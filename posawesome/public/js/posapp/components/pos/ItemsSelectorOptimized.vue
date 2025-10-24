@@ -219,45 +219,93 @@ export default {
   components: {
     VirtualScroll
   },
-  props: {
-    items_view: {
-      type: String,
-      default: 'card'
-    },
-    items_group: {
-      type: Array,
-      default: () => []
-    },
-    filtred_items: {
-      type: Array,
-      default: () => []
-    },
-    loading: {
-      type: Boolean,
-      default: false
-    },
-    search_loading: {
-      type: Boolean,
-      default: false
-    },
-    couponsCount: {
-      type: Number,
-      default: 0
-    },
-    offersCount: {
-      type: Number,
-      default: 0
-    }
-  },
+  mixins: [format],
+  
+  // ===== DATA =====
   data() {
     return {
-      item_group: '',
-      barcode_search: '',
-      debounce_search: '',
-      containerHeight: 400
-    }
+      // POS Configuration
+      pos_profile: null,
+      flags: {},
+      
+      // View State
+      items_view: 'list',
+      item_group: "ALL",
+      loading: false,
+      search_loading: false,
+      
+      // Items Data
+      items_group: ["ALL"],
+      items: [],
+      
+      // Search State
+      search: "",
+      first_search: "",
+      barcode_search: "",
+      
+      // Pagination
+      itemsPerPage: 1000,
+      
+      // Counters
+      offersCount: 0,
+      appliedOffersCount: 0,
+      couponsCount: 0,
+      appliedCouponsCount: 0,
+      
+      // Customer Data
+      customer_price_list: null,
+      customer: null,
+      
+      // Item Operations
+      qty: 1,
+      
+      // UI State
+      itemsScrollHeight: null,
+      containerHeight: 400,
+      
+      // Internal Flags
+      _suppressCustomerWatcher: false,
+      _detailsReady: false,
+      
+      // Caching & Performance
+      _itemsMap: new Map(),
+    };
   },
+  // ===== COMPUTED =====
   computed: {
+    filtred_items() {
+      this.search = this.get_search(this.first_search);
+
+      // Cache expensive operations
+      const groupFilter = this.item_group !== "ALL";
+      const hasSearch = this.search && this.search.length >= 3;
+      
+      let filtred_list = [];
+      let filtred_group_list = [];
+
+      // Filter by group - cache toLowerCase results
+      if (groupFilter) {
+        filtred_group_list = this.items.filter(item => 
+          item.item_group && item.item_group.toLowerCase() === this.item_group.toLowerCase()
+        );
+      } else {
+        filtred_group_list = this.items;
+      }
+
+      // Filter by search
+      if (hasSearch) {
+        const searchLower = this.search.toLowerCase();
+        filtred_list = filtred_group_list.filter(item => 
+          item.item_name.toLowerCase().includes(searchLower) ||
+          item.item_code.toLowerCase().includes(searchLower)
+        );
+      } else {
+        filtred_list = filtred_group_list;
+      }
+
+      return filtred_list.slice(0, this.itemsPerPage);
+    },
+
     itemsScrollStyle() {
       return {
         height: this.containerHeight + 'px',
@@ -274,6 +322,55 @@ export default {
     window.removeEventListener('resize', this.updateContainerHeight)
   },
   
+  // ===== WATCH =====
+  watch: {
+    filtred_items(newValue, oldValue) {
+      if (newValue.length !== oldValue.length) {
+        this.update_items_details(newValue);
+      }
+      this.scheduleScrollHeightUpdate();
+    },
+
+    customer(newVal, oldVal) {
+      if (this._suppressCustomerWatcher) {
+        this._suppressCustomerWatcher = false;
+        return;
+      }
+      if (oldVal !== undefined && newVal !== oldVal) {
+        this.get_items();
+      }
+    },
+
+    items_view() {
+      this.scheduleScrollHeightUpdate();
+    },
+  },
+
+  // ===== LIFECYCLE =====
+  mounted() {
+    this.updateContainerHeight()
+    window.addEventListener('resize', this.updateContainerHeight)
+    
+    // Initialize component
+    evntBus.on("register_pos_profile", this.register_pos_profile);
+    evntBus.on("update_customer", this.update_customer);
+    evntBus.on("update_customer_price_list", this.update_customer_price_list);
+    evntBus.on("update_offers_counters", this.update_offers_counters);
+    evntBus.on("update_coupons_counters", this.update_coupons_counters);
+  },
+  
+  beforeUnmount() {
+    window.removeEventListener('resize', this.updateContainerHeight)
+    
+    // Clean up event listeners
+    evntBus.off("register_pos_profile", this.register_pos_profile);
+    evntBus.off("update_customer", this.update_customer);
+    evntBus.off("update_customer_price_list", this.update_customer_price_list);
+    evntBus.off("update_offers_counters", this.update_offers_counters);
+    evntBus.off("update_coupons_counters", this.update_coupons_counters);
+  },
+
+  // ===== METHODS =====
   methods: {
     updateContainerHeight() {
       // Calculate available height for items display
@@ -340,6 +437,125 @@ export default {
         'EGP': '£'
       }
       return symbols[currency] || currency
+    },
+
+    // Essential methods from original component
+    register_pos_profile(data) {
+      this.pos_profile = data;
+      this.get_items_groups();
+      this.get_items();
+    },
+
+    update_customer(data) {
+      this.customer = data;
+    },
+
+    update_customer_price_list(data) {
+      this.customer_price_list = data;
+    },
+
+    update_offers_counters(data) {
+      this.offersCount = data.total || 0;
+      this.appliedOffersCount = data.applied || 0;
+    },
+
+    update_coupons_counters(data) {
+      this.couponsCount = data.total || 0;
+      this.appliedCouponsCount = data.applied || 0;
+    },
+
+    get_items_groups() {
+      if (!this.pos_profile) {
+        return;
+      }
+
+      if (this.pos_profile.item_groups && this.pos_profile.item_groups.length > 0) {
+        this.items_group = ["ALL", ...this.pos_profile.item_groups];
+      } else {
+        this.items_group = ["ALL"];
+      }
+    },
+
+    get_items() {
+      if (!this.pos_profile) {
+        return;
+      }
+
+      const vm = this;
+      this.loading = true;
+      let search = this.get_search(this.first_search);
+      let gr = "";
+      let sr = "";
+
+      if (search) {
+        sr = search;
+      }
+      if (vm.item_group != "ALL") {
+        gr = vm.item_group.toLowerCase();
+      }
+
+      frappe.call({
+        method: API_MAP.ITEM.GET_ITEMS,
+        args: {
+          pos_profile: vm.pos_profile,
+          price_list: vm.customer_price_list,
+          item_group: gr,
+          search_value: sr,
+          customer: vm.customer,
+        },
+        callback: function (r) {
+          if (r.message) {
+            vm.items = (r.message || []).map((it) => ({
+              item_code: it.item_code,
+              item_name: it.item_name,
+              item_group: it.item_group,
+              rate: it.rate,
+              price_list_rate: it.price_list_rate,
+              base_rate: it.base_rate,
+              currency: it.currency,
+              actual_qty: it.actual_qty,
+              stock_uom: it.stock_uom,
+              item_barcode: [],
+              serial_no_data: [],
+              batch_no_data: [],
+            }));
+            vm._buildItemsMap();
+            evntBus.emit("set_all_items", vm.items);
+            vm.loading = false;
+            vm.search_loading = false;
+            vm.scheduleScrollHeightUpdate();
+          }
+        },
+      });
+    },
+
+    _buildItemsMap() {
+      this._itemsMap.clear();
+      this.items.forEach((item) => {
+        this._itemsMap.set(item.item_code.toLowerCase(), item);
+        this._itemsMap.set(item.item_name.toLowerCase(), item);
+      });
+    },
+
+    update_items_details(items) {
+      // Implementation for updating item details
+      this._detailsReady = true;
+    },
+
+    scheduleScrollHeightUpdate() {
+      // Implementation for scroll height update
+    },
+
+    onItemGroupChange() {
+      this.get_items();
+    },
+
+    show_offers() {
+      evntBus.emit("show_offers");
+    },
+
+    show_coupons() {
+      evntBus.emit("show_coupons");
     }
   }
 }

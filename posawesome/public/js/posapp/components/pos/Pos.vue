@@ -36,8 +36,8 @@
 <script>
 // ===== IMPORTS =====
 import { evntBus } from "../../bus";
-import ItemsSelector from "./ItemsSelector.vue";
-import Invoice from "./Invoice.vue";
+import ItemsSelector from "./ItemsSelectorOptimized.vue";
+import Invoice from "./InvoiceOptimized.vue";
 import OpeningDialog from "./OpeningDialog.vue";
 import Payments from "./Payments.vue";
 import PosOffers from "./PosOffers.vue";

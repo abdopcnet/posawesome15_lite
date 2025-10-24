@@ -47,6 +47,18 @@ export default {
     InvoiceTotals
   },
   props: {
+    is_payment: {
+      type: Boolean,
+      default: false,
+    },
+    offerApplied: {
+      type: Object,
+      default: null,
+    },
+    offerRemoved: {
+      type: Boolean,
+      default: false,
+    },
     items: {
       type: Array,
       default: () => []
