@@ -28,7 +28,13 @@ class RedisCache:
         Initialize Redis connection
         """
         try:
-            import redis
+            # Try to import redis - gracefully handle if not available
+            try:
+                import redis
+            except ImportError:
+                frappe.logger().info("Redis package not installed - caching disabled")
+                self.cache_enabled = False
+                return
             
             # Get Redis configuration from site config
             redis_config = frappe.get_conf().get('redis_cache', {})
