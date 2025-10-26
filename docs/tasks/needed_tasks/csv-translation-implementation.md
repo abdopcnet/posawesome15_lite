@@ -1,3 +1,21 @@
+
+docs/tasks/needed_tasks/csv-translation-implementation.md
+i want translation simple
+so i dont want complexity and api's
+
+example
+@https://github.com/abdopcnet/posawesome_dev/blob/main/posawesome/posawesome/page/posapp/posapp.js
+
+i want exact translation logic to be implemented here also
+https://github.com/abdopcnet/posawesome15_lite/blob/main/posawesome/posawesome/page/posapp/posapp.js
+
+Use __() for all user-facing text:
+Labels (<label>)
+Button text (<span>)
+Tooltips (:title)
+
+
+
 # 🌐 Task: Multi-Language Support Implementation
 
 **💰 Budget**: $30 (Non-negotiable)
