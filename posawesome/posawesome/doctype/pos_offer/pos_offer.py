@@ -82,14 +82,14 @@ class POSOffer(Document):
         self.check_duplicate_offers()
 
     def check_duplicate_offers(self):
-        """التحقق من وجود عروض مكررة ونشطة"""
+        """Check for duplicate active offers"""
         from frappe.utils import getdate, today
 
-        # تحقق من وجود الحقول المطلوبة
+        # Check if required fields exist
         if not self.pos_profile or not self.offer_type:
             return
 
-        # الحالة 1: grand_total - لا يجوز أكثر من عرض واحد مفعل
+        # Case 1: grand_total - only one active offer allowed per POS Profile
         if self.offer_type == "grand_total":
             filters = {
                 "pos_profile": self.pos_profile,
@@ -97,7 +97,7 @@ class POSOffer(Document):
                 "disable": 0,
             }
 
-            # استثناء المستند الحالي إذا كان تعديل
+            # Exclude current document if updating
             if not self.is_new():
                 filters["name"] = ["!=", self.name]
 
@@ -109,23 +109,23 @@ class POSOffer(Document):
 
             if existing_grand_total:
                 frappe.throw(
-                    f"لا يمكن إنشاء عرض إضافي من نوع 'Grand Total' لملف POS Profile '{self.pos_profile}'. "
-                    f"يوجد بالفعل عرض نشط: '{existing_grand_total[0].title}'"
+                    f"Cannot create additional 'Grand Total' offer for POS Profile '{self.pos_profile}'. "
+                    f"An active offer already exists: '{existing_grand_total[0].title}'"
                 )
 
-        # الحالة 2: الأنواع الأخرى - التحقق من المطابقة الكاملة
+        # Case 2: Other types - check for exact match
         else:
-            # بناء الفلاتر بناءً على نوع العرض
+            # Build filters based on offer type
             filters = {
                 "pos_profile": self.pos_profile,
                 "offer_type": self.offer_type,
                 "disable": 0,
             }
 
-            # إضافة الفلاتر المحددة حسب نوع العرض
+            # Add specific filters based on offer type
             if self.offer_type == "item_code":
                 if not self.item_code:
-                    return  # انتظر حتى يتم تعيين item_code
+                    return  # Wait until item_code is set
                 filters["item_code"] = self.item_code
 
             elif self.offer_type == "item_group":
@@ -148,11 +148,11 @@ class POSOffer(Document):
                     return
                 filters["customer_group"] = self.customer_group
 
-            # استثناء المستند الحالي
+            # Exclude current document
             if not self.is_new():
                 filters["name"] = ["!=", self.name]
 
-            # البحث عن عروض مطابقة
+            # Search for matching offers
             existing_docs = frappe.get_all(
                 "POS Offer",
                 filters=filters,
@@ -161,8 +161,8 @@ class POSOffer(Document):
 
             if existing_docs:
                 frappe.throw(
-                    f"يوجد عرض مكرر نشط '{existing_docs[0].title}' لنفس ملف POS Profile '{self.pos_profile}' "
-                    f"ونفس نوع العرض '{self.offer_type}'"
+                    f"Duplicate active offer '{existing_docs[0].title}' exists for POS Profile '{self.pos_profile}' "
+                    f"with the same offer type '{self.offer_type}'"
                 )
 
 
