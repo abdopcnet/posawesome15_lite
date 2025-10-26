@@ -66,14 +66,14 @@ Replaced 184 lines of hard-coded Arabic translations with a ~30-line CSV loader:
 window.addEventListener('posProfileLoaded', async (event) => {
     const pos_profile = event.detail.pos_profile;
     const language = pos_profile.posa_language;
-    
+
     if (language === 'ar') {
         const response = await fetch('/assets/posawesome/translations/ar.csv');
         const csvText = await response.text();
-        
+
         window.__messages = window.__messages || {};
         const lines = csvText.split('\n');
-        
+
         lines.forEach(line => {
             if (!line.trim()) return;
             const commaIndex = line.indexOf(',');
@@ -85,7 +85,7 @@ window.addEventListener('posProfileLoaded', async (event) => {
                 }
             }
         });
-        
+
         console.log('Arabic translations loaded from ar.csv');
     }
 });
@@ -119,7 +119,7 @@ window.addEventListener('posProfileLoaded', async (event) => {
    - Format: `English Text,النص العربي`
    - Example: `Save,حفظ`
 
-2. **Add support for another language**: 
+2. **Add support for another language**:
    - Create new CSV file (e.g., `es.csv`, `pt.csv`)
    - Update `posa_language` field options in POS Profile
    - CSV loader will automatically load the correct file
