@@ -18,43 +18,57 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 	$("head").append("<style>.layout-main-section { display: none !important; }</style>");
 };
 
-console.log('🔍 Before loading CSV, window.__messages:', window.__messages);
-window.__messages = window.__messages || {};
-
-const xhr = new XMLHttpRequest();
-xhr.open('GET', '/assets/posawesome/translations/ar.csv', false);
-xhr.send();
-
-console.log('📡 CSV response status:', xhr.status);
-console.log('📄 CSV response text length:', xhr.responseText.length);
-
-if (xhr.status === 200) {
-	const lines = xhr.responseText.split('\n');
-	console.log('📝 CSV lines count:', lines.length);
+// Wait 500ms for everything to load, then check user language and load translations
+setTimeout(() => {
+	console.log('🌍 After 500ms - frappe.boot.lang:', frappe.boot.lang);
+	console.log('🌍 After 500ms - frappe.boot.user:', frappe.boot.user);
+	console.log('🌍 After 500ms - frappe.session:', frappe.session);
 	
-	let loadedCount = 0;
-	lines.forEach(line => {
-		if (!line.trim()) return;
-		
-		const commaIndex = line.indexOf(',');
-		if (commaIndex > 0) {
-			const key = line.substring(0, commaIndex).trim();
-			const value = line.substring(commaIndex + 1).trim();
-			if (key && value) {
-				window.__messages[key] = value;
-				loadedCount++;
-			}
-		}
-	});
-	console.log('✅ Loaded', loadedCount, 'translations');
-} else {
-	console.error('❌ Failed to load CSV:', xhr.status, xhr.statusText);
-}
+	// Check if user language is Arabic
+	const isArabic = frappe.boot.lang === "ar" || 
+	                 frappe.boot.user?.language === "ar" ||
+	                 frappe.session?.user_language === "ar" ||
+	                 frappe.get_cookie('language') === "ar";
+	
+	console.log('🌍 After 500ms - isArabic:', isArabic);
+	
+	if (isArabic) {
+		console.log('📥 Loading Arabic translations...');
+		window.__messages = window.__messages || {};
 
-// Update the global __() function to use our translations
-window.__ = function(key) {
-	return window.__messages[key] || key;
-};
+		const xhr = new XMLHttpRequest();
+		xhr.open('GET', '/assets/posawesome/translations/ar.csv', false);
+		xhr.send();
+
+		if (xhr.status === 200) {
+			const lines = xhr.responseText.split('\n');
+			
+			lines.forEach(line => {
+				if (!line.trim()) return;
+				
+				const commaIndex = line.indexOf(',');
+				if (commaIndex > 0) {
+					const key = line.substring(0, commaIndex).trim();
+					const value = line.substring(commaIndex + 1).trim();
+					if (key && value) {
+						window.__messages[key] = value;
+					}
+				}
+			});
+			
+			// Update the global __() function to use our translations
+			window.__ = function(key) {
+				return window.__messages[key] || key;
+			};
+			
+			console.log('✅ Arabic translations loaded successfully');
+		} else {
+			console.error('❌ Failed to load Arabic translations:', xhr.status, xhr.statusText);
+		}
+	} else {
+		console.log('ℹ️ User language is not Arabic, skipping translation loading');
+	}
+}, 500);
 
 frappe.pages['posapp'].on_page_leave = function() {
 	// Remove Material Design Icons CSS when leaving POS app
