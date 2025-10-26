@@ -43,16 +43,8 @@ if (xhr.status === 200) {
 
 // Update the global __() function to use our translations
 window.__ = function(key) {
-	const result = window.__messages[key] || key;
-	console.log(`🌐 __("${key}") -> "${result}"`);
-	return result;
+	return window.__messages[key] || key;
 };
-
-console.log('🔍 Sample translations loaded:', {
-	'Print': window.__messages['Print'],
-	'Pay': window.__messages['Pay'],
-	'Total Qty': window.__messages['Total Qty']
-});
 
 frappe.pages['posapp'].on_page_leave = function() {
 	// Remove Material Design Icons CSS when leaving POS app
