@@ -3,7 +3,7 @@ docs/tasks/needed_tasks/csv-translation-implementation.md
 
 # 🌐 Task: Multi-Language Support Implementation
 
-**💰 Budget**: $30 (Non-negotiable)
+**💰 Budget**: $20 ~ 30 (Non-negotiable)
 
 **👨‍💻 Developer**: TBD
 
