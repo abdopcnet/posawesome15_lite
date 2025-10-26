@@ -18,30 +18,21 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 	$("head").append("<style>.layout-main-section { display: none !important; }</style>");
 };
 
-//Arabic translations - Simple and clean approach (like posawesome_dev)
+//Arabic translations - Simple CSV loader
 if (frappe.boot.lang == "ar") {
-	debugger;
-	console.log('🌍 Arabic language detected, loading translations...');
 	// Ensure __messages exists before extending it
 	window.__messages = window.__messages || {};
 	
 	// Load translations from CSV file
 	fetch('/assets/posawesome/translations/ar.csv')
-		.then(response => {
-			console.log('📡 CSV fetch response:', response.status, response.statusText);
-			return response.text();
-		})
+		.then(response => response.text())
 		.then(csvText => {
-			console.log('📄 CSV text length:', csvText.length);
-			
 			// Parse CSV and load into window.__messages
 			const lines = csvText.split('\n');
-			console.log('📝 CSV lines count:', lines.length);
-
-			let loadedCount = 0;
+			
 			lines.forEach(line => {
 				if (!line.trim()) return; // Skip empty lines
-
+				
 				// Handle CSV with commas in values (find first comma only)
 				const commaIndex = line.indexOf(',');
 				if (commaIndex > 0) {
@@ -49,20 +40,12 @@ if (frappe.boot.lang == "ar") {
 					const value = line.substring(commaIndex + 1).trim();
 					if (key && value) {
 						window.__messages[key] = value;
-						loadedCount++;
 					}
 				}
 			});
-
-			console.log('✅ Loaded', loadedCount, 'translations into window.__messages');
-			console.log('🔍 Sample translations:', {
-				'Print': window.__messages['Print'],
-				'Pay': window.__messages['Pay'],
-				'Total Qty': window.__messages['Total Qty']
-			});
 		})
 		.catch(error => {
-			console.error('❌ Failed to load Arabic translations:', error);
+			console.error('Failed to load Arabic translations:', error);
 		});
 }
 
