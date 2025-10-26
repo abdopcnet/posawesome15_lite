@@ -18,48 +18,33 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 	$("head").append("<style>.layout-main-section { display: none !important; }</style>");
 };
 
-//Arabic translations - Load from CSV file system only if user language is Arabic
-console.log('🌍 frappe.boot.lang:', frappe.boot.lang);
-console.log('🌍 frappe.boot.user:', frappe.boot.user);
-console.log('🌍 frappe.boot.lang_dict:', frappe.boot.lang_dict);
+window.__messages = window.__messages || {};
 
-// Check multiple ways to detect Arabic language preference
-const isArabic = frappe.boot.lang === "ar" || 
-                 frappe.boot.user?.language === "ar" ||
-                 frappe.session?.user_language === "ar" ||
-                 frappe.get_cookie('language') === "ar";
+const xhr = new XMLHttpRequest();
+xhr.open('GET', '/assets/posawesome/translations/ar.csv', false);
+xhr.send();
 
-console.log('🌍 isArabic:', isArabic);
-
-if (isArabic) {
-	window.__messages = window.__messages || {};
-
-	const xhr = new XMLHttpRequest();
-	xhr.open('GET', '/assets/posawesome/translations/ar.csv', false);
-	xhr.send();
-
-	if (xhr.status === 200) {
-		const lines = xhr.responseText.split('\n');
+if (xhr.status === 200) {
+	const lines = xhr.responseText.split('\n');
+	
+	lines.forEach(line => {
+		if (!line.trim()) return;
 		
-		lines.forEach(line => {
-			if (!line.trim()) return;
-			
-			const commaIndex = line.indexOf(',');
-			if (commaIndex > 0) {
-				const key = line.substring(0, commaIndex).trim();
-				const value = line.substring(commaIndex + 1).trim();
-				if (key && value) {
-					window.__messages[key] = value;
-				}
+		const commaIndex = line.indexOf(',');
+		if (commaIndex > 0) {
+			const key = line.substring(0, commaIndex).trim();
+			const value = line.substring(commaIndex + 1).trim();
+			if (key && value) {
+				window.__messages[key] = value;
 			}
-		});
-	}
-
-	// Update the global __() function to use our translations
-	window.__ = function(key) {
-		return window.__messages[key] || key;
-	};
+		}
+	});
 }
+
+// Update the global __() function to use our translations
+window.__ = function(key) {
+	return window.__messages[key] || key;
+};
 
 frappe.pages['posapp'].on_page_leave = function() {
 	// Remove Material Design Icons CSS when leaving POS app
