@@ -642,7 +642,7 @@ Return invoice total should not be higher than {0},مجموع فاتورة ال�
 Quantity for item {0} cannot be greater than {1},الكمية للصنف {0} لا يمكن أن تكون أكبر من {1}
 You are not allowed to print pending invoices,لا يُسمح لك بطباعة الفواتير المعلقة
 Loyalty points offer applied,تم تطبيق عرض نقاط الولاء
-inv_disc%,خصم الفاتورة %
+inv_disc,خصم الفاتورة %
 items_dis,خصم الأصناف
 before_disc,قبل الخصم
 net_total,الصافي
