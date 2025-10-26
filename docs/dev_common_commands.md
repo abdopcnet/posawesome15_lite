@@ -3,6 +3,9 @@
 **Backend Apply Changes**
 
 ```bash
+cd ~/frappe-bench-15
+bench clear-cache && \
+bench clear-website-cache &&
 find . -name "*.pyc" -print -delete &&
 bench restart
 ```
@@ -12,6 +15,7 @@ bench restart
 - **Summary:** Use `frappe.log_error()` at the end of each function to summarize results
 - **Details:** Include the filename, function name, and results in the log
 - **Tracking:** [Error Log](http://192.168.100.117/app/error-log)
+- **Tracking:** [Error Log](https://test.future-support.online/app/error-log)
 
 **Frontend Debug Policy**
 
