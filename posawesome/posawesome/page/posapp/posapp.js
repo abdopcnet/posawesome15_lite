@@ -18,15 +18,21 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 	$("head").append("<style>.layout-main-section { display: none !important; }</style>");
 };
 
+console.log('🔍 Before loading CSV, window.__messages:', window.__messages);
 window.__messages = window.__messages || {};
 
 const xhr = new XMLHttpRequest();
 xhr.open('GET', '/assets/posawesome/translations/ar.csv', false);
 xhr.send();
 
+console.log('📡 CSV response status:', xhr.status);
+console.log('📄 CSV response text length:', xhr.responseText.length);
+
 if (xhr.status === 200) {
 	const lines = xhr.responseText.split('\n');
+	console.log('📝 CSV lines count:', lines.length);
 	
+	let loadedCount = 0;
 	lines.forEach(line => {
 		if (!line.trim()) return;
 		
@@ -36,9 +42,13 @@ if (xhr.status === 200) {
 			const value = line.substring(commaIndex + 1).trim();
 			if (key && value) {
 				window.__messages[key] = value;
+				loadedCount++;
 			}
 		}
 	});
+	console.log('✅ Loaded', loadedCount, 'translations');
+} else {
+	console.error('❌ Failed to load CSV:', xhr.status, xhr.statusText);
 }
 
 // Update the global __() function to use our translations
