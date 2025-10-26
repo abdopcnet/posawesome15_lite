@@ -20,6 +20,7 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 
 //Arabic translations - Simple and clean approach (like posawesome_dev)
 if (frappe.boot.lang == "ar") {
+	debugger;
 	console.log('🌍 Arabic language detected, loading translations...');
 	// Ensure __messages exists before extending it
 	window.__messages = window.__messages || {};
