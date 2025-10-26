@@ -79,6 +79,13 @@ window.addEventListener('posProfileLoaded', async (event) => {
 					console.log('🎯 Vue app found, updating global properties...');
 					window.posApp.config.globalProperties.__ = window.__;
 					
+					// Also update Vue instance if it exists
+					if (window.posApp._instance && window.posApp._instance.proxy) {
+						console.log('🔄 Updating Vue instance...');
+						window.posApp._instance.proxy.__ = window.__;
+						console.log('✅ Vue instance __() function updated');
+					}
+					
 					// Trigger reactive update by changing translation trigger
 					console.log('🔄 Triggering reactive update...');
 					// Increment translation trigger to force re-render
