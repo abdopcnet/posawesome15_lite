@@ -59,6 +59,12 @@ window.addEventListener('posProfileLoaded', async (event) => {
 				// Also update Vue app's global property if it exists
 				if (window.posApp && window.posApp.config && window.posApp.config.globalProperties) {
 					window.posApp.config.globalProperties.__ = window.__;
+					
+					// Force Vue app to re-render by updating reactive data
+					if (window.posApp._instance && window.posApp._instance.proxy) {
+						// Trigger reactivity update
+						window.posApp._instance.proxy.$forceUpdate();
+					}
 				}
 			}
 		} catch (error) {
