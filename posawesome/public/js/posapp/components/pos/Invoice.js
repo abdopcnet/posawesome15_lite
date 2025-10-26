@@ -63,14 +63,14 @@ export default {
       // Table Headers Configuration
       items_headers: [
         {
-          title: "i_name",
+          title: __("Item Name"),
           align: "start",
           sortable: true,
           key: "item_name",
           width: "12%",
         },
         {
-          title: frappe._("Qty"),
+          title: __("Qty"),
           key: "qty",
           align: "center",
           width: "11%",
