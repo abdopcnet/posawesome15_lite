@@ -11,7 +11,6 @@
 **Frontend Technology**
 
 - **Vue 3.4.21** - Progressive JavaScript framework with Composition API
-- **Vuetify 3.6.9** - Material Design components with responsive design
 - **mitt** - Lightweight event emitter for component communication
 - **lodash** - JavaScript utility library for data manipulation
 
