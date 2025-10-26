@@ -403,7 +403,7 @@ export default {
           width: "30%",
         },
         {
-          title: "I-Code",
+          title: __("Item Code"),
           align: "start",
           sortable: true,
           key: "item_code",
