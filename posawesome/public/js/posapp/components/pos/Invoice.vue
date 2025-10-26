@@ -127,7 +127,7 @@
       <!-- Financial Summary Row -->
       <div class="financial-summary">
         <div class="summary-field readonly-field">
-          <label>{{ __("Total Qty") }}</label>
+          <label>{{ $translationUpdated ? __("Total Qty") : "Total Qty" }}</label>
           <div class="field-value">
             {{ formatFloat(invoice_doc?.total_qty || 0) }}
           </div>
@@ -181,28 +181,28 @@
       <div class="action-buttons">
         <button class="action-btn primary-btn" :disabled="!hasItems" @click="printInvoice" :title="__('Print invoice')">
           <i class="mdi mdi-printer action-icon"></i>
-          <span>{{ __("Print") }}</span>
+          <span>{{ $translationUpdated ? __("Print") : "Print" }}</span>
         </button>
 
         <button class="action-btn success-btn" :disabled="!hasItems || is_payment || isUpdatingTotals"
           @click="show_payment">
           <i class="mdi mdi-cash-multiple action-icon"></i>
-          <span>{{ __("Pay") }}</span>
+          <span>{{ $translationUpdated ? __("Pay") : "Pay" }}</span>
         </button>
 
         <button class="action-btn secondary-btn" :disabled="!pos_profile?.posa_allow_return" @click="open_returns">
           <i class="mdi mdi-keyboard-return action-icon"></i>
-          <span>{{ __("Return") }}</span>
+          <span>{{ $translationUpdated ? __("Return") : "Return" }}</span>
         </button>
 
         <button class="action-btn purple-btn" :disabled="!pos_profile?.posa_allow_quick_return" @click="quick_return">
           <i class="mdi mdi-flash action-icon"></i>
-          <span>{{ __("Quick Return") }}</span>
+          <span>{{ $translationUpdated ? __("Quick Return") : "Quick Return" }}</span>
         </button>
 
         <button class="action-btn error-btn" @click="cancel_invoice">
           <i class="mdi mdi-close-circle action-icon"></i>
-          <span>{{ __("Cancel") }}</span>
+          <span>{{ $translationUpdated ? __("Cancel") : "Cancel" }}</span>
         </button>
       </div>
     </div>
