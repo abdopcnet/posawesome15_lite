@@ -32,7 +32,7 @@
             <div class="search-icon">
               <i class="mdi mdi-barcode barcode-icon"></i>
             </div>
-            <input type="text" class="custom-search-input barcode-input" placeholder="Scan Barcode"
+            <input type="text" class="custom-search-input barcode-input" :placeholder="__('Scan Barcode')"
               v-model="barcode_search" @keyup.enter="handle_barcode_input" ref="barcode_search" />
             <button v-if="barcode_search" class="clear-btn" @click="barcode_search = ''" type="button">
               ×
