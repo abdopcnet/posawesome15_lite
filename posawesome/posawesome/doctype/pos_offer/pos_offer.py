@@ -140,7 +140,7 @@ class POSOffer(Document):
                         "title": "Duplicate Offer Detected",
                         "message": f"Another active offer '{doc.title}' exists for this POS Profile with the same type and overlapping dates. This offer will be disabled.",
                     })
-                    
+
                     # Disable this offer
                     self.disable = 1
                     return
