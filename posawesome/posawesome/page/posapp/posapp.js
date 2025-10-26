@@ -83,8 +83,8 @@ window.addEventListener('posProfileLoaded', async (event) => {
 					if (window.posApp._instance && window.posApp._instance.proxy) {
 						console.log('🔄 Triggering reactive update...');
 						// Increment translation trigger to force re-render
-						window.posApp.config.globalProperties.$translationTrigger++;
-						console.log('✅ Translation trigger updated to:', window.posApp.config.globalProperties.$translationTrigger);
+						window.posApp._instance.proxy.$translationTrigger++;
+						console.log('✅ Translation trigger updated to:', window.posApp._instance.proxy.$translationTrigger);
 						
 						// Also try force update as backup
 						window.posApp._instance.proxy.$forceUpdate();
