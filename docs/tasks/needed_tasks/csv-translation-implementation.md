@@ -44,35 +44,45 @@ Simple translation system using CSV files. When POS Profile loads, check `posa_l
 
 **File**: `posawesome/posawesome/page/posapp/posapp.js`
 
-Replaced 184 lines of hard-coded Arabic translations with a ~30-line CSV loader:
+Replaced 184 lines of hard-coded Arabic translations with a ~37-line CSV loader:
 
 ```javascript
 // Simple CSV Translation Loader
+// Listens for POS Profile load event and loads translations from CSV file
 window.addEventListener('posProfileLoaded', async (event) => {
-    const pos_profile = event.detail.pos_profile;
-    const language = pos_profile.posa_language;
+	const pos_profile = event.detail.pos_profile;
+	const language = pos_profile.posa_language;
 
-    if (language === 'ar') {
-        const response = await fetch('/assets/posawesome/translations/ar.csv');
-        const csvText = await response.text();
+	// Only load translations for Arabic (English is default, no translation needed)
+	if (language === 'ar') {
+		try {
+			const response = await fetch('/assets/posawesome/translations/ar.csv');
+			const csvText = await response.text();
 
-        window.__messages = window.__messages || {};
-        const lines = csvText.split('\n');
+			// Parse CSV and load into window.__messages
+			window.__messages = window.__messages || {};
+			const lines = csvText.split('\n');
 
-        lines.forEach(line => {
-            if (!line.trim()) return;
-            const commaIndex = line.indexOf(',');
-            if (commaIndex > 0) {
-                const key = line.substring(0, commaIndex).trim();
-                const value = line.substring(commaIndex + 1).trim();
-                if (key && value) {
-                    window.__messages[key] = value;
-                }
-            }
-        });
+			lines.forEach(line => {
+				if (!line.trim()) return; // Skip empty lines
 
-        console.log('Arabic translations loaded from ar.csv');
-    }
+				// Handle CSV with commas in values (find first comma only)
+				const commaIndex = line.indexOf(',');
+				if (commaIndex > 0) {
+					const key = line.substring(0, commaIndex).trim();
+					const value = line.substring(commaIndex + 1).trim();
+					if (key && value) {
+						window.__messages[key] = value;
+					}
+				}
+			});
+
+			console.log('Arabic translations loaded from ar.csv');
+		} catch (error) {
+			console.error('Failed to load Arabic translations:', error);
+		}
+	}
+	// English = no translations needed (default Frappe behavior)
 });
 ```
 
