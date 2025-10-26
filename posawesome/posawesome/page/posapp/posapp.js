@@ -23,20 +23,20 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 window.addEventListener('posProfileLoaded', async (event) => {
 	const pos_profile = event.detail.pos_profile;
 	const language = pos_profile.posa_language;
-	
+
 	// Only load translations for Arabic (English is default, no translation needed)
 	if (language === 'ar') {
 		try {
 			const response = await fetch('/assets/posawesome/translations/ar.csv');
 			const csvText = await response.text();
-			
+
 			// Parse CSV and load into window.__messages
 			window.__messages = window.__messages || {};
 			const lines = csvText.split('\n');
-			
+
 			lines.forEach(line => {
 				if (!line.trim()) return; // Skip empty lines
-				
+
 				// Handle CSV with commas in values (find first comma only)
 				const commaIndex = line.indexOf(',');
 				if (commaIndex > 0) {
@@ -47,7 +47,7 @@ window.addEventListener('posProfileLoaded', async (event) => {
 					}
 				}
 			});
-			
+
 			console.log('Arabic translations loaded from ar.csv');
 		} catch (error) {
 			console.error('Failed to load Arabic translations:', error);
