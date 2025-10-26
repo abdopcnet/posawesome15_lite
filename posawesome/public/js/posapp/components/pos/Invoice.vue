@@ -181,7 +181,7 @@
       <div class="action-buttons">
         <button class="action-btn primary-btn" :disabled="!hasItems" @click="printInvoice" :title="__('Print invoice')">
           <i class="mdi mdi-printer action-icon"></i>
-          <span>{{ $translationTrigger ? __("Print") : "Print" }}</span>
+          <span>{{ (() => { console.log('🔍 Print button render, $translationTrigger:', $translationTrigger); return $translationTrigger ? __("Print") : "Print"; })() }}</span>
         </button>
 
         <button class="action-btn success-btn" :disabled="!hasItems || is_payment || isUpdatingTotals"
