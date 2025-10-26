@@ -82,68 +82,88 @@ class POSOffer(Document):
         self.check_duplicate_offers()
 
     def check_duplicate_offers(self):
-        """Check for duplicate active offers"""
-        from frappe.utils import nowdate, getdate
+        """التحقق من وجود عروض مكررة ونشطة"""
+        from frappe.utils import getdate, today
 
-        # Skip if this is a new document without required fields
+        # تحقق من وجود الحقول المطلوبة
         if not self.pos_profile or not self.offer_type:
             return
 
-        # Build filters based on offer_type
-        filters = {
-            "pos_profile": self.pos_profile,
-            "offer_type": self.offer_type,
-            "disable": 0,
-        }
-
-        # Add offer-specific filters
+        # الحالة 1: grand_total - لا يجوز أكثر من عرض واحد مفعل
         if self.offer_type == "grand_total":
-            # For grand_total: only check pos_profile and offer_type
-            pass
-        elif self.offer_type == "item_code" and self.item_code:
-            filters["item_code"] = self.item_code
-        elif self.offer_type == "item_group" and self.item_group:
-            filters["item_group"] = self.item_group
-        elif self.offer_type == "brand" and self.brand:
-            filters["brand"] = self.brand
-        elif self.offer_type == "customer" and self.customer:
-            filters["customer"] = self.customer
-        elif self.offer_type == "customer_group" and self.customer_group:
-            filters["customer_group"] = self.customer_group
+            filters = {
+                "pos_profile": self.pos_profile,
+                "offer_type": "grand_total",
+                "disable": 0,
+            }
 
-        # Exclude current document if updating
-        if not self.is_new():
-            filters["name"] = ["!=", self.name]
+            # استثناء المستند الحالي إذا كان تعديل
+            if not self.is_new():
+                filters["name"] = ["!=", self.name]
 
-        # Check date range overlap
-        if self.valid_from and self.valid_upto:
+            existing_grand_total = frappe.get_all(
+                "POS Offer",
+                filters=filters,
+                fields=["name", "title"],
+            )
+
+            if existing_grand_total:
+                frappe.throw(
+                    f"لا يمكن إنشاء عرض إضافي من نوع 'Grand Total' لملف POS Profile '{self.pos_profile}'. "
+                    f"يوجد بالفعل عرض نشط: '{existing_grand_total[0].title}'"
+                )
+
+        # الحالة 2: الأنواع الأخرى - التحقق من المطابقة الكاملة
+        else:
+            # بناء الفلاتر بناءً على نوع العرض
+            filters = {
+                "pos_profile": self.pos_profile,
+                "offer_type": self.offer_type,
+                "disable": 0,
+            }
+
+            # إضافة الفلاتر المحددة حسب نوع العرض
+            if self.offer_type == "item_code":
+                if not self.item_code:
+                    return  # انتظر حتى يتم تعيين item_code
+                filters["item_code"] = self.item_code
+
+            elif self.offer_type == "item_group":
+                if not self.item_group:
+                    return
+                filters["item_group"] = self.item_group
+
+            elif self.offer_type == "brand":
+                if not self.brand:
+                    return
+                filters["brand"] = self.brand
+
+            elif self.offer_type == "customer":
+                if not self.customer:
+                    return
+                filters["customer"] = self.customer
+
+            elif self.offer_type == "customer_group":
+                if not self.customer_group:
+                    return
+                filters["customer_group"] = self.customer_group
+
+            # استثناء المستند الحالي
+            if not self.is_new():
+                filters["name"] = ["!=", self.name]
+
+            # البحث عن عروض مطابقة
             existing_docs = frappe.get_all(
                 "POS Offer",
                 filters=filters,
-                fields=["name", "title", "valid_from", "valid_upto"],
+                fields=["name", "title"],
             )
 
-            for doc in existing_docs:
-                # Check if dates overlap
-                existing_from = getdate(doc.valid_from) if doc.valid_from else None
-                existing_upto = getdate(doc.valid_upto) if doc.valid_upto else None
-                new_from = getdate(self.valid_from)
-                new_upto = getdate(self.valid_upto)
-
-                # Check if date ranges overlap
-                if (existing_from is None or new_upto >= existing_from) and \
-                   (existing_upto is None or new_from <= existing_upto):
-
-                    # Show warning and disable the offer
-                    frappe.show_message({
-                        "indicator": "red",
-                        "title": "Duplicate Offer Detected",
-                        "message": f"Another active offer '{doc.title}' exists for this POS Profile with the same type and overlapping dates. This offer will be disabled.",
-                    })
-
-                    # Disable this offer
-                    self.disable = 1
-                    return
+            if existing_docs:
+                frappe.throw(
+                    f"يوجد عرض مكرر نشط '{existing_docs[0].title}' لنفس ملف POS Profile '{self.pos_profile}' "
+                    f"ونفس نوع العرض '{self.offer_type}'"
+                )
 
 
 # =============================================================================
