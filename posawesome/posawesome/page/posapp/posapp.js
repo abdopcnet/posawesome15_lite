@@ -58,6 +58,15 @@ fetch('/assets/posawesome/translations/ar.csv')
 			'Pay': window.__messages['Pay'],
 			'Total Qty': window.__messages['Total Qty']
 		});
+		
+		// Update the global __() function to use our translations
+		console.log('🔄 Updating global __() function...');
+		window.__ = function(key) {
+			const result = window.__messages[key] || key;
+			console.log(`🌐 __("${key}") -> "${result}"`);
+			return result;
+		};
+		console.log('✅ Global __() function updated');
 	})
 	.catch(error => {
 		console.error('❌ Failed to load Arabic translations:', error);
