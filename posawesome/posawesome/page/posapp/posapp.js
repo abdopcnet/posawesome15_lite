@@ -20,10 +20,18 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 
 //Arabic translations - Load from CSV file system only if user language is Arabic
 console.log('🌍 frappe.boot.lang:', frappe.boot.lang);
-console.log('🌍 typeof frappe.boot.lang:', typeof frappe.boot.lang);
-console.log('🌍 frappe.boot:', frappe.boot);
+console.log('🌍 frappe.boot.user:', frappe.boot.user);
+console.log('🌍 frappe.boot.lang_dict:', frappe.boot.lang_dict);
 
-if (frappe.boot.lang === "ar") {
+// Check multiple ways to detect Arabic language preference
+const isArabic = frappe.boot.lang === "ar" || 
+                 frappe.boot.user?.language === "ar" ||
+                 frappe.session?.user_language === "ar" ||
+                 frappe.get_cookie('language') === "ar";
+
+console.log('🌍 isArabic:', isArabic);
+
+if (isArabic) {
 	window.__messages = window.__messages || {};
 
 	const xhr = new XMLHttpRequest();
