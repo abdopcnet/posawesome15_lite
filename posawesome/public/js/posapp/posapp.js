@@ -12,12 +12,16 @@ if (typeof window !== 'undefined') {
 
 // Define SetVueGlobals function to set up Vue global properties
 function SetVueGlobals(app) {
+    console.log('⚙️ SetVueGlobals called');
     // Set up global properties that components might need
     app.config.globalProperties.$frappe = frappe;
 
     // Make __() function available for translation
     if (typeof __ !== 'undefined') {
+        console.log('🌐 Setting up __() function in Vue globals');
         app.config.globalProperties.__ = __;
+    } else {
+        console.log('❌ __() function not available yet');
     }
 
     // Make common Frappe utilities available globally
@@ -32,24 +36,29 @@ frappe.provide('frappe.PosApp');
 
 frappe.PosApp.posapp = class {
     constructor({ parent }) {
+        console.log('🚀 PosApp constructor called');
         this.$parent = $(document);
         this.page = parent.page;
         this.make_body();
     }
 
     make_body() {
+        console.log('🎨 make_body() called');
         this.$el = this.$parent.find('.main-section');
 
         const app = createApp(Home);
+        console.log('📱 Vue app created');
 
         // Set up global properties BEFORE mounting
         SetVueGlobals(app);
 
         // Store app reference globally for translation updates
         window.posApp = app;
+        console.log('💾 Vue app stored in window.posApp');
 
         // Mount the app
         app.mount(this.$el[0]);
+        console.log('🎯 Vue app mounted');
     }
 
     setup_header() {
