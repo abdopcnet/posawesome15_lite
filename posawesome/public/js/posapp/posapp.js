@@ -45,6 +45,9 @@ frappe.PosApp.posapp = class {
         // Set up global properties BEFORE mounting
         SetVueGlobals(app);
 
+        // Store app reference globally for translation updates
+        window.posApp = app;
+
         // Mount the app
         app.mount(this.$el[0]);
     }
