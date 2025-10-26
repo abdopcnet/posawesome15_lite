@@ -24,6 +24,10 @@ function SetVueGlobals(app) {
         console.log('❌ __() function not available yet');
     }
 
+    // Add reactive translation trigger BEFORE mounting
+    app.config.globalProperties.$translationTrigger = 0;
+    console.log('🔄 Added $translationTrigger to global properties, value: 0');
+
     // Make common Frappe utilities available globally
     if (typeof frappe !== 'undefined') {
         app.config.globalProperties.$call = frappe.call;
@@ -59,14 +63,6 @@ frappe.PosApp.posapp = class {
         // Mount the app
         app.mount(this.$el[0]);
         console.log('🎯 Vue app mounted');
-        
-        // Add reactive translation trigger after mounting
-        if (window.posApp._instance && window.posApp._instance.proxy) {
-            window.posApp._instance.proxy.$translationTrigger = 0;
-            console.log('🔄 Added $translationTrigger to Vue instance, value:', window.posApp._instance.proxy.$translationTrigger);
-        } else {
-            console.log('❌ Cannot add $translationTrigger - Vue instance not found');
-        }
     }
 
     setup_header() {
