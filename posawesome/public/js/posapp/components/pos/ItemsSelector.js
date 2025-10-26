@@ -396,7 +396,7 @@ export default {
     getItemsHeaders() {
       const items_headers = [
         {
-          title: "I-Name",
+          title: __("Item Name"),
           align: "start",
           sortable: true,
           key: "item_name",
@@ -409,15 +409,15 @@ export default {
           key: "item_code",
           width: "25%",
         },
-        { title: "Price", key: "rate", align: "start", width: "10%" },
+        { title: __("Price"), key: "rate", align: "start", width: "10%" },
         {
-          title: "Qty",
+          title: __("Qty"),
           value: "actual_qty",
           key: "actual_qty",
           align: "center",
           width: "25%",
         },
-        { title: "Uom", key: "stock_uom", align: "center", width: "10%" },
+        { title: __("UOM"), key: "stock_uom", align: "center", width: "10%" },
       ];
 
       return items_headers;
