@@ -63,7 +63,9 @@ frappe.PosApp.posapp = class {
         // Add reactive translation trigger after mounting
         if (window.posApp._instance && window.posApp._instance.proxy) {
             window.posApp._instance.proxy.$translationTrigger = 0;
-            console.log('🔄 Added $translationTrigger to Vue instance');
+            console.log('🔄 Added $translationTrigger to Vue instance, value:', window.posApp._instance.proxy.$translationTrigger);
+        } else {
+            console.log('❌ Cannot add $translationTrigger - Vue instance not found');
         }
     }
 
