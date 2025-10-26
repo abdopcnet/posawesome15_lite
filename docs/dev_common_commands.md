@@ -3,8 +3,7 @@
 **Backend Apply Changes**
 
 ```bash
-find . -name "*.pyc" -print -delete
-find . -type d -name "__pycache__" -print -exec rm -rf {} + &&
+find . -name "*.pyc" -print -delete &&
 bench restart
 ```
 
