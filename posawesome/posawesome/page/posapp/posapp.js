@@ -18,27 +18,59 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 	$("head").append("<style>.layout-main-section { display: none !important; }</style>");
 };
 
+// Load translations based on user language
 window.__messages = window.__messages || {};
 
-const xhr = new XMLHttpRequest();
-xhr.open('GET', '/assets/posawesome/translations/ar.csv', false);
-xhr.send();
+// Check if user language is Arabic
+const isArabic = frappe.boot.lang === "ar" || 
+                 frappe.boot.user?.language === "ar" ||
+                 frappe.session?.user_language === "ar" ||
+                 frappe.get_cookie('language') === "ar";
 
-if (xhr.status === 200) {
-	const lines = xhr.responseText.split('\n');
-	
-	lines.forEach(line => {
-		if (!line.trim()) return;
+if (isArabic) {
+	// Load Arabic translations
+	const xhr = new XMLHttpRequest();
+	xhr.open('GET', '/assets/posawesome/translations/ar.csv', false);
+	xhr.send();
+
+	if (xhr.status === 200) {
+		const lines = xhr.responseText.split('\n');
 		
-		const commaIndex = line.indexOf(',');
-		if (commaIndex > 0) {
-			const key = line.substring(0, commaIndex).trim();
-			const value = line.substring(commaIndex + 1).trim();
-			if (key && value) {
-				window.__messages[key] = value;
+		lines.forEach(line => {
+			if (!line.trim()) return;
+			
+			const commaIndex = line.indexOf(',');
+			if (commaIndex > 0) {
+				const key = line.substring(0, commaIndex).trim();
+				const value = line.substring(commaIndex + 1).trim();
+				if (key && value) {
+					window.__messages[key] = value;
+				}
 			}
-		}
-	});
+		});
+	}
+} else {
+	// Load English translations (or keep default English)
+	const xhr = new XMLHttpRequest();
+	xhr.open('GET', '/assets/posawesome/translations/en.csv', false);
+	xhr.send();
+
+	if (xhr.status === 200) {
+		const lines = xhr.responseText.split('\n');
+		
+		lines.forEach(line => {
+			if (!line.trim()) return;
+			
+			const commaIndex = line.indexOf(',');
+			if (commaIndex > 0) {
+				const key = line.substring(0, commaIndex).trim();
+				const value = line.substring(commaIndex + 1).trim();
+				if (key && value) {
+					window.__messages[key] = value;
+				}
+			}
+		});
+	}
 }
 
 // Update the global __() function to use our translations
