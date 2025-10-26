@@ -70,7 +70,7 @@
           <div class="dropdown">
             <button class="action-btn menu-btn" @click="toggleMenu">
               <i class="mdi mdi-menu" style="font-size: 14px;"></i>
-              <span>Menu</span>
+              <span>{{ __("Menu") }}</span>
             </button>
             <div v-if="showMenu" class="dropdown-menu">
               <div class="menu-list">
