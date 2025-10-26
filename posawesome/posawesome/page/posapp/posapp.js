@@ -49,6 +49,18 @@ window.addEventListener('posProfileLoaded', async (event) => {
 			});
 
 			console.log('Arabic translations loaded from ar.csv');
+			
+			// Update the global __() function to use our translations
+			if (typeof window.__messages !== 'undefined') {
+				window.__ = function(key) {
+					return window.__messages[key] || key;
+				};
+				
+				// Also update Vue app's global property if it exists
+				if (window.posApp && window.posApp.config && window.posApp.config.globalProperties) {
+					window.posApp.config.globalProperties.__ = window.__;
+				}
+			}
 		} catch (error) {
 			console.error('Failed to load Arabic translations:', error);
 		}
