@@ -92,8 +92,12 @@ window.addEventListener('posProfileLoaded', async (event) => {
 					window.posApp.config.globalProperties.$translationTrigger++;
 					console.log('✅ Translation trigger updated to:', window.posApp.config.globalProperties.$translationTrigger);
 					
-					// Also try force update as backup
+					// Also update Vue instance translation trigger
 					if (window.posApp._instance && window.posApp._instance.proxy) {
+						window.posApp._instance.proxy.$translationTrigger = window.posApp.config.globalProperties.$translationTrigger;
+						console.log('✅ Vue instance translation trigger updated to:', window.posApp._instance.proxy.$translationTrigger);
+						
+						// Also try force update as backup
 						window.posApp._instance.proxy.$forceUpdate();
 						console.log('✅ Vue app re-render triggered');
 					} else {
