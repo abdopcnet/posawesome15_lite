@@ -76,7 +76,7 @@ export default {
           width: "11%",
         },
         {
-          title: frappe._("UOM"),
+          title: __("UOM"),
           key: "uom",
           align: "center",
           width: "10%",
