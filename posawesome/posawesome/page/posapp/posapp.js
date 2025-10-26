@@ -18,25 +18,13 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 	$("head").append("<style>.layout-main-section { display: none !important; }</style>");
 };
 
-// Listen for POS Profile loaded to apply translations based on posa_language
-window.addEventListener('posProfileLoaded', function(e) {
-	const posProfile = e.detail.pos_profile;
-	const language = posProfile && posProfile.posa_language ? posProfile.posa_language : 'en';
-
-	// Get translations based on language
-	const translations = getTranslationsForLanguage(language);
-	if (translations) {
-		// Ensure __messages exists before extending it
-		window.__messages = window.__messages || {};
-		$.extend(window.__messages, translations);
-	}
-});
-
-// Translation maps for different languages
-function getTranslationsForLanguage(language) {
-	const TRANSLATIONS = {
-		ar: {
-			"POS Awesome": "نقاط البيع المميزة",
+// Arabic translations - Simple and clean approach
+if (frappe.boot.lang == "ar") {
+	// Ensure __messages exists before extending it
+	window.__messages = window.__messages || {};
+	$.extend(
+		window.__messages, {
+		"POS Awesome": "نقاط البيع المميزة",
 			"Menu": "قائمة",
 			"List": "قائمة",
 			"Images": "صور",
@@ -212,22 +200,7 @@ function getTranslationsForLanguage(language) {
 			"Clear Cache": "مسح الذاكرة المؤقتة",
 			"About System": "حول النظام",
 			"No last receipt": "لا يوجد اخر فاتورة"
-		},
-		es: {
-			"POS Awesome": "POS Awesome",
-			"Menu": "Menú",
-			"Close Shift": "Cerrar Turno",
-			"Logout": "Cerrar sesión"
-		},
-		pt: {
-			"POS Awesome": "POS Awesome",
-			"Menu": "Menu",
-			"Close Shift": "Fechar Turno",
-			"Logout": "Sair"
-		}
-	};
-
-	return TRANSLATIONS[language] || null;
+	});
 }
 
 frappe.pages['posapp'].on_page_leave = function() {

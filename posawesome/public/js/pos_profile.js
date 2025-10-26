@@ -7,43 +7,38 @@ frappe.ui.form.on('POS Profile', {
         });
     },
 
-    // Control logic - only one option allowed
-    posa_allow_user_to_edit_additional_discount: function(frm) {
-        if (frm.doc.posa_allow_user_to_edit_additional_discount) {
-            // Disable other options
-            frm.set_value('posa_allow_user_to_edit_item_discount', 0);
-            frm.set_value('posa_auto_fetch_offers', 0);
-
-            frappe.show_alert({
-                message: 'Additional discount enabled - other options disabled',
-                indicator: 'green'
-            });
-        }
-    },
-
-    posa_allow_user_to_edit_item_discount: function(frm) {
-        if (frm.doc.posa_allow_user_to_edit_item_discount) {
-            // Disable other options
-            frm.set_value('posa_allow_user_to_edit_additional_discount', 0);
-            frm.set_value('posa_auto_fetch_offers', 0);
-
-            frappe.show_alert({
-                message: 'Item discount enabled - other options disabled',
-                indicator: 'blue'
-            });
-        }
-    },
-
+    // posa_auto_fetch_offers logic
     posa_auto_fetch_offers: function(frm) {
         if (frm.doc.posa_auto_fetch_offers) {
-            // Disable other options
+            // Clear all related fields
             frm.set_value('posa_allow_user_to_edit_additional_discount', 0);
+            frm.set_value('posa_invoice_max_discount_allowed', 0);
             frm.set_value('posa_allow_user_to_edit_item_discount', 0);
+            frm.set_value('posa_item_max_discount_allowed', 0);
+            frm.set_value('posa_display_discount_percentage', 0);
+            frm.set_value('posa_display_discount_amount', 0);
+        }
+    },
 
-            frappe.show_alert({
-                message: 'Auto offers enabled - other options disabled',
-                indicator: 'orange'
-            });
+    // posa_allow_user_to_edit_additional_discount logic
+    posa_allow_user_to_edit_additional_discount: function(frm) {
+        if (frm.doc.posa_allow_user_to_edit_additional_discount) {
+            // Clear item discount fields and auto_fetch_offers
+            frm.set_value('posa_allow_user_to_edit_item_discount', 0);
+            frm.set_value('posa_item_max_discount_allowed', 0);
+            frm.set_value('posa_display_discount_percentage', 0);
+            frm.set_value('posa_display_discount_amount', 0);
+            frm.set_value('posa_auto_fetch_offers', 0);
+        }
+    },
+
+    // posa_allow_user_to_edit_item_discount logic
+    posa_allow_user_to_edit_item_discount: function(frm) {
+        if (frm.doc.posa_allow_user_to_edit_item_discount) {
+            // Clear additional discount fields and auto_fetch_offers
+            frm.set_value('posa_allow_user_to_edit_additional_discount', 0);
+            frm.set_value('posa_invoice_max_discount_allowed', 0);
+            frm.set_value('posa_auto_fetch_offers', 0);
         }
     },
 

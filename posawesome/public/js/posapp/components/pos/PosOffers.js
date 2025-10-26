@@ -90,11 +90,41 @@ export default {
         offer.offer_applied = !offer.offer_applied;
         this.handleOfferToggle();
       }
+
+      // Create a normalized offer object with all necessary fields for Invoice.js
+      const normalizedOffer = {
+        ...offer,
+        name: offer.name || offer.offer_name,
+        offer_name: offer.offer_name || offer.name,
+        // Ensure offer_type is set for Invoice.js logic
+        offer_type: offer.offer_type || this.inferOfferType(offer)
+      };
+
       if (offer.offer_applied) {
-        this.$emit("offerApplied", offer);
+        this.$emit("offerApplied", normalizedOffer);
       } else {
-        this.$emit("offerRemoved", false);
+        // Pass the normalized offer object so Invoice.js knows which offer was removed
+        this.$emit("offerRemoved", normalizedOffer);
       }
+    },
+
+    inferOfferType(offer) {
+      // Infer offer_type from other fields if not present
+      // This handles cases where backend uses different field naming
+
+      if (offer.item_code) return 'item_code';
+      if (offer.item_group) return 'item_group';
+      if (offer.brand) return 'brand';
+      if (offer.customer) return 'customer';
+      if (offer.customer_group) return 'customer_group';
+
+      // Check legacy 'offer' field (e.g., "Grand Total")
+      if (offer.offer === 'Grand Total' || offer.apply_on === 'Grand Total') {
+        return 'grand_total';
+      }
+
+      // Default to grand_total for transaction-level offers
+      return 'grand_total';
     },
 
     isOfferDisabled(offer) {

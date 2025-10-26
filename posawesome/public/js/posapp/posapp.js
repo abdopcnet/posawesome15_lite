@@ -14,7 +14,11 @@ if (typeof window !== 'undefined') {
 function SetVueGlobals(app) {
     // Set up global properties that components might need
     app.config.globalProperties.$frappe = frappe;
-    app.config.globalProperties.$__ = __; // Frappe's translation function
+
+    // Make __() function available for translation
+    if (typeof __ !== 'undefined') {
+        app.config.globalProperties.__ = __;
+    }
 
     // Make common Frappe utilities available globally
     if (typeof frappe !== 'undefined') {
@@ -38,7 +42,10 @@ frappe.PosApp.posapp = class {
 
         const app = createApp(Home);
 
+        // Set up global properties BEFORE mounting
         SetVueGlobals(app);
+
+        // Mount the app
         app.mount(this.$el[0]);
     }
 

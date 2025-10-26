@@ -74,9 +74,11 @@ export default {
       });
     },
 
-    handleOfferRemoved() {
+    handleOfferRemoved(removedOffer) {
       this.offerApplied = null;
-      this.offerRemoved = true;
+
+      // Pass the removed offer object (or true for backward compatibility)
+      this.offerRemoved = removedOffer || true;
 
       // Reset offerRemoved flag after a short delay
       this.$nextTick(() => {

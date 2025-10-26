@@ -127,49 +127,50 @@
       <!-- Financial Summary Row -->
       <div class="financial-summary">
         <div class="summary-field readonly-field">
-          <label>Total Qty</label>
+          <label>{{ __("Total Qty") }}</label>
           <div class="field-value">
             {{ formatFloat(invoice_doc?.total_qty || 0) }}
           </div>
         </div>
 
         <div class="summary-field editable-field">
-          <label>inv_disc%</label>
-          <input type="number" v-model.number="additional_discount_percentage" @blur="update_discount_umount"
+          <label>{{ __("inv_disc%") }}</label>
+          <input type="number" :value="additional_discount_percentage" @input="onDiscountInput" @blur="onDiscountBlur"
             ref="percentage_discount" step="0.01" min="0" :max="pos_profile?.posa_invoice_max_discount_allowed || 100"
-            class="field-input discount-input" placeholder="0.00" />
+            class="field-input discount-input" placeholder="0.00"
+            :disabled="!pos_profile?.posa_allow_user_to_edit_additional_discount" />
         </div>
 
         <div class="summary-field readonly-field warning-field">
-          <label>items_dis</label>
+          <label>{{ __("items_dis") }}</label>
           <div class="field-value">
             {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(invoice_doc?.posa_item_discount_total || 0) }}
           </div>
         </div>
 
         <div class="summary-field readonly-field">
-          <label>before_disc</label>
+          <label>{{ __("before_disc") }}</label>
           <div class="field-value">
             {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(invoice_doc?.total || 0) }}
           </div>
         </div>
 
         <div class="summary-field readonly-field">
-          <label>net_total</label>
+          <label>{{ __("net_total") }}</label>
           <div class="field-value">
             {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(invoice_doc?.net_total || 0) }}
           </div>
         </div>
 
         <div class="summary-field readonly-field info-field">
-          <label>tax</label>
+          <label>{{ __("Tax") }}</label>
           <div class="field-value">
             {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(computedTaxAmount) }}
           </div>
         </div>
 
         <div class="summary-field readonly-field success-field grand-total">
-          <label>grand_total</label>
+          <label>{{ __("grand_total") }}</label>
           <div class="field-value">
             {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(invoice_doc?.grand_total || 0) }}
           </div>
@@ -178,30 +179,30 @@
 
       <!-- Action Buttons Row -->
       <div class="action-buttons">
-        <button class="action-btn primary-btn" :disabled="!hasItems" @click="printInvoice" title="Print invoice">
+        <button class="action-btn primary-btn" :disabled="!hasItems" @click="printInvoice" :title="__('Print invoice')">
           <i class="mdi mdi-printer action-icon"></i>
-          <span>Print</span>
+          <span>{{ __("Print") }}</span>
         </button>
 
         <button class="action-btn success-btn" :disabled="!hasItems || is_payment || isUpdatingTotals"
           @click="show_payment">
           <i class="mdi mdi-cash-multiple action-icon"></i>
-          <span>Pay</span>
+          <span>{{ __("Pay") }}</span>
         </button>
 
         <button class="action-btn secondary-btn" :disabled="!pos_profile?.posa_allow_return" @click="open_returns">
           <i class="mdi mdi-keyboard-return action-icon"></i>
-          <span>Return</span>
+          <span>{{ __("Return") }}</span>
         </button>
 
         <button class="action-btn purple-btn" :disabled="!pos_profile?.posa_allow_quick_return" @click="quick_return">
           <i class="mdi mdi-flash action-icon"></i>
-          <span>Quick Return</span>
+          <span>{{ __("Quick Return") }}</span>
         </button>
 
         <button class="action-btn error-btn" @click="cancel_invoice">
           <i class="mdi mdi-close-circle action-icon"></i>
-          <span>Cancel</span>
+          <span>{{ __("Cancel") }}</span>
         </button>
       </div>
     </div>
