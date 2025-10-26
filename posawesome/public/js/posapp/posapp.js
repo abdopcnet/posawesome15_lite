@@ -49,6 +49,10 @@ frappe.PosApp.posapp = class {
         const app = createApp(Home);
         console.log('📱 Vue app created');
 
+        // Add reactive translation trigger
+        app.config.globalProperties.$translationTrigger = 0;
+        console.log('🔄 Added $translationTrigger reactive property');
+
         // Set up global properties BEFORE mounting
         SetVueGlobals(app);
 
