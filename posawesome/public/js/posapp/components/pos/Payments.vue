@@ -2,9 +2,9 @@
   <!-- ===== COMPACT PAYMENTS COMPONENT ===== -->
   <div class="payments-container">
     <!-- Fixed Back Button -->
-    <button class="back-button-fixed" @click="back_to_invoice" title="Back to Invoice">
+    <button class="back-button-fixed" @click="back_to_invoice" :title="__('Back to Invoice')">
       <i class="mdi mdi-arrow-left back-icon"></i>
-      <span class="back-text">Back</span>
+      <span class="back-text">{{ __("Back") }}</span>
     </button>
 
     <div class="card payments-card" style="max-height: 76vh; height: 76vh">
@@ -17,14 +17,14 @@
         <div v-if="invoice_doc" class="payment-summary">
           <div class="summary-row">
             <div class="summary-field-large">
-              <label>Total Paid</label>
+              <label>{{ __("Total Paid") }}</label>
               <div class="field-display success-display">
                 <span class="currency">{{ currencySymbol(invoice_doc.currency) }}</span>
                 <span class="value">{{ formatCurrency(total_payments) }}</span>
               </div>
             </div>
             <div class="summary-field-small">
-              <label>Remaining</label>
+              <label>{{ __("Remaining") }}</label>
               <div class="field-display warning-display">
                 <span class="currency">{{ currencySymbol(invoice_doc.currency) }}</span>
                 <span class="value">{{ formatCurrency(diff_payment) }}</span>
@@ -34,7 +34,7 @@
 
           <div class="summary-row" v-if="diff_payment < 0 && !invoice_doc.is_return">
             <div class="summary-field-large">
-              <label>Remaining Amount</label>
+              <label>{{ __("Remaining Amount") }}</label>
               <div class="field-input-wrapper">
                 <span class="currency-prefix">{{ currencySymbol(invoice_doc.currency) }}</span>
                 <input type="number" class="compact-input readonly-input" v-model="paid_change"
@@ -42,7 +42,7 @@
               </div>
             </div>
             <div class="summary-field-small">
-              <label>Change Amount</label>
+              <label>{{ __("Change Amount") }}</label>
               <div class="field-display info-display">
                 <span class="currency">{{ currencySymbol(invoice_doc.currency) }}</span>
                 <span class="value">{{ formatCurrency(credit_change) }}</span>
@@ -57,7 +57,7 @@
         <div v-if="is_cashback" class="payment-methods">
           <div class="payment-method-row" v-for="payment in invoice_doc.payments" :key="payment.name">
             <div class="payment-amount">
-              <label>Amount</label>
+              <label>{{ __("Amount") }}</label>
               <div class="field-input-wrapper">
                 <span class="currency-prefix">{{ currencySymbol(invoice_doc.currency) }}</span>
                 <input type="text" class="compact-input" :value="formatCurrency(payment.amount)"
@@ -73,7 +73,7 @@
             </button>
             <button v-if="payment.type == 'Phone' && payment.amount > 0 && request_payment_field" class="request-btn"
               :disabled="payment.amount == 0" @click="(phone_dialog = true), (payment.amount = flt(payment.amount, 0))">
-              Request
+              {{ __("Request") }}
             </button>
           </div>
         </div>
@@ -82,14 +82,14 @@
         <div class="payment-loyalty" v-if="invoice_doc && available_pioints_amount > 0 && !invoice_doc.is_return">
           <div class="loyalty-row">
             <div class="loyalty-field-large">
-              <label>Pay from Customer Points</label>
+              <label>{{ __("Pay from Customer Points") }}</label>
               <div class="field-input-wrapper">
                 <span class="currency-prefix">{{ currencySymbol(invoice_doc.currency) }}</span>
                 <input type="number" class="compact-input" v-model="loyalty_amount" placeholder="0.00" />
               </div>
             </div>
             <div class="loyalty-field-small">
-              <label>Points Balance</label>
+              <label>{{ __("Customer Points Balance") }}</label>
               <div class="field-display disabled-display">
                 <span class="currency">{{ currencySymbol(invoice_doc.currency) }}</span>
                 <span class="value">{{ formatFloat(available_pioints_amount) }}</span>
@@ -103,14 +103,14 @@
           v-if="invoice_doc && available_customer_credit > 0 && !invoice_doc.is_return && redeem_customer_credit">
           <div class="credit-row">
             <div class="credit-field-large">
-              <label>Redeemed Customer Credit</label>
+              <label>{{ __("Customer Credit Redeemed") }}</label>
               <div class="field-display disabled-display">
                 <span class="currency">{{ currencySymbol(invoice_doc.currency) }}</span>
                 <span class="value">{{ formatCurrency(redeemed_customer_credit) }}</span>
               </div>
             </div>
             <div class="credit-field-small">
-              <label>Cash Credit Balance</label>
+              <label>{{ __("Cash Credit Balance") }}</label>
               <div class="field-display disabled-display">
                 <span class="currency">{{ currencySymbol(invoice_doc.currency) }}</span>
                 <span class="value">{{ formatCurrency(available_customer_credit) }}</span>
@@ -128,14 +128,14 @@
             <label class="custom-switch">
               <input type="checkbox" v-model="is_write_off_change" />
               <span class="switch-slider"></span>
-              <span class="switch-label">Is it a write-off amount?</span>
+              <span class="switch-label">{{ __("Is Write Off Amount?") }}</span>
             </label>
           </div>
           <div class="option-switch" v-if="pos_profile.posa_allow_credit_sale && !invoice_doc.is_return">
             <label class="custom-switch">
               <input type="checkbox" v-model="is_credit_sale" />
               <span class="switch-slider"></span>
-              <span class="switch-label">Is it a credit sale?</span>
+              <span class="switch-label">{{ __("Is Credit Sale?") }}</span>
             </label>
           </div>
           <div class="option-switch" v-if="!invoice_doc.is_return && pos_profile.posa_use_customer_credit">
@@ -143,18 +143,18 @@
               <input type="checkbox" v-model="redeem_customer_credit"
                 @change="get_available_credit($event.target.checked)" />
               <span class="switch-slider"></span>
-              <span class="switch-label">Use Customer Credit</span>
+              <span class="switch-label">{{ __("Use Customer Credit") }}</span>
             </label>
           </div>
           <div class="option-switch" v-if="invoice_doc.is_return && pos_profile.posa_use_cashback">
             <label class="custom-switch">
               <input type="checkbox" v-model="is_cashback" />
               <span class="switch-slider"></span>
-              <span class="switch-label">Is it a cash refund?</span>
+              <span class="switch-label">{{ __("Is Cash Return?") }}</span>
             </label>
           </div>
           <div class="option-date" v-if="is_credit_sale">
-            <label>Due Date</label>
+            <label>{{ __("Due Date") }}</label>
             <div class="text-field-wrapper">
               <input type="date" class="custom-text-field date-field" v-model="invoice_doc.due_date"
                 :min="frappe.datetime.now_date()" placeholder="Select date" />
@@ -171,7 +171,7 @@
               {{ row.credit_origin }}
             </div>
             <div class="credit-available">
-              <label>Available Credit</label>
+              <label>{{ __("Available Credit") }}</label>
               <div class="field-display disabled-display">
                 <span class="currency">{{ currencySymbol(invoice_doc.currency) }}</span>
                 <span class="value">{{ formatCurrency(row.total_credit) }}</span>
