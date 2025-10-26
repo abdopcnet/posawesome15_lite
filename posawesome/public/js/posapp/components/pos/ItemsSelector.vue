@@ -48,7 +48,7 @@
             <div class="search-icon">
               <i class="mdi mdi-magnify search-icon-element"></i>
             </div>
-            <input type="text" class="custom-search-input name-input" placeholder="Search Item"
+            <input type="text" class="custom-search-input name-input" :placeholder="__('Search Item')"
               v-model="debounce_search" @keydown.esc="esc_event" ref="debounce_search" autofocus />
             <button v-if="debounce_search" class="clear-btn" @click="debounce_search = ''" type="button">
               ×
