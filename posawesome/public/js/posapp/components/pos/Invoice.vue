@@ -134,7 +134,7 @@
         </div>
 
         <div class="summary-field editable-field">
-          <label>{{ __("inv_disc") }}</label>
+          <label>{{ __("Additional Discount") }}</label>
           <input type="number" :value="additional_discount_percentage" @input="onDiscountInput" @blur="onDiscountBlur"
             ref="percentage_discount" step="0.01" min="0" :max="pos_profile?.posa_invoice_max_discount_allowed || 100"
             class="field-input discount-input" placeholder="0.00"
