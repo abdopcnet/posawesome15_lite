@@ -77,25 +77,25 @@ class POSOffer(Document):
 
         if self.offer_type == "customer_group" and not self.customer_group:
             frappe.throw("Customer Group is required when Offer Type is 'Customer Group'")
-        
+
         # Validate no duplicate offers
         self.check_duplicate_offers()
-    
+
     def check_duplicate_offers(self):
         """Check for duplicate active offers"""
         from frappe.utils import nowdate, getdate
-        
+
         # Skip if this is a new document without required fields
         if not self.pos_profile or not self.offer_type:
             return
-        
+
         # Build filters based on offer_type
         filters = {
             "pos_profile": self.pos_profile,
             "offer_type": self.offer_type,
             "disabled": 0,
         }
-        
+
         # Add offer-specific filters
         if self.offer_type == "grand_total":
             # For grand_total: only check pos_profile and offer_type
@@ -110,11 +110,11 @@ class POSOffer(Document):
             filters["customer"] = self.customer
         elif self.offer_type == "customer_group" and self.customer_group:
             filters["customer_group"] = self.customer_group
-        
+
         # Exclude current document if updating
         if not self.is_new():
             filters["name"] = ["!=", self.name]
-        
+
         # Check date range overlap
         if self.valid_from and self.valid_upto:
             existing_docs = frappe.get_all(
@@ -122,25 +122,25 @@ class POSOffer(Document):
                 filters=filters,
                 fields=["name", "title", "valid_from", "valid_upto"],
             )
-            
+
             for doc in existing_docs:
                 # Check if dates overlap
                 existing_from = getdate(doc.valid_from) if doc.valid_from else None
                 existing_upto = getdate(doc.valid_upto) if doc.valid_upto else None
                 new_from = getdate(self.valid_from)
                 new_upto = getdate(self.valid_upto)
-                
+
                 # Check if date ranges overlap
                 if (existing_from is None or new_upto >= existing_from) and \
                    (existing_upto is None or new_from <= existing_upto):
-                    
+
                     # Show warning and disable the offer
                     frappe.show_message({
                         "indicator": "red",
                         "title": "Duplicate Offer Detected",
                         "message": f"Another active offer '{doc.title}' exists for this POS Profile with the same type and overlapping dates. This offer will be disabled.",
                     })
-                    
+
                     # Disable this offer
                     self.disabled = 1
                     return
