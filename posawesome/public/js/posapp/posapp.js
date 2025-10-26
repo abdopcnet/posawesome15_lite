@@ -26,9 +26,6 @@ function SetVueGlobals(app) {
         app.config.globalProperties.$format = frappe.format;
         app.config.globalProperties.$db = frappe.db;
     }
-    
-    // Add reactive translation trigger
-    app.config.globalProperties.$translationUpdated = false;
 }
 
 frappe.provide('frappe.PosApp');
