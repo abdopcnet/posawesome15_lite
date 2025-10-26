@@ -24,10 +24,6 @@ function SetVueGlobals(app) {
         console.log('❌ __() function not available yet');
     }
 
-    // Add reactive translation trigger BEFORE mounting
-    app.config.globalProperties.$translationTrigger = 0;
-    console.log('🔄 Added $translationTrigger to global properties, value: 0');
-
     // Make common Frappe utilities available globally
     if (typeof frappe !== 'undefined') {
         app.config.globalProperties.$call = frappe.call;
