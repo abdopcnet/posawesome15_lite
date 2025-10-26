@@ -60,16 +60,11 @@ window.addEventListener('posProfileLoaded', async (event) => {
 				if (window.posApp && window.posApp.config && window.posApp.config.globalProperties) {
 					window.posApp.config.globalProperties.__ = window.__;
 					
-					// Trigger translation update
-					window.posApp.config.globalProperties.$translationUpdated = !window.posApp.config.globalProperties.$translationUpdated;
-					
 					// Force Vue app to re-render by updating reactive data
 					if (window.posApp._instance && window.posApp._instance.proxy) {
 						// Trigger reactivity update
 						window.posApp._instance.proxy.$forceUpdate();
 					}
-					
-					console.log('Vue app translation updated and forced re-render');
 				}
 			}
 		} catch (error) {
