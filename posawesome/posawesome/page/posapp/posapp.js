@@ -19,6 +19,10 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 };
 
 //Arabic translations - Load from CSV file system only if user language is Arabic
+console.log('🌍 frappe.boot.lang:', frappe.boot.lang);
+console.log('🌍 typeof frappe.boot.lang:', typeof frappe.boot.lang);
+console.log('🌍 frappe.boot:', frappe.boot);
+
 if (frappe.boot.lang === "ar") {
 	window.__messages = window.__messages || {};
 
