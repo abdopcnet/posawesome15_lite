@@ -18,33 +18,39 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 	$("head").append("<style>.layout-main-section { display: none !important; }</style>");
 };
 
-//Arabic translations - Manual test (no async)
-console.log('🌍 Current language:', frappe.boot.lang);
-console.log('📥 Loading Arabic translations manually...');
-
-// Ensure __messages exists before extending it
+//Arabic translations - Load from CSV file system
 window.__messages = window.__messages || {};
 
-// Manual test - add Print translation directly
-window.__messages['Print'] = 'طباعة';
-window.__messages['Pay'] = 'دفع';
-window.__messages['Total Qty'] = 'إجمالي الكمية';
+const xhr = new XMLHttpRequest();
+xhr.open('GET', '/assets/posawesome/translations/ar.csv', false);
+xhr.send();
 
-console.log('✅ Loaded manual translations into window.__messages');
-console.log('🔍 Sample translations:', {
-	'Print': window.__messages['Print'],
-	'Pay': window.__messages['Pay'],
-	'Total Qty': window.__messages['Total Qty']
-});
+if (xhr.status === 200) {
+	const lines = xhr.responseText.split('\n');
+	
+	lines.forEach(line => {
+		if (!line.trim()) return;
+		
+		const commaIndex = line.indexOf(',');
+		if (commaIndex > 0) {
+			const key = line.substring(0, commaIndex).trim();
+			const value = line.substring(commaIndex + 1).trim();
+			if (key && value) {
+				window.__messages[key] = value;
+			}
+		}
+	});
+} else {
+	// Fallback to manual translations
+	window.__messages['Print'] = 'طباعة';
+	window.__messages['Pay'] = 'دفع';
+	window.__messages['Total Qty'] = 'إجمالي الكمية';
+}
 
 // Update the global __() function to use our translations
-console.log('🔄 Updating global __() function...');
 window.__ = function(key) {
-	const result = window.__messages[key] || key;
-	console.log(`🌐 __("${key}") -> "${result}"`);
-	return result;
+	return window.__messages[key] || key;
 };
-console.log('✅ Global __() function updated');
 
 frappe.pages['posapp'].on_page_leave = function() {
 	// Remove Material Design Icons CSS when leaving POS app
