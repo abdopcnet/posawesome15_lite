@@ -2,7 +2,7 @@
   <nav>
     <div class="custom-navbar">
       <!-- Logo/Title -->
-      <div class="nav-brand" @click="go_desk" title="Go to Desk">
+      <div class="nav-brand" @click="go_desk" :title="__('Go to Desk')">
         <i class="mdi mdi-point-of-sale" style="font-size: 16px; color: var(--primary);"></i>
       </div>
 
@@ -57,12 +57,12 @@
       <!-- Action Buttons -->
       <div class="nav-actions">
         <button class="action-btn" :class="{ disabled: !last_invoice }" :disabled="!last_invoice"
-          @click="print_last_invoice" :title="last_invoice ? 'Print Last Receipt' : 'No last receipt'">
+          @click="print_last_invoice" :title="last_invoice ? __('Print Last Receipt') : __('No last receipt')">
           <i class="mdi mdi-printer"
             :style="`font-size: 14px; color: ${last_invoice ? 'var(--primary)' : 'var(--gray-500)'};`"></i>
         </button>
 
-        <button class="action-btn cache-btn" @click="clearCache" title="Clear Cache">
+        <button class="action-btn cache-btn" @click="clearCache" :title="__('Clear Cache')">
           <i class="mdi mdi-cached" style="font-size: 14px; color: var(--warning);"></i>
         </button>
 
@@ -79,21 +79,21 @@
                   <div class="menu-icon close-shift-icon">
                     <i class="mdi mdi-content-save-move-outline" style="font-size: 16px;"></i>
                   </div>
-                  <div class="menu-text">Close Shift</div>
+                  <div class="menu-text">{{ __("Close Shift") }}</div>
                 </div>
 
                 <div class="menu-item" @click="logOut">
                   <div class="menu-icon logout-icon">
                     <i class="mdi mdi-logout" style="font-size: 16px;"></i>
                   </div>
-                  <div class="menu-text">Logout</div>
+                  <div class="menu-text">{{ __("Logout") }}</div>
                 </div>
 
                 <div class="menu-item" @click="go_about">
                   <div class="menu-icon about-icon">
                     <i class="mdi mdi-information-outline" style="font-size: 16px;"></i>
                   </div>
-                  <div class="menu-text">About System</div>
+                  <div class="menu-text">{{ __("About System") }}</div>
                 </div>
               </div>
             </div>
