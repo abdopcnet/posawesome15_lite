@@ -93,11 +93,6 @@
 <script src="./ClosingDialog.js" />
 
 <style scoped>
-/* ===== CENTRALIZED POS STYLING ===== */
-/* This file contains all POS dialog styling */
-/* ERP forms use default Frappe styling */
-/* Reports use simple HTML without custom CSS */
-
 /* Dialog Row Container */
 .dialog-row {
   display: flex;
@@ -111,7 +106,7 @@
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  max-width: 450px;
+  max-width: 550px;
   width: 100%;
   animation: dialogSlideIn 0.3s ease-out;
   border: 1px solid rgba(102, 126, 234, 0.1);
@@ -254,7 +249,7 @@
 }
 
 .table-cell {
-  padding: 6px 8px;
+  padding: 0 2px !important;
   display: flex;
   align-items: center;
   justify-content: flex-end;
