@@ -18,29 +18,38 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 	$("head").append("<style>.layout-main-section { display: none !important; }</style>");
 };
 
-// Replace Frappe translations completely with CSV translations after page loads
+// Hard-way translation loading: Replace Frappe translations with CSV translations
 $(document).ready(() => {
+	// Ensure __messages exists
+	window.__messages = window.__messages || {};
+
 	if (frappe.boot.lang === 'ar') {
-		fetch('/assets/posawesome/translations/ar.csv')
-			.then(response => response.text())
-			.then(csvText => {
-				// Delete Frappe translations completely and replace with CSV translations
-				window.__messages = {};
+		// Load Arabic translations from CSV
+		const xhr = new XMLHttpRequest();
+		xhr.open('GET', '/assets/posawesome/translations/ar.csv', false); // synchronous
+		xhr.send();
 
-				// Load only from CSV
-				csvText.split('\n').forEach(line => {
-					if (!line.trim()) return;
-					const commaIndex = line.indexOf(',');
-					if (commaIndex > 0) {
-						const key = line.substring(0, commaIndex).trim();
-						const value = line.substring(commaIndex + 1).trim();
-						if (key && value) window.__messages[key] = value;
-					}
-				});
+		if (xhr.status === 200) {
+			const csvLines = xhr.responseText.split('\n');
+			const csvTranslations = {};
 
-				console.log('✅ CSV translations loaded - Frappe translations replaced completely');
-			})
-			.catch(err => console.error('❌ Translation load error:', err));
+			csvLines.forEach(line => {
+				if (!line.trim()) return;
+				const commaIndex = line.indexOf(',');
+				if (commaIndex > 0) {
+					const key = line.substring(0, commaIndex).trim();
+					const value = line.substring(commaIndex + 1).trim();
+					if (key && value) csvTranslations[key] = value;
+				}
+			});
+
+			// Replace Frappe translations with CSV translations using $.extend
+			$.extend(window.__messages, csvTranslations);
+			console.log('✅ Arabic translations loaded from ar.csv');
+		}
+	} else {
+		// English: Keep Frappe translations as-is (already loaded in window.__messages)
+		console.log('✅ Using English (Frappe default translations)');
 	}
 });
 
