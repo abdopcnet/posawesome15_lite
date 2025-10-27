@@ -1,0 +1,71 @@
+<!-- Quantity Column -->
+<td v-if="dynamicHeaders.find(h => h.key === 'qty')" style="
+    padding: 8px 12px;
+    border-right: 1px solid #e0e0e0;
+    vertical-align: middle;
+    background-color: #ffffff;
+  ">
+  <div style="
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 32px;
+    padding: 2px;
+  " @mouseenter="setHoverState(`qty-${item.posa_row_id}`, true)"
+    @mouseleave="setHoverState(`qty-${item.posa_row_id}`, false)">
+
+    <!-- Minus Button -->
+    <button style="
+      width: 28px;
+      height: 28px;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      background-color: #f8f8f8;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    " @click="decreaseQuantity(item)" :disabled="!(item.qty && Math.abs(item.qty) > 0)" type="button">
+      <span style="
+      font-size: 0.85rem;
+      font-weight: 700;
+      line-height: 1;
+      color: #666666;
+    ">−</span>
+    </button>
+
+    <!-- Input -->
+    <input type="number" :value="Math.abs(item.qty || 0)" @input="onQtyInput(item, $event)"
+      @change="onQtyChange(item, $event)" style="
+      width: 50px;
+      height: 28px;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 0.875rem;
+      padding: 0 4px;
+    " placeholder="0" />
+
+    <!-- Plus Button -->
+    <button style="
+      width: 28px;
+      height: 28px;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      background-color: #f8f8f8;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    " @click="increaseQuantity(item)" type="button">
+      <span style="
+      font-size: 0.85rem;
+      font-weight: 700;
+      line-height: 1;
+      color: #666666;
+    ">+</span>
+    </button>
+  </div>
+</td>
