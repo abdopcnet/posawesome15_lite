@@ -3,15 +3,20 @@
 {% include "posawesome/public/js/translations/ar.js" %}
 
 // =============================================================================
-// TRANSLATION SYSTEM
+// TRANSLATION SYSTEM - Initialize with selected language
 // =============================================================================
 
 // Manual language parameter - Change this to switch languages
 const posa_language = 'ar'; // Options: 'ar' (Arabic) or 'en' (English)
 
-// Initialize translation system
+// Initialize translation system after ar.js is loaded
 if (typeof window.posaTranslationInit === 'function') {
 	window.posaTranslationInit(posa_language);
+} else {
+	console.error('Translation system not loaded. Check if ar.js is included correctly.');
+	// Fallback: setup basic __ function
+	window.__ = function(msg) { return msg; };
+	window.__messages = {};
 }
 
 // =============================================================================
