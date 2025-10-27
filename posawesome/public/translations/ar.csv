@@ -137,7 +137,7 @@ Invoice {0} Deleted,تم حذف الفاتورة {0}
 Title,العنوان
 Total Quantity,إجمالي الكمية
 Transaction,المعاملة
-UOM,وحدة القياس
+UOM,وحدة
 Use Browser Local Storage,استخدام التخزين المحلي للمتصفح
 Fetch Items Directly from Server,جلب الأصناف مباشرة من الخادم
 Use Cashback,استخدام الاسترداد النقدي
