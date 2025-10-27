@@ -26,7 +26,7 @@ frappe.ready(() => {
 			.then(csvText => {
 				// Delete Frappe translations completely and replace with CSV translations
 				window.__messages = {};
-				
+
 				// Load only from CSV
 				csvText.split('\n').forEach(line => {
 					if (!line.trim()) return;
@@ -37,7 +37,7 @@ frappe.ready(() => {
 						if (key && value) window.__messages[key] = value;
 					}
 				});
-				
+
 				console.log('✅ CSV translations loaded - Frappe translations replaced completely');
 			})
 			.catch(err => console.error('❌ Translation load error:', err));
