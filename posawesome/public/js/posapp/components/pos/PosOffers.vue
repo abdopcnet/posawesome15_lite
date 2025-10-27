@@ -5,15 +5,15 @@
       <div class="header-content">
         <div class="header-left">
           <i class="mdi mdi-tag-multiple header-icon"></i>
-          <h2 class="header-title">Special Offers Total</h2>
+          <h2 class="header-title">{{ __("Special Offers Total") }}</h2>
         </div>
         <div class="header-stats">
           <div class="stat-badge">
-            <span class="stat-label">Total</span>
+            <span class="stat-label">{{ __("Total") }}</span>
             <span class="stat-value">{{ offersCount }}</span>
           </div>
           <div class="stat-badge active">
-            <span class="stat-label">Active</span>
+            <span class="stat-label">{{ __("Active") }}</span>
             <span class="stat-value">{{ appliedOffersCount }}</span>
           </div>
         </div>
@@ -36,7 +36,7 @@
             <!-- APPLIED BADGE -->
             <div v-if="offer.offer_applied" class="applied-badge">
               <i class="mdi mdi-check-circle badge-icon"></i>
-              <span>Active</span>
+              <span>{{ __("Active") }}</span>
             </div>
           </div>
 
@@ -56,7 +56,7 @@
               </div>
               <div v-else class="discount-main special">
                 <i class="mdi mdi-gift gift-icon"></i>
-                <span class="discount-label">Special Offer</span>
+                <span class="discount-label">{{ __("Special Offer") }}</span>
               </div>
             </div>
 
@@ -68,7 +68,7 @@
               discount_percentage_offer_name !== offer.name
             " class="warning-msg">
               <i class="mdi mdi-alert-circle warning-icon"></i>
-              <span>Another offer active</span>
+              <span>{{ __("Another offer active") }}</span>
             </div>
 
             <!-- APPLY TOGGLE -->
@@ -79,7 +79,7 @@
                 <span class="toggle-slider"></span>
               </label>
               <span class="toggle-text">{{
-                offer.offer_applied ? "Applied" : "Apply"
+                offer.offer_applied ? __("Applied") : __("Apply")
               }}</span>
             </div>
           </div>
@@ -91,18 +91,18 @@
     <div class="offers-footer">
       <button class="back-button" @click="back_to_invoice">
         <i class="mdi mdi-arrow-left back-icon"></i>
-        <span>Back to Invoice</span>
+        <span>{{ __("Back to Invoice") }}</span>
       </button>
     </div>
   </div>
   <div v-else class="offers-disabled">
     <div class="disabled-message">
       <i class="mdi mdi-tag-off disabled-icon"></i>
-      <h3>Offers Disabled</h3>
-      <p>Offers are disabled in POS Profile settings</p>
+      <h3>{{ __("Offers Disabled") }}</h3>
+      <p>{{ __("Offers are disabled in POS Profile settings") }}</p>
       <button class="back-button" @click="back_to_invoice">
         <i class="mdi mdi-arrow-left back-icon"></i>
-        <span>Back to Invoice</span>
+        <span>{{ __("Back to Invoice") }}</span>
       </button>
     </div>
   </div>
