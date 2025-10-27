@@ -136,24 +136,28 @@ def get_barcode_item(pos_profile, barcode_value):
         if isinstance(pos_profile, str):
             pos_profile = json.loads(pos_profile)
 
-        # Process barcode scan - no logging needed for normal operations
+        frappe.log_error(f"get_barcode_item: barcode={barcode_value[:20]}, price_list={pos_profile.get('selling_price_list')}", "POS Barcode Debug")
 
         # Try scale barcode first (highest priority - specific format)
         result = _get_scale_barcode(pos_profile, barcode_value)
         if result:
+            frappe.log_error(f"get_barcode_item: scale_barcode SUCCESS item={result.get('item_code')} rate={result.get('rate')} qty={result.get('qty')}", "POS Barcode Debug")
             return result
 
         # Try private barcode second (medium priority - specific prefixes)
         result = _get_private_barcode(pos_profile, barcode_value)
         if result:
+            frappe.log_error(f"get_barcode_item: private_barcode SUCCESS item={result.get('item_code')} rate={result.get('rate')} qty={result.get('qty')}", "POS Barcode Debug")
             return result
 
         # Try normal barcode last (fallback - search Item Barcode table)
         result = _get_normal_barcode(pos_profile, barcode_value)
         if result:
+            frappe.log_error(f"get_barcode_item: normal_barcode SUCCESS item={result.get('item_code')} rate={result.get('rate')} qty={result.get('qty')}", "POS Barcode Debug")
             return result
 
         # Not found - return empty dict
+        frappe.log_error(f"get_barcode_item: NOT FOUND barcode={barcode_value[:20]}", "POS Barcode Debug")
         return {}
 
     except Exception as e:
@@ -359,6 +363,8 @@ def _fetch_item_with_price(item_code, price_list):
                 ON `tabItem`.name = `tabItem Price`.item_code
                 AND `tabItem Price`.selling = 1
                 AND `tabItem Price`.price_list = %(price_list)s
+                AND (`tabItem Price`.valid_from IS NULL OR `tabItem Price`.valid_from <= CURDATE())
+                AND (`tabItem Price`.valid_upto IS NULL OR `tabItem Price`.valid_upto >= CURDATE())
             WHERE `tabItem`.name = %(item_code)s
                 AND `tabItem`.disabled = 0
                 AND `tabItem`.is_fixed_asset = 0
@@ -377,7 +383,7 @@ def _fetch_item_with_price(item_code, price_list):
         item = result[0]
 
         # Return clean response
-        return {
+        result = {
             "item_code": item.get("item_code"),
             "item_name": item.get("item_name"),
             "stock_uom": item.get("stock_uom"),
@@ -388,6 +394,10 @@ def _fetch_item_with_price(item_code, price_list):
             "base_rate": item.get("price_list_rate", 0),  # Same as price_list_rate
         }
 
+        frappe.log_error(f"_fetch_item_with_price: item={result.get('item_code')} rate={result.get('rate')}", "POS Barcode Debug")
+        return result
+
     except Exception as e:
         frappe.logger().error(f"Error fetching item: {item_code} - Error: {str(e)}")
+        frappe.log_error(f"_fetch_item_with_price: ERROR item={item_code} error={str(e)}", "POS Barcode Debug")
         return None
