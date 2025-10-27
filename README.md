@@ -43,7 +43,15 @@ Just a lightweight web interface built on top of ERPNext's proven foundation:
 
 ## 📋 Development Tasks Tracking
 
-📋 **Tasks Management:** [docs/tasks/](needed_tasks/)
+📋 **Tasks Management:** [needed_tasks/](needed_tasks/)
+
+### 📋 Needed Tasks
+
+- 🌐 **Frappe Builder Confectionery Website:** [frappe-builder-confectionery-website.md](needed_tasks/frappe-builder-confectionery-website.md)
+- 🎁 **Offers Implementation:** [offers_implementation.md](needed_tasks/offers_implementation.md)
+- ⚙️ **POS Operations Improvement:** [pos_operations_improvement.md](needed_tasks/pos_operations_improvement.md)
+- 🔄 **Quick Return Logic:** [return_quick_return_logic.md](needed_tasks/return_quick_return_logic.md)
+- 🌍 **Translation Feature:** [translate_feature.md](needed_tasks/translate_feature.md)
 
 ### 🛠️ **Development Resources**
 
@@ -54,12 +62,6 @@ Just a lightweight web interface built on top of ERPNext's proven foundation:
 
 - 🔒 **Backend Policy:** [backend_policy.md](docs/backend_policy.md)
 - 🎨 **Frontend Policy:** [frontend_policy.md](docs/frontend_policy.md)
-
-### 📋 Tasks Tracking111
-
-- 📋 **Needed Tasks:** [docs/tasks/needed_tasks/](docs/tasks/needed_tasks/)
-- ✅ **Completed Tasks:** [docs/tasks/completed_tasks/](docs/tasks/completed_tasks/)
-- ❌ **Failed Tasks:** [docs/tasks/failed_tasks/](docs/tasks/failed_tasks/)
 
 ## 💰 Development Collaboration
 
