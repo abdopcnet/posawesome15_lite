@@ -18,7 +18,6 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 	$("head").append("<style>.layout-main-section { display: none !important; }</style>");
 };
 
-<<<<<<< HEAD
 // Simple CSV Translation Loader
 // Listens for POS Profile load event and loads translations from CSV file
 window.addEventListener('posProfileLoaded', async (event) => {
@@ -56,36 +55,6 @@ window.addEventListener('posProfileLoaded', async (event) => {
 	}
 	// English = no translations needed (default Frappe behavior)
 });
-=======
-//Arabic translations - Always load Arabic translations
-window.__messages = window.__messages || {};
-
-const xhr = new XMLHttpRequest();
-xhr.open('GET', '/assets/posawesome/translations/ar.csv', false);
-xhr.send();
-
-if (xhr.status === 200) {
-	const lines = xhr.responseText.split('\n');
-
-	lines.forEach(line => {
-		if (!line.trim()) return;
-
-		const commaIndex = line.indexOf(',');
-		if (commaIndex > 0) {
-			const key = line.substring(0, commaIndex).trim();
-			const value = line.substring(commaIndex + 1).trim();
-			if (key && value) {
-				window.__messages[key] = value;
-			}
-		}
-	});
-
-	// Update the global __() function to use our translations
-	window.__ = function(key) {
-		return window.__messages[key] || key;
-	};
-}
->>>>>>> 4b5c7c9 (🔄 posapp.js)
 
 frappe.pages['posapp'].on_page_leave = function() {
 	// Remove Material Design Icons CSS when leaving POS app
