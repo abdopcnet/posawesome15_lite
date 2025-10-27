@@ -1,36 +1,38 @@
 // @ts-nocheck
+{% include "posawesome/posawesome/page/posapp/onscan.js" %}
+
 // =============================================================================
 // POS AWESOME - POS Application Page
 // =============================================================================
 // This file handles the POS application page setup and translation system
 //
-// IMPORTANT: To change language, modify posa_language variable at line 11
+// IMPORTANT: To change language, modify posa_language variable below (line 32)
 // =============================================================================
 
-{% include "posawesome/posawesome/page/posapp/onscan.js" %}
-{% include "posawesome/posawesome/page/posapp/translations.js" %}
+// Translation system embedded below (no external files needed)
+{% include "posawesome/posawesome/page/posapp/translations" %}
 
 // =============================================================================
-// TRANSLATION SYSTEM
+// MANUAL LANGUAGE SELECTION
 // =============================================================================
-// This section initializes the translation system from ar.js
-//
-// HOW TO USE:
-// 1. Change posa_language to 'ar' for Arabic or 'en' for English
-// 2. Reload the page
-// 3. Use __() function in your code: __('Hello')
+// Change this variable to switch between Arabic and English
+// Options: 'ar' (Arabic) or 'en' (English)
+// After changing, reload the page for the new language to take effect
 // =============================================================================
+const posa_language = 'ar';
 
-// Manual language parameter - Change this to switch languages
-const posa_language = 'ar'; // Options: 'ar' (Arabic) or 'en' (English)
-
-// Initialize translation system after ar.js is loaded
+// =============================================================================
+// INITIALIZE TRANSLATION SYSTEM
+// =============================================================================
+// This checks if translations.js was loaded and initializes the translation system
+// If translations.js failed to load, provides a fallback that returns original text
+// =============================================================================
 if (typeof window.posaTranslationInit === 'function') {
-	// Successfully loaded ar.js - initialize with selected language
+	// Successfully loaded translations.js - initialize with selected language
 	window.posaTranslationInit(posa_language);
 } else {
-	// ar.js not loaded - show error and provide fallback
-	console.error('Translation system not loaded. Check if ar.js is included correctly.');
+	// translations.js not loaded - show error and provide fallback
+	console.error('POS Awesome: Translation system not loaded. Using fallback.');
 	// Fallback: setup basic __ function (returns original text)
 	window.__ = function(msg) { return msg; };
 	window.__messages = {};
