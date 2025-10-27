@@ -682,9 +682,16 @@ const posaTranslations = {
 	en: {}
 };
 
-// Translation function with placeholder support
+// =============================================================================
+// LANGUAGE SELECTION - Change this value to switch languages
+// =============================================================================
+const posa_language = 'en'; // Options: 'ar' (Arabic) or 'en' (English)
+
+// =============================================================================
+// TRANSLATION FUNCTION
+// =============================================================================
 function posaTranslate(message, replace, context) {
-	let translatedMessage = posaTranslations[posaLanguage][message] || message;
+	let translatedMessage = posaTranslations[posa_language][message] || message;
 
 	// Handle placeholders like {0}, {1}, etc.
 	if (replace && Array.isArray(replace)) {
@@ -696,32 +703,11 @@ function posaTranslate(message, replace, context) {
 	return translatedMessage;
 }
 
-// Initialize translation system
-function initTranslationSystem(language) {
-	posaLanguage = language;
-	window.__ = posaTranslate;
-	window.__messages = posaTranslations[language] || {};
-}
-
-// Initialize with default language
-let posaLanguage = 'ar';
-initTranslationSystem(posaLanguage);
-
-// Export for use in posapp.js
-window.posaTranslationInit = initTranslationSystem;
-
 // =============================================================================
-// MANUAL LANGUAGE CONTROL
+// INITIALIZE TRANSLATION SYSTEM
 // =============================================================================
-// Change posa_language to switch between languages
-// Options: 'ar' (Arabic) or 'en' (English)
-// =============================================================================
-const posa_language = 'ar';
-
-// Re-initialize with selected language
-if (typeof initTranslationSystem === 'function') {
-	initTranslationSystem(posa_language);
-}
+window.__ = posaTranslate;
+window.__messages = posaTranslations[posa_language] || {};
 
 // =============================================================================
 // PAGE SETUP
