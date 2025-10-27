@@ -18,34 +18,43 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 	$("head").append("<style>.layout-main-section { display: none !important; }</style>");
 };
 
-//Arabic translations - Always load Arabic translations
-window.__messages = window.__messages || {};
+// Simple CSV Translation Loader
+// Listens for POS Profile load event and loads translations from CSV file
+window.addEventListener('posProfileLoaded', async (event) => {
+	const pos_profile = event.detail.pos_profile;
+	const language = pos_profile.posa_language;
 
-const xhr = new XMLHttpRequest();
-xhr.open('GET', '/assets/posawesome/translations/ar.csv', false);
-xhr.send();
+	// Only load translations for Arabic (English is default, no translation needed)
+	if (language === 'ar') {
+		try {
+			const response = await fetch('/assets/posawesome/translations/ar.csv');
+			const csvText = await response.text();
 
-if (xhr.status === 200) {
-	const lines = xhr.responseText.split('\n');
+			// Parse CSV and load into window.__messages
+			window.__messages = window.__messages || {};
+			const lines = csvText.split('\n');
 
-	lines.forEach(line => {
-		if (!line.trim()) return;
+			lines.forEach(line => {
+				if (!line.trim()) return; // Skip empty lines
 
-		const commaIndex = line.indexOf(',');
-		if (commaIndex > 0) {
-			const key = line.substring(0, commaIndex).trim();
-			const value = line.substring(commaIndex + 1).trim();
-			if (key && value) {
-				window.__messages[key] = value;
-			}
+				// Handle CSV with commas in values (find first comma only)
+				const commaIndex = line.indexOf(',');
+				if (commaIndex > 0) {
+					const key = line.substring(0, commaIndex).trim();
+					const value = line.substring(commaIndex + 1).trim();
+					if (key && value) {
+						window.__messages[key] = value;
+					}
+				}
+			});
+
+			console.log('Arabic translations loaded from ar.csv');
+		} catch (error) {
+			console.error('Failed to load Arabic translations:', error);
 		}
-	});
-
-	// Update the global __() function to use our translations
-	window.__ = function(key) {
-		return window.__messages[key] || key;
-	};
-}
+	}
+	// English = no translations needed (default Frappe behavior)
+});
 
 frappe.pages['posapp'].on_page_leave = function() {
 	// Remove Material Design Icons CSS when leaving POS app
