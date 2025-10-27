@@ -18,12 +18,15 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 	$("head").append("<style>.layout-main-section { display: none !important; }</style>");
 };
 
+// Manual translation parameter - Set this to 'ar' for Arabic, 'en' for English
+const posa_language = 'ar'; // Change this parameter manually: 'ar' or 'en'
+
 // Hard-way translation loading: Replace Frappe translations with CSV translations
 $(document).ready(() => {
 	// Ensure __messages exists
 	window.__messages = window.__messages || {};
 
-	if (frappe.boot.lang === 'ar') {
+	if (posa_language === 'ar') {
 		// Load Arabic translations from CSV
 		const xhr = new XMLHttpRequest();
 		xhr.open('GET', '/assets/posawesome/translations/ar.csv', false); // synchronous
@@ -47,7 +50,7 @@ $(document).ready(() => {
 			$.extend(window.__messages, csvTranslations);
 			console.log('✅ Arabic translations loaded from ar.csv');
 		}
-	} else {
+	} else if (posa_language === 'en') {
 		// English: Keep Frappe translations as-is (already loaded in window.__messages)
 		console.log('✅ Using English (Frappe default translations)');
 	}
