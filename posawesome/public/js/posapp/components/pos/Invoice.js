@@ -197,7 +197,6 @@ export default {
     },
 
     // Computed property for discount amount (calculated from percentage)
-    // This mirrors ERPNext's automatic calculation: discount_amount = total × percentage / 100
     computedDiscountAmount() {
       const total = flt(this.invoice_doc?.total || 0);
       const percentage = flt(this.additional_discount_percentage || 0);
@@ -213,43 +212,83 @@ export default {
       let taxAmount = 0;
       if (taxType === 'Inclusive') {
         // For inclusive tax: extract tax from the total
-        // Formula: tax = total - (total / (1 + rate/100))
         taxAmount = subtotal - (subtotal / (1 + taxPercent / 100));
       } else if (taxType === 'Exclusive') {
         // For exclusive tax: add tax to the total
-        // Formula: tax = total * (rate/100)
         taxAmount = subtotal * (taxPercent / 100);
       }
 
       return flt(taxAmount, this.currency_precision);
     },
 
-    onQtyChange(item) {
-      const newQty = Number(item.qty) || 0;
-      item.qty = newQty;
+    onQtyChange(item, event) {
+      // Get the value from the input (always positive in display)
+      let displayValue = event?.target?.value !== undefined
+        ? Number(event.target.value)
+        : Number(item.qty);
+
+      // Convert to absolute value in case user types negative
+      const absQty = Math.abs(displayValue) || 0;
+
+      // Check if this is a return item with max quantity limit
+      if (item.max_qty && absQty > item.max_qty) {
+        evntBus.emit("show_mesage", {
+          text: `Quantity cannot exceed original return quantity: ${item.max_qty}`,
+          color: "warning",
+        });
+        // Reset to max allowed quantity (apply sign based on invoice type)
+        item.qty = this.invoice_doc?.is_return ? -item.max_qty : item.max_qty;
+      } else {
+        // Apply correct sign: negative for returns, positive for regular invoices
+        item.qty = this.invoice_doc?.is_return ? -absQty : absQty;
+      }
 
       item.amount = this.calculateItemAmount(item);
       this.updateInvoiceDocLocally();
     },
 
-    onQtyInput(item) {
-      // Handle input events - use same logic as onQtyChange but without debounce
-      this.onQtyChange(item);
+    onQtyInput(item, event) {
+      // Handle input events - use same logic as onQtyChange
+      this.onQtyChange(item, event);
     },
 
     increaseQuantity(item) {
-      item.qty = (Number(item.qty) || 0) + 1;
+      const currentQty = Math.abs(Number(item.qty) || 0);
+
+      // Check if this is a return item with max quantity limit
+      if (item.max_qty && currentQty >= item.max_qty) {
+        evntBus.emit("show_mesage", {
+          text: `Cannot increase quantity beyond original return quantity: ${item.max_qty}`,
+          color: "warning",
+        });
+        return;
+      }
+
+      // For return invoices, qty is negative
+      if (this.invoice_doc?.is_return) {
+        item.qty = -(currentQty + 1);
+      } else {
+        item.qty = currentQty + 1;
+      }
+
       item.amount = this.calculateItemAmount(item);
       evntBus.emit("item_updated", item);
       this.updateInvoiceDocLocally();
     },
 
     decreaseQuantity(item) {
-      const newQty = Math.max(0, (Number(item.qty) || 0) - 1);
+      const currentQty = Math.abs(Number(item.qty) || 0);
+      const newQty = Math.max(0, currentQty - 1);
+
       if (newQty === 0) {
         this.remove_item(item);
       } else {
-        item.qty = newQty;
+        // For return invoices, qty is negative
+        if (this.invoice_doc?.is_return) {
+          item.qty = -newQty;
+        } else {
+          item.qty = newQty;
+        }
         item.amount = this.calculateItemAmount(item);
         evntBus.emit("item_updated", item);
         this.updateInvoiceDocLocally();
@@ -309,14 +348,6 @@ export default {
     async add_item(item) {
       if (!item?.item_code) return;
 
-      console.log("Invoice.add_item: START item=" + JSON.stringify({
-        item_code: item.item_code,
-        item_name: item.item_name,
-        rate: item.rate,
-        qty: item.qty,
-        uom: item.uom
-      }));
-
       const new_item = Object.assign({}, item);
       new_item.uom = new_item.uom || new_item.stock_uom || "Nos";
 
@@ -329,7 +360,6 @@ export default {
       if (existing_item) {
         existing_item.qty = flt(existing_item.qty) + flt(new_item.qty);
         existing_item.amount = this.calculateItemAmount(existing_item);
-        console.log("Invoice.add_item: UPDATED existing amount=" + existing_item.amount);
       } else {
         new_item.posa_row_id = this.generateRowId();
         new_item.posa_offers = "[]";
@@ -338,7 +368,6 @@ export default {
         new_item.posa_is_replace = 0;
         new_item.is_free_item = 0;
         new_item.amount = this.calculateItemAmount(new_item);
-        console.log("Invoice.add_item: NEW item amount=" + new_item.amount);
         this.items.push(new_item);
       }
 
@@ -476,8 +505,6 @@ export default {
 
 
     cancel_invoice() {
-      // في نهج __islocal: لا نحتاج حذف من قاعدة البيانات
-      // فقط إعادة تعيين الحالة وإغلاق نافذة الدفع
       this.reset_invoice_session();
       evntBus.emit("show_payment", "false");
     },
@@ -501,8 +528,6 @@ export default {
 
       // Recalculate offers for new session with default customer
       this.calculateAndApplyOffers();
-      // لا نرسل "new_invoice" event هنا لتفادي recursion
-      // يتم إرساله من printInvoice() فقط بعد الطباعة الناجحة
     },
 
     new_invoice(data = {}) {
@@ -510,9 +535,7 @@ export default {
       this.posa_offers = [];
       this.return_doc = "";
 
-      // في نهج __islocal: لا نحفظ أي شيء قبل Print
       // previous invoice is automatically discarded
-
       if (!data.name && !data.is_return) {
         this.items = [];
         this.customer = this.pos_profile?.customer;
@@ -538,6 +561,12 @@ export default {
         this.items.forEach((item) => {
           if (!item.posa_row_id) {
             item.posa_row_id = this.makeid(20);
+          }
+
+          // Store original return quantity to prevent increasing beyond it
+          if (data.is_return && item.qty) {
+            item.original_return_qty = Math.abs(item.qty); // Store as positive number
+            item.max_qty = Math.abs(item.qty); // Maximum allowed quantity
           }
         });
 
@@ -586,8 +615,6 @@ export default {
         !this.invoice_doc?.submitted_for_payment
       ) {
         doc.name = this.invoice_doc?.name;
-      } else if (this.items.length > 0) {
-        // Create new invoice when we have items but no existing invoice
       }
       doc.doctype = "Sales Invoice";
       doc.is_pos = 1;
