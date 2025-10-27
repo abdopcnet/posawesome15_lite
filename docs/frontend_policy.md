@@ -14,6 +14,34 @@
 - NO animations or heavy CSS
 - Simple structure only
 
+**CSS Styling Method (MANDATORY):**
+
+- ✅ Use **direct inline styles** in the `style` attribute
+- ✅ Format CSS properties on multiple lines (one property per line)
+- ✅ Keep CSS organized and readable
+- ✅ Use direct CSS values (not JavaScript functions)
+- ❌ NO style functions like `getXxxStyle()`
+- ❌ NO computed properties that return style objects
+- ❌ NO conditional logic in style functions
+- ❌ NO complex JavaScript style calculations
+
+**Example - Correct Method:**
+
+```html
+<button
+  style="
+    width: 28px;
+    height: 28px;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    background-color: #f8f8f8;
+    cursor: pointer;
+  "
+  @click="doSomething">
+  Click Me
+</button>
+```
+
 **Asset Management:**
 
 - ✅ Local CDN only - no external requests
