@@ -1,127 +1,10 @@
+<!-- @ngrie -->
 <template>
+  <!-- =========================================== -->
+  <!-- NAVBAR COMPONENT -->
+  <!-- =========================================== -->
   <nav>
-    <div class="custom-navbar">
-      <!-- Logo/Title -->
-      <div class="nav-brand" @click="go_desk" :title="__('Go to Desk')">
-        <i class="mdi mdi-point-of-sale" style="font-size: 16px; color: var(--primary);"></i>
-      </div>
-
-      <!-- Info Badges -->
-      <div class="nav-badges">
-        <div class="badge" :class="invoiceNumberClass">
-          <i class="mdi mdi-receipt" :style="`font-size: 12px; color: ${invoiceIconColor};`"></i>
-          <span>{{ invoiceNumberText }}</span>
-        </div>
-
-        <div class="badge" :class="shiftNumberClass">
-          <i class="mdi mdi-clock-outline" :style="`font-size: 12px; color: ${shiftIconColor};`"></i>
-          <span>{{ shiftNumberText }}</span>
-        </div>
-
-        <div class="badge user-badge">
-          <i class="mdi mdi-account" style="font-size: 12px; color: var(--primary);"></i>
-          <span>{{ currentUserName }}</span>
-        </div>
-
-        <div class="badge" :class="shiftStartClass">
-          <i class="mdi mdi-clock-start" :style="`font-size: 12px; color: ${shiftStartIconColor};`"></i>
-          <span>{{ shiftStartText }}</span>
-        </div>
-
-        <div class="badge totals-badge">
-          <i class="mdi mdi-counter" style="font-size: 12px; color: var(--primary);"></i>
-          <span>QTY: {{ totalInvoicesQty }}</span>
-        </div>
-
-        <div class="badge cash-badge">
-          <i class="mdi mdi-cash-multiple" style="font-size: 12px; color: var(--success);"></i>
-          <span>{{ formatCurrency(totalCash) }}</span>
-        </div>
-
-        <div class="badge card-badge">
-          <i class="mdi mdi-credit-card" style="font-size: 12px; color: var(--primary);"></i>
-          <span>{{ formatCurrency(totalNonCash) }}</span>
-        </div>
-
-        <div class="badge" :class="pingClass">
-          <i class="mdi mdi-wifi" :style="`font-size: 12px; color: ${pingIconColor};`"></i>
-          <span>{{ pingTime }}ms</span>
-        </div>
-
-        <div class="badge profile-badge">
-          <i class="mdi mdi-briefcase" style="font-size: 12px; color: var(--primary);"></i>
-          <span>{{ pos_profile.name }}</span>
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="nav-actions">
-        <button class="action-btn" :class="{ disabled: !last_invoice }" :disabled="!last_invoice"
-          @click="print_last_invoice" :title="last_invoice ? __('Print Last Receipt') : __('No last receipt')">
-          <i class="mdi mdi-printer"
-            :style="`font-size: 14px; color: ${last_invoice ? 'var(--primary)' : 'var(--gray-500)'};`"></i>
-        </button>
-
-        <button class="action-btn cache-btn" @click="clearCache" :title="__('Clear Cache')">
-          <i class="mdi mdi-cached" style="font-size: 14px; color: var(--warning);"></i>
-        </button>
-
-        <div class="menu-wrapper">
-          <div class="dropdown">
-            <button class="action-btn menu-btn" @click="toggleMenu">
-              <i class="mdi mdi-menu" style="font-size: 14px;"></i>
-              <span>{{ __("Menu") }}</span>
-            </button>
-            <div v-if="showMenu" class="dropdown-menu">
-              <div class="menu-list">
-                <div class="menu-item" @click="close_shift_dialog"
-                  v-if="!pos_profile.posa_hide_closing_shift && menu_item == 0">
-                  <div class="menu-icon close-shift-icon">
-                    <i class="mdi mdi-content-save-move-outline" style="font-size: 16px;"></i>
-                  </div>
-                  <div class="menu-text">{{ __("Close Shift") }}</div>
-                </div>
-
-                <div class="menu-item" @click="logOut">
-                  <div class="menu-icon logout-icon">
-                    <i class="mdi mdi-logout" style="font-size: 16px;"></i>
-                  </div>
-                  <div class="menu-text">{{ __("Logout") }}</div>
-                </div>
-
-                <div class="menu-item" @click="go_about">
-                  <div class="menu-icon about-icon">
-                    <i class="mdi mdi-information-outline" style="font-size: 16px;"></i>
-                  </div>
-                  <div class="menu-text">{{ __("About System") }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div v-if="snack" class="snackbar" :class="snackColor" @click="snack = false">
-      {{ snackText }}
-    </div>
-    <div v-if="freeze" class="modal-overlay">
-      <div class="modal">
-        <div class="modal-header">
-          <h3 class="modal-title">{{ freezeTitle }}</h3>
-        </div>
-        <div class="modal-body">
-          {{ freezeMsg }}
-        </div>
-      </div>
-    </div>
-  </nav>
-</template>
-
-<script src="./Navbar.js" />
-
-<style scoped>
-/* Ultra-compact custom navbar */
-.custom-navbar {
+    <div style="
   display: flex;
   align-items: center;
   gap: 4px;
@@ -132,185 +15,247 @@
   height: 32px;
   position: sticky;
   top: 0;
-  z-index: 1100;
-}
+      z-index: 1100">
 
-/* Brand/Logo */
-.nav-brand {
+      <!-- =========================================== -->
+      <!-- LOGO/TITLE -->
+      <!-- =========================================== -->
+      <div @click="go_desk" style="
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 4px 8px;
   cursor: pointer;
   border-radius: 4px;
-  transition: background 0.2s;
-}
+        transition: background 0.2s"
+        title="Go to Desk">
+        <i class="mdi mdi-point-of-sale" style="font-size: 16px; color: var(--primary)"></i>
+      </div>
 
-.nav-brand:hover {
-  background: rgba(25, 118, 210, 0.08);
-}
-
-/* Badges Container */
-.nav-badges {
+      <!-- =========================================== -->
+      <!-- INFO BADGES -->
+      <!-- =========================================== -->
+      <div style="
   flex: 1;
   display: flex;
   align-items: center;
   gap: 3px;
   overflow-x: auto;
-  scrollbar-width: none;
-}
+        scrollbar-width: none">
 
-.nav-badges::-webkit-scrollbar {
-  display: none;
-}
-
-/* Badge Styles - Ultra Compact */
-.badge {
+        <!-- Invoice Badge -->
+        <div :style="invoiceNumberClass === 'regular-invoice' ? 'border-color: rgba(25, 118, 210, 0.62); background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); color: #1976d2' :
+                      invoiceNumberClass === 'return-invoice' ? 'border-color: rgba(211, 47, 47, 0.62); background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); color: #d32f2f' :
+                      'border-color: rgba(189, 189, 189, 0.8); background: #f5f5f5; color: #757575; font-style: italic'"
+             style="
   display: inline-flex;
   align-items: center;
   gap: 3px;
   padding: 2px 6px;
   border-radius: 4px;
-  /* (was #e0e0e0) */
-  border: 1px solid rgba(224, 224, 224, 0.85);
+               border: 1px solid;
   background: #fff;
   font-size: 10px;
   font-weight: 600;
   white-space: nowrap;
-  transition: box-shadow 180ms ease, filter 180ms ease, background-color 180ms ease, border-color 180ms ease;
-  will-change: box-shadow, filter, background-color;
   line-height: 1;
-  height: 22px;
-}
+               height: 22px">
+          <i class="mdi mdi-receipt" :style="`font-size: 12px; color: ${invoiceIconColor}`"></i>
+          <span>{{ invoiceNumberText }}</span>
+        </div>
 
-.badge span {
+        <!-- Shift Badge -->
+        <div :style="shiftNumberClass === 'open-shift' ? 'border-color: rgba(76, 175, 80, 0.62); background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); color: #2e7d32' :
+                      shiftNumberClass === 'closed-shift' ? 'border-color: rgba(255, 152, 0, 0.33); background: linear-gradient(135deg, #fffaf3 0%, #ff870a59 100%); color: #000000b0' :
+                      'border-color: rgba(189, 189, 189, 0.8); background: #f5f5f5; color: #757575; font-style: italic'"
+             style="
+               display: inline-flex;
+               align-items: center;
+               gap: 3px;
+               padding: 2px 6px;
+               border-radius: 4px;
+               border: 1px solid;
+               background: #fff;
+               font-size: 10px;
+               font-weight: 600;
   white-space: nowrap;
-}
+               line-height: 1;
+               height: 22px">
+          <i class="mdi mdi-clock-outline" :style="`font-size: 12px; color: ${shiftIconColor}`"></i>
+          <span>{{ shiftNumberText }}</span>
+        </div>
 
-/* Badge Variants */
-.badge.regular-invoice {
-  /* original #1976d2 */
-  border-color: rgba(25, 118, 210, 0.62);
+        <!-- User Badge -->
+        <div style="
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          padding: 2px 6px;
+          border-radius: 4px;
+          border: 1px solid rgba(25, 118, 210, 0.56);
   background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
   color: #1976d2;
-}
+          font-size: 10px;
+          font-weight: 600;
+          white-space: nowrap;
+          line-height: 1;
+          height: 22px">
+          <i class="mdi mdi-account" style="font-size: 12px; color: var(--primary)"></i>
+          <span>{{ currentUserName }}</span>
+        </div>
 
-.badge.return-invoice {
-  border-color: rgba(211, 47, 47, 0.62);
-  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
-  color: #d32f2f;
-}
+        <!-- Shift Start Badge -->
+        <div :style="shiftStartClass === 'shift-active' ? 'border-color: rgba(76, 175, 80, 0.56); background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); color: #2e7d32' :
+                      'border-color: rgba(189, 189, 189, 0.8); background: #f5f5f5; color: #757575'"
+             style="
+               display: inline-flex;
+               align-items: center;
+               gap: 3px;
+               padding: 2px 6px;
+               border-radius: 4px;
+               border: 1px solid;
+               background: #fff;
+               font-size: 10px;
+               font-weight: 600;
+               white-space: nowrap;
+               line-height: 1;
+               height: 22px">
+          <i class="mdi mdi-clock-start" :style="`font-size: 12px; color: ${shiftStartIconColor}`"></i>
+          <span>{{ shiftStartText }}</span>
+        </div>
 
-.badge.no-invoice {
-  border-color: rgba(189, 189, 189, 0.8);
-  background: #f5f5f5;
-  color: #757575;
-  font-style: italic;
-}
+        <!-- Totals Badge -->
+        <div style="
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          padding: 2px 6px;
+          border-radius: 4px;
+          border: 1px solid rgba(25, 118, 210, 0.56);
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  color: #1976d2;
+          font-size: 10px;
+          font-weight: 600;
+          white-space: nowrap;
+          line-height: 1;
+          height: 22px">
+          <i class="mdi mdi-counter" style="font-size: 12px; color: var(--primary)"></i>
+          <span>QTY: {{ totalInvoicesQty }}</span>
+        </div>
 
-.badge.open-shift {
-  border-color: rgba(76, 175, 80, 0.62);
+        <!-- Cash Badge -->
+        <div style="
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          padding: 2px 6px;
+          border-radius: 4px;
+          border: 1px solid rgba(76, 175, 80, 0.56);
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
   color: #2e7d32;
-}
+          font-size: 10px;
+          font-weight: 600;
+          white-space: nowrap;
+          line-height: 1;
+          height: 22px">
+          <i class="mdi mdi-cash-multiple" style="font-size: 12px; color: var(--success)"></i>
+          <span>{{ formatCurrency(totalCash) }}</span>
+        </div>
 
-.badge.closed-shift {
-  border-color: rgba(255, 152, 0, 0.33);
-  background: linear-gradient(135deg, #fffaf3 0%, #ff870a59 100%);
-  color: #000000b0;
-}
+        <!-- Card Badge -->
+        <div style="
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          padding: 2px 6px;
+          border-radius: 4px;
+          border: 1px solid rgba(156, 39, 176, 0.29);
+          background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7ab 100%);
+          color: #9033b7;
+          font-size: 10px;
+          font-weight: 600;
+          white-space: nowrap;
+          line-height: 1;
+          height: 22px">
+          <i class="mdi mdi-credit-card" style="font-size: 12px; color: var(--primary)"></i>
+          <span>{{ formatCurrency(totalNonCash) }}</span>
+        </div>
 
-.badge.no-shift {
-  border-color: rgba(189, 189, 189, 0.8);
-  background: #f5f5f5;
-  color: #757575;
-  font-style: italic;
-}
+        <!-- Ping Badge -->
+        <div :style="pingClass === 'ping-excellent' ? 'border-color: rgba(76, 175, 80, 0.56); background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); color: #2e7d32' :
+                      pingClass === 'ping-good' ? 'border-color: rgba(33, 150, 243, 0.56); background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); color: #1976d2' :
+                      pingClass === 'ping-fair' ? 'border-color: rgba(255, 152, 0, 0.56); background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); color: #f57c00' :
+                      'border-color: rgba(244, 67, 54, 0.56); background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); color: #d32f2f'"
+             style="
+               display: inline-flex;
+               align-items: center;
+               gap: 3px;
+               padding: 2px 6px;
+               border-radius: 4px;
+               border: 1px solid;
+               background: #fff;
+               font-size: 10px;
+               font-weight: 600;
+               white-space: nowrap;
+               line-height: 1;
+               height: 22px">
+          <i class="mdi mdi-wifi" :style="`font-size: 12px; color: ${pingIconColor}`"></i>
+          <span>{{ pingTime }}ms</span>
+        </div>
 
-.badge.user-badge {
-  border-color: rgba(25, 118, 210, 0.56);
+        <!-- Profile Badge -->
+        <div style="
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          padding: 2px 6px;
+          border-radius: 4px;
+          border: 1px solid rgba(25, 118, 210, 0.56);
   background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
   color: #1976d2;
-}
-
-.badge.shift-active {
-  border-color: rgba(76, 175, 80, 0.56);
-  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-  color: #2e7d32;
-}
-
-.badge.no-shift-start {
-  border-color: rgba(189, 189, 189, 0.8);
-  background: #f5f5f5;
-  color: #757575;
-}
-
-.badge.totals-badge {
-  border-color: rgba(25, 118, 210, 0.56);
-  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-  color: #1976d2;
-}
-
-.badge.ping-excellent {
-  border-color: rgba(76, 175, 80, 0.56);
-  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-  color: #2e7d32;
-}
-
-.badge.ping-good {
-  border-color: rgba(33, 150, 243, 0.56);
-  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-  color: #1976d2;
-}
-
-.badge.ping-fair {
-  border-color: rgba(255, 152, 0, 0.56);
-  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-  color: #f57c00;
-}
-
-.badge.ping-poor {
-  border-color: rgba(244, 67, 54, 0.56);
-  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
-  color: #d32f2f;
-}
-
-.badge.profile-badge {
-  border-color: rgba(25, 118, 210, 0.56);
-  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-  color: #1976d2;
+          font-size: 10px;
   font-weight: 700;
-}
+          white-space: nowrap;
+          line-height: 1;
+          height: 22px">
+          <i class="mdi mdi-briefcase" style="font-size: 12px; color: var(--primary)"></i>
+          <span>{{ pos_profile.name }}</span>
+        </div>
+      </div>
 
-.badge.cash-badge {
-  border-color: rgba(76, 175, 80, 0.56);
-  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-  color: #2e7d32;
-}
-
-.badge.card-badge {
-  border-color: rgba(156, 39, 176, 0.29);
-  background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7ab 100%);
-  color: #9033b7;
-}
-
-/* modern, lightweight hover effect for badges */
-.badge:hover {
-  box-shadow: 0 4px 12px rgba(12, 24, 40, 0.06);
-  filter: brightness(1.03);
-  border-color: rgba(0, 0, 0, 0.08);
-  z-index: 2;
-}
-
-/* Actions Container */
-.nav-actions {
-  display: flex;
+      <!-- =========================================== -->
+      <!-- ACTION BUTTONS -->
+      <!-- =========================================== -->
+      <div style="display: flex; align-items: center; gap: 3px">
+        <!-- Print Button -->
+        <button
+          :disabled="!last_invoice"
+          :title="last_invoice ? __('Print Last Receipt') : __('No last receipt')"
+          @click="print_last_invoice"
+          :style="!last_invoice ? 'opacity: 0.4; cursor: not-allowed' : ''"
+          style="
+            display: inline-flex;
   align-items: center;
+            justify-content: center;
   gap: 3px;
-}
+            padding: 3px 6px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            height: 24px;
+            min-width: 24px;
+            transition: all 0.2s">
+          <i class="mdi mdi-printer" :style="`font-size: 14px; color: ${last_invoice ? 'var(--primary)' : 'var(--gray-500)'}`"></i>
+        </button>
 
-/* Action Buttons - Beautiful Custom Design */
-.action-btn {
+        <!-- Cache Button -->
+        <button
+          @click="clearCache"
+          :title="__('Clear Cache')"
+          style="
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -320,74 +265,39 @@
   border-radius: 4px;
   background: #fff;
   cursor: pointer;
-  transition: all 0.2s;
   font-size: 11px;
   font-weight: 600;
   height: 24px;
   min-width: 24px;
-}
+            transition: all 0.2s">
+          <i class="mdi mdi-cached" style="font-size: 14px; color: var(--warning)"></i>
+        </button>
 
-.action-btn:hover:not(.disabled) {
-  background: linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%);
-  border-color: #bdbdbd;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.action-btn:active:not(.disabled) {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-}
-
-.action-btn.disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.cache-btn:hover {
-  border-color: #ff9800;
-  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-}
-
-.menu-btn {
-  border-color: #1976d2;
+        <!-- Menu Dropdown -->
+        <div style="display: flex">
+          <button
+            @click="toggleMenu"
+            style="
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              gap: 3px;
+              padding: 3px 6px;
+              border: 1px solid #1976d2;
+              border-radius: 4px;
   background: linear-gradient(135deg, #1976d2 0%, #1e88e5 100%);
   color: white;
-}
+              cursor: pointer;
+              font-size: 11px;
+              font-weight: 600;
+              height: 24px;
+              min-width: 24px">
+            <i class="mdi mdi-menu" style="font-size: 14px"></i>
+            <span style="color: white">{{ __("Menu") }}</span>
+          </button>
 
-.menu-btn:hover span,
-.menu-btn:hover .v-icon {
-  color: #1976d2;
-}
-
-.menu-btn span {
-  color: white;
-}
-
-.menu-wrapper {
-  display: flex;
-}
-
-/* Cache button rotation animation */
-.cache-btn:active .v-icon {
-  animation: spin 0.4s ease-in-out;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(180deg);
-  }
-}
-
-/* ===== DROPDOWN MENU STYLES ===== */
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.dropdown-menu {
+          <!-- Dropdown Menu -->
+          <div v-if="showMenu" style="
   position: absolute;
   top: 100%;
   right: 0;
@@ -400,17 +310,14 @@
   margin-top: 4px;
   overflow: hidden;
   display: block !important;
-  /* Force display */
-  /* Prevent overflow outside viewport */
-  max-width: calc(100vw - 10px);
-}
+            max-width: calc(100vw - 10px)">
 
-.menu-list {
-  padding: 4px;
-  background: white;
-}
+            <div style="padding: 4px; background: white">
 
-.menu-item {
+              <!-- Close Shift -->
+              <div v-if="!pos_profile.posa_hide_closing_shift && menu_item == 0"
+                   @click="close_shift_dialog"
+                   style="
   display: flex;
   align-items: center;
   padding: 8px 12px;
@@ -418,14 +325,8 @@
   transition: background-color 0.2s ease;
   border-radius: 6px;
   margin: 2px 0;
-  min-height: 40px;
-}
-
-.menu-item:hover {
-  background: linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%);
-}
-
-.menu-icon {
+                     min-height: 40px">
+                <div style="
   width: 28px;
   height: 28px;
   border-radius: 6px;
@@ -433,59 +334,99 @@
   align-items: center;
   justify-content: center;
   margin-right: 12px;
-  transition: all 0.2s ease;
-}
-
-.close-shift-icon {
   background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
   color: white;
-}
+                  transition: all 0.2s ease">
+                  <i class="mdi mdi-content-save-move-outline" style="font-size: 16px"></i>
+                </div>
+                <div style="
+                  font-size: 0.875rem;
+                  font-weight: 600;
+                  color: #333;
+                  letter-spacing: 0.2px">
+                  {{ __("Close Shift") }}
+                </div>
+              </div>
 
-.logout-icon {
+              <!-- Logout -->
+              <div @click="logOut"
+                   style="
+                     display: flex;
+                     align-items: center;
+                     padding: 8px 12px;
+                     cursor: pointer;
+                     transition: background-color 0.2s ease;
+                     border-radius: 6px;
+                     margin: 2px 0;
+                     min-height: 40px">
+                <div style="
+                  width: 28px;
+                  height: 28px;
+                  border-radius: 6px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  margin-right: 12px;
   background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
   color: white;
-}
+                  transition: all 0.2s ease">
+                  <i class="mdi mdi-logout" style="font-size: 16px"></i>
+                </div>
+                <div style="
+                  font-size: 0.875rem;
+                  font-weight: 600;
+                  color: #333;
+                  letter-spacing: 0.2px">
+                  {{ __("Logout") }}
+                </div>
+              </div>
 
-.about-icon {
+              <!-- About -->
+              <div @click="go_about"
+                   style="
+                     display: flex;
+                     align-items: center;
+                     padding: 8px 12px;
+                     cursor: pointer;
+                     transition: background-color 0.2s ease;
+                     border-radius: 6px;
+                     margin: 2px 0;
+                     min-height: 40px">
+                <div style="
+                  width: 28px;
+                  height: 28px;
+                  border-radius: 6px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  margin-right: 12px;
   background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
   color: white;
-}
-
-.menu-item:hover .menu-icon {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.menu-text {
+                  transition: all 0.2s ease">
+                  <i class="mdi mdi-information-outline" style="font-size: 16px"></i>
+                </div>
+                <div style="
   font-size: 0.875rem;
   font-weight: 600;
   color: #333;
-  letter-spacing: 0.2px;
-}
+                  letter-spacing: 0.2px">
+                  {{ __("About System") }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-/* Responsive - tighter at small screens */
-@media (max-width: 1024px) {
-  .custom-navbar {
-    gap: 2px;
-    padding: 2px 4px;
-  }
-
-  .nav-badges {
-    gap: 2px;
-  }
-
-  .badge {
-    padding: 2px 4px;
-    font-size: 10px;
-  }
-}
-
-/* Legacy styles cleanup */
-.margen-top {
-  margin-top: 0px;
-}
-
-/* ===== SNACKBAR NOTIFICATION STYLES ===== */
-.snackbar {
+    <!-- Snackbar -->
+    <div v-if="snack"
+         :style="snackColor === 'success' ? 'background: linear-gradient(135deg, #4caf50 0%, #45a049 100%); border: 1px solid #4caf50' :
+                 snackColor === 'error' ? 'background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); border: 1px solid #f44336' :
+                 snackColor === 'info' ? 'background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%); border: 1px solid #2196f3' :
+                 'background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); border: 1px solid #ff9800'"
+         @click="snack = false"
+         style="
   position: fixed;
   top: 40px;
   left: 50%;
@@ -501,43 +442,12 @@
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   animation: slideDown 0.3s ease-out;
-  text-align: center;
-}
+           text-align: center">
+      {{ snackText }}
+    </div>
 
-.snackbar.success {
-  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
-  border: 1px solid #4caf50;
-}
-
-.snackbar.error {
-  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
-  border: 1px solid #f44336;
-}
-
-.snackbar.info {
-  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
-  border: 1px solid #2196f3;
-}
-
-.snackbar.warning {
-  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-  border: 1px solid #ff9800;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
-/* Modal overlay styles */
-.modal-overlay {
+    <!-- Modal Overlay -->
+    <div v-if="freeze" style="
   position: fixed;
   top: 0;
   left: 0;
@@ -547,34 +457,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 3000;
-}
-
-.modal {
+      z-index: 3000">
+      <div style="
   background: white;
   border-radius: 8px;
   max-width: 500px;
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-.modal-header {
-  padding: 20px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.modal-title {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3)">
+        <div style="padding: 20px; border-bottom: 1px solid #e0e0e0">
+          <h3 style="
   margin: 0;
   color: #333;
   font-size: 18px;
-  font-weight: 600;
-}
+            font-weight: 600">
+            {{ freezeTitle }}
+          </h3>
+        </div>
+        <div style="padding: 20px; color: #666; line-height: 1.5">
+          {{ freezeMsg }}
+        </div>
+      </div>
+    </div>
+  </nav>
+</template>
 
-.modal-body {
-  padding: 20px;
-  color: #666;
-  line-height: 1.5;
-}
-</style>
+<script src="./Navbar.js" />
