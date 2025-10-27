@@ -59,6 +59,7 @@ export default {
       // ===== OFFER CACHING (Simple) =====
       _sessionOffers: [],      // All offers from Pos.js
       _lastCustomer: null,     // Track customer changes
+      
 
       // Table Headers Configuration
       items_headers: [
@@ -202,9 +203,26 @@ export default {
       const percentage = flt(this.additional_discount_percentage || 0);
       return flt((total * percentage) / 100, this.currency_precision);
     },
+
   },
 
   methods: {
+    // ===== BLUR HANDLERS =====
+    handleQtyBlur(item, event) {
+      // Handle business logic
+      this.onQtyChange(item, event);
+    },
+
+    handleRateBlur(item, event) {
+      // Handle business logic
+      this.setItemRate(item, event);
+    },
+
+    handleDiscountBlur(item, event) {
+      // Handle business logic
+      this.setDiscountPercentage(item, event);
+    },
+
     // Shared tax calculation utility - ensures consistency between frontend and backend
     calculateTax(subtotal, taxType, taxPercent) {
       if (!taxPercent || taxPercent === 0) return 0;
