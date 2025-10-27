@@ -15,7 +15,7 @@
 
 ## 🎯 Goal
 
-![POS Awesome metrics snapshot](./imgs/metrics_24_10_2025_06_00_am.png)
+![POS Awesome metrics snapshot](./imgs/Performace_metrics.png)
 
 **POS Awesome Lite** = Modern Interface + Original ERPNext Engine
 
