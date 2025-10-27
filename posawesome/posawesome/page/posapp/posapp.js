@@ -16,13 +16,18 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 
 	// Fix shortcut.js offsetWidth error by hiding layout-main-section
 	$("head").append("<style>.layout-main-section { display: none !important; }</style>");
+};
 
-	// Simple Translation Loader - Load Arabic translations if language is Arabic
+// Replace Frappe translations completely with CSV translations after page loads
+frappe.ready(() => {
 	if (frappe.boot.lang === 'ar') {
 		fetch('/assets/posawesome/translations/ar.csv')
 			.then(response => response.text())
 			.then(csvText => {
-				window.__messages = window.__messages || {};
+				// Delete Frappe translations completely and replace with CSV translations
+				window.__messages = {};
+				
+				// Load only from CSV
 				csvText.split('\n').forEach(line => {
 					if (!line.trim()) return;
 					const commaIndex = line.indexOf(',');
@@ -32,11 +37,12 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 						if (key && value) window.__messages[key] = value;
 					}
 				});
-				console.log('Arabic translations loaded');
+				
+				console.log('✅ CSV translations loaded - Frappe translations replaced completely');
 			})
-			.catch(err => console.error('Translation load error:', err));
+			.catch(err => console.error('❌ Translation load error:', err));
 	}
-};
+});
 
 frappe.pages['posapp'].on_page_leave = function() {
 	// Remove Material Design Icons CSS when leaving POS app
