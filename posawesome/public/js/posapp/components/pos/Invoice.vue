@@ -937,7 +937,7 @@
   left: 0 !important;
   right: 0 !important;
   width: 100% !important;
-  z-index: 1000 !important;
+  z-index: 900 !important;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border-radius: 0 !important;
   padding: 6px;
