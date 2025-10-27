@@ -8,7 +8,7 @@
 // =============================================================================
 
 {% include "posawesome/posawesome/page/posapp/onscan.js" %}
-{% include "posawesome/public/js/translations/ar.js" %}
+{% include "posawesome/posawesome/page/posapp/translations.js" %}
 
 // =============================================================================
 // TRANSLATION SYSTEM
