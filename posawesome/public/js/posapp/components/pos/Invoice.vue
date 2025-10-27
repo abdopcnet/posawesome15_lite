@@ -29,11 +29,12 @@
               <td v-if="dynamicHeaders.find(h => h.key === 'qty')" class="table-cell">
                 <div class="compact-qty-controls">
                   <button class="qty-btn minus-btn" @click="decreaseQuantity(item)"
-                    :disabled="!(item.qty && item.qty > 0)" type="button">
+                    :disabled="!(item.qty && Math.abs(item.qty) > 0)" type="button">
                     <span class="btn-icon">−</span>
                   </button>
-                  <input type="number" v-model.number="item.qty" @input="onQtyInput(item)" @change="onQtyChange(item)"
-                    @blur="onQtyChange(item)" class="compact-qty-input" placeholder="0" />
+                  <input type="number" :value="Math.abs(item.qty || 0)" @input="onQtyInput(item, $event)"
+                    @change="onQtyChange(item, $event)" @blur="onQtyChange(item, $event)" class="compact-qty-input"
+                    placeholder="0" />
                   <button class="qty-btn plus-btn" @click="increaseQuantity(item)" type="button">
                     <span class="btn-icon">+</span>
                   </button>
