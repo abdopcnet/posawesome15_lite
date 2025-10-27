@@ -1,6 +1,6 @@
 # 🍰 Task: Frappe Builder Confectionery Website Design
 
-**💰 Budget**: TBD
+**💰 Budget**: 100 ~ 150
 
 **👨‍💻 Developer**: TBD (Requires strong design experience)
 
