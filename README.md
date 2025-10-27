@@ -43,7 +43,7 @@ Just a lightweight web interface built on top of ERPNext's proven foundation:
 
 ## 📋 Development Tasks Tracking
 
-📋 **Tasks Management:** [docs/tasks/](docs/tasks/)
+📋 **Tasks Management:** [docs/tasks/](needed_tasks/)
 
 ### 🛠️ **Development Resources**
 
