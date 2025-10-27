@@ -309,6 +309,14 @@ export default {
     async add_item(item) {
       if (!item?.item_code) return;
 
+      console.log("Invoice.add_item: START item=" + JSON.stringify({
+        item_code: item.item_code,
+        item_name: item.item_name,
+        rate: item.rate,
+        qty: item.qty,
+        uom: item.uom
+      }));
+
       const new_item = Object.assign({}, item);
       new_item.uom = new_item.uom || new_item.stock_uom || "Nos";
 
@@ -321,6 +329,7 @@ export default {
       if (existing_item) {
         existing_item.qty = flt(existing_item.qty) + flt(new_item.qty);
         existing_item.amount = this.calculateItemAmount(existing_item);
+        console.log("Invoice.add_item: UPDATED existing amount=" + existing_item.amount);
       } else {
         new_item.posa_row_id = this.generateRowId();
         new_item.posa_offers = "[]";
@@ -329,6 +338,7 @@ export default {
         new_item.posa_is_replace = 0;
         new_item.is_free_item = 0;
         new_item.amount = this.calculateItemAmount(new_item);
+        console.log("Invoice.add_item: NEW item amount=" + new_item.amount);
         this.items.push(new_item);
       }
 
