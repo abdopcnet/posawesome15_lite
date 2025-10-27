@@ -43,9 +43,9 @@ Just a lightweight web interface built on top of ERPNext's proven foundation:
 
 ## 📋 Development Tasks Tracking
 
-### 📋 Needed Tasks (needed_tasks)
-
 ### 📋 Needed Tasks
+
+📁 **[View all needed tasks →](needed_tasks/)**
 
 ### 🛠️ **Development Resources**
 
