@@ -1,24 +1,8 @@
 // =============================================================================
 // POS AWESOME TRANSLATION SYSTEM
 // =============================================================================
-// This file contains all translation data and functions for POS Awesome
-//
-// TRANSLATION DATA:
-// - Contains Arabic (ar) translations for all UI strings
-// - English (en) is empty (uses original text)
-//
-// USAGE:
-// - Load this file via {% include %} in posapp.js
-// - Initialize with: window.posaTranslationInit('ar')
-// - Use translations via: window.__('Text')
-//
-// TO ADD/EDIT TRANSLATIONS:
-// - Edit the posaTranslations object below
-// - Add new entries or modify existing ones
-// - Reload the application
-// =============================================================================
 
-// Translation data object containing all language translations
+// Translation data
 const posaTranslations = {
 	ar: {
 		"Account": "الحساب",
@@ -684,23 +668,8 @@ const posaTranslations = {
 	en: {}
 };
 
-// =============================================================================
-// TRANSLATION FUNCTION
-// =============================================================================
-// This function translates a message string and handles dynamic placeholders
-//
-// PARAMETERS:
-// - message: The text to translate (e.g., "Hello")
-// - replace: Array of values to replace {0}, {1}, etc.
-// - context: Optional context (currently not used)
-//
-// EXAMPLES:
-// - posaTranslate('Hello') → 'مرحبا' (if language is 'ar')
-// - posaTranslate('Item {0}', ['Apple']) → 'الصنف Apple'
-// =============================================================================
-
+// Translation function with placeholder support
 function posaTranslate(message, replace, context) {
-	// Get translated message or use original if not found
 	let translatedMessage = posaTranslations[posaLanguage][message] || message;
 
 	// Handle placeholders like {0}, {1}, etc.
@@ -713,32 +682,16 @@ function posaTranslate(message, replace, context) {
 	return translatedMessage;
 }
 
-// =============================================================================
-// TRANSLATION SYSTEM INITIALIZATION
-// =============================================================================
-// This function initializes the translation system with a specific language
-// and sets up global Frappe-compatible translation functions
-//
-// PARAMETERS:
-// - language: 'ar' for Arabic or 'en' for English
-//
-// SETUP:
-// - Sets up window.__() function for use throughout the app
-// - Initializes window.__messages for Frappe compatibility
-// =============================================================================
-
+// Initialize translation system
 function initTranslationSystem(language) {
 	posaLanguage = language;
-	// Make __ function available globally
 	window.__ = posaTranslate;
-	// Initialize Frappe-compatible messages object
 	window.__messages = posaTranslations[language] || {};
 }
 
-// Initialize with default language (Arabic)
+// Initialize with default language
 let posaLanguage = 'ar';
 initTranslationSystem(posaLanguage);
 
-// Export initialization function for use in posapp.js
+// Export for use in posapp.js
 window.posaTranslationInit = initTranslationSystem;
-
