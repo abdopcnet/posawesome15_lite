@@ -171,12 +171,14 @@
   gap: 3px;
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid #e0e0e0;
+  /* (was #e0e0e0) */
+  border: 1px solid rgba(224, 224, 224, 0.85);
   background: #fff;
   font-size: 10px;
   font-weight: 600;
   white-space: nowrap;
-  transition: all 0.2s;
+  transition: box-shadow 180ms ease, filter 180ms ease, background-color 180ms ease, border-color 180ms ease;
+  will-change: box-shadow, filter, background-color;
   line-height: 1;
   height: 22px;
 }
@@ -187,108 +189,117 @@
 
 /* Badge Variants */
 .badge.regular-invoice {
-  border-color: #1976d2;
+  /* original #1976d2 */
+  border-color: rgba(25, 118, 210, 0.62);
   background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
   color: #1976d2;
 }
 
 .badge.return-invoice {
-  border-color: #d32f2f;
+  border-color: rgba(211, 47, 47, 0.62);
   background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
   color: #d32f2f;
 }
 
 .badge.no-invoice {
-  border-color: #bdbdbd;
+  border-color: rgba(189, 189, 189, 0.8);
   background: #f5f5f5;
   color: #757575;
   font-style: italic;
 }
 
 .badge.open-shift {
-  border-color: #4caf50;
+  border-color: rgba(76, 175, 80, 0.62);
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
   color: #2e7d32;
 }
 
 .badge.closed-shift {
-  border-color: #ff9800;
-  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-  color: #f57c00;
+  border-color: rgba(255, 152, 0, 0.33);
+  background: linear-gradient(135deg, #fffaf3 0%, #ff870a59 100%);
+  color: #000000b0;
 }
 
 .badge.no-shift {
-  border-color: #bdbdbd;
+  border-color: rgba(189, 189, 189, 0.8);
   background: #f5f5f5;
   color: #757575;
   font-style: italic;
 }
 
 .badge.user-badge {
-  border-color: #1976d2;
+  border-color: rgba(25, 118, 210, 0.56);
   background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
   color: #1976d2;
 }
 
 .badge.shift-active {
-  border-color: #4caf50;
+  border-color: rgba(76, 175, 80, 0.56);
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
   color: #2e7d32;
 }
 
 .badge.no-shift-start {
-  border-color: #bdbdbd;
+  border-color: rgba(189, 189, 189, 0.8);
   background: #f5f5f5;
   color: #757575;
 }
 
 .badge.totals-badge {
-  border-color: #1976d2;
+  border-color: rgba(25, 118, 210, 0.56);
   background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
   color: #1976d2;
 }
 
 .badge.ping-excellent {
-  border-color: #4caf50;
+  border-color: rgba(76, 175, 80, 0.56);
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
   color: #2e7d32;
 }
 
 .badge.ping-good {
-  border-color: #2196f3;
+  border-color: rgba(33, 150, 243, 0.56);
   background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
   color: #1976d2;
 }
 
 .badge.ping-fair {
-  border-color: #ff9800;
+  border-color: rgba(255, 152, 0, 0.56);
   background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
   color: #f57c00;
 }
 
 .badge.ping-poor {
-  border-color: #f44336;
+  border-color: rgba(244, 67, 54, 0.56);
   background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
   color: #d32f2f;
 }
 
 .badge.profile-badge {
-  border-color: #1976d2;
+  border-color: rgba(25, 118, 210, 0.56);
   background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
   color: #1976d2;
   font-weight: 700;
 }
 
 .badge.cash-badge {
-  border-color: #4caf50;
+  border-color: rgba(76, 175, 80, 0.56);
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
   color: #2e7d32;
 }
 
 .badge.card-badge {
-  border-color: #9c27b0;
-  background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
-  color: #7b1fa2;
+  border-color: rgba(156, 39, 176, 0.29);
+  background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7ab 100%);
+  color: #9033b7;
+}
+
+/* modern, lightweight hover effect for badges */
+.badge:hover {
+  box-shadow: 0 4px 12px rgba(12, 24, 40, 0.06);
+  filter: brightness(1.03);
+  border-color: rgba(0, 0, 0, 0.08);
+  z-index: 2;
 }
 
 /* Actions Container */
