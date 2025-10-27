@@ -1,36 +1,27 @@
 // @ts-nocheck
+
+// =============================================================================
+// Barcode Scanner (onscan.js)
+// =============================================================================
 {% include "posawesome/posawesome/page/posapp/onscan.js" %}
+
+// =============================================================================
+// TRANSLATION SYSTEM - EMBEDDED
+// =============================================================================
+{% include "posawesome/posawesome/page/posapp/translations.js" %}
 
 // =============================================================================
 // POS AWESOME - POS Application Page
 // =============================================================================
 // This file handles the POS application page setup and translation system
 //
-// IMPORTANT: To change language, modify posa_language variable below (line 32)
+// IMPORTANT: To change language, modify posa_language variable below (around line 746)
 // =============================================================================
 
-// =============================================================================
-// TRANSLATION SYSTEM - EMBEDDED IN THIS FILE
-// =============================================================================
-// Translation data object containing all language translations
-{% include "posawesome/posawesome/page/posapp/translations.js" %}
-// =============================================================================
+// Manual language parameter - Change this to switch languages
+const posa_language = 'ar'; // Options: 'ar' (Arabic) or 'en' (English)
 
-// =============================================================================
-// MANUAL LANGUAGE SELECTION
-// =============================================================================
-// Change this variable to switch between Arabic and English
-// Options: 'ar' (Arabic) or 'en' (English)
-// After changing, reload the page for the new language to take effect
-// =============================================================================
-const posa_language = 'ar';
-
-// =============================================================================
-// INITIALIZE TRANSLATION SYSTEM
-// =============================================================================
-// This checks if translations.js was loaded and initializes the translation system
-// If translations.js failed to load, provides a fallback that returns original text
-// =============================================================================
+// Initialize translation system after translations.js is loaded
 if (typeof window.posaTranslationInit === 'function') {
 	// Successfully loaded translations.js - initialize with selected language
 	window.posaTranslationInit(posa_language);
