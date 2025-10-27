@@ -9,8 +9,12 @@
 // IMPORTANT: To change language, modify posa_language variable below (line 32)
 // =============================================================================
 
-// Translation system embedded below (no external files needed)
-{% include "posawesome/posawesome/page/posapp/translations" %}
+// =============================================================================
+// TRANSLATION SYSTEM - EMBEDDED IN THIS FILE
+// =============================================================================
+// Translation data object containing all language translations
+{% include "posawesome/posawesome/page/posapp/translations.js" %}
+// =============================================================================
 
 // =============================================================================
 // MANUAL LANGUAGE SELECTION
