@@ -19,14 +19,14 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 };
 
 // Replace Frappe translations completely with CSV translations after page loads
-frappe.ready(() => {
+$(document).ready(() => {
 	if (frappe.boot.lang === 'ar') {
 		fetch('/assets/posawesome/translations/ar.csv')
 			.then(response => response.text())
 			.then(csvText => {
 				// Delete Frappe translations completely and replace with CSV translations
 				window.__messages = {};
-
+				
 				// Load only from CSV
 				csvText.split('\n').forEach(line => {
 					if (!line.trim()) return;
@@ -37,7 +37,7 @@ frappe.ready(() => {
 						if (key && value) window.__messages[key] = value;
 					}
 				});
-
+				
 				console.log('✅ CSV translations loaded - Frappe translations replaced completely');
 			})
 			.catch(err => console.error('❌ Translation load error:', err));
