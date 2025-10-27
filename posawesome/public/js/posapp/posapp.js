@@ -15,9 +15,14 @@ function SetVueGlobals(app) {
     // Set up global properties that components might need
     app.config.globalProperties.$frappe = frappe;
 
-    // Make __() function available for translation
-    if (typeof __ !== 'undefined') {
-        app.config.globalProperties.__ = __;
+    // =============================================================================
+    // Make __() function available for translation in Vue components
+    // =============================================================================
+    // This allows Vue components to use translation like: {{ __("Hello") }}
+    // Check if __() exists in global scope (defined in posapp.js page file)
+    if (typeof window.__ !== 'undefined') {
+        // Make translation function available to all Vue components
+        app.config.globalProperties.__ = window.__;
     }
 
     // Make common Frappe utilities available globally
