@@ -449,13 +449,6 @@ export default {
     hasValidPayments(invoice_doc = null) {
       const doc = invoice_doc || this.invoice_doc;
       const hasValid = doc?.payments?.some((p) => Math.abs(this.flt(p.amount)) > 0) || false;
-
-      console.log('Invoice.js - hasValidPayments():', {
-        hasValid: hasValid,
-        payments: doc?.payments?.map((p) => ({ mode: p.mode_of_payment, amount: p.amount })),
-        is_return: doc?.is_return,
-      });
-
       return hasValid;
     },
 
@@ -820,14 +813,6 @@ export default {
         this.updateInvoiceDocLocally();
 
         const invoice_doc = await this.process_invoice();
-
-        console.log('Invoice.js - show_payment() - invoice_doc:', {
-          grand_total: invoice_doc?.grand_total,
-          net_total: invoice_doc?.net_total,
-          items_count: invoice_doc?.items?.length || 0,
-          payments: invoice_doc?.payments?.length || 0,
-          pos_profile_payments: this.pos_profile?.payments?.length || 0,
-        });
 
         // Add default payment method if no payments exist
         if (!invoice_doc?.payments || invoice_doc?.payments.length === 0) {
@@ -1839,45 +1824,23 @@ export default {
       const doc = this.get_invoice_doc('print');
       doc.__islocal = 1; // Mark as local document (matches ERPNext behavior)
 
-      // Debug: Log important invoice data
-      console.log('Invoice.js - printInvoice():', {
-        customer: doc.customer,
-        items_count: doc.items?.length || 0,
-        grand_total: doc.grand_total,
-        payment_count: doc.payments?.length || 0,
-        is_return: doc.is_return,
-      });
-
       // Calculate totals locally (like ERPNext does)
       // This ensures totals are updated without saving to server
       this.calculateTotalsLocally(doc);
 
-      console.log('Invoice.js - After calculateTotalsLocally():', {
-        grand_total: doc.grand_total,
-        net_total: doc.net_total,
-        rounded_total: doc.rounded_total,
-      });
-
       if (!this.hasValidPayments(doc)) {
-        console.log('Invoice.js - Payment validation failed');
         evntBus.emit('show_payment', 'true');
         evntBus.emit('hide_loading');
         return;
       }
 
       // Send to server for insert + submit (ERPNext native workflow)
-      console.log('Invoice.js - Sending to server for create_and_submit_invoice');
       frappe.call({
         method: 'posawesome.posawesome.api.sales_invoice.create_and_submit_invoice',
         args: {
           invoice_doc: doc,
         },
         callback: (r) => {
-          console.log('Invoice.js - Server response:', {
-            success: !!r.message?.name,
-            invoice_name: r.message?.name || 'No name',
-          });
-
           evntBus.emit('hide_loading');
 
           if (r.message?.name) {
