@@ -39,13 +39,13 @@
       >
         <table
           style="
+            /* min-width: 600px; */
+            /* max-width: 100%; */
             width: 100%;
             border-collapse: collapse;
             background: white;
-            font-size: 0.72rem;
+            font-size: 0.75rem;
             table-layout: fixed;
-            /* make cells not wrap by default */
-            white-space: nowrap;
           "
         >
           <!-- TABLE HEADERS -->
@@ -61,17 +61,14 @@
                     rgba(128, 166, 255, 0.25) 50%
                   );
                   border-bottom: 1px solid #e0e0e0;
-                  padding: 6px 8px;
+                  padding: 8px 12px;
                   font-weight: 600;
-                  font-size: 0.72rem;
+                  font-size: 0.75rem;
                   color: #424242;
                   position: sticky;
                   top: 0;
                   z-index: 1;
                   text-align: center;
-                  white-space: nowrap;
-                  overflow: hidden;
-                  text-overflow: ellipsis;
                 "
               >
                 {{ header.title }}
@@ -85,89 +82,80 @@
               v-for="item in items"
               :key="item.posa_row_id"
               @mouseenter="
-                $event.currentTarget.style.background = 'rgba(16,24,40,0.06)';
-                $event.currentTarget.style.transition = 'background-color 120ms ease';
+                $event.currentTarget.style.background = 'rgba(16,24,40,0.09)';
+                $event.currentTarget.style.transition = 'background-color 160ms ease';
               "
               @mouseleave="
                 $event.currentTarget.style.background = '';
-                $event.currentTarget.style.transition = 'background-color 120ms ease';
+                $event.currentTarget.style.transition = 'background-color 160ms ease';
               "
-              style="
-                border-bottom: 1px solid #f1f1f1;
-                height: 40px;
-                min-height: 40px;
-                box-sizing: border-box;
-                white-space: nowrap;
-                overflow: hidden;
-              "
+              style="border-bottom: 1px solid #f1f1f1"
             >
               <!-- ITEM NAME COLUMN -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'item_name')"
-                style="
-                  padding: 6px 8px;
-                  vertical-align: middle;
-                  max-width: 1px; /* allow flex truncation */
-                "
+                style="padding: 12px 12px; vertical-align: middle"
               >
-                <!-- no-wrap + ellipsis -->
-                <p
-                  style="
-                    margin-bottom: 0;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    display: block;
-                    max-width: 100%;
-                  "
-                  :title="item.item_name"
-                >
+                <!-- <div style="width: 120px"> -->
+                <p style="margin-bottom: 0">
                   {{ item.item_name }}
                 </p>
+                <!-- </div> -->
               </td>
 
               <!-- QUANTITY COLUMN -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'qty')"
-                style="padding: 6px 8px; vertical-align: middle; max-width: 92px; width: 92px"
+                style="/* padding: 6px;  */ padding: 12px; vertical-align: middle; max-width: 80px"
               >
                 <div
                   style="
                     display: flex;
                     align-items: center;
-                    justify-content: center;
-                    gap: 6px;
-                    padding: 0;
+                    justify-content: space-between;
+                    /* gap: 2px;
+                    padding: 2px; */
+                    gap: 0px;
+                    padding: 0px;
                     background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
                     border-radius: 4px;
                     width: 100%;
-                    min-width: 0;
-                    box-sizing: border-box;
-                    overflow: hidden;
-                    white-space: nowrap;
+                    /* max-width: 85px; */
+                    min-width: 75px;
                   "
                 >
                   <button
                     style="
                       flex-shrink: 0;
-                      width: 28px;
-                      height: 28px;
+                      width: 16px;
+                      height: 16px;
+                      min-width: 16px;
                       padding: 0;
                       border: none;
-                      border-radius: 5px;
+                      border-radius: 3px;
                       cursor: pointer;
                       display: flex;
                       align-items: center;
                       justify-content: center;
-                      font-size: 0.9rem;
+                      font-size: 0;
+                      position: relative;
                       color: white;
                       background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+                      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
                     "
                     @click="decreaseQuantity(item)"
                     :disabled="!(item.qty && Math.abs(item.qty) > 0)"
                     type="button"
                   >
-                    −
+                    <span
+                      style="
+                        /* font-size: 0.85rem; */
+                        font-size: 0.75rem;
+                        font-weight: 700;
+                        line-height: 1;
+                      "
+                      >−</span
+                    >
                   </button>
 
                   <input
@@ -176,52 +164,53 @@
                     @input="onQtyInput(item, $event)"
                     @change="onQtyChange(item, $event)"
                     @blur="handleQtyBlur(item, $event)"
-                    @wheel.prevent
-                    @keydown="
-                      if ($event.key === 'ArrowUp' || $event.key === 'ArrowDown') {
-                        $event.preventDefault();
-                        $event.stopPropagation();
-                      }
-                    "
                     style="
-                      width: 44px;
+                      flex: 1;
+                      width: 100%;
+                      min-width: 0;
                       border: 1px solid #1976d2;
                       background: white;
                       text-align: center;
-                      font-size: 0.72rem;
-                      margin: 0 4px;
-                      padding: 3px 4px;
-                      border-radius: 4px;
+                      font-size: 0.75rem;
+                      margin: 0px 3px;
+                      /* padding: 2px 4px; */
+                      padding: 0px 0px;
+                      border-radius: 3px;
                       outline: none;
-                      box-sizing: border-box;
-                      -moz-appearance: textfield;
-                      -webkit-appearance: none;
-                      appearance: textfield;
                     "
                     placeholder="0"
-                    inputmode="numeric"
                   />
-
                   <button
                     style="
                       flex-shrink: 0;
-                      width: 28px;
-                      height: 28px;
+                      width: 16px;
+                      height: 16px;
+                      min-width: 16px;
                       padding: 0;
                       border: none;
-                      border-radius: 5px;
+                      border-radius: 3px;
                       cursor: pointer;
                       display: flex;
                       align-items: center;
                       justify-content: center;
-                      font-size: 0.9rem;
+                      font-size: 0;
+                      position: relative;
                       color: white;
                       background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+                      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
                     "
                     @click="increaseQuantity(item)"
                     type="button"
                   >
-                    +
+                    <span
+                      style="
+                        /* font-size: 0.85rem; */
+                        font-size: 0.75rem;
+                        font-weight: 700;
+                        line-height: 1;
+                      "
+                      >+</span
+                    >
                   </button>
                 </div>
               </td>
@@ -229,16 +218,7 @@
               <!-- UOM COLUMN -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'uom')"
-                style="
-                  padding: 6px 8px;
-                  vertical-align: middle;
-                  text-align: center;
-                  max-width: 72px;
-                  width: 72px;
-                  overflow: hidden;
-                  text-overflow: ellipsis;
-                "
-                :title="item.uom"
+                style="padding: 12px 12px; vertical-align: middle; text-align: center"
               >
                 {{ item.uom }}
               </td>
@@ -246,37 +226,21 @@
               <!-- PRICE LIST RATE COLUMN (Original Price) -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'price_list_rate')"
-                style="
-                  padding: 6px 8px;
-                  vertical-align: middle;
-                  max-width: 92px;
-                  width: 92px;
-                  overflow: hidden;
-                "
+                style="padding: 12px 12px; vertical-align: middle"
               >
                 <div
                   style="
                     display: flex;
                     align-items: center;
-                    justify-content: center;
                     gap: 3px;
-                    padding: 4px;
+                    padding: 0px 6px;
                     background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
                     border-radius: 4px;
-                    min-width: 0;
-                    overflow: hidden;
+                    min-width: 60px;
+                    justify-content: center;
                   "
                 >
-                  <span
-                    style="
-                      font-size: 0.75rem;
-                      font-weight: 700;
-                      color: #2e7d32;
-                      white-space: nowrap;
-                      overflow: hidden;
-                      text-overflow: ellipsis;
-                    "
-                  >
+                  <span style="font-size: 0.75rem; font-weight: 700; color: #2e7d32">
                     {{ formatCurrency(item.price_list_rate) }}
                   </span>
                 </div>
@@ -285,25 +249,18 @@
               <!-- RATE COLUMN (Discounted Price - Editable) -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'rate')"
-                style="
-                  padding: 6px 8px;
-                  vertical-align: middle;
-                  max-width: 110px;
-                  width: 110px;
-                  overflow: hidden;
-                "
+                style="padding: 12px 12px; vertical-align: middle"
               >
                 <div
                   style="
                     display: flex;
                     align-items: center;
-                    justify-content: center;
                     gap: 3px;
-                    padding: 4px;
+                    padding: 0px 6px;
                     background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
                     border-radius: 4px;
-                    min-width: 0;
-                    overflow: hidden;
+                    min-width: 65px;
+                    justify-content: center;
                   "
                 >
                   <input
@@ -327,8 +284,8 @@
                           item.posa_offer_applied ||
                           invoice_doc?.is_return,
                       )
-                        ? 'width:100%; border:none; background:#f5f5f5; color:#9e9e9e; font-size:0.72rem; padding:4px; border-radius:4px; outline:none; text-align:center'
-                        : 'width:100%; border:none; background:transparent; font-size:0.78rem; font-weight:700; color:#f57c00; padding:4px; outline:none; text-align:center'
+                        ? 'flex: 1; width: 100%; border: none; background: #f5f5f5; color: #9e9e9e; font-size: 0.75rem; padding: 2px 4px; border-radius: 3px; outline: none; cursor: not-allowed'
+                        : 'flex: 1; width: 100%; border: none; background: transparent; font-size: 0.8rem; font-weight: 700; color: #f57c00; padding: 0; outline: none; text-align: right'
                     "
                     placeholder="0.00"
                   />
@@ -338,25 +295,18 @@
               <!-- DISCOUNT PERCENTAGE COLUMN (Editable) -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'discount_percentage')"
-                style="
-                  padding: 6px 8px;
-                  vertical-align: middle;
-                  max-width: 90px;
-                  width: 90px;
-                  overflow: hidden;
-                "
+                style="padding: 12px 12px; vertical-align: middle"
               >
                 <div
                   style="
                     display: flex;
                     align-items: center;
-                    justify-content: center;
                     gap: 3px;
-                    padding: 4px;
+                    padding: 0px 6px;
                     background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
                     border-radius: 4px;
-                    min-width: 0;
-                    overflow: hidden;
+                    min-width: 55px;
+                    justify-content: center;
                   "
                 >
                   <input
@@ -382,17 +332,18 @@
                           !pos_profile?.posa_allow_user_to_edit_item_discount ||
                           invoice_doc?.is_return,
                       )
-                        ? 'width:100%; border:none; background:#f5f5f5; color:#9e9e9e; font-size:0.72rem; padding:4px; border-radius:4px; outline:none; text-align:center'
-                        : 'width:100%; border:none; background:transparent; font-size:0.72rem; font-weight:700; color:#f57c00; padding:4px; outline:none; text-align:center'
+                        ? 'flex: 1; width: 100%; border: none; background: #f5f5f5; color: #9e9e9e; font-size: 0.75rem; padding: 2px 4px; border-radius: 3px; outline: none; cursor: not-allowed; text-align: right'
+                        : 'flex: 1; width: 100%; border: none; background: transparent; font-size: 0.75rem; font-weight: 700; color: #f57c00; padding: 0; outline: none; text-align: right'
                     "
                     placeholder="0"
                     min="0"
                     :max="pos_profile?.posa_item_max_discount_allowed || 100"
                     step="0.01"
                   />
+
                   <span
                     style="
-                      font-size: 0.68rem;
+                      font-size: 0.65rem;
                       font-weight: 700;
                       color: #f57c00;
                       white-space: nowrap;
@@ -406,35 +357,25 @@
               <!-- DISCOUNT AMOUNT COLUMN (Calculated) -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'discount_amount')"
-                style="
-                  padding: 6px 8px;
-                  vertical-align: middle;
-                  max-width: 92px;
-                  width: 92px;
-                  overflow: hidden;
-                "
+                style="padding: 12px 12px; vertical-align: middle"
               >
                 <div
                   style="
                     display: flex;
                     align-items: center;
-                    justify-content: center;
                     gap: 3px;
-                    padding: 4px;
+                    padding: 0px 6px;
                     background: linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%);
                     border-radius: 4px;
-                    min-width: 0;
-                    overflow: hidden;
+                    min-width: 60px;
+                    justify-content: center;
                   "
                 >
                   <span
                     :style="{
-                      fontSize: '0.76rem',
+                      fontSize: '0.8rem',
                       fontWeight: '700',
                       color: getDiscountAmount(item) > 0 ? '#f57c00' : '#9e9e9e',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
                     }"
                   >
                     {{ formatCurrency(getDiscountAmount(item)) }}
@@ -445,37 +386,21 @@
               <!-- TOTAL AMOUNT COLUMN (Calculated: Qty × Rate) -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'amount')"
-                style="
-                  padding: 6px 8px;
-                  vertical-align: middle;
-                  max-width: 110px;
-                  width: 110px;
-                  overflow: hidden;
-                "
+                style="padding: 12px 12px; vertical-align: middle"
               >
                 <div
                   style="
                     display: flex;
                     align-items: center;
-                    justify-content: center;
                     gap: 3px;
-                    padding: 4px;
+                    padding: 0px 6px;
                     background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
                     border-radius: 4px;
-                    min-width: 0;
-                    overflow: hidden;
+                    min-width: 70px;
+                    justify-content: center;
                   "
                 >
-                  <span
-                    style="
-                      font-size: 0.78rem;
-                      font-weight: 700;
-                      color: #1b5e20;
-                      white-space: nowrap;
-                      overflow: hidden;
-                      text-overflow: ellipsis;
-                    "
-                  >
+                  <span style="font-size: 0.75rem; font-weight: 700; color: #1b5e20">
                     {{
                       formatCurrency(
                         flt(item.qty, float_precision) * flt(item.rate, currency_precision),
@@ -488,29 +413,20 @@
               <!-- ACTIONS COLUMN (Delete Button) -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'actions')"
-                style="
-                  padding: 6px 8px;
-                  vertical-align: middle;
-                  width: 56px;
-                  max-width: 56px;
-                  text-align: center;
-                  overflow: hidden;
-                "
+                style="padding: 12px 12px; vertical-align: middle"
               >
-                <div
-                  style="display: flex; justify-content: center; align-items: center; height: 100%"
-                >
+                <div style="display: flex; justify-content: center; align-items: center">
                   <button
                     :disabled="Boolean(item.posa_is_offer || item.posa_is_replace)"
                     :style="
                       item.posa_is_offer || item.posa_is_replace
-                        ? 'width:36px;height:36px;padding:0;border-radius:6px;border:none;background:#f3f3f3;color:#9e9e9e;display:flex;align-items:center;justify-content:center;cursor:not-allowed;opacity:0.6;transition:transform 140ms ease,box-shadow 140ms ease,background 140ms ease'
-                        : 'width:36px;height:36px;padding:0;border-radius:6px;border:none;background:linear-gradient(180deg,#fff5f5,#ffffff);color:#c62828;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform 140ms ease,box-shadow 140ms ease,background 140ms ease'
+                        ? 'width:18px;height:18px;padding:0;border-radius:6px;border:none;background:#f3f3f3;color:#9e9e9e;display:flex;align-items:center;justify-content:center;cursor:not-allowed;opacity:0.6;transition:transform 140ms ease,box-shadow 140ms ease,background 140ms ease'
+                        : 'width:18px;height:18px;padding:0;border-radius:6px;border:none;background:linear-gradient(180deg,#fff5f5,#ffffff);color:#c62828;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform 140ms ease,box-shadow 140ms ease,background 140ms ease'
                     "
                     @mouseenter="
                       if (!$event.currentTarget.disabled) {
                         $event.currentTarget.style.transform = 'translateY(-2px)';
-                        $event.currentTarget.style.boxShadow = '0 8px 24px rgba(198,40,40,0.12)';
+                        $event.currentTarget.style.boxShadow = '0 10px 30px rgba(198,40,40,0.12)';
                         $event.currentTarget.style.background =
                           'linear-gradient(180deg,#ffebee,#ffcdd2)';
                       }
