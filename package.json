@@ -2,5 +2,11 @@
   "dependencies": {
     "mitt": "^3.0.1",
     "vue": "^3.4.21"
+  },
+  "devDependencies": {
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^10.5.1",
+    "prettier": "^3.6.2"
   }
 }
