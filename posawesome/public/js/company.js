@@ -2,22 +2,22 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('Company', {
-    setup: function (frm) {
-        frm.set_query("posa_customer_offer", function () {
-            return {
-                filters: {
-                    "company": frm.doc.name,
-                    "disable": 0,
-                }
-            };
-        });
-        frm.set_query("posa_primary_offer", function () {
-            return {
-                filters: {
-                    "company": frm.doc.name,
-                    "disable": 0,
-                }
-            };
-        });
-    },
+  setup: function (frm) {
+    frm.set_query('posa_customer_offer', function () {
+      return {
+        filters: {
+          company: frm.doc.name,
+          disable: 0,
+        },
+      };
+    });
+    frm.set_query('posa_primary_offer', function () {
+      return {
+        filters: {
+          company: frm.doc.name,
+          disable: 0,
+        },
+      };
+    });
+  },
 });
