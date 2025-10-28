@@ -1,6 +1,6 @@
-import { evntBus } from "../../bus";
-import UpdateCustomer from "./UpdateCustomer.vue";
-import { API_MAP } from "../../api_mapper.js";
+import { evntBus } from '../../bus';
+import UpdateCustomer from './UpdateCustomer.vue';
+import { API_MAP } from '../../api_mapper.js';
 
 const EVENT_NAMES = {
   UPDATE_CUSTOMER: 'update_customer',
@@ -54,7 +54,7 @@ export default {
     get_many_customers() {
       try {
         if (this.customers.length > 0) return;
-        this.load_all_customers("");
+        this.load_all_customers('');
         this.load_default_customer();
       } catch (error) {
         this.showMessage(ERROR_MESSAGES.UNEXPECTED_ERROR, 'error');
@@ -62,7 +62,7 @@ export default {
     },
 
     handleCustomerFocus() {
-      this.load_all_customers("");
+      this.load_all_customers('');
       this.showDropdown = true;
     },
 
@@ -78,7 +78,7 @@ export default {
 
         // Wait for customers list to load, then match name
         const checkInterval = setInterval(() => {
-          const selected = this.customers.find(c => c.name === default_customer);
+          const selected = this.customers.find((c) => c.name === default_customer);
           if (selected) {
             this.customer_search = selected.customer_name;
             this.customer_info = selected;
@@ -93,7 +93,7 @@ export default {
       }
     },
 
-    load_all_customers(searchTerm = "") {
+    load_all_customers(searchTerm = '') {
       if (!this.pos_profile) {
         this.showMessage(ERROR_MESSAGES.POS_PROFILE_NOT_LOADED, 'error');
         return;
@@ -117,7 +117,7 @@ export default {
 
             // ✅ After customers loaded, if default not yet shown, show it now
             if (!this.defaultLoaded && this.customer) {
-              const selected = this.customers.find(c => c.name === this.customer);
+              const selected = this.customers.find((c) => c.name === this.customer);
               if (selected) {
                 this.customer_search = selected.customer_name;
                 this.customer_info = selected;
@@ -135,7 +135,7 @@ export default {
     },
 
     performSearch(event) {
-      const searchTerm = event?.target?.value || "";
+      const searchTerm = event?.target?.value || '';
       this.customer_search = searchTerm;
       this.showDropdown = true;
       this.selectedIndex = -1;
@@ -197,7 +197,7 @@ export default {
     },
 
     handleClickOutside(e) {
-      const wrapper = this.$el.querySelector(".autocomplete");
+      const wrapper = this.$el.querySelector('.autocomplete');
       if (wrapper && !wrapper.contains(e.target)) {
         this.showDropdown = false;
       }
@@ -207,7 +207,10 @@ export default {
       try {
         evntBus.on(EVENT_NAMES.TOGGLE_QUICK_RETURN, this.handleToggleQuickReturn);
         evntBus.on(EVENT_NAMES.REGISTER_POS_PROFILE, this.handleRegisterPosProfile);
-        evntBus.on(EVENT_NAMES.PAYMENTS_REGISTER_POS_PROFILE, this.handlePaymentsRegisterPosProfile);
+        evntBus.on(
+          EVENT_NAMES.PAYMENTS_REGISTER_POS_PROFILE,
+          this.handlePaymentsRegisterPosProfile,
+        );
         evntBus.on(EVENT_NAMES.SET_CUSTOMER, this.handleSetCustomer);
         evntBus.on(EVENT_NAMES.ADD_CUSTOMER_TO_LIST, this.handleAddCustomerToList);
         evntBus.on(EVENT_NAMES.SET_CUSTOMER_READONLY, this.handleSetCustomerReadonly);
@@ -246,17 +249,17 @@ export default {
       this.get_many_customers();
     },
     handleCustomerDropdownOpened() {
-      this.load_all_customers("");
+      this.load_all_customers('');
     },
   },
 
   mounted() {
-    document.addEventListener("click", this.handleClickOutside);
+    document.addEventListener('click', this.handleClickOutside);
   },
 
   beforeUnmount() {
     if (this.searchTimeout) clearTimeout(this.searchTimeout);
-    document.removeEventListener("click", this.handleClickOutside);
+    document.removeEventListener('click', this.handleClickOutside);
   },
 
   created() {
@@ -267,7 +270,7 @@ export default {
 
   watch: {
     customer(newVal) {
-      const selected = this.customers.find(c => c.name === newVal);
+      const selected = this.customers.find((c) => c.name === newVal);
       if (selected) this.customer_search = selected.customer_name;
       evntBus.emit(EVENT_NAMES.UPDATE_CUSTOMER, newVal);
     },
