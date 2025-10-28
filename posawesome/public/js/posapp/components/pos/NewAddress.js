@@ -1,5 +1,5 @@
 import { evntBus } from '../../bus';
-import { API_MAP } from "../../api_mapper.js";
+import { API_MAP } from '../../api_mapper.js';
 export default {
   data: () => ({
     addressDialog: false,
@@ -46,5 +46,5 @@ export default {
   beforeDestroy() {
     // Clean up event listener
     evntBus.$off('open_new_address');
-  }
+  },
 };
