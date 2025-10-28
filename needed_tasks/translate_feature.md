@@ -1,6 +1,6 @@
 # Translation Feature - POS Awesome
 
-## Budget: 20-30 Hours
+## Budget: 20$~30$
 
 ## Objective
 
