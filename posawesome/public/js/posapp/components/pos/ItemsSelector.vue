@@ -95,9 +95,7 @@
           "
         >
           <i class="mdi mdi-tag-multiple" style="font-size: 18px"></i>
-          <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
-            >{{ offersCount }} Offers</span
-          >
+          <span>{{ offersCount }} Offers</span>
         </button>
       </div>
     </div>
@@ -413,10 +411,11 @@
             <table
               style="
                 width: 100%;
+                max-width: 100%;
                 border-collapse: collapse;
                 font-size: 0.75rem;
                 background: white;
-                table-layout: fixed;
+                table-layout: auto; /* let browser size columns by content */
               "
             >
               <thead>
@@ -439,9 +438,9 @@
                       position: sticky;
                       top: 0;
                       z-index: 1;
-                      white-space: nowrap;
-                      overflow: hidden;
-                      text-overflow: ellipsis;
+                      white-space: nowrap; /* no wrapping */
+                      overflow: hidden; /* clip overflow */
+                      text-overflow: ellipsis; /* show ellipsis when truncated */
                     "
                   >
                     {{ header.title || header.text }}
@@ -476,19 +475,34 @@
                       font-size: 0.75rem;
                       color: #424242;
                       vertical-align: middle;
-
-                      white-space: nowrap;
-                      overflow: hidden;
-                      text-overflow: ellipsis;
+                      white-space: nowrap; /* no wrapping */
+                      overflow: hidden; /* clip overflow */
+                      text-overflow: ellipsis; /* ellipsis when truncated */
+                      min-width: 0; /* allow cell to shrink within table */
                     "
                   >
-                    <span v-if="header.key === 'rate'" style="color: #1976d2; font-weight: 600">
+                    <span
+                      v-if="header.key === 'rate'"
+                      style="
+                        color: #1976d2;
+                        font-weight: 600;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                      "
+                    >
                       {{ formatCurrency(item.rate) }}
                     </span>
-                    <span v-else-if="header.key === 'actual_qty'">
+                    <span
+                      v-else-if="header.key === 'actual_qty'"
+                      style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
+                    >
                       {{ formatFloat(item.actual_qty) }}
                     </span>
-                    <span v-else>
+                    <span
+                      v-else
+                      style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
+                    >
                       {{ item[header.key] }}
                     </span>
                   </td>
