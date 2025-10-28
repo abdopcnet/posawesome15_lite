@@ -65,7 +65,7 @@
               right: 8px;
               top: 50%;
               transform: translateY(-50%);
-              font-size: 8px;
+              font-size: 13px;
               color: #1976d2;
               pointer-events: none;
             "
@@ -172,10 +172,10 @@
                 background: transparent;
                 padding: 4px 6px;
                 font-size: 0.8rem;
-                font-weight: 500;
-                color: #2e7d32;
+                /* stronger, darker placeholder + text */
+                color: #0f172a;
+                font-weight: 700;
                 height: 100%;
-                font-weight: 600;
               "
             />
 
@@ -260,8 +260,9 @@
                 background: transparent;
                 padding: 4px 6px;
                 font-size: 0.8rem;
-                font-weight: 500;
-                color: #1565c0;
+                /* stronger, darker placeholder + text */
+                color: #0f172a;
+                font-weight: 700;
                 height: 100%;
               "
             />
@@ -449,6 +450,14 @@
                   v-for="item in filtred_items"
                   :key="item.item_code"
                   @click="add_item_table(item)"
+                  @mouseenter="
+                    $event.currentTarget.style.background = 'rgba(16,24,40,0.09)';
+                    $event.currentTarget.style.transition = 'background-color 160ms ease';
+                  "
+                  @mouseleave="
+                    $event.currentTarget.style.background = '';
+                    $event.currentTarget.style.transition = 'background-color 160ms ease';
+                  "
                   style="
                     border-bottom: 1px solid #f0f0f0;
                     cursor: pointer;
