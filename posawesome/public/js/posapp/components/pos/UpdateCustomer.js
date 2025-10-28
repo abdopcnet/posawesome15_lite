@@ -1,5 +1,5 @@
 import { evntBus } from '../../bus';
-import { API_MAP } from "../../api_mapper.js";
+import { API_MAP } from '../../api_mapper.js';
 
 const EVENT_NAMES = {
   SHOW_MESSAGE: 'show_mesage',
@@ -187,7 +187,9 @@ export default {
       };
 
       frappe.call({
-        method: this.customer_id ? API_MAP.CUSTOMER.UPDATE_CUSTOMER : API_MAP.CUSTOMER.POST_CUSTOMER,
+        method: this.customer_id
+          ? API_MAP.CUSTOMER.UPDATE_CUSTOMER
+          : API_MAP.CUSTOMER.POST_CUSTOMER,
         args: args,
         callback: (r) => {
           if (!r.exc && r.message.name) {
@@ -270,7 +272,8 @@ export default {
   created() {
     this.registerEventListeners();
 
-    this.group = frappe.defaults.get_user_default('Customer Group') || DEFAULT_VALUES.CUSTOMER_GROUP;
+    this.group =
+      frappe.defaults.get_user_default('Customer Group') || DEFAULT_VALUES.CUSTOMER_GROUP;
     this.territory = frappe.defaults.get_user_default('Territory') || DEFAULT_VALUES.TERRITORY;
   },
 
@@ -279,5 +282,5 @@ export default {
     evntBus.$off(EVENT_NAMES.OPEN_UPDATE_CUSTOMER, this.handleOpenUpdateCustomer);
     evntBus.$off(EVENT_NAMES.REGISTER_POS_PROFILE, this.handleRegisterPosProfile);
     evntBus.$off(EVENT_NAMES.PAYMENTS_REGISTER_POS_PROFILE, this.handlePaymentsRegisterPosProfile);
-  }
+  },
 };
