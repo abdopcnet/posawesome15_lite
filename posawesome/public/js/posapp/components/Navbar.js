@@ -1,8 +1,8 @@
 // ===== SECTION 1: IMPORTS =====
-import { evntBus } from "../bus";
+import { evntBus } from '../bus';
 // Import cache manager utility
-import "../../utils/clearAllCaches.js";
-import { API_MAP } from "../api_mapper.js";
+import '../../utils/clearAllCaches.js';
+import { API_MAP } from '../api_mapper.js';
 
 // ===== SECTION 2: EXPORT DEFAULT =====
 export default {
@@ -13,8 +13,8 @@ export default {
       drawer: false,
       mini: true,
       item: 0,
-      items: [{ text: "POS", icon: "mdi-network-pos" }],
-      page: "",
+      items: [{ text: 'POS', icon: 'mdi-network-pos' }],
+      page: '',
       fav: true,
       menu: false,
       showMenu: false,
@@ -22,19 +22,19 @@ export default {
       hints: true,
       menu_item: 0,
       snack: false,
-      snackColor: "",
-      snackText: "",
-      company_name: "",
-      pos_profile: "",
+      snackColor: '',
+      snackText: '',
+      company_name: '',
+      pos_profile: '',
       freeze: false,
-      freezeTitle: "",
-      freezeMsg: "",
-      last_invoice: "",
+      freezeTitle: '',
+      freezeMsg: '',
+      last_invoice: '',
       invoice_doc: null,
       pos_opening_shift: null,
       shift_invoice_count: 0,
       // Ping variables
-      pingTime: "000",
+      pingTime: '000',
       pingInterval: null,
       // Payment totals
       totalCash: 0,
@@ -48,12 +48,12 @@ export default {
       if (!this.invoice_doc || !this.invoice_doc.name) {
         // Check current mode
         if (this.invoice_doc?.is_return) {
-          return "Return_Invoice_Mode";
+          return 'Return_Invoice_Mode';
         }
         if (this.quick_return_value) {
-          return "Quick_Return_Mode";
+          return 'Quick_Return_Mode';
         }
-        return "Sales_Invoice_Mode";
+        return 'Sales_Invoice_Mode';
       }
       return this.invoice_doc.name;
     },
@@ -61,112 +61,104 @@ export default {
       if (!this.invoice_doc || !this.invoice_doc.name) {
         // Check current mode for class
         if (this.invoice_doc?.is_return) {
-          return "return-invoice-mode";
+          return 'return-invoice-mode';
         }
         if (this.quick_return_value) {
-          return "quick-return-mode";
+          return 'quick-return-mode';
         }
-        return "sales-invoice-mode";
+        return 'sales-invoice-mode';
       }
-      return this.invoice_doc.is_return ? "return-invoice" : "regular-invoice";
+      return this.invoice_doc.is_return ? 'return-invoice' : 'regular-invoice';
     },
     invoiceIconColor() {
       if (!this.invoice_doc || !this.invoice_doc.name) {
         // Check current mode for color
         if (this.invoice_doc?.is_return) {
-          return "#757575"; // Grey for Return Invoice Mode
+          return '#757575'; // Grey for Return Invoice Mode
         }
         if (this.quick_return_value) {
-          return "#9c27b0"; // Purple for Quick Return Mode
+          return '#9c27b0'; // Purple for Quick Return Mode
         }
-        return "#4caf50"; // Green for Sales Invoice Mode
+        return '#4caf50'; // Green for Sales Invoice Mode
       }
-      return this.invoice_doc.is_return ? "error" : "primary";
+      return this.invoice_doc.is_return ? 'error' : 'primary';
     },
     shiftNumberText() {
       if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
-        return "Shift not opened yet";
+        return 'Shift not opened yet';
       }
       return this.pos_opening_shift.name;
     },
     shiftNumberClass() {
       if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
-        return "no-shift";
+        return 'no-shift';
       }
-      return this.pos_opening_shift.status === "Open"
-        ? "open-shift"
-        : "closed-shift";
+      return this.pos_opening_shift.status === 'Open' ? 'open-shift' : 'closed-shift';
     },
     shiftIconColor() {
       if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
-        return "grey";
+        return 'grey';
       }
-      return this.pos_opening_shift.status === "Open" ? "success" : "warning";
+      return this.pos_opening_shift.status === 'Open' ? 'success' : 'warning';
     },
     currentUserName() {
-      return frappe.session.user || "Unknown User";
+      return frappe.session.user || 'Unknown User';
     },
     shiftStartText() {
       if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
-        return "Not opened";
+        return 'Not opened';
       }
       if (!this.pos_opening_shift.period_start_date) {
-        return "Unknown";
+        return 'Unknown';
       }
       const startDate = new Date(this.pos_opening_shift.period_start_date);
-      const timeString = startDate.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
+      const timeString = startDate.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
         hour12: true,
       });
       return `${timeString}`;
     },
     shiftStartClass() {
       if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
-        return "no-shift-start";
+        return 'no-shift-start';
       }
-      return this.pos_opening_shift.status === "Open"
-        ? "open-shift-start"
-        : "closed-shift-start";
+      return this.pos_opening_shift.status === 'Open' ? 'open-shift-start' : 'closed-shift-start';
     },
     shiftStartIconColor() {
       if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
-        return "grey";
+        return 'grey';
       }
-      return this.pos_opening_shift.status === "Open" ? "success" : "warning";
+      return this.pos_opening_shift.status === 'Open' ? 'success' : 'warning';
     },
     totalInvoicesQty() {
       // Get total invoices count for current shift
-      if (
-        !this.pos_opening_shift ||
-        !this.pos_opening_shift.name ||
-        !this.pos_profile
-      ) {
-        return "000";
+      if (!this.pos_opening_shift || !this.pos_opening_shift.name || !this.pos_profile) {
+        return '000';
       }
-      return this.shift_invoice_count || "000";
+      return this.shift_invoice_count || '000';
     },
     // Ping computed properties
     pingClass() {
       const ping = parseInt(this.pingTime);
-      if (ping < 100) return "ping-excellent";
-      if (ping < 300) return "ping-good";
-      if (ping < 500) return "ping-fair";
-      return "ping-poor";
+      if (ping < 100) return 'ping-excellent';
+      if (ping < 300) return 'ping-good';
+      if (ping < 500) return 'ping-fair';
+      return 'ping-poor';
     },
     pingIconColor() {
       const ping = parseInt(this.pingTime);
-      if (ping < 100) return "success";
-      if (ping < 300) return "primary";
-      if (ping < 500) return "warning";
-      return "error";
+      if (ping < 100) return 'success';
+      if (ping < 300) return 'primary';
+      if (ping < 500) return 'warning';
+      return 'error';
     },
   },
   // ===== SECTION 3.5: WATCHERS =====
   watch: {
     showMenu(newVal, oldVal) {
       // Menu visibility watcher - cleaned up debug logs
-    }
+    },
   },
   // ===== SECTION 4: METHODS =====
   methods: {
@@ -185,7 +177,7 @@ export default {
       // Format the number with comma separators and 2 decimal places
       return value.toLocaleString('en-US', {
         minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        maximumFractionDigits: 2,
       });
     },
 
@@ -204,7 +196,7 @@ export default {
         error: (err) => {
           console.error('Error fetching cash total:', err);
           this.totalCash = 0;
-        }
+        },
       });
 
       // Fetch non-cash total
@@ -220,7 +212,7 @@ export default {
         error: (err) => {
           console.error('Error fetching non-cash total:', err);
           this.totalNonCash = 0;
-        }
+        },
       });
     },
 
@@ -241,7 +233,7 @@ export default {
     },
 
     changePage(key) {
-      this.$emit("changePage", key);
+      this.$emit('changePage', key);
     },
     toggleMenu() {
       this.showMenu = !this.showMenu;
@@ -288,7 +280,7 @@ export default {
       }
     },
     go_desk() {
-      frappe.set_route("/");
+      frappe.set_route('/');
       location.reload();
     },
     go_about() {
@@ -297,13 +289,13 @@ export default {
       // win.focus();
 
       this.show_mesage({
-        color: "info",
-        text: "POSAwesome Lite v15 - Local System",
+        color: 'info',
+        text: 'POSAwesome Lite v15 - Local System',
       });
     },
     close_shift_dialog() {
       this.showMenu = false; // Close menu after action
-      evntBus.emit("open_closing_dialog");
+      evntBus.emit('open_closing_dialog');
     },
     show_mesage(data) {
       this.snack = true;
@@ -320,19 +312,19 @@ export default {
       var me = this;
       me.logged_out = true;
       return frappe.call({
-        method: "logout",
+        method: 'logout',
         callback: function (r) {
           if (r.exc) {
             return;
           }
           // Instead of automatic reload, let the user manually reload
           me.show_mesage({
-            color: "info",
-            text: "Logged out successfully. Click to reload.",
+            color: 'info',
+            text: 'Logged out successfully. Click to reload.',
           });
           // Only reload when user clicks on the message
-          document.querySelector(".snackbar").addEventListener("click", function() {
-            frappe.set_route("/login");
+          document.querySelector('.snackbar').addEventListener('click', function () {
+            frappe.set_route('/login');
             location.reload();
           });
         },
@@ -343,31 +335,30 @@ export default {
         return;
       }
       const print_format =
-        this.pos_profile.print_format_for_online ||
-        this.pos_profile.print_format;
+        this.pos_profile.print_format_for_online || this.pos_profile.print_format;
       const letter_head = this.pos_profile.letter_head || 0;
       const url =
         frappe.urllib.get_base_url() +
-        "/printview?doctype=Sales%20Invoice&name=" +
+        '/printview?doctype=Sales%20Invoice&name=' +
         this.last_invoice +
-        "&trigger_print=1" +
-        "&format=" +
+        '&trigger_print=1' +
+        '&format=' +
         print_format +
-        "&no_letterhead=" +
+        '&no_letterhead=' +
         letter_head;
-      const printWindow = window.open(url, "Print");
+      const printWindow = window.open(url, 'Print');
       printWindow.addEventListener(
-        "load",
+        'load',
         function () {
           printWindow.print();
         },
-        true
+        true,
       );
     },
     fetch_company_info() {
       if (this.pos_profile && this.pos_profile.company) {
         frappe.db
-          .get_doc("Company", this.pos_profile.company)
+          .get_doc('Company', this.pos_profile.company)
           .then((company_doc) => {
             this.company_name = company_doc.company_name;
           })
@@ -380,8 +371,8 @@ export default {
       try {
         // Show loading message
         this.show_mesage({
-          color: "info",
-          text: "Clearing cache...",
+          color: 'info',
+          text: 'Clearing cache...',
         });
 
         // Use the comprehensive cache manager
@@ -390,8 +381,8 @@ export default {
 
           if (success) {
             this.show_mesage({
-              color: "success",
-              text: "Cache cleared successfully. Reloading...",
+              color: 'success',
+              text: 'Cache cleared successfully. Reloading...',
             });
 
             // Reload page after short delay
@@ -400,8 +391,8 @@ export default {
             }, 1000);
           } else {
             this.show_mesage({
-              color: "error",
-              text: "Error clearing cache",
+              color: 'error',
+              text: 'Error clearing cache',
             });
           }
         } else {
@@ -410,8 +401,8 @@ export default {
           sessionStorage.clear();
 
           this.show_mesage({
-            color: "success",
-            text: "Basic cache cleared. Reloading...",
+            color: 'success',
+            text: 'Basic cache cleared. Reloading...',
           });
 
           setTimeout(() => {
@@ -420,8 +411,8 @@ export default {
         }
       } catch (error) {
         this.show_mesage({
-          color: "error",
-          text: "Error clearing cache: " + error.message,
+          color: 'error',
+          text: 'Error clearing cache: ' + error.message,
         });
       }
     },
@@ -450,31 +441,31 @@ export default {
     async measurePing() {
       // Skip if connection issues might cause a reload
       if (navigator.onLine === false) {
-        this.pingTime = "999";
+        this.pingTime = '999';
         return;
       }
 
       const startTime = performance.now();
       try {
         await frappe.call({
-          method: "frappe.ping",
+          method: 'frappe.ping',
           args: {},
           callback: () => {
             const endTime = performance.now();
             const ping = Math.round(endTime - startTime);
-            this.pingTime = ping.toString().padStart(3, "0");
+            this.pingTime = ping.toString().padStart(3, '0');
           },
           error: () => {
             // Silently handle error without triggering page reload
-            this.pingTime = "999";
+            this.pingTime = '999';
           },
-          freeze: false,  // Don't freeze the UI
+          freeze: false, // Don't freeze the UI
           show_spinner: false, // Don't show spinner
-          async: true,  // Make sure it's async
+          async: true, // Make sure it's async
         });
       } catch (error) {
         // Capture error without allowing it to affect the application
-        this.pingTime = "999";
+        this.pingTime = '999';
       }
     },
     startPingMonitoring() {
@@ -519,7 +510,8 @@ export default {
       try {
         // Check if ping monitoring should be enabled
         // We can add a global setting to control this
-        const enablePingMonitoring = sessionStorage.getItem('pos_enable_ping_monitoring') !== 'false';
+        const enablePingMonitoring =
+          sessionStorage.getItem('pos_enable_ping_monitoring') !== 'false';
 
         if (enablePingMonitoring) {
           // Start ping monitoring
@@ -542,13 +534,13 @@ export default {
         this._wasRunningBeforeHidden = true;
         document.addEventListener('visibilitychange', this.handleVisibilityChange);
 
-        evntBus.on("show_mesage", (data) => {
+        evntBus.on('show_mesage', (data) => {
           this.show_mesage(data);
         });
-        evntBus.on("set_company", (data) => {
+        evntBus.on('set_company', (data) => {
           this.company_name = data.name;
         });
-        evntBus.on("register_pos_profile", (data) => {
+        evntBus.on('register_pos_profile', (data) => {
           this.pos_profile = data.pos_profile;
           this.pos_opening_shift = data.pos_opening_shift;
           this.fetch_company_info();
@@ -556,25 +548,25 @@ export default {
           this.fetchPaymentTotals(); // Fetch payment totals when POS profile is registered
           // External payments screen disabled - removed payments option
         });
-        evntBus.on("set_last_invoice", (data) => {
+        evntBus.on('set_last_invoice', (data) => {
           this.last_invoice = data;
         });
-        evntBus.on("toggle_quick_return", (value) => {
+        evntBus.on('toggle_quick_return', (value) => {
           this.quick_return_value = value;
         });
-        evntBus.on("update_invoice_doc", (data) => {
+        evntBus.on('update_invoice_doc', (data) => {
           this.invoice_doc = data;
         });
-        evntBus.on("set_pos_opening_shift", (data) => {
+        evntBus.on('set_pos_opening_shift', (data) => {
           this.pos_opening_shift = data;
           this.fetchShiftInvoiceCount();
           this.fetchPaymentTotals(); // Fetch payment totals when shift is opened
         });
-        evntBus.on("register_pos_data", (data) => {
+        evntBus.on('register_pos_data', (data) => {
           this.pos_opening_shift = data.pos_opening_shift;
           this.fetchPaymentTotals(); // Fetch payment totals when POS data is registered
         });
-        evntBus.on("invoice_submitted", () => {
+        evntBus.on('invoice_submitted', () => {
           // Refresh invoice count when a new invoice is submitted
           // Add delay to wait for background job to complete
           setTimeout(() => {
@@ -582,25 +574,25 @@ export default {
             this.fetchPaymentTotals(); // Update payment totals after invoice submission
           }, 2000); // Wait 2 seconds for background job
         });
-        evntBus.on("freeze", (data) => {
+        evntBus.on('freeze', (data) => {
           this.freeze = true;
           this.freezeTitle = data.title;
           this.freezeMsg = data.msg;
         });
-        evntBus.on("unfreeze", () => {
+        evntBus.on('unfreeze', () => {
           this.freeze = false;
-          this.freezTitle = "";
-          this.freezeMsg = "";
+          this.freezTitle = '';
+          this.freezeMsg = '';
         });
 
         // Add event listener for toggling ping monitoring
-        evntBus.on("toggle_ping_monitoring", (enable) => {
+        evntBus.on('toggle_ping_monitoring', (enable) => {
           this.togglePingMonitoring(enable);
         });
       } catch (error) {
         this.show_mesage({
-          color: "error",
-          text: "An error occurred while loading the menu.",
+          color: 'error',
+          text: 'An error occurred while loading the menu.',
         });
       }
     });
@@ -622,16 +614,16 @@ export default {
     }
 
     // Clean up all event listeners
-    evntBus.off("show_mesage");
-    evntBus.off("set_company");
-    evntBus.off("register_pos_profile");
-    evntBus.off("set_last_invoice");
-    evntBus.off("update_invoice_doc");
-    evntBus.off("set_pos_opening_shift");
-    evntBus.off("register_pos_data");
-    evntBus.off("invoice_submitted");
-    evntBus.off("freeze");
-    evntBus.off("unfreeze");
-    evntBus.off("toggle_ping_monitoring");
+    evntBus.off('show_mesage');
+    evntBus.off('set_company');
+    evntBus.off('register_pos_profile');
+    evntBus.off('set_last_invoice');
+    evntBus.off('update_invoice_doc');
+    evntBus.off('set_pos_opening_shift');
+    evntBus.off('register_pos_data');
+    evntBus.off('invoice_submitted');
+    evntBus.off('freeze');
+    evntBus.off('unfreeze');
+    evntBus.off('toggle_ping_monitoring');
   },
 };
