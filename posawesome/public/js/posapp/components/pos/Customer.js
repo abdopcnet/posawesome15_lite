@@ -197,7 +197,12 @@ export default {
     },
 
     handleClickOutside(e) {
-      const wrapper = this.$el.querySelector('.autocomplete');
+      // Check if $el exists and is a valid DOM element
+      if (!this.$el || !this.$el.querySelector) {
+        return;
+      }
+
+      const wrapper = this.$el;
       if (wrapper && !wrapper.contains(e.target)) {
         this.showDropdown = false;
       }
