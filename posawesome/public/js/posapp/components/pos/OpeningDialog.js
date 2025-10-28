@@ -7,7 +7,7 @@ import format from '../../format';
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 // Import API mapper
-import { API_MAP } from "../../api_mapper.js";
+import { API_MAP } from '../../api_mapper.js';
 
 /**
  * Event names for bus communication
@@ -195,10 +195,7 @@ export default {
           if (r.message) {
             evntBus.emit(EVENT_NAMES.REGISTER_POS_DATA, r.message);
             evntBus.emit(EVENT_NAMES.SET_COMPANY, r.message.company);
-            showMessage(
-              `POS Opening Shift ${r.message.pos_opening_shift.name} Created`,
-              'success'
-            );
+            showMessage(`POS Opening Shift ${r.message.pos_opening_shift.name} Created`, 'success');
             close_opening_dialog();
           } else {
             showMessage('Failed to create opening document', 'error');
@@ -232,7 +229,7 @@ export default {
      */
     const getPaymentIcon = (paymentMethod) => {
       const method = Object.keys(PAYMENT_ICONS).find((key) =>
-        paymentMethod.toLowerCase().includes(key.toLowerCase())
+        paymentMethod.toLowerCase().includes(key.toLowerCase()),
       );
 
       return method ? PAYMENT_ICONS[method] : DEFAULT_PAYMENT_ICON;
@@ -251,9 +248,9 @@ export default {
       frappe.call({
         method: API_MAP.POS_OPENING_SHIFT.CHECK_OPENING_TIME_ALLOWED,
         args: {
-          pos_profile: pos_profile.value
+          pos_profile: pos_profile.value,
         },
-        callback: function(r) {
+        callback: function (r) {
           if (r.message) {
             isOpeningAllowed.value = r.message.allowed;
             if (!r.message.allowed) {
@@ -262,9 +259,9 @@ export default {
           } else {
             isOpeningAllowed.value = true;
           }
-        }
+        },
       });
-    };    /**
+    }; /**
      * Show message to user via event bus
      * @param {string} text - Message text
      * @param {string} color - Message color (success, error, warning, info)
