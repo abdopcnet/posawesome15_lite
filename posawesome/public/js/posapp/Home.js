@@ -1,10 +1,10 @@
-import Navbar from "./components/Navbar.vue";
-import POS from "./components/pos/Pos.vue";
+import Navbar from './components/Navbar.vue';
+import POS from './components/pos/Pos.vue';
 
 export default {
   data: function () {
     return {
-      page: "POS",
+      page: 'POS',
     };
   },
   components: {
