@@ -1,6 +1,6 @@
 # 🎁 Task 2: Offers Implementation
 
-**💰 Budget**: $40
+**💰 Budget**: $30 ~ 40$
 
 **👨‍💻 Developer**: Priyansh Vijay
 
