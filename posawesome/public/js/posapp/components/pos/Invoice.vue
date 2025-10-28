@@ -45,7 +45,8 @@
             border-collapse: collapse;
             background: white;
             font-size: 0.75rem;
-            table-layout: fixed;
+            table-layout: auto; /* let browser size columns by content */
+            white-space: nowrap; /* prevent wrapping across the table - cells will ellipsize */
           "
         >
           <!-- TABLE HEADERS -->
@@ -61,7 +62,7 @@
                     rgba(128, 166, 255, 0.25) 50%
                   );
                   border-bottom: 1px solid #e0e0e0;
-                  padding: 8px 12px;
+                  padding: 8px 2px;
                   font-weight: 600;
                   font-size: 0.75rem;
                   color: #424242;
@@ -69,6 +70,9 @@
                   top: 0;
                   z-index: 1;
                   text-align: center;
+                  white-space: nowrap; /* ensure header text doesn't wrap */
+                  overflow: hidden; /* truncate if needed */
+                  text-overflow: ellipsis; /* show ellipsis */
                 "
               >
                 {{ header.title }}
@@ -89,15 +93,37 @@
                 $event.currentTarget.style.background = '';
                 $event.currentTarget.style.transition = 'background-color 160ms ease';
               "
-              style="border-bottom: 1px solid #f1f1f1"
+              :style="{
+                borderBottom: '1px solid #f1f1f1',
+                borderLeft:
+                  item.discount_percentage > 0 || item.posa_offer_applied
+                    ? '3px solid #ff9800'
+                    : 'none',
+              }"
             >
               <!-- ITEM NAME COLUMN -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'item_name')"
-                style="padding: 12px 12px; vertical-align: middle"
+                style="
+                  padding: 12px 0px 12px 3px;
+                  vertical-align: middle;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  min-width: 0;
+                "
               >
                 <!-- <div style="width: 120px"> -->
-                <p style="margin-bottom: 0">
+                <p
+                  style="
+                    margin-bottom: 0;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    font-size: 0.7rem !important;
+                  "
+                  :title="item.item_name"
+                >
                   {{ item.item_name }}
                 </p>
                 <!-- </div> -->
@@ -106,7 +132,16 @@
               <!-- QUANTITY COLUMN -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'qty')"
-                style="/* padding: 6px;  */ padding: 12px; vertical-align: middle; max-width: 80px"
+                style="
+                  /* padding: 6px;  */
+                  padding: 12px 0px;
+                  vertical-align: middle;
+                  max-width: 80px;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  min-width: 0;
+                "
               >
                 <div
                   style="
@@ -121,7 +156,9 @@
                     border-radius: 4px;
                     width: 100%;
                     /* max-width: 85px; */
-                    min-width: 75px;
+                    min-width: 0; /* allow shrinking inside cell */
+                    box-sizing: border-box;
+                    overflow: hidden;
                   "
                 >
                   <button
@@ -172,11 +209,13 @@
                       background: white;
                       text-align: center;
                       font-size: 0.75rem;
-                      margin: 0px 3px;
-                      /* padding: 2px 4px; */
+                      margin: 0px 1px;
                       padding: 0px 0px;
                       border-radius: 3px;
                       outline: none;
+                      box-sizing: border-box;
+                      max-width: 100%;
+                      min-width: 10px !important;
                     "
                     placeholder="0"
                   />
@@ -218,7 +257,15 @@
               <!-- UOM COLUMN -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'uom')"
-                style="padding: 12px 12px; vertical-align: middle; text-align: center"
+                style="
+                  padding: 12px 0px;
+                  vertical-align: middle;
+                  text-align: center;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  min-width: 0;
+                "
               >
                 {{ item.uom }}
               </td>
@@ -226,21 +273,40 @@
               <!-- PRICE LIST RATE COLUMN (Original Price) -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'price_list_rate')"
-                style="padding: 12px 12px; vertical-align: middle"
+                style="
+                  padding: 12px 0px;
+                  vertical-align: middle;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  min-width: 0;
+                  max-width: 80px;
+                "
               >
                 <div
                   style="
                     display: flex;
                     align-items: center;
                     gap: 3px;
-                    padding: 0px 6px;
+                    padding: 0px 3px;
                     background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
                     border-radius: 4px;
-                    min-width: 60px;
+                    min-width: 0;
                     justify-content: center;
+                    place-self: center;
+                    overflow: hidden;
                   "
                 >
-                  <span style="font-size: 0.75rem; font-weight: 700; color: #2e7d32">
+                  <span
+                    style="
+                      font-size: 0.7rem;
+                      font-weight: 700;
+                      color: #2e7d32;
+                      white-space: nowrap;
+                      overflow: hidden;
+                      text-overflow: ellipsis;
+                    "
+                  >
                     {{ formatCurrency(item.price_list_rate) }}
                   </span>
                 </div>
@@ -249,19 +315,35 @@
               <!-- RATE COLUMN (Discounted Price - Editable) -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'rate')"
-                style="padding: 12px 12px; vertical-align: middle"
+                style="
+                  padding: 12px 0px;
+                  vertical-align: middle;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  min-width: 0;
+                  max-width: 75px;
+                  justify-items: center;
+                "
               >
                 <div
-                  style="
-                    display: flex;
-                    align-items: center;
-                    gap: 3px;
-                    padding: 0px 6px;
-                    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-                    border-radius: 4px;
-                    min-width: 65px;
-                    justify-content: center;
-                  "
+                  :style="{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    padding: '0px 3px',
+                    background:
+                      flt(item.rate) !== flt(item.price_list_rate)
+                        ? 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)'
+                        : 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)',
+                    borderRadius: '4px',
+                    minWidth: '0',
+                    maxWidth: '65px',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    border:
+                      flt(item.rate) !== flt(item.price_list_rate) ? '1px solid #ff9800' : 'none',
+                  }"
                 >
                   <input
                     type="text"
@@ -284,30 +366,65 @@
                           item.posa_offer_applied ||
                           invoice_doc?.is_return,
                       )
-                        ? 'flex: 1; width: 100%; border: none; background: #f5f5f5; color: #9e9e9e; font-size: 0.75rem; padding: 2px 4px; border-radius: 3px; outline: none; cursor: not-allowed'
-                        : 'flex: 1; width: 100%; border: none; background: transparent; font-size: 0.8rem; font-weight: 700; color: #f57c00; padding: 0; outline: none; text-align: right'
+                        ? 'flex: 1; width: 100%; border: none;background: #f5f5f5; color: #9e9e9e; font-size: 0.7rem; padding: 2px 2px; border-radius: 3px; outline: none; cursor: not-allowed; max-width: 45px;'
+                        : 'flex: 1; width: 100%; border: none; background: transparent; font-size: 0.75rem; font-weight: 700; color: #f57c00; padding: 0; outline: none; text-align: right; max-width: 45px;'
                     "
                     placeholder="0.00"
+                    style="box-sizing: border-box; min-width: 0; max-width: 100%"
                   />
+
+                  <!-- Discount indicator for rate -->
+                  <!-- <span
+                    v-if="
+                      flt(item.rate) !== flt(item.price_list_rate) &&
+                      flt(item.rate) < flt(item.price_list_rate)
+                    "
+                    style="
+                      position: absolute;
+                      top: -2px;
+                      right: -2px;
+                      background: #ff9800;
+                      color: white;
+                      font-size: 0.5rem;
+                      font-weight: 600;
+                      padding: 1px 3px;
+                      border-radius: 2px;
+                      line-height: 1;
+                    "
+                  >
+                    DISCOUNT
+                  </span> -->
                 </div>
               </td>
 
               <!-- DISCOUNT PERCENTAGE COLUMN (Editable) -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'discount_percentage')"
-                style="padding: 12px 12px; vertical-align: middle"
+                style="
+                  padding: 12px 0px;
+                  vertical-align: middle;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  min-width: 0;
+                  max-width: 85px;
+                "
               >
                 <div
-                  style="
-                    display: flex;
-                    align-items: center;
-                    gap: 3px;
-                    padding: 0px 6px;
-                    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-                    border-radius: 4px;
-                    min-width: 55px;
-                    justify-content: center;
-                  "
+                  :style="{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    padding: '0px 6px',
+                    background:
+                      item.discount_percentage > 0
+                        ? 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)'
+                        : 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)',
+                    borderRadius: '4px',
+                    minWidth: '0',
+                    justifyContent: 'center',
+                    position: 'relative',
+                  }"
                 >
                   <input
                     type="number"
@@ -339,6 +456,7 @@
                     min="0"
                     :max="pos_profile?.posa_item_max_discount_allowed || 100"
                     step="0.01"
+                    style="box-sizing: border-box; min-width: 0; max-width: 100%"
                   />
 
                   <span
@@ -351,34 +469,85 @@
                     "
                     >%</span
                   >
+
+                  <!-- Offer badge for discount percentage -->
+                  <span
+                    v-if="item.posa_offer_applied && item.discount_percentage > 0"
+                    style="
+                      position: absolute;
+                      top: -2px;
+                      right: -2px;
+                      background: #4caf50;
+                      color: white;
+                      font-size: 0.5rem;
+                      font-weight: 600;
+                      padding: 1px 3px;
+                      border-radius: 2px;
+                      line-height: 1;
+                    "
+                  >
+                    OFFER
+                  </span>
                 </div>
               </td>
 
               <!-- DISCOUNT AMOUNT COLUMN (Calculated) -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'discount_amount')"
-                style="padding: 12px 12px; vertical-align: middle"
+                style="
+                  padding: 12px 1px;
+                  vertical-align: middle;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  min-width: 0;
+                  max-width: 80px;
+                  justify-items: center;
+                "
               >
                 <div
-                  style="
-                    display: flex;
-                    align-items: center;
-                    gap: 3px;
-                    padding: 0px 6px;
-                    background: linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%);
-                    border-radius: 4px;
-                    min-width: 60px;
-                    justify-content: center;
-                  "
+                  :style="{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    padding: '0px 2px',
+                    background:
+                      getDiscountAmount(item) > 0
+                        ? 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)'
+                        : 'linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%)',
+                    borderRadius: '4px',
+                    minWidth: '0',
+                    maxWidth: '85px',
+                    justifyContent: 'center',
+                    position: 'relative',
+                  }"
                 >
                   <span
                     :style="{
-                      fontSize: '0.8rem',
+                      fontSize: '0.75rem',
                       fontWeight: '700',
                       color: getDiscountAmount(item) > 0 ? '#f57c00' : '#9e9e9e',
                     }"
                   >
                     {{ formatCurrency(getDiscountAmount(item)) }}
+                  </span>
+                  <!-- Offer badge for discount amount -->
+                  <span
+                    v-if="item.posa_offer_applied && getDiscountAmount(item) > 0"
+                    style="
+                      position: absolute;
+                      top: -2px;
+                      right: -2px;
+                      background: #4caf50;
+                      color: white;
+                      font-size: 0.5rem;
+                      font-weight: 600;
+                      padding: 1px 2px;
+                      border-radius: 2px;
+                      line-height: 1;
+                    "
+                  >
+                    OFFER
                   </span>
                 </div>
               </td>
@@ -386,7 +555,14 @@
               <!-- TOTAL AMOUNT COLUMN (Calculated: Qty × Rate) -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'amount')"
-                style="padding: 12px 12px; vertical-align: middle"
+                style="
+                  padding: 12px 0px;
+                  vertical-align: middle;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  min-width: 0;
+                "
               >
                 <div
                   style="
@@ -396,11 +572,21 @@
                     padding: 0px 6px;
                     background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
                     border-radius: 4px;
-                    min-width: 70px;
+                    min-width: 0;
                     justify-content: center;
+                    overflow: hidden;
                   "
                 >
-                  <span style="font-size: 0.75rem; font-weight: 700; color: #1b5e20">
+                  <span
+                    style="
+                      font-size: 0.75rem;
+                      font-weight: 700;
+                      color: #1b5e20;
+                      white-space: nowrap;
+                      overflow: hidden;
+                      text-overflow: ellipsis;
+                    "
+                  >
                     {{
                       formatCurrency(
                         flt(item.qty, float_precision) * flt(item.rate, currency_precision),
@@ -413,7 +599,14 @@
               <!-- ACTIONS COLUMN (Delete Button) -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'actions')"
-                style="padding: 12px 12px; vertical-align: middle"
+                style="
+                  padding: 12px 0px;
+                  vertical-align: middle;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  min-width: 0;
+                "
               >
                 <div style="display: flex; justify-content: center; align-items: center">
                   <button
@@ -444,7 +637,13 @@
                   >
                     <i
                       class="mdi mdi-delete"
-                      style="font-size: 18px; color: #b71c1c; line-height: 1; display: block"
+                      style="
+                        font-size: 18px;
+                        color: #b71c1c;
+                        line-height: 1;
+                        display: block;
+                        pointer-events: none;
+                      "
                     ></i>
                   </button>
                 </div>
@@ -527,27 +726,32 @@
 
         <!-- Additional Discount Field (Editable) -->
         <div
-          style="
-            display: flex;
-            flex-direction: column;
-            padding: 4px 6px;
-            background: white;
-            border-radius: 3px;
-            border: 1px solid #e0e0e0;
-          "
+          :style="{
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '4px 6px',
+            background: pos_profile?.posa_allow_user_to_edit_additional_discount
+              ? 'white'
+              : '#f5f5f5',
+            borderRadius: '3px',
+            border: pos_profile?.posa_allow_user_to_edit_additional_discount
+              ? '1px solid #e0e0e0'
+              : '1px solid #d0d0d0',
+            position: 'relative',
+          }"
         >
           <label
-            style="
-              font-size: 0.65rem;
-              margin-bottom: 0;
-              font-weight: 600;
-              color: #666;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              text-transform: uppercase;
-              letter-spacing: 0.3px;
-            "
+            :style="{
+              fontSize: '0.65rem',
+              marginBottom: '0',
+              fontWeight: '600',
+              color: pos_profile?.posa_allow_user_to_edit_additional_discount ? '#666' : '#9e9e9e',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              textTransform: 'uppercase',
+              letterSpacing: '0.3px',
+            }"
             >{{ __('Additional Discount') }}</label
           >
           <input
@@ -559,20 +763,43 @@
             step="0.01"
             min="0"
             :max="pos_profile?.posa_invoice_max_discount_allowed || 100"
-            style="
-              width: 100%;
-              border: none;
-              outline: none;
-              background: transparent;
-              font-size: 0.9rem;
-              font-weight: 700;
-              color: #1976d2;
-              padding: 0;
-              text-align: left;
-            "
+            :style="{
+              width: '100%',
+              border: 'none',
+              outline: 'none',
+              background: 'transparent',
+              fontSize: '0.9rem',
+              fontWeight: '700',
+              color: pos_profile?.posa_allow_user_to_edit_additional_discount
+                ? '#1976d2'
+                : '#9e9e9e',
+              padding: '0',
+              textAlign: 'left',
+              cursor: pos_profile?.posa_allow_user_to_edit_additional_discount
+                ? 'text'
+                : 'not-allowed',
+            }"
             placeholder="0.00"
             :disabled="!pos_profile?.posa_allow_user_to_edit_additional_discount"
           />
+          <!-- Offer badge for additional discount -->
+          <span
+            v-if="offer_discount_percentage > 0 && additional_discount_percentage > 0"
+            style="
+              position: absolute;
+              top: -2px;
+              right: -2px;
+              background: #4caf50;
+              color: white;
+              font-size: 0.5rem;
+              font-weight: 600;
+              padding: 1px 3px;
+              border-radius: 2px;
+              line-height: 1;
+            "
+          >
+            OFFER
+          </span>
         </div>
 
         <!-- Items Discount Field -->
