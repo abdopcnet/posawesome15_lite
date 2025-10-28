@@ -37,7 +37,8 @@
     background-color: #f8f8f8;
     cursor: pointer;
   "
-  @click="doSomething">
+  @click="doSomething"
+>
   Click Me
 </button>
 ```
