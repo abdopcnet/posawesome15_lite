@@ -21,7 +21,7 @@
       :style="{
         backgroundColor: quick_return ? '#fff1f0' : 'white',
       }"
-      style="position: relative; width: 100%; --input-height: 44px"
+      style="position: relative; width: 100%; --input-height: 51px"
     >
       <!-- =========================================== -->
       <!-- Input Wrapper -->
@@ -143,7 +143,7 @@
         role="listbox"
         style="
           position: absolute;
-          top: calc(100% + 8px);
+          top: calc(100% + 9px);
           left: 0;
           right: 0;
           background: #fff;
