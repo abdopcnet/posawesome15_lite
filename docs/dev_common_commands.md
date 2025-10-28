@@ -29,3 +29,4 @@ cd ~/frappe-bench-15
 bench clear-cache && \
 bench clear-website-cache && \
 bench build --app posawesome --force
+```
