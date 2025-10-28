@@ -4,6 +4,14 @@ import format from '../../format';
 import Customer from './Customer.vue';
 import { API_MAP } from '../../api_mapper.js';
 
+const UI_CONFIG = {
+  SEARCH_MIN_LENGTH: 3,
+  MAX_DISPLAYED_ITEMS: 50,
+  MIN_PANEL_HEIGHT: 180,
+  BOTTOM_PADDING: 16,
+  DEBOUNCE_DELAY: 200,
+};
+
 // ===== COMPONENT =====
 export default {
   name: 'Invoice',
@@ -32,6 +40,9 @@ export default {
   // ===== DATA =====
   data() {
     return {
+      // UI State
+      itemsScrollHeight: null,
+
       pos_profile: null,
       pos_opening_shift: null,
       stock_settings: null,
@@ -67,49 +78,49 @@ export default {
           align: 'start',
           sortable: true,
           key: 'item_name',
-          width: '12%',
+          width: '35%',
         },
         {
           title: __('Qty'),
           key: 'qty',
           align: 'center',
-          width: '11%',
+          width: '8%',
         },
         {
           title: __('UOM'),
           key: 'uom',
           align: 'center',
-          width: '10%',
+          width: '4%',
         },
         {
           title: __('List Price'),
           key: 'price_list_rate',
           align: 'center',
-          width: '12%',
+          width: '10%',
         },
         {
           title: __('Price'),
           key: 'rate',
           align: 'center',
-          width: '12%',
+          width: '10%',
         },
         {
           title: __('Discount %'),
           key: 'discount_percentage',
           align: 'center',
-          width: '13%',
+          width: '9%',
         },
         {
           title: __('Discount Amount'),
           key: 'discount_amount',
           align: 'center',
-          width: '12%',
+          width: '8%',
         },
         {
           title: __('Total'),
           key: 'amount',
           align: 'center',
-          width: '13%',
+          width: '11%',
         },
         {
           title: __('Delete'),
@@ -124,6 +135,14 @@ export default {
 
   // ===== COMPUTED =====
   computed: {
+    itemsScrollStyle() {
+      if (!this.itemsScrollHeight) {
+        return {};
+      }
+      return {
+        maxHeight: `${this.itemsScrollHeight - 80}px`,
+      };
+    },
     dynamicHeaders() {
       let headers = [...this.items_headers];
 
@@ -201,6 +220,33 @@ export default {
   },
 
   methods: {
+    scheduleScrollHeightUpdate() {
+      this.$nextTick(() => {
+        this.updateScrollableHeight();
+      });
+    },
+    updateScrollableHeight() {
+      const scrollRef = this.$refs.itemsScrollArea;
+      const scrollEl = scrollRef ? scrollRef.$el || scrollRef : null;
+
+      if (!scrollEl || typeof scrollEl.getBoundingClientRect !== 'function') {
+        return;
+      }
+
+      const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+
+      if (!viewportHeight) {
+        return;
+      }
+
+      const rect = scrollEl.getBoundingClientRect();
+      const available = viewportHeight - rect.top - UI_CONFIG.BOTTOM_PADDING;
+
+      if (Number.isFinite(available)) {
+        this.itemsScrollHeight = Math.max(UI_CONFIG.MIN_PANEL_HEIGHT, Math.floor(available));
+      }
+    },
+
     // ===== BLUR HANDLERS =====
     handleQtyBlur(item, event) {
       // Handle business logic
@@ -2057,10 +2103,15 @@ export default {
     document.addEventListener('keydown', this._boundShortDeleteFirstItem);
     document.addEventListener('keydown', this._boundShortOpenFirstItem);
     document.addEventListener('keydown', this._boundShortSelectDiscount);
+
+    this.scheduleScrollHeightUpdate();
+    window.addEventListener('resize', this.scheduleScrollHeightUpdate);
   },
   beforeUnmount() {
     // Clean up ALL event listeners to prevent memory leaks
 
+    // Remove window listener
+    window.removeEventListener('resize', this.scheduleScrollHeightUpdate);
     // Clean up document event listeners using stored bound functions
     document.removeEventListener('keydown', this._boundShortOpenPayment);
     document.removeEventListener('keydown', this._boundShortDeleteFirstItem);
