@@ -4,7 +4,9 @@
 
 ## Objective
 
-Add a language selection feature to POS Profile that controls the displayed language for texts and buttons in the POS Shift interface.
+**Simple goal**: Make POS language controlled by **POS Profile** only, not User Settings.
+
+Read `posa_language` field from POS Profile and use it to display translations. When a POS Profile has `posa_language = 'ar'`, the POS will open in Arabic. When `posa_language = 'en'`, it will open in English.
 
 ## Requirements
 
