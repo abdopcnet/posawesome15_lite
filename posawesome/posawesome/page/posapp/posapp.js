@@ -991,15 +991,15 @@ window.__messages = posaTranslations[posa_language] || {};
 // =============================================================================
 
 frappe.pages['posapp'].on_page_load = function (wrapper) {
-  var page = frappe.ui.make_app_page({
-    parent: wrapper,
-    title: 'Andalus Group',
+	var page = frappe.ui.make_app_page({
+		parent: wrapper,
+		title: 'Andalus Group',
     single_column: true,
-  });
+	});
 
-  this.page.$PosApp = new frappe.PosApp.posapp(this.page);
+	this.page.$PosApp = new frappe.PosApp.posapp(this.page);
 
-  $('div.navbar-fixed-top').find('.container').css('padding', '0');
+	$('div.navbar-fixed-top').find('.container').css('padding', '0');
 
   $('head').append(
     "<link rel='stylesheet' href='/assets/posawesome/css/materialdesignicons.css' class='posapp-mdi-css'>",
