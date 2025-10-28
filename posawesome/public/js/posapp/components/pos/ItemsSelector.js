@@ -238,9 +238,6 @@ export default {
 
     process_barcode(barcode_value) {
       // Single unified method - backend determines barcode type
-
-      console.log(`ItemsSelector.js | process_barcode | START | barcode=${barcode_value}`);
-
       frappe.call({
         method: API_MAP.ITEM.GET_BARCODE_ITEM,
         args: {
@@ -248,13 +245,7 @@ export default {
           barcode_value: barcode_value,
         },
         callback: (response) => {
-          console.log(`ItemsSelector.js | process_barcode | RESPONSE`, response);
-
           if (response?.message?.item_code) {
-            console.log(
-              `ItemsSelector.js | process_barcode | SUCCESS | item=${response.message.item_code} | rate=${response.message.rate} | qty=${response.message.qty}`,
-            );
-
             // Add item to cart
             this.add_item_to_cart(response.message);
 
@@ -267,10 +258,6 @@ export default {
               color: 'success',
             });
           } else {
-            console.log(
-              `ItemsSelector.js | process_barcode | NOT_FOUND | barcode=${barcode_value}`,
-            );
-
             evntBus.emit('show_mesage', {
               text: 'Item not found with this barcode',
               color: 'error',
@@ -278,11 +265,6 @@ export default {
           }
         },
         error: (error) => {
-          console.log(
-            `ItemsSelector.js | process_barcode | ERROR | barcode=${barcode_value} | error=`,
-            error,
-          );
-
           evntBus.emit('show_mesage', {
             text: 'Error processing barcode',
             color: 'error',
