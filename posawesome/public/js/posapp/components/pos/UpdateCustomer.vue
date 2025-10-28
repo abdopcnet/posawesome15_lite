@@ -58,7 +58,14 @@
               color: white;
             "
           >
-            <i class="mdi mdi-account-circle" style="color: white; font-size: 16px"></i>
+            <i
+              class="mdi mdi-account-circle"
+              style="
+                color: white;
+                font-size: 20px;
+                filter: drop-shadow(0 6px 16px rgba(33, 150, 243, 0.1));
+              "
+            ></i>
             <span style="flex: 1; font-size: 13px; font-weight: 600; letter-spacing: 0.3px">
               {{ customer_id ? 'Update Customer' : 'New Customer' }}
             </span>
@@ -76,7 +83,14 @@
                 transition: background 0.2s;
               "
             >
-              <i class="mdi mdi-close" style="color: white; font-size: 16px"></i>
+              <i
+                class="mdi mdi-close"
+                style="
+                  color: white;
+                  font-size: 18px;
+                  filter: drop-shadow(0 6px 14px rgba(244, 67, 54, 0.1));
+                "
+              ></i>
             </button>
           </div>
 
@@ -239,7 +253,7 @@
                     height: 28px;
                     cursor: pointer;
                     appearance: none;
-                    background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E&quot;);
+                    background-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath fill=%22%23666%22 d=%22M6 9L1 4h10z%22/%3E%3C/svg%3E');
                     background-repeat: no-repeat;
                     background-position: right 6px center;
                     padding-right: 24px;
@@ -397,7 +411,7 @@
                     height: 28px;
                     cursor: pointer;
                     appearance: none;
-                    background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E&quot;);
+                    background-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath fill=%22%23666%22 d=%22M6 9L1 4h10z%22/%3E%3C/svg%3E');
                     background-repeat: no-repeat;
                     background-position: right 6px center;
                     padding-right: 24px;
@@ -435,7 +449,7 @@
                     height: 28px;
                     cursor: pointer;
                     appearance: none;
-                    background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E&quot;);
+                    background-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath fill=%22%23666%22 d=%22M6 9L1 4h10z%22/%3E%3C/svg%3E');
                     background-repeat: no-repeat;
                     background-position: right 6px center;
                     padding-right: 24px;
