@@ -29,9 +29,7 @@ const ERROR_MESSAGES = {
 
 export default {
   name: 'Customer',
-
   components: { UpdateCustomer },
-
   data() {
     return {
       pos_profile: null,
@@ -196,15 +194,45 @@ export default {
       evntBus.emit(EVENT_NAMES.SHOW_MESSAGE, { message, color });
     },
 
-    handleClickOutside(e) {
-      // Check if $el exists and is a valid DOM element
-      if (!this.$el || !this.$el.querySelector) {
-        return;
-      }
+    // avatar helpers moved to Customer.vue (visual helpers belong with template)
 
-      const wrapper = this.$el;
-      if (wrapper && !wrapper.contains(e.target)) {
-        this.showDropdown = false;
+    handleClickOutside(e) {
+      try {
+        // Prefer composedPath for Shadow DOM / web components compatibility
+        const path = (typeof e.composedPath === 'function' && e.composedPath()) || e.path || [];
+
+        // Resolve the component root element safely (some test harnesses can wrap $el)
+        const root =
+          this.$el instanceof HTMLElement
+            ? this.$el
+            : this.$el && this.$el.$el instanceof HTMLElement
+              ? this.$el.$el
+              : null;
+
+        // Find the autocomplete wrapper starting from component root if possible,
+        // otherwise fall back to querying the document (safe fallback).
+        const wrapper = root ? root.querySelector('.autocomplete') : document.querySelector('.autocomplete');
+        if (!wrapper) return;
+
+        // If event path exists, check whether any node in the path is the wrapper (or inside it).
+        if (path && path.length) {
+          for (let i = 0; i < path.length; i++) {
+            if (path[i] === wrapper || (path[i] instanceof Node && wrapper.contains(path[i]))) {
+              return; // click occurred inside the wrapper -> do nothing
+            }
+          }
+          // not inside: close
+          this.showDropdown = false;
+          return;
+        }
+
+        // Fallback: use contains with event.target
+        if (!wrapper.contains(e.target)) {
+          this.showDropdown = false;
+        }
+      } catch (err) {
+        // non-fatal; avoid breaking UI if something unexpected occurs
+        console.warn && console.warn('handleClickOutside error', err);
       }
     },
 
@@ -259,12 +287,18 @@ export default {
   },
 
   mounted() {
-    document.addEventListener('click', this.handleClickOutside);
+    // ensure we install a single document click listener and remove it on unmount
+    // bound so we can remove exactly the same reference later
+    this._boundHandleClickOutside = (e) => this.handleClickOutside(e);
+    // use capture to reliably catch outside clicks even if other handlers stopPropagation
+    document.addEventListener('click', this._boundHandleClickOutside, true);
   },
 
   beforeUnmount() {
-    if (this.searchTimeout) clearTimeout(this.searchTimeout);
-    document.removeEventListener('click', this.handleClickOutside);
+    if (this._boundHandleClickOutside) {
+      document.removeEventListener('click', this._boundHandleClickOutside, true);
+      this._boundHandleClickOutside = null;
+    }
   },
 
   created() {
