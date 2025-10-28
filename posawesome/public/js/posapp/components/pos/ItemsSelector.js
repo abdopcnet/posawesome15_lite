@@ -182,7 +182,7 @@ export default {
         return {};
       }
       return {
-        maxHeight: `${this.itemsScrollHeight}px`,
+        maxHeight: `${this.itemsScrollHeight - 80}px`,
       };
     },
 
@@ -393,24 +393,24 @@ export default {
           align: 'start',
           sortable: true,
           key: 'item_name',
-          width: '30%',
+          width: '40%',
         },
         {
           title: __('Item Code'),
           align: 'start',
           sortable: true,
           key: 'item_code',
-          width: '25%',
+          width: '35%',
         },
-        { title: __('Price'), key: 'rate', align: 'start', width: '10%' },
+        { title: __('Price'), key: 'rate', align: 'start', width: '5%' },
         {
           title: __('Qty'),
           value: 'actual_qty',
           key: 'actual_qty',
           align: 'center',
-          width: '25%',
+          width: '15%',
         },
-        { title: __('UOM'), key: 'stock_uom', align: 'center', width: '10%' },
+        { title: __('UOM'), key: 'stock_uom', align: 'center', width: '5%' },
       ];
 
       return items_headers;
