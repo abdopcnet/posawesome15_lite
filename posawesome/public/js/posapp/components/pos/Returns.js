@@ -1,19 +1,19 @@
 // ===== SECTION 1: IMPORTS =====
 import { evntBus } from '../../bus';
 import format from '../../format';
-import { API_MAP } from "../../api_mapper.js";
+import { API_MAP } from '../../api_mapper.js';
 
 const EVENT_NAMES = {
   OPEN_RETURNS: 'open_returns',
   LOAD_RETURN_INVOICE: 'load_return_invoice',
-  SHOW_MESSAGE: 'show_mesage'
+  SHOW_MESSAGE: 'show_mesage',
 };
 
 const TABLE_HEADERS = [
   { title: 'Customer', key: 'customer', align: 'start', sortable: true },
   { title: 'Date', key: 'posting_date', align: 'start', sortable: true },
   { title: 'Invoice Number', key: 'name', align: 'start', sortable: true },
-  { title: 'Amount', key: 'grand_total', align: 'end', sortable: false }
+  { title: 'Amount', key: 'grand_total', align: 'end', sortable: false },
 ];
 
 const DEFAULT_COMPANY = 'Khaleej Women';
@@ -26,14 +26,14 @@ export default {
   data() {
     return {
       invoicesDialog: false,
-      selected: null,  // Changed from [] to null for single selection
+      selected: null, // Changed from [] to null for single selection
       dialog_data: [],
       isLoading: false,
       company: '',
       invoice_name: '',
       pos_profile: null,
       pos_opening_shift: null,
-      headers: TABLE_HEADERS
+      headers: TABLE_HEADERS,
     };
   },
   // ===== LIFECYCLE HOOKS =====
@@ -48,7 +48,7 @@ export default {
       this.pos_opening_shift = data.pos_opening_shift || null;
       this.company = this.getCompany();
       this.dialog_data = [];
-      this.selected = null;  // Changed from [] to null
+      this.selected = null; // Changed from [] to null
       this.search_invoices();
     });
   },
@@ -60,22 +60,27 @@ export default {
     },
 
     getCompany() {
-      return this.pos_profile?.company || this.pos_opening_shift?.company || this.company || DEFAULT_COMPANY;
+      return (
+        this.pos_profile?.company ||
+        this.pos_opening_shift?.company ||
+        this.company ||
+        DEFAULT_COMPANY
+      );
     },
 
     // Removed toggleSelectAll - not needed for radio buttons
 
-      // Close the returns dialog and reset state
+    // Close the returns dialog and reset state
     close_dialog() {
       this.$nextTick(() => {
         this.invoicesDialog = false;
-        this.selected = null;  // Changed from [] to null
+        this.selected = null; // Changed from [] to null
         this.dialog_data = [];
         this.invoice_name = '';
       });
     },
 
-      // Search for invoices available for return
+    // Search for invoices available for return
     search_invoices() {
       this.company = this.getCompany();
 
@@ -85,28 +90,29 @@ export default {
         method: API_MAP.SALES_INVOICE.GET_INVOICES_FOR_RETURN,
         args: {
           invoice_name: this.invoice_name || '',
-          company: this.company
+          company: this.company,
         },
         callback: (r) => {
           this.isLoading = false;
 
-          this.dialog_data = r.message?.length > 0
-            ? r.message.map(item => ({
-                name: item.name,
-                customer: item.customer,
-                posting_date: item.posting_date,
-                grand_total: item.grand_total,
-                currency: item.currency,
-                items: item.items || []
-              }))
-            : [];
+          this.dialog_data =
+            r.message?.length > 0
+              ? r.message.map((item) => ({
+                  name: item.name,
+                  customer: item.customer,
+                  posting_date: item.posting_date,
+                  grand_total: item.grand_total,
+                  currency: item.currency,
+                  items: item.items || [],
+                }))
+              : [];
 
           this.displaySearchResultsMessage();
         },
         error: () => {
           this.isLoading = false;
           this.showMessage('Failed to search for invoices', 'error');
-        }
+        },
       });
     },
 
@@ -118,7 +124,10 @@ export default {
           : `No submitted invoices available for return in company: ${this.company}`;
         this.showMessage(message, 'info');
       } else {
-        this.showMessage(`Found ${this.dialog_data.length} invoices available for return`, 'success');
+        this.showMessage(
+          `Found ${this.dialog_data.length} invoices available for return`,
+          'success',
+        );
       }
     },
 
@@ -127,9 +136,9 @@ export default {
         const response = await frappe.call({
           method: API_MAP.FRAPPE.CLIENT_GET,
           args: {
-            doctype: "Sales Invoice",
-            name: invoice_name
-          }
+            doctype: 'Sales Invoice',
+            name: invoice_name,
+          },
         });
         return response.message;
       } catch (e) {
@@ -139,13 +148,13 @@ export default {
     },
 
     validateReturnItems(return_items, original_invoice) {
-      const original_items = original_invoice.items.map(i => i.item_code);
-      const invalid_items = return_items.filter(item => !original_items.includes(item.item_code));
+      const original_items = original_invoice.items.map((i) => i.item_code);
+      const invalid_items = return_items.filter((item) => !original_items.includes(item.item_code));
 
       if (invalid_items.length > 0) {
         this.showMessage(
-          `The following items are not in the original invoice: ${invalid_items.map(i => i.item_code).join(', ')}`,
-          'error'
+          `The following items are not in the original invoice: ${invalid_items.map((i) => i.item_code).join(', ')}`,
+          'error',
         );
         return false;
       }
@@ -154,19 +163,19 @@ export default {
 
     createReturnInvoiceDoc(return_doc) {
       return {
-        items: return_doc.items.map(item => ({
+        items: return_doc.items.map((item) => ({
           ...item,
           qty: Math.abs(item.qty) * -1,
           stock_qty: Math.abs(item.stock_qty || item.qty) * -1,
           amount: Math.abs(item.amount) * -1,
           posa_row_id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
-          posa_offers: "[]",
+          posa_offers: '[]',
           posa_offer_applied: 0,
           posa_is_offer: 0,
           posa_is_replace: 0,
           is_free_item: 0,
           sales_invoice_item: item.name,
-          name: null
+          name: null,
         })),
         is_return: 1,
         return_against: return_doc.name,
@@ -174,7 +183,7 @@ export default {
         customer: return_doc.customer,
         posa_pos_opening_shift: this.pos_opening_shift?.name,
         pos_opening_shift: this.pos_opening_shift || null,
-        pos_profile: this.pos_profile || null
+        pos_profile: this.pos_profile || null,
       };
     },
 
@@ -185,7 +194,7 @@ export default {
         return;
       }
 
-      const selectedItem = this.dialog_data.find(item => item.name === this.selected);
+      const selectedItem = this.dialog_data.find((item) => item.name === this.selected);
       if (!selectedItem) {
         this.showMessage('Selected invoice not found', 'error');
         return;
@@ -215,11 +224,11 @@ export default {
 
       // Emit event after closing
       evntBus.emit(EVENT_NAMES.LOAD_RETURN_INVOICE, { invoice_doc, return_doc });
-    }
+    },
   },
 
   beforeDestroy() {
     // Clean up event listener
     evntBus.$off(EVENT_NAMES.OPEN_RETURNS);
-  }
+  },
 };
