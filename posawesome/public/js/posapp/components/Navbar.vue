@@ -53,12 +53,14 @@
       >
         <!-- Invoice Badge -->
         <div
+          @mouseenter="badgeMouseEnter"
+          @mouseleave="badgeMouseLeave"
           :style="
             invoiceNumberClass === 'regular-invoice'
-              ? 'border-color: rgba(25, 118, 210, 0.62); background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); color: #1976d2'
+              ? 'border-color: rgba(25, 118, 210, 0.50); background: linear-gradient(135deg, #eaf4ff 0%, #dbeeff 100%); color: #1976d2; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
               : invoiceNumberClass === 'return-invoice'
-                ? 'border-color: rgba(211, 47, 47, 0.62); background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); color: #d32f2f'
-                : 'border-color: rgba(189, 189, 189, 0.8); background: #f5f5f5; color: #757575; font-style: italic'
+                ? 'border-color: rgba(211, 47, 47, 0.50); background: linear-gradient(135deg, #fff6f6 0%, #ffe6e6 100%); color: #d32f2f; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
+                : 'border-color: rgba(189, 189, 189, 0.65); background: #f9f9f9; color: #757575; font-style: italic; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
           "
           style="
             display: inline-flex;
@@ -73,6 +75,7 @@
             white-space: nowrap;
             line-height: 1;
             height: 22px;
+            box-sizing: border-box;
           "
         >
           <i class="mdi mdi-receipt" :style="`font-size: 12px; color: ${invoiceIconColor}`"></i>
@@ -81,12 +84,14 @@
 
         <!-- Shift Badge -->
         <div
+          @mouseenter="badgeMouseEnter"
+          @mouseleave="badgeMouseLeave"
           :style="
             shiftNumberClass === 'open-shift'
-              ? 'border-color: rgba(76, 175, 80, 0.62); background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); color: #2e7d32'
+              ? 'border-color: rgba(76, 175, 80, 0.50); background: linear-gradient(135deg, #eefbe7 0%, #def2da 100%); color: #2e7d32; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
               : shiftNumberClass === 'closed-shift'
-                ? 'border-color: rgba(255, 152, 0, 0.33); background: linear-gradient(135deg, #fffaf3 0%, #ff870a59 100%); color: #000000b0'
-                : 'border-color: rgba(189, 189, 189, 0.8); background: #f5f5f5; color: #757575; font-style: italic'
+                ? 'border-color: rgba(255, 152, 0, 0.30); background: linear-gradient(135deg, #fffaf3 0%, #fff0d6 100%); color: #000000b0; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
+                : 'border-color: rgba(189, 189, 189, 0.65); background: #f9f9f9; color: #757575; font-style: italic; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
           "
           style="
             display: inline-flex;
@@ -101,6 +106,7 @@
             white-space: nowrap;
             line-height: 1;
             height: 22px;
+            box-sizing: border-box;
           "
         >
           <i class="mdi mdi-clock-outline" :style="`font-size: 12px; color: ${shiftIconColor}`"></i>
@@ -109,20 +115,29 @@
 
         <!-- User Badge -->
         <div
+          @mouseenter="badgeMouseEnter"
+          @mouseleave="badgeMouseLeave"
           style="
             display: inline-flex;
             align-items: center;
             gap: 3px;
             padding: 2px 6px;
             border-radius: 4px;
-            border: 1px solid rgba(25, 118, 210, 0.56);
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 1px solid rgba(25, 118, 210, 0.5);
+            background: linear-gradient(135deg, #eaf4ff 0%, #dbeeff 100%);
             color: #1976d2;
             font-size: 10px;
             font-weight: 600;
             white-space: nowrap;
             line-height: 1;
             height: 22px;
+            transition:
+              box-shadow 140ms ease,
+              filter 120ms ease,
+              background-color 120ms ease,
+              border-color 120ms ease,
+              color 120ms ease;
+            box-sizing: border-box;
           "
         >
           <i class="mdi mdi-account" style="font-size: 12px; color: var(--primary)"></i>
@@ -131,10 +146,12 @@
 
         <!-- Shift Start Badge -->
         <div
+          @mouseenter="badgeMouseEnter"
+          @mouseleave="badgeMouseLeave"
           :style="
             shiftStartClass === 'shift-active'
-              ? 'border-color: rgba(76, 175, 80, 0.56); background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); color: #2e7d32'
-              : 'border-color: rgba(189, 189, 189, 0.8); background: #f5f5f5; color: #757575'
+              ? 'border-color: rgba(76, 175, 80, 0.50); background: linear-gradient(135deg, #eefbe7 0%, #def2da 100%); color: #2e7d32; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
+              : 'border-color: rgba(189, 189, 189, 0.65); background: #f9f9f9; color: #757575; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
           "
           style="
             display: inline-flex;
@@ -149,6 +166,7 @@
             white-space: nowrap;
             line-height: 1;
             height: 22px;
+            box-sizing: border-box;
           "
         >
           <i
@@ -160,20 +178,29 @@
 
         <!-- Totals Badge -->
         <div
+          @mouseenter="badgeMouseEnter"
+          @mouseleave="badgeMouseLeave"
           style="
             display: inline-flex;
             align-items: center;
             gap: 3px;
             padding: 2px 6px;
             border-radius: 4px;
-            border: 1px solid rgba(25, 118, 210, 0.56);
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 1px solid rgba(25, 118, 210, 0.5);
+            background: linear-gradient(135deg, #eaf4ff 0%, #dbeeff 100%);
             color: #1976d2;
             font-size: 10px;
             font-weight: 600;
             white-space: nowrap;
             line-height: 1;
             height: 22px;
+            transition:
+              box-shadow 140ms ease,
+              filter 120ms ease,
+              background-color 120ms ease,
+              border-color 120ms ease,
+              color 120ms ease;
+            box-sizing: border-box;
           "
         >
           <i class="mdi mdi-counter" style="font-size: 12px; color: var(--primary)"></i>
@@ -182,20 +209,29 @@
 
         <!-- Cash Badge -->
         <div
+          @mouseenter="badgeMouseEnter"
+          @mouseleave="badgeMouseLeave"
           style="
             display: inline-flex;
             align-items: center;
             gap: 3px;
             padding: 2px 6px;
             border-radius: 4px;
-            border: 1px solid rgba(76, 175, 80, 0.56);
-            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border: 1px solid rgba(76, 175, 80, 0.5);
+            background: linear-gradient(135deg, #eefbe7 0%, #def2da 100%);
             color: #2e7d32;
             font-size: 10px;
             font-weight: 600;
             white-space: nowrap;
             line-height: 1;
             height: 22px;
+            transition:
+              box-shadow 140ms ease,
+              filter 120ms ease,
+              background-color 120ms ease,
+              border-color 120ms ease,
+              color 120ms ease;
+            box-sizing: border-box;
           "
         >
           <i class="mdi mdi-cash-multiple" style="font-size: 12px; color: var(--success)"></i>
@@ -204,20 +240,29 @@
 
         <!-- Card Badge -->
         <div
+          @mouseenter="badgeMouseEnter"
+          @mouseleave="badgeMouseLeave"
           style="
             display: inline-flex;
             align-items: center;
             gap: 3px;
             padding: 2px 6px;
             border-radius: 4px;
-            border: 1px solid rgba(156, 39, 176, 0.29);
-            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7ab 100%);
+            border: 1px solid rgba(156, 39, 176, 0.3);
+            background: linear-gradient(135deg, #f8eefb 0%, #f0e1f6 100%);
             color: #9033b7;
             font-size: 10px;
             font-weight: 600;
             white-space: nowrap;
             line-height: 1;
             height: 22px;
+            transition:
+              box-shadow 140ms ease,
+              filter 120ms ease,
+              background-color 120ms ease,
+              border-color 120ms ease,
+              color 120ms ease;
+            box-sizing: border-box;
           "
         >
           <i class="mdi mdi-credit-card" style="font-size: 12px; color: var(--primary)"></i>
@@ -226,14 +271,16 @@
 
         <!-- Ping Badge -->
         <div
+          @mouseenter="badgeMouseEnter"
+          @mouseleave="badgeMouseLeave"
           :style="
             pingClass === 'ping-excellent'
-              ? 'border-color: rgba(76, 175, 80, 0.56); background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); color: #2e7d32'
+              ? 'border-color: rgba(76, 175, 80, 0.50); background: linear-gradient(135deg, #eefbe7 0%, #def2da 100%); color: #2e7d32; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
               : pingClass === 'ping-good'
-                ? 'border-color: rgba(33, 150, 243, 0.56); background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); color: #1976d2'
+                ? 'border-color: rgba(33, 150, 243, 0.50); background: linear-gradient(135deg, #eaf4ff 0%, #dbeeff 100%); color: #1976d2; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
                 : pingClass === 'ping-fair'
-                  ? 'border-color: rgba(255, 152, 0, 0.56); background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); color: #f57c00'
-                  : 'border-color: rgba(244, 67, 54, 0.56); background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); color: #d32f2f'
+                  ? 'border-color: rgba(255, 152, 0, 0.50); background: linear-gradient(135deg, #fff9ed 0%, #fff1d6 100%); color: #f57c00; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
+                  : 'border-color: rgba(244, 67, 54, 0.50); background: linear-gradient(135deg, #fff6f6 0%, #ffe6e6 100%); color: #d32f2f; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
           "
           style="
             display: inline-flex;
@@ -248,6 +295,7 @@
             white-space: nowrap;
             line-height: 1;
             height: 22px;
+            box-sizing: border-box;
           "
         >
           <i class="mdi mdi-wifi" :style="`font-size: 12px; color: ${pingIconColor}`"></i>
@@ -256,20 +304,29 @@
 
         <!-- Profile Badge -->
         <div
+          @mouseenter="badgeMouseEnter"
+          @mouseleave="badgeMouseLeave"
           style="
             display: inline-flex;
             align-items: center;
             gap: 3px;
             padding: 2px 6px;
             border-radius: 4px;
-            border: 1px solid rgba(25, 118, 210, 0.56);
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 1px solid rgba(25, 118, 210, 0.5);
+            background: linear-gradient(135deg, #eaf4ff 0%, #dbeeff 100%);
             color: #1976d2;
             font-size: 10px;
             font-weight: 700;
             white-space: nowrap;
             line-height: 1;
             height: 22px;
+            transition:
+              box-shadow 140ms ease,
+              filter 120ms ease,
+              background-color 120ms ease,
+              border-color 120ms ease,
+              color 120ms ease;
+            box-sizing: border-box;
           "
         >
           <i class="mdi mdi-briefcase" style="font-size: 12px; color: var(--primary)"></i>
