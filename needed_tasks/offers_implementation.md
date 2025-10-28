@@ -51,7 +51,7 @@
 - Respect existing barcode scanning workflow
 - 🔍 Database queries
 - With specific field selection
-- NO SELECT *
+- NO SELECT \*
 - ⚡ Target <100ms response time
 - For offer validation
 - 🔗 Integration
