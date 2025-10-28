@@ -51,35 +51,35 @@
           scrollbar-width: none;
         "
       >
-        <!-- Invoice Badge -->
         <div
           @mouseenter="badgeMouseEnter"
           @mouseleave="badgeMouseLeave"
           :style="
             invoiceNumberClass === 'regular-invoice'
-              ? 'border-color: rgba(25, 118, 210, 0.50); background: linear-gradient(135deg, #eaf4ff 0%, #dbeeff 100%); color: #1976d2; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
+              ? 'border-color: rgba(8, 86, 152, 0.85); background: linear-gradient(135deg, #d4e8ff 0%, #93b9ff 100%); color: #043a8b; box-shadow: 0 8px 24px rgba(8,86,152,0.12); transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
               : invoiceNumberClass === 'return-invoice'
-                ? 'border-color: rgba(211, 47, 47, 0.50); background: linear-gradient(135deg, #fff6f6 0%, #ffe6e6 100%); color: #d32f2f; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
-                : 'border-color: rgba(189, 189, 189, 0.65); background: #f9f9f9; color: #757575; font-style: italic; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
+                ? 'border-color: rgba(183, 28, 28, 0.85); background: linear-gradient(135deg, #ffe8e8 0%, #ffb3b3 100%); color: #8b1111; box-shadow: 0 8px 24px rgba(183,28,28,0.12); transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
+                : 'border-color: rgba(63, 81, 181, 0.75); background: linear-gradient(135deg, #eef3ff 0%, #d9e4ff 100%); color: #22314f; font-style: normal; box-shadow: 0 6px 18px rgba(34,49,79,0.06); transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
           "
           style="
             display: inline-flex;
             align-items: center;
-            gap: 3px;
-            padding: 2px 6px;
-            border-radius: 4px;
+            gap: 6px;
+            padding: 3px 8px;
+            border-radius: 6px;
             border: 1px solid;
-            background: #fff;
-            font-size: 10px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 700;
             white-space: nowrap;
             line-height: 1;
-            height: 22px;
+            height: 26px;
             box-sizing: border-box;
           "
         >
-          <i class="mdi mdi-receipt" :style="`font-size: 12px; color: ${invoiceIconColor}`"></i>
-          <span>{{ invoiceNumberText }}</span>
+          <i class="mdi mdi-receipt" :style="`font-size: 13px; color: ${invoiceIconColor}`"></i>
+          <span style="color: inherit; font-weight: 700; font-size: 0.85rem">{{
+            invoiceNumberText
+          }}</span>
         </div>
 
         <!-- Shift Badge -->
@@ -343,27 +343,43 @@
           :disabled="!last_invoice"
           :title="last_invoice ? __('Print Last Receipt') : __('No last receipt')"
           @click="print_last_invoice"
-          :style="!last_invoice ? 'opacity: 0.4; cursor: not-allowed' : ''"
+          :style="{
+            cursor: last_invoice ? 'pointer' : 'not-allowed',
+            opacity: last_invoice ? 1 : 0.6,
+          }"
           style="
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 3px;
-            padding: 3px 6px;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            background: #fff;
-            cursor: pointer;
+            gap: 6px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(25, 118, 210, 0.12);
+            background: linear-gradient(90deg, rgba(25, 118, 210, 0.12), rgba(30, 136, 229, 0.08));
             font-size: 11px;
             font-weight: 600;
             height: 24px;
             min-width: 24px;
-            transition: all 0.2s;
+            transition: all 140ms ease;
+            box-sizing: border-box;
           "
+          @mouseenter="
+            $event.currentTarget.disabled ||
+            (($event.currentTarget.style.boxShadow = '0 8px 24px rgba(14,50,100,0.08)'),
+            ($event.currentTarget.style.background =
+              'linear-gradient(90deg, rgba(25,118,210,0.24), rgba(30,136,229,0.22))'))
+          "
+          @mouseleave="
+            $event.currentTarget.disabled ||
+            (($event.currentTarget.style.boxShadow = ''),
+            ($event.currentTarget.style.background =
+              'linear-gradient(90deg, rgba(25,118,210,0.12), rgba(30,136,229,0.08))'))
+          "
+          aria-label="Print last receipt"
         >
           <i
             class="mdi mdi-printer"
-            :style="`font-size: 14px; color: ${last_invoice ? 'var(--primary)' : 'var(--gray-500)'}`"
+            :style="`font-size: 19px; color: ${last_invoice ? 'blue' : 'var(--gray-500)'}; filter: ${last_invoice ? 'drop-shadow(0 6px 14px rgba(25,118,210,0.12))' : 'none'}`"
           ></i>
         </button>
 
@@ -375,20 +391,39 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 3px;
-            padding: 3px 6px;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            background: #fff;
+            gap: 6px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 160, 0, 0.1);
+            background: linear-gradient(90deg, rgba(255, 193, 7, 0.18), rgba(255, 152, 0, 0.12));
             cursor: pointer;
             font-size: 11px;
             font-weight: 600;
             height: 24px;
             min-width: 24px;
-            transition: all 0.2s;
+            transition: all 140ms ease;
+            box-sizing: border-box;
           "
+          @mouseenter="
+            $event.currentTarget.style.boxShadow = '0 8px 24px rgba(80,40,0,0.06)';
+            $event.currentTarget.style.background =
+              'linear-gradient(90deg, rgba(255,193,7,0.36), rgba(255,152,0,0.24))';
+          "
+          @mouseleave="
+            $event.currentTarget.style.boxShadow = '';
+            $event.currentTarget.style.background =
+              'linear-gradient(90deg, rgba(255,193,7,0.18), rgba(255,152,0,0.12))';
+          "
+          aria-label="Clear cache"
         >
-          <i class="mdi mdi-cached" style="font-size: 14px; color: var(--warning)"></i>
+          <i
+            class="mdi mdi-cached"
+            style="
+              font-size: 19px;
+              color: #2264d4;
+              filter: drop-shadow(0 6px 14px rgba(255, 152, 0, 0.12));
+            "
+          ></i>
         </button>
 
         <!-- Menu Dropdown -->
