@@ -504,6 +504,39 @@ export default {
         this.stopPingMonitoring();
       }
     },
+
+    // Inline-hover helpers for badges (mutates inline styles only, fast & scoped)
+    badgeMouseEnter(e) {
+      try {
+        const el = e.currentTarget;
+        // store original border color for restore
+        el.dataset._origBorder = el.style.borderColor || getComputedStyle(el).borderColor || '';
+        // subtle hover visual (no translate)
+        el.style.boxShadow = '0 6px 18px rgba(12, 24, 40, 0.06)';
+        el.style.filter = 'brightness(1.03)';
+        el.style.borderColor = 'rgba(0,0,0,0.08)';
+      } catch (err) {
+        // non-fatal - avoid console spam in production
+        console.warn && console.warn('badgeMouseEnter error', err);
+      }
+    },
+
+    badgeMouseLeave(e) {
+      try {
+        const el = e.currentTarget;
+        // restore original properties
+        el.style.boxShadow = '';
+        el.style.filter = '';
+        if (el.dataset._origBorder !== undefined) {
+          el.style.borderColor = el.dataset._origBorder;
+          delete el.dataset._origBorder;
+        } else {
+          el.style.borderColor = '';
+        }
+      } catch (err) {
+        console.warn && console.warn('badgeMouseLeave error', err);
+      }
+    },
   },
   created: function () {
     this.$nextTick(function () {
