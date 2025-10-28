@@ -75,6 +75,14 @@
             <tr
               v-for="item in items"
               :key="item.posa_row_id"
+              @mouseenter="
+                $event.currentTarget.style.background = 'rgba(16,24,40,0.09)';
+                $event.currentTarget.style.transition = 'background-color 160ms ease';
+              "
+              @mouseleave="
+                $event.currentTarget.style.background = '';
+                $event.currentTarget.style.transition = 'background-color 160ms ease';
+              "
               style="border-bottom: 1px solid #f1f1f1"
             >
               <!-- ITEM NAME COLUMN -->
@@ -90,7 +98,7 @@
               <!-- QUANTITY COLUMN -->
               <td
                 v-if="dynamicHeaders.find((h) => h.key === 'qty')"
-                style="padding: 6px; vertical-align: middle"
+                style="padding: 6px; vertical-align: middle; max-width: 100px"
               >
                 <!-- Quantity Controls: [-][Input][+] -->
                 <div
@@ -103,7 +111,7 @@
                     background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
                     border-radius: 4px;
                     width: 100%;
-                    max-width: 85px;
+                    /* max-width: 85px; */
                     min-width: 75px;
                   "
                 >
@@ -380,25 +388,37 @@
                 v-if="dynamicHeaders.find((h) => h.key === 'actions')"
                 style="padding: 6px; vertical-align: middle"
               >
-                <div style="display: flex; justify-content: flex-end">
+                <div style="display: flex; justify-content: center; align-items: center">
                   <button
                     :disabled="Boolean(item.posa_is_offer || item.posa_is_replace)"
-                    style="
-                      width: 16px;
-                      height: 16px;
-                      min-width: 16px;
-                      min-height: 16px;
-                      padding: 4px;
-                      border-radius: 4px;
-                      border: none;
-                      background: transparent;
-                      cursor: pointer;
-                      transition: background 0.2s;
+                    :style="
+                      item.posa_is_offer || item.posa_is_replace
+                        ? 'width:34px;height:34px;padding:0;border-radius:6px;border:none;background:#f3f3f3;color:#9e9e9e;display:flex;align-items:center;justify-content:center;cursor:not-allowed;opacity:0.6;transition:transform 140ms ease,box-shadow 140ms ease,background 140ms ease'
+                        : 'width:34px;height:34px;padding:0;border-radius:6px;border:none;background:linear-gradient(180deg,#fff5f5,#ffffff);color:#c62828;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform 140ms ease,box-shadow 140ms ease,background 140ms ease'
+                    "
+                    @mouseenter="
+                      if (!$event.currentTarget.disabled) {
+                        $event.currentTarget.style.transform = 'translateY(-2px)';
+                        $event.currentTarget.style.boxShadow = '0 10px 30px rgba(198,40,40,0.12)';
+                        $event.currentTarget.style.background =
+                          'linear-gradient(180deg,#ffebee,#ffcdd2)';
+                      }
+                    "
+                    @mouseleave="
+                      if (!$event.currentTarget.disabled) {
+                        $event.currentTarget.style.transform = '';
+                        $event.currentTarget.style.boxShadow = '';
+                        $event.currentTarget.style.background =
+                          'linear-gradient(180deg,#fff5f5,#ffffff)';
+                      }
                     "
                     @click.stop="remove_item(item)"
                     title="Delete item"
                   >
-                    <i class="mdi mdi-delete"></i>
+                    <i
+                      class="mdi mdi-delete"
+                      style="font-size: 18px; color: #b71c1c; line-height: 1; display: block"
+                    ></i>
                   </button>
                 </div>
               </td>
