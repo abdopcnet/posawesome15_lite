@@ -1,7 +1,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { evntBus } from '../../bus';
 import format from '../../format';
-import { API_MAP } from "../../api_mapper.js";
+import { API_MAP } from '../../api_mapper.js';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CONSTANTS
@@ -139,7 +139,7 @@ export default {
      */
     const getPaymentIcon = (paymentMethod) => {
       const method = Object.keys(PAYMENT_ICONS).find((key) =>
-        paymentMethod.toLowerCase().includes(key.toLowerCase())
+        paymentMethod.toLowerCase().includes(key.toLowerCase()),
       );
 
       return method ? PAYMENT_ICONS[method] : DEFAULT_PAYMENT_ICON;
@@ -170,9 +170,9 @@ export default {
       frappe.call({
         method: API_MAP.POS_CLOSING_SHIFT.CHECK_CLOSING_TIME_ALLOWED,
         args: {
-          pos_profile: pos_profile.value.name
+          pos_profile: pos_profile.value.name,
         },
-        callback: function(r) {
+        callback: function (r) {
           if (r.message) {
             isClosingAllowed.value = r.message.allowed;
             if (!r.message.allowed) {
@@ -182,9 +182,9 @@ export default {
             isClosingAllowed.value = false;
             closingTimeMessage.value = 'Error checking closing time permissions';
           }
-        }
+        },
       });
-    };    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    }; // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // EVENT HANDLERS
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
