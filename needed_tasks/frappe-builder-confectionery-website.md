@@ -32,6 +32,7 @@ Design and develop a beautiful confectionery website with integrated e-commerce 
 **🎯 Implementation Details**:
 
 **✅ Framework & Tools**:
+
 - **Frappe Builder**: [https://github.com/frappe/builder](https://github.com/frappe/builder)
 - **Frappe.io Builder**: [https://frappe.io/builder](https://frappe.io/builder)
 - **Frappe Framework**: Full-stack web application framework
@@ -41,6 +42,7 @@ Design and develop a beautiful confectionery website with integrated e-commerce 
 **🎨 Design Requirements**:
 
 **Visual Design**:
+
 - Modern, attractive confectionery-themed design
 - Professional color scheme suitable for food industry
 - High-quality product photography integration
@@ -49,6 +51,7 @@ Design and develop a beautiful confectionery website with integrated e-commerce 
 - Fast loading times (Lighthouse score > 90)
 
 **E-commerce Features**:
+
 - Product catalog with categories
 - Shopping cart functionality
 - Checkout process
@@ -59,6 +62,7 @@ Design and develop a beautiful confectionery website with integrated e-commerce 
 - Product search and filtering
 
 **Content Management**:
+
 - Dynamic content from Frappe CMS
 - Blog/news section for confectionery updates
 - About us page
@@ -69,6 +73,7 @@ Design and develop a beautiful confectionery website with integrated e-commerce 
 **🎯 Key Features**:
 
 **Homepage**:
+
 - Hero section with featured products
 - Product categories showcase
 - Special offers banner
@@ -77,6 +82,7 @@ Design and develop a beautiful confectionery website with integrated e-commerce 
 - Contact information
 
 **Product Pages**:
+
 - High-resolution product images
 - Detailed product descriptions
 - Nutritional information
@@ -85,6 +91,7 @@ Design and develop a beautiful confectionery website with integrated e-commerce 
 - Add to cart functionality
 
 **E-commerce Functionality**:
+
 - Shopping cart with persistent storage
 - Secure checkout process
 - Multiple payment methods
@@ -93,6 +100,7 @@ Design and develop a beautiful confectionery website with integrated e-commerce 
 - Customer account management
 
 **Admin Features**:
+
 - Product management
 - Order processing
 - Inventory tracking
@@ -189,12 +197,14 @@ Design and develop a beautiful confectionery website with integrated e-commerce 
 **🔗 Resources**:
 
 **📚 Documentation & Code**:
+
 - [Frappe Builder GitHub](https://github.com/frappe/builder)
 - [Frappe Builder Documentation](https://frappe.io/builder)
 - [Frappe Framework Documentation](https://frappe.io/docs)
 - [Frappe UI Components](https://frappe.io/ui)
 
 **🎥 Video Tutorials & References**:
+
 - [Frappe Builder Tutorial](https://www.youtube.com/watch?v=cBpWblmUm3c)
 - [Frappe Builder Advanced Tutorial](https://www.youtube.com/watch?v=8Ua-EzgofcA)
 - [Frappe Builder Components Guide](https://www.youtube.com/watch?v=JYs5f8LZvp0)
