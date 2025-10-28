@@ -33,7 +33,7 @@
             position: relative;
           "
         >
-          <i class="mdi mdi-shape" style="color: #1976d2; flex-shrink: 0; font-size: 14px"></i>
+          <i class="mdi mdi-shape" style="color: #1976d2; flex-shrink: 0; font-size: 18px"></i>
           <select
             v-model="item_group"
             @change="onItemGroupChange"
@@ -94,7 +94,7 @@
             color: #1976d2;
           "
         >
-          <i class="mdi mdi-tag-multiple" style="font-size: 14px"></i>
+          <i class="mdi mdi-tag-multiple" style="font-size: 18px"></i>
           <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
             >{{ offersCount }} Offers</span
           >
@@ -156,7 +156,7 @@
             "
           >
             <div style="display: flex; align-items: center; padding: 0 6px; height: 100%">
-              <i class="mdi mdi-barcode" style="color: #4caf50; font-size: 16px"></i>
+              <i class="mdi mdi-barcode" style="color: #4caf50; font-size: 20px"></i>
             </div>
 
             <input
@@ -243,7 +243,7 @@
             </div>
 
             <div style="display: flex; align-items: center; padding: 0 6px; height: 100%">
-              <i class="mdi mdi-magnify" style="color: #1976d2; font-size: 16px"></i>
+              <i class="mdi mdi-magnify" style="color: #1976d2; font-size: 20px"></i>
             </div>
 
             <input
@@ -439,6 +439,9 @@
                       position: sticky;
                       top: 0;
                       z-index: 1;
+                      white-space: nowrap;
+                      overflow: hidden;
+                      text-overflow: ellipsis;
                     "
                   >
                     {{ header.title || header.text }}
@@ -469,10 +472,14 @@
                     :key="header.value"
                     :style="{ textAlign: header.align || 'left' }"
                     style="
-                      padding: 8px 12px;
+                      padding: 13px 12px;
                       font-size: 0.75rem;
                       color: #424242;
                       vertical-align: middle;
+
+                      white-space: nowrap;
+                      overflow: hidden;
+                      text-overflow: ellipsis;
                     "
                   >
                     <span v-if="header.key === 'rate'" style="color: #1976d2; font-weight: 600">
