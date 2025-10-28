@@ -1,7 +1,7 @@
 // ===== IMPORTS =====
-import { evntBus } from "../../bus";
-import format from "../../format";
-import { API_MAP } from "../../api_mapper.js";
+import { evntBus } from '../../bus';
+import format from '../../format';
+import { API_MAP } from '../../api_mapper.js';
 
 // Lightweight debounce function (replaces lodash)
 // CRITICAL: Preserve 'this' context for Vue component methods
@@ -20,21 +20,21 @@ function debounce(func, wait) {
 
 const EVENT_NAMES = {
   // Item Events
-  ADD_ITEM: "add_item",
-  SET_ALL_ITEMS: "set_all_items",
-  UPDATE_CUR_ITEMS_DETAILS: "update_cur_items_details",
+  ADD_ITEM: 'add_item',
+  SET_ALL_ITEMS: 'set_all_items',
+  UPDATE_CUR_ITEMS_DETAILS: 'update_cur_items_details',
 
   // UI Events
-  SHOW_OFFERS: "show_offers",
-  SHOW_MESSAGE: "show_mesage",
+  SHOW_OFFERS: 'show_offers',
+  SHOW_MESSAGE: 'show_mesage',
 
   // Configuration Events
-  REGISTER_POS_PROFILE: "register_pos_profile",
-  UPDATE_CUSTOMER: "update_customer",
-  UPDATE_CUSTOMER_PRICE_LIST: "update_customer_price_list",
+  REGISTER_POS_PROFILE: 'register_pos_profile',
+  UPDATE_CUSTOMER: 'update_customer',
+  UPDATE_CUSTOMER_PRICE_LIST: 'update_customer_price_list',
 
   // Counter Events
-  UPDATE_OFFERS_COUNTERS: "update_offers_counters",
+  UPDATE_OFFERS_COUNTERS: 'update_offers_counters',
 };
 
 const UI_CONFIG = {
@@ -46,19 +46,19 @@ const UI_CONFIG = {
 };
 
 const VIEW_MODES = {
-  CARD: "card",
-  LIST: "list",
+  CARD: 'card',
+  LIST: 'list',
 };
 
 const BARCODE_TYPES = {
-  SCALE: "scale",
-  PRIVATE: "private",
-  NORMAL: "normal",
+  SCALE: 'scale',
+  PRIVATE: 'private',
+  NORMAL: 'normal',
 };
 
 // ===== COMPONENT =====
 export default {
-  name: "ItemsSelector",
+  name: 'ItemsSelector',
 
   mixins: [format],
 
@@ -71,18 +71,18 @@ export default {
 
       // View State
       items_view: VIEW_MODES.LIST,
-      item_group: "ALL",
+      item_group: 'ALL',
       loading: false,
       search_loading: false,
 
       // Items Data
-      items_group: ["ALL"],
+      items_group: ['ALL'],
       items: [],
 
       // Search State
-      search: "",
-      first_search: "",
-      barcode_search: "",
+      search: '',
+      first_search: '',
+      barcode_search: '',
 
       // Pagination
       itemsPerPage: 1000,
@@ -140,7 +140,7 @@ export default {
       this.search = this.get_search(this.first_search);
 
       // Cache expensive operations
-      const groupFilter = this.item_group !== "ALL";
+      const groupFilter = this.item_group !== 'ALL';
       const hasSearch = this.search && this.search.length >= UI_CONFIG.SEARCH_MIN_LENGTH;
 
       let filtred_list = [];
@@ -150,7 +150,7 @@ export default {
       if (groupFilter) {
         const lowerGroup = this.item_group.toLowerCase();
         filtred_group_list = this.items.filter((item) =>
-          item.item_group.toLowerCase().includes(lowerGroup)
+          item.item_group.toLowerCase().includes(lowerGroup),
         );
       } else {
         filtred_group_list = this.items;
@@ -163,13 +163,13 @@ export default {
         // Search in item_code - cache toLowerCase result
         const lowerSearch = this.search.toLowerCase();
         filtred_list = filtred_group_list.filter((item) =>
-          item.item_code.toLowerCase().includes(lowerSearch)
+          item.item_code.toLowerCase().includes(lowerSearch),
         );
 
         // Search in item_name if no results
         if (filtred_list.length === 0) {
           filtred_list = filtred_group_list.filter((item) =>
-            item.item_name.toLowerCase().includes(lowerSearch)
+            item.item_name.toLowerCase().includes(lowerSearch),
           );
         }
       }
@@ -208,12 +208,11 @@ export default {
       const scrollRef = this.$refs.itemsScrollArea;
       const scrollEl = scrollRef ? scrollRef.$el || scrollRef : null;
 
-      if (!scrollEl || typeof scrollEl.getBoundingClientRect !== "function") {
+      if (!scrollEl || typeof scrollEl.getBoundingClientRect !== 'function') {
         return;
       }
 
-      const viewportHeight =
-        window.innerHeight || document.documentElement?.clientHeight || 0;
+      const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
 
       if (!viewportHeight) {
         return;
@@ -223,10 +222,7 @@ export default {
       const available = viewportHeight - rect.top - UI_CONFIG.BOTTOM_PADDING;
 
       if (Number.isFinite(available)) {
-        this.itemsScrollHeight = Math.max(
-          UI_CONFIG.MIN_PANEL_HEIGHT,
-          Math.floor(available)
-        );
+        this.itemsScrollHeight = Math.max(UI_CONFIG.MIN_PANEL_HEIGHT, Math.floor(available));
       }
     },
 
@@ -234,10 +230,10 @@ export default {
       if (!this.barcode_search.trim()) return;
 
       this.process_barcode(this.barcode_search.trim());
-      this.barcode_search = "";
+      this.barcode_search = '';
 
       const barcodeInput = document.querySelector('input[placeholder*="Barcode"]');
-      if (barcodeInput) barcodeInput.value = "";
+      if (barcodeInput) barcodeInput.value = '';
     },
 
     process_barcode(barcode_value) {
@@ -247,11 +243,10 @@ export default {
         method: API_MAP.ITEM.GET_BARCODE_ITEM,
         args: {
           pos_profile: this.pos_profile,
-          barcode_value: barcode_value
+          barcode_value: barcode_value,
         },
         callback: (response) => {
           if (response?.message?.item_code) {
-
             // Add item to cart
             this.add_item_to_cart(response.message);
 
@@ -259,23 +254,23 @@ export default {
             const qty = response.message.qty || 1;
             const qtyText = qty !== 1 ? ` (qty: ${qty})` : '';
 
-            evntBus.emit("show_mesage", {
+            evntBus.emit('show_mesage', {
               text: `Added ${response.message.item_name}${qtyText} to cart`,
-              color: "success"
+              color: 'success',
             });
           } else {
-            evntBus.emit("show_mesage", {
-              text: "Item not found with this barcode",
-              color: "error"
+            evntBus.emit('show_mesage', {
+              text: 'Item not found with this barcode',
+              color: 'error',
             });
           }
         },
         error: (error) => {
-          evntBus.emit("show_mesage", {
-            text: "Error processing barcode",
-            color: "error"
+          evntBus.emit('show_mesage', {
+            text: 'Error processing barcode',
+            color: 'error',
           });
-        }
+        },
       });
     },
 
@@ -284,22 +279,22 @@ export default {
     },
 
     show_offers() {
-      evntBus.emit(EVENT_NAMES.SHOW_OFFERS, "true");
+      evntBus.emit(EVENT_NAMES.SHOW_OFFERS, 'true');
     },
 
     onItemGroupChange() {
       if (this.debounce_search) {
-        this.debounce_search = "";
-        this.first_search = "";
+        this.debounce_search = '';
+        this.first_search = '';
       }
       this.get_items();
     },
 
     get_items() {
       if (!this.pos_profile) {
-        evntBus.emit("show_mesage", {
-          text: "POS Profile not specified",
-          color: "error",
+        evntBus.emit('show_mesage', {
+          text: 'POS Profile not specified',
+          color: 'error',
         });
         return;
       }
@@ -307,13 +302,13 @@ export default {
       const vm = this;
       this.loading = true;
       let search = this.get_search(this.first_search);
-      let gr = "";
-      let sr = "";
+      let gr = '';
+      let sr = '';
 
       if (search) {
         sr = search;
       }
-      if (vm.item_group != "ALL") {
+      if (vm.item_group != 'ALL') {
         gr = vm.item_group.toLowerCase();
       }
 
@@ -344,7 +339,7 @@ export default {
               batch_no_data: [],
             }));
             vm._buildItemsMap();
-            evntBus.emit("set_all_items", vm.items);
+            evntBus.emit('set_all_items', vm.items);
             vm.loading = false;
             vm.search_loading = false;
             vm.scheduleScrollHeightUpdate();
@@ -372,7 +367,7 @@ export default {
 
       if (this.pos_profile.item_groups && this.pos_profile.item_groups.length > 0) {
         this.pos_profile.item_groups.forEach((element) => {
-          if (element.item_group !== "ALL") {
+          if (element.item_group !== 'ALL') {
             this.items_group.push(element.item_group);
           }
         });
@@ -395,28 +390,28 @@ export default {
     getItemsHeaders() {
       const items_headers = [
         {
-          title: __("Item Name"),
-          align: "start",
+          title: __('Item Name'),
+          align: 'start',
           sortable: true,
-          key: "item_name",
-          width: "30%",
+          key: 'item_name',
+          width: '30%',
         },
         {
-          title: __("Item Code"),
-          align: "start",
+          title: __('Item Code'),
+          align: 'start',
           sortable: true,
-          key: "item_code",
-          width: "25%",
+          key: 'item_code',
+          width: '25%',
         },
-        { title: __("Price"), key: "rate", align: "start", width: "10%" },
+        { title: __('Price'), key: 'rate', align: 'start', width: '10%' },
         {
-          title: __("Qty"),
-          value: "actual_qty",
-          key: "actual_qty",
-          align: "center",
-          width: "25%",
+          title: __('Qty'),
+          value: 'actual_qty',
+          key: 'actual_qty',
+          align: 'center',
+          width: '25%',
         },
-        { title: __("UOM"), key: "stock_uom", align: "center", width: "10%" },
+        { title: __('UOM'), key: 'stock_uom', align: 'center', width: '10%' },
       ];
 
       return items_headers;
@@ -424,7 +419,7 @@ export default {
 
     add_item_table(item) {
       // Add the item from the table - use the item object directly
-      evntBus.emit("add_item", {
+      evntBus.emit('add_item', {
         ...item,
         qty: this.qty || 1,
       });
@@ -433,7 +428,7 @@ export default {
 
     add_item(item) {
       // Add item from card view
-      evntBus.emit("add_item", {
+      evntBus.emit('add_item', {
         ...item,
         qty: this.qty || 1,
       });
@@ -441,12 +436,12 @@ export default {
     },
 
     get_search(val) {
-      return val || "";
+      return val || '';
     },
 
     esc_event() {
-      this.first_search = "";
-      this.debounce_search = "";
+      this.first_search = '';
+      this.debounce_search = '';
     },
 
     performLiveSearch(searchValue) {
@@ -456,7 +451,7 @@ export default {
       this.search_loading = true;
 
       // If search is empty, reload all items
-      if (!searchValue || searchValue.trim() === "") {
+      if (!searchValue || searchValue.trim() === '') {
         this.get_items();
         return;
       }
@@ -467,8 +462,7 @@ export default {
         args: {
           pos_profile: vm.pos_profile,
           price_list: vm.customer_price_list,
-          item_group:
-            vm.item_group !== "ALL" ? vm.item_group.toLowerCase() : "",
+          item_group: vm.item_group !== 'ALL' ? vm.item_group.toLowerCase() : '',
           search_value: searchValue.trim(),
           customer: vm.customer,
         },
@@ -482,18 +476,12 @@ export default {
               item_group: it.item_group,
               price_list_rate: it.price_list_rate || it.rate,
               base_rate: it.base_rate || it.rate,
-              item_barcode: Array.isArray(it.item_barcode)
-                ? it.item_barcode
-                : [],
-              serial_no_data: Array.isArray(it.serial_no_data)
-                ? it.serial_no_data
-                : [],
-              batch_no_data: Array.isArray(it.batch_no_data)
-                ? it.batch_no_data
-                : [],
+              item_barcode: Array.isArray(it.item_barcode) ? it.item_barcode : [],
+              serial_no_data: Array.isArray(it.serial_no_data) ? it.serial_no_data : [],
+              batch_no_data: Array.isArray(it.batch_no_data) ? it.batch_no_data : [],
             }));
             vm._buildItemsMap();
-            evntBus.emit("set_all_items", vm.items);
+            evntBus.emit('set_all_items', vm.items);
           }
         },
         error: function (err) {
@@ -504,7 +492,7 @@ export default {
     },
 
     update_items_details(items) {
-      evntBus.emit("update_cur_items_details", items);
+      evntBus.emit('update_cur_items_details', items);
     },
 
     scan_barcode() {
@@ -529,33 +517,29 @@ export default {
   },
 
   created: function () {
-    this.$nextTick(function () { });
-    evntBus.on("register_pos_profile", (data) => {
+    this.$nextTick(function () {});
+    evntBus.on('register_pos_profile', (data) => {
       this.pos_profile = data.pos_profile;
       // Set customer without triggering watcher for first time
       this._suppressCustomerWatcher = true;
       this.customer =
-        this.pos_profile && this.pos_profile.customer
-          ? this.pos_profile.customer
-          : this.customer;
+        this.pos_profile && this.pos_profile.customer ? this.pos_profile.customer : this.customer;
       this.get_items();
       this.get_items_groups();
-      this.items_view = this.pos_profile.posa_default_card_view
-        ? "card"
-        : "list";
+      this.items_view = this.pos_profile.posa_default_card_view ? 'card' : 'list';
     });
     // Removed: This was causing infinite recursion
     // evntBus.on("update_cur_items_details", () => {
     //   this.update_items_details(this.filtred_items);
     // });
-    evntBus.on("update_offers_counters", (data) => {
+    evntBus.on('update_offers_counters', (data) => {
       this.offersCount = data.offersCount;
       this.appliedOffersCount = data.appliedOffersCount;
     });
-    evntBus.on("update_customer_price_list", (data) => {
+    evntBus.on('update_customer_price_list', (data) => {
       this.customer_price_list = data;
     });
-    evntBus.on("update_customer", (data) => {
+    evntBus.on('update_customer', (data) => {
       this.customer = data;
     });
   },
@@ -565,7 +549,7 @@ export default {
     this.scan_barcode();
     // Calculate scrollable area as soon as the card renders
     this.scheduleScrollHeightUpdate();
-    window.addEventListener("resize", this.scheduleScrollHeightUpdate);
+    window.addEventListener('resize', this.scheduleScrollHeightUpdate);
   },
 
   // Add beforeUnmount to clean up memory
@@ -576,13 +560,13 @@ export default {
     }
 
     // Clean up event listeners
-    evntBus.$off("register_pos_profile");
-    evntBus.$off("update_cur_items_details");
-    evntBus.$off("update_offers_counters");
-    evntBus.$off("update_customer_price_list");
-    evntBus.$off("update_customer");
+    evntBus.$off('register_pos_profile');
+    evntBus.$off('update_cur_items_details');
+    evntBus.$off('update_offers_counters');
+    evntBus.$off('update_customer_price_list');
+    evntBus.$off('update_customer');
 
     // Remove window listener
-    window.removeEventListener("resize", this.scheduleScrollHeightUpdate);
+    window.removeEventListener('resize', this.scheduleScrollHeightUpdate);
   },
 };
