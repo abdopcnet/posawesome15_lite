@@ -4,8 +4,16 @@
     <!-- =========================================== -->
     <!-- INVOICE CONTAINER -->
     <!-- =========================================== -->
-    <div style="min-height: 0; display: flex; flex-direction: column; flex-grow: 1">
-      
+    <div
+      style="
+        position: relative;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        height: 100%;
+      "
+    >
       <!-- =========================================== -->
       <!-- CUSTOMER SECTION -->
       <!-- =========================================== -->
@@ -16,23 +24,37 @@
       <!-- =========================================== -->
       <!-- ITEMS TABLE SECTION -->
       <!-- =========================================== -->
-      <div style="flex: 1 1 auto; max-height: calc(100vh - 170px); overflow-y: auto; overflow-x: auto">
-        
-        <table style="
-          min-width: 600px;
-          max-width: 100%;
-          width: 100%;
-          border-collapse: collapse;
-          background: white;
-          font-size: 0.75rem"
+      <div
+        style="
+          flex: 1 1 auto;
+          max-height: calc(100vh - 350px);
+          overflow-y: auto;
+          overflow-x: auto;
+          padding-bottom: 10px;
+        "
+      >
+        <table
+          style="
+            min-width: 600px;
+            max-width: 100%;
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            font-size: 0.75rem;
+          "
         >
-          
           <!-- TABLE HEADERS -->
           <thead>
             <tr>
-              <th v-for="header in dynamicHeaders" :key="header.key"
+              <th
+                v-for="header in dynamicHeaders"
+                :key="header.key"
                 style="
-                  background: linear-gradient(180deg, rgba(128, 166, 255, 1) 0%, rgba(128, 166, 255, 0.25) 50%);
+                  background: linear-gradient(
+                    180deg,
+                    rgba(128, 166, 255, 1) 0%,
+                    rgba(128, 166, 255, 0.25) 50%
+                  );
                   border-bottom: 1px solid #e0e0e0;
                   padding: 8px 6px;
                   font-weight: 600;
@@ -40,7 +62,8 @@
                   color: #424242;
                   position: sticky;
                   top: 0;
-                  z-index: 1"
+                  z-index: 1;
+                "
               >
                 {{ header.title }}
               </th>
@@ -49,37 +72,43 @@
 
           <!-- TABLE ROWS - INVOICE ITEMS -->
           <tbody>
-            <tr v-for="item in items" 
-                :key="item.posa_row_id"
-                style="border-bottom: 1px solid #f1f1f1">
-              
+            <tr
+              v-for="item in items"
+              :key="item.posa_row_id"
+              style="border-bottom: 1px solid #f1f1f1"
+            >
               <!-- ITEM NAME COLUMN -->
-              <td v-if="dynamicHeaders.find(h => h.key === 'item_name')" 
-                  style="padding: 6px; vertical-align: middle">
+              <td
+                v-if="dynamicHeaders.find((h) => h.key === 'item_name')"
+                style="padding: 6px; vertical-align: middle"
+              >
                 <div style="width: 120px">
                   <p style="margin-bottom: 0">{{ item.item_name }}</p>
                 </div>
               </td>
 
               <!-- QUANTITY COLUMN -->
-              <td v-if="dynamicHeaders.find(h => h.key === 'qty')" 
-                  style="padding: 6px; vertical-align: middle">
-                
+              <td
+                v-if="dynamicHeaders.find((h) => h.key === 'qty')"
+                style="padding: 6px; vertical-align: middle"
+              >
                 <!-- Quantity Controls: [-][Input][+] -->
-                <div style="
-                  display: flex;
-                  align-items: center;
-                  justify-content: space-between;
-                  gap: 2px;
-                  padding: 2px;
-                  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-                  border-radius: 4px;
-                  width: 100%;
-                  max-width: 85px;
-                  min-width: 75px">
-                  
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 2px;
+                    padding: 2px;
+                    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+                    border-radius: 4px;
+                    width: 100%;
+                    max-width: 85px;
+                    min-width: 75px;
+                  "
+                >
                   <!-- Decrease Button (-) -->
-                  <button 
+                  <button
                     style="
                       flex-shrink: 0;
                       width: 20px;
@@ -96,19 +125,21 @@
                       position: relative;
                       color: white;
                       background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-                      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2)"
+                      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+                    "
                     @click="decreaseQuantity(item)"
-                    :disabled="!(item.qty && Math.abs(item.qty) > 0)" 
-                    type="button">
+                    :disabled="!(item.qty && Math.abs(item.qty) > 0)"
+                    type="button"
+                  >
                     <span style="font-size: 0.85rem; font-weight: 700; line-height: 1">−</span>
                   </button>
 
                   <!-- Quantity Input -->
-                  <input 
-                    type="number" 
-                    :value="Math.abs(item.qty || 0)" 
+                  <input
+                    type="number"
+                    :value="Math.abs(item.qty || 0)"
                     @input="onQtyInput(item, $event)"
-                    @change="onQtyChange(item, $event)" 
+                    @change="onQtyChange(item, $event)"
                     @blur="handleQtyBlur(item, $event)"
                     style="
                       flex: 1;
@@ -120,11 +151,13 @@
                       font-size: 0.75rem;
                       padding: 2px 4px;
                       border-radius: 3px;
-                      outline: none"
-                    placeholder="0" />
+                      outline: none;
+                    "
+                    placeholder="0"
+                  />
 
                   <!-- Increase Button (+) -->
-                  <button 
+                  <button
                     style="
                       flex-shrink: 0;
                       width: 20px;
@@ -141,32 +174,40 @@
                       position: relative;
                       color: white;
                       background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
-                      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2)"
-                    @click="increaseQuantity(item)" 
-                    type="button">
+                      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+                    "
+                    @click="increaseQuantity(item)"
+                    type="button"
+                  >
                     <span style="font-size: 0.85rem; font-weight: 700; line-height: 1">+</span>
                   </button>
-
                 </div>
               </td>
 
               <!-- UOM COLUMN -->
-              <td v-if="dynamicHeaders.find(h => h.key === 'uom')" 
-                  style="padding: 6px; vertical-align: middle">
+              <td
+                v-if="dynamicHeaders.find((h) => h.key === 'uom')"
+                style="padding: 6px; vertical-align: middle"
+              >
                 {{ item.uom }}
               </td>
 
               <!-- PRICE LIST RATE COLUMN (Original Price) -->
-              <td v-if="dynamicHeaders.find(h => h.key === 'price_list_rate')" 
-                  style="padding: 6px; vertical-align: middle">
-                <div style="
-                  display: flex;
-                  align-items: center;
-                  gap: 3px;
-                  padding: 3px 6px;
-                  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-                  border-radius: 4px;
-                  min-width: 60px">
+              <td
+                v-if="dynamicHeaders.find((h) => h.key === 'price_list_rate')"
+                style="padding: 6px; vertical-align: middle"
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 3px;
+                    padding: 3px 6px;
+                    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+                    border-radius: 4px;
+                    min-width: 60px;
+                  "
+                >
                   <span style="font-size: 0.8rem; font-weight: 700; color: #2e7d32">
                     {{ formatCurrency(item.price_list_rate) }}
                   </span>
@@ -174,118 +215,160 @@
               </td>
 
               <!-- RATE COLUMN (Discounted Price - Editable) -->
-              <td v-if="dynamicHeaders.find(h => h.key === 'rate')" 
-                  style="padding: 6px; vertical-align: middle">
-                <div style="
-                  display: flex;
-                  align-items: center;
-                  gap: 3px;
-                  padding: 3px 6px;
-                  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-                  border-radius: 4px;
-                  min-width: 65px">
-                  
-                  <input 
-                    type="text" 
-                    :value="formatCurrency(item.rate)" 
+              <td
+                v-if="dynamicHeaders.find((h) => h.key === 'rate')"
+                style="padding: 6px; vertical-align: middle"
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 3px;
+                    padding: 3px 6px;
+                    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+                    border-radius: 4px;
+                    min-width: 65px;
+                  "
+                >
+                  <input
+                    type="text"
+                    :value="formatCurrency(item.rate)"
                     @change="setItemRate(item, $event)"
                     @keyup.enter="setItemRate(item, $event)"
                     @blur="handleRateBlur(item, $event)"
-                    :disabled="Boolean(
-                      item.posa_is_offer ||
-                      item.posa_is_replace ||
-                      item.posa_offer_applied ||
-                      invoice_doc?.is_return
-                    )"
-                    :style="Boolean(
-                      item.posa_is_offer ||
-                      item.posa_is_replace ||
-                      item.posa_offer_applied ||
-                      invoice_doc?.is_return
-                    ) ? 'flex: 1; width: 100%; border: none; background: #f5f5f5; color: #9e9e9e; font-size: 0.75rem; padding: 2px 4px; border-radius: 3px; outline: none; cursor: not-allowed' : 'flex: 1; width: 100%; border: none; background: transparent; font-size: 0.8rem; font-weight: 700; color: #f57c00; padding: 0; outline: none; text-align: right'"
-                    placeholder="0.00" />
+                    :disabled="
+                      Boolean(
+                        item.posa_is_offer ||
+                          item.posa_is_replace ||
+                          item.posa_offer_applied ||
+                          invoice_doc?.is_return,
+                      )
+                    "
+                    :style="
+                      Boolean(
+                        item.posa_is_offer ||
+                          item.posa_is_replace ||
+                          item.posa_offer_applied ||
+                          invoice_doc?.is_return,
+                      )
+                        ? 'flex: 1; width: 100%; border: none; background: #f5f5f5; color: #9e9e9e; font-size: 0.75rem; padding: 2px 4px; border-radius: 3px; outline: none; cursor: not-allowed'
+                        : 'flex: 1; width: 100%; border: none; background: transparent; font-size: 0.8rem; font-weight: 700; color: #f57c00; padding: 0; outline: none; text-align: right'
+                    "
+                    placeholder="0.00"
+                  />
                 </div>
               </td>
 
               <!-- DISCOUNT PERCENTAGE COLUMN (Editable) -->
-              <td v-if="dynamicHeaders.find(h => h.key === 'discount_percentage')" 
-                  style="padding: 6px; vertical-align: middle">
-                <div style="
-                  display: flex;
-                  align-items: center;
-                  gap: 3px;
-                  padding: 3px 6px;
-                  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-                  border-radius: 4px;
-                  min-width: 55px">
-                  
-                  <input 
-                    type="number" 
+              <td
+                v-if="dynamicHeaders.find((h) => h.key === 'discount_percentage')"
+                style="padding: 6px; vertical-align: middle"
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 3px;
+                    padding: 3px 6px;
+                    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+                    border-radius: 4px;
+                    min-width: 55px;
+                  "
+                >
+                  <input
+                    type="number"
                     :value="formatFloat(item.discount_percentage || 0)"
-                    @change="setDiscountPercentage(item, $event)" 
+                    @change="setDiscountPercentage(item, $event)"
                     @keyup.enter="setDiscountPercentage(item, $event)"
                     @blur="handleDiscountBlur(item, $event)"
-                    :disabled="Boolean(
-                      item.posa_is_offer ||
-                      item.posa_is_replace ||
-                      item.posa_offer_applied ||
-                      !pos_profile?.posa_allow_user_to_edit_item_discount ||
-                      invoice_doc?.is_return
-                    )"
-                    :style="Boolean(
-                      item.posa_is_offer ||
-                      item.posa_is_replace ||
-                      item.posa_offer_applied ||
-                      !pos_profile?.posa_allow_user_to_edit_item_discount ||
-                      invoice_doc?.is_return
-                    ) ? 'flex: 1; width: 100%; border: none; background: #f5f5f5; color: #9e9e9e; font-size: 0.75rem; padding: 2px 4px; border-radius: 3px; outline: none; cursor: not-allowed; text-align: right' : 'flex: 1; width: 100%; border: none; background: transparent; font-size: 0.75rem; font-weight: 700; color: #f57c00; padding: 0; outline: none; text-align: right'"
-                    placeholder="0" 
+                    :disabled="
+                      Boolean(
+                        item.posa_is_offer ||
+                          item.posa_is_replace ||
+                          item.posa_offer_applied ||
+                          !pos_profile?.posa_allow_user_to_edit_item_discount ||
+                          invoice_doc?.is_return,
+                      )
+                    "
+                    :style="
+                      Boolean(
+                        item.posa_is_offer ||
+                          item.posa_is_replace ||
+                          item.posa_offer_applied ||
+                          !pos_profile?.posa_allow_user_to_edit_item_discount ||
+                          invoice_doc?.is_return,
+                      )
+                        ? 'flex: 1; width: 100%; border: none; background: #f5f5f5; color: #9e9e9e; font-size: 0.75rem; padding: 2px 4px; border-radius: 3px; outline: none; cursor: not-allowed; text-align: right'
+                        : 'flex: 1; width: 100%; border: none; background: transparent; font-size: 0.75rem; font-weight: 700; color: #f57c00; padding: 0; outline: none; text-align: right'
+                    "
+                    placeholder="0"
                     min="0"
-                    :max="pos_profile?.posa_item_max_discount_allowed || 100" 
-                    step="0.01" />
-                  
-                  <span style="font-size: 0.65rem; font-weight: 700; color: #f57c00; white-space: nowrap; flex-shrink: 0">%</span>
+                    :max="pos_profile?.posa_item_max_discount_allowed || 100"
+                    step="0.01"
+                  />
+
+                  <span
+                    style="
+                      font-size: 0.65rem;
+                      font-weight: 700;
+                      color: #f57c00;
+                      white-space: nowrap;
+                      flex-shrink: 0;
+                    "
+                    >%</span
+                  >
                 </div>
               </td>
 
               <!-- DISCOUNT AMOUNT COLUMN (Calculated) -->
-              <td v-if="dynamicHeaders.find(h => h.key === 'discount_amount')" 
-                  style="padding: 6px; vertical-align: middle">
-                <div style="
-                  display: flex;
-                  align-items: center;
-                  gap: 3px;
-                  padding: 3px 6px;
-                  background: linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%);
-                  border-radius: 4px;
-                  min-width: 60px">
-                  <span :style="{ 
-                    fontSize: '0.8rem', 
-                    fontWeight: '700', 
-                    color: getDiscountAmount(item) > 0 ? '#f57c00' : '#9e9e9e' 
-                  }">
+              <td
+                v-if="dynamicHeaders.find((h) => h.key === 'discount_amount')"
+                style="padding: 6px; vertical-align: middle"
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 3px;
+                    padding: 3px 6px;
+                    background: linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%);
+                    border-radius: 4px;
+                    min-width: 60px;
+                  "
+                >
+                  <span
+                    :style="{
+                      fontSize: '0.8rem',
+                      fontWeight: '700',
+                      color: getDiscountAmount(item) > 0 ? '#f57c00' : '#9e9e9e',
+                    }"
+                  >
                     {{ formatCurrency(getDiscountAmount(item)) }}
                   </span>
                 </div>
               </td>
 
               <!-- TOTAL AMOUNT COLUMN (Calculated: Qty × Rate) -->
-              <td v-if="dynamicHeaders.find(h => h.key === 'amount')" 
-                  style="padding: 6px; vertical-align: middle">
-                <div style="
-                  display: flex;
-                  align-items: center;
-                  gap: 3px;
-                  padding: 3px 6px;
-                  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-                  border-radius: 4px;
-                  min-width: 70px;
-                  justify-content: flex-end">
+              <td
+                v-if="dynamicHeaders.find((h) => h.key === 'amount')"
+                style="padding: 6px; vertical-align: middle"
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 3px;
+                    padding: 3px 6px;
+                    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+                    border-radius: 4px;
+                    min-width: 70px;
+                    justify-content: flex-end;
+                  "
+                >
                   <span style="font-size: 0.8rem; font-weight: 700; color: #1b5e20">
                     {{
                       formatCurrency(
-                        flt(item.qty, float_precision) *
-                        flt(item.rate, currency_precision)
+                        flt(item.qty, float_precision) * flt(item.rate, currency_precision),
                       )
                     }}
                   </span>
@@ -293,10 +376,12 @@
               </td>
 
               <!-- ACTIONS COLUMN (Delete Button) -->
-              <td v-if="dynamicHeaders.find(h => h.key === 'actions')" 
-                  style="padding: 6px; vertical-align: middle">
+              <td
+                v-if="dynamicHeaders.find((h) => h.key === 'actions')"
+                style="padding: 6px; vertical-align: middle"
+              >
                 <div style="display: flex; justify-content: flex-end">
-                  <button 
+                  <button
                     :disabled="Boolean(item.posa_is_offer || item.posa_is_replace)"
                     style="
                       width: 16px;
@@ -308,97 +393,124 @@
                       border: none;
                       background: transparent;
                       cursor: pointer;
-                      transition: background 0.2s"
-                    @click.stop="remove_item(item)" 
-                    title="Delete item">
+                      transition: background 0.2s;
+                    "
+                    @click.stop="remove_item(item)"
+                    title="Delete item"
+                  >
                     <i class="mdi mdi-delete"></i>
                   </button>
                 </div>
               </td>
-
             </tr>
           </tbody>
         </table>
       </div>
-    </div> 
+    </div>
 
     <!-- =========================================== -->
     <!-- PAYMENT & FINANCIAL SUMMARY SECTION -->
     <!-- =========================================== -->
-    <div style="
-      background: white;
-      border-radius: 8px;
-      padding: 8px;
-      margin-top: 4px;
-      border: 1px solid #e0e0e0;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08)">
-      
+    <div
+      style="
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 8px 8px 0 0;
+        padding: 8px;
+        border: 1px solid #e0e0e0;
+        border-bottom: none;
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.12);
+        z-index: 100;
+      "
+    >
       <!-- FINANCIAL SUMMARY (Totals Row) -->
-      <div style="
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 6px;
-        margin-bottom: 8px;
-        padding: 4px;
-        background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
-        border-radius: 4px">
-        
+      <div
+        style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+          gap: 6px;
+          margin-bottom: 8px;
+          padding: 4px;
+          background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+          border-radius: 4px;
+        "
+      >
         <!-- Total Qty Field -->
-        <div style="
-          display: flex;
-          flex-direction: column;
-          padding: 4px 6px;
-          background: white;
-          border-radius: 3px;
-          border: 1px solid #e0e0e0">
-          <label style="
-            font-size: 0.65rem;
-            margin-bottom: 0;
-            font-weight: 600;
-            color: #666;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            text-transform: uppercase;
-            letter-spacing: 0.3px">{{ __("Total Qty") }}</label>
-          <div style="
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #1976d2;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.2">
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            padding: 4px 6px;
+            background: white;
+            border-radius: 3px;
+            border: 1px solid #e0e0e0;
+          "
+        >
+          <label
+            style="
+              font-size: 0.65rem;
+              margin-bottom: 0;
+              font-weight: 600;
+              color: #666;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+            "
+            >{{ __('Total Qty') }}</label
+          >
+          <div
+            style="
+              font-size: 0.75rem;
+              font-weight: 700;
+              color: #1976d2;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              line-height: 1.2;
+            "
+          >
             {{ formatFloat(invoice_doc?.total_qty || 0) }}
           </div>
         </div>
 
         <!-- Additional Discount Field (Editable) -->
-        <div style="
-          display: flex;
-          flex-direction: column;
-          padding: 4px 6px;
-          background: white;
-          border-radius: 3px;
-          border: 1px solid #e0e0e0">
-          <label style="
-            font-size: 0.65rem;
-            margin-bottom: 0;
-            font-weight: 600;
-            color: #666;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            text-transform: uppercase;
-            letter-spacing: 0.3px">{{ __("Additional Discount") }}</label>
-          <input 
-            type="number" 
-            :value="additional_discount_percentage" 
-            @input="onDiscountInput" 
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            padding: 4px 6px;
+            background: white;
+            border-radius: 3px;
+            border: 1px solid #e0e0e0;
+          "
+        >
+          <label
+            style="
+              font-size: 0.65rem;
+              margin-bottom: 0;
+              font-weight: 600;
+              color: #666;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+            "
+            >{{ __('Additional Discount') }}</label
+          >
+          <input
+            type="number"
+            :value="additional_discount_percentage"
+            @input="onDiscountInput"
             @blur="onDiscountBlur"
-            ref="percentage_discount" 
-            step="0.01" 
-            min="0" 
+            ref="percentage_discount"
+            step="0.01"
+            min="0"
             :max="pos_profile?.posa_invoice_max_discount_allowed || 100"
             style="
               width: 100%;
@@ -409,179 +521,235 @@
               font-weight: 700;
               color: #1976d2;
               padding: 0;
-              text-align: left" 
+              text-align: left;
+            "
             placeholder="0.00"
-            :disabled="!pos_profile?.posa_allow_user_to_edit_additional_discount" />
+            :disabled="!pos_profile?.posa_allow_user_to_edit_additional_discount"
+          />
         </div>
 
         <!-- Items Discount Field -->
-        <div style="
-          display: flex;
-          flex-direction: column;
-          padding: 4px 6px;
-          background: white;
-          border-radius: 3px;
-          border: 1px solid #ffcc02">
-          <label style="
-            font-size: 0.65rem;
-            margin-bottom: 0;
-            font-weight: 600;
-            color: #666;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            text-transform: uppercase;
-            letter-spacing: 0.3px">{{ __("items_dis") }}</label>
-          <div style="
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #f57c00;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.2">
-            {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(invoice_doc?.posa_item_discount_total || 0) }}
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            padding: 4px 6px;
+            background: white;
+            border-radius: 3px;
+            border: 1px solid #ffcc02;
+          "
+        >
+          <label
+            style="
+              font-size: 0.65rem;
+              margin-bottom: 0;
+              font-weight: 600;
+              color: #666;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+            "
+            >{{ __('items_dis') }}</label
+          >
+          <div
+            style="
+              font-size: 0.75rem;
+              font-weight: 700;
+              color: #f57c00;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              line-height: 1.2;
+            "
+          >
+            {{ currencySymbol(pos_profile?.currency)
+            }}{{ formatCurrency(invoice_doc?.posa_item_discount_total || 0) }}
           </div>
         </div>
 
         <!-- Before Discount Field -->
-        <div style="
-          display: flex;
-          flex-direction: column;
-          padding: 4px 6px;
-          background: white;
-          border-radius: 3px;
-          border: 1px solid #e0e0e0">
-          <label style="
-            font-size: 0.65rem;
-            margin-bottom: 0;
-            font-weight: 600;
-            color: #666;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            text-transform: uppercase;
-            letter-spacing: 0.3px">{{ __("before_disc") }}</label>
-          <div style="
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #1976d2;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.2">
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            padding: 4px 6px;
+            background: white;
+            border-radius: 3px;
+            border: 1px solid #e0e0e0;
+          "
+        >
+          <label
+            style="
+              font-size: 0.65rem;
+              margin-bottom: 0;
+              font-weight: 600;
+              color: #666;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+            "
+            >{{ __('before_disc') }}</label
+          >
+          <div
+            style="
+              font-size: 0.75rem;
+              font-weight: 700;
+              color: #1976d2;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              line-height: 1.2;
+            "
+          >
             {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(invoice_doc?.total || 0) }}
           </div>
         </div>
 
         <!-- Net Total Field -->
-        <div style="
-          display: flex;
-          flex-direction: column;
-          padding: 4px 6px;
-          background: white;
-          border-radius: 3px;
-          border: 1px solid #e0e0e0">
-          <label style="
-            font-size: 0.65rem;
-            margin-bottom: 0;
-            font-weight: 600;
-            color: #666;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            text-transform: uppercase;
-            letter-spacing: 0.3px">{{ __("net_total") }}</label>
-          <div style="
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #1976d2;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.2">
-            {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(invoice_doc?.net_total || 0) }}
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            padding: 4px 6px;
+            background: white;
+            border-radius: 3px;
+            border: 1px solid #e0e0e0;
+          "
+        >
+          <label
+            style="
+              font-size: 0.65rem;
+              margin-bottom: 0;
+              font-weight: 600;
+              color: #666;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+            "
+            >{{ __('net_total') }}</label
+          >
+          <div
+            style="
+              font-size: 0.75rem;
+              font-weight: 700;
+              color: #1976d2;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              line-height: 1.2;
+            "
+          >
+            {{ currencySymbol(pos_profile?.currency)
+            }}{{ formatCurrency(invoice_doc?.net_total || 0) }}
           </div>
         </div>
 
         <!-- Tax Field -->
-        <div style="
-          display: flex;
-          flex-direction: column;
-          padding: 4px 6px;
-          background: white;
-          border-radius: 3px;
-          border: 1px solid #03a9f4">
-          <label style="
-            font-size: 0.65rem;
-            margin-bottom: 0;
-            font-weight: 600;
-            color: #666;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            text-transform: uppercase;
-            letter-spacing: 0.3px">{{ __("Tax") }}</label>
-          <div style="
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #0288d1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.2">
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            padding: 4px 6px;
+            background: white;
+            border-radius: 3px;
+            border: 1px solid #03a9f4;
+          "
+        >
+          <label
+            style="
+              font-size: 0.65rem;
+              margin-bottom: 0;
+              font-weight: 600;
+              color: #666;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+            "
+            >{{ __('Tax') }}</label
+          >
+          <div
+            style="
+              font-size: 0.75rem;
+              font-weight: 700;
+              color: #0288d1;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              line-height: 1.2;
+            "
+          >
             {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(computedTaxAmount) }}
           </div>
         </div>
 
         <!-- Grand Total Field -->
-        <div style="
-          display: flex;
-          flex-direction: column;
-          padding: 4px 6px;
-          background: white;
-          border-radius: 3px;
-          border: 1px solid #2e7d32">
-          <label style="
-            font-size: 0.65rem;
-            margin-bottom: 0;
-            font-weight: 600;
-            color: #2e7d32;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            text-transform: uppercase;
-            letter-spacing: 0.3px">{{ __("grand_total") }}</label>
-          <div style="
-            font-size: 0.9rem;
-            font-weight: 800;
-            color: #2e7d32;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.2">
-            {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(invoice_doc?.grand_total || 0) }}
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            padding: 4px 6px;
+            background: white;
+            border-radius: 3px;
+            border: 1px solid #2e7d32;
+          "
+        >
+          <label
+            style="
+              font-size: 0.65rem;
+              margin-bottom: 0;
+              font-weight: 600;
+              color: #2e7d32;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+            "
+            >{{ __('grand_total') }}</label
+          >
+          <div
+            style="
+              font-size: 0.9rem;
+              font-weight: 800;
+              color: #2e7d32;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              line-height: 1.2;
+            "
+          >
+            {{ currencySymbol(pos_profile?.currency)
+            }}{{ formatCurrency(invoice_doc?.grand_total || 0) }}
           </div>
         </div>
-
       </div>
 
       <!-- =========================================== -->
       <!-- ACTION BUTTONS ROW -->
       <!-- =========================================== -->
-      <div style="
-        display: flex;
-        gap: 1px;
-        background: white;
-        padding: 2px;
-        border-radius: 6px;
-        width: 100%;
-        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05)">
-
+      <div
+        style="
+          display: flex;
+          gap: 1px;
+          background: white;
+          padding: 2px;
+          border-radius: 6px;
+          width: 100%;
+          box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        "
+      >
         <!-- Print Button -->
-        <button 
-          :disabled="!hasItems" 
-          @click="printInvoice" 
+        <button
+          :disabled="!hasItems"
+          @click="printInvoice"
           :title="__('Print invoice')"
           style="
             flex: 1;
@@ -597,15 +765,21 @@
             align-items: center;
             justify-content: center;
             gap: 4px;
-            transition: all 0.2s"
-          :style="!hasItems ? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6' : ''"
-          type="button">
+            transition: all 0.2s;
+          "
+          :style="
+            !hasItems
+              ? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6'
+              : ''
+          "
+          type="button"
+        >
           <i class="mdi mdi-printer" style="font-size: 16px"></i>
-          <span>{{ __("Print") }}</span>
+          <span>{{ __('Print') }}</span>
         </button>
 
         <!-- Pay Button -->
-        <button 
+        <button
           :disabled="!hasItems || is_payment || isUpdatingTotals"
           @click="show_payment"
           style="
@@ -622,16 +796,22 @@
             align-items: center;
             justify-content: center;
             gap: 4px;
-            transition: all 0.2s"
-          :style="(!hasItems || is_payment || isUpdatingTotals) ? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6' : ''"
-          type="button">
+            transition: all 0.2s;
+          "
+          :style="
+            !hasItems || is_payment || isUpdatingTotals
+              ? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6'
+              : ''
+          "
+          type="button"
+        >
           <i class="mdi mdi-cash-multiple" style="font-size: 16px"></i>
-          <span>{{ __("Pay") }}</span>
+          <span>{{ __('Pay') }}</span>
         </button>
 
         <!-- Return Button -->
-        <button 
-          :disabled="!pos_profile?.posa_allow_return" 
+        <button
+          :disabled="!pos_profile?.posa_allow_return"
           @click="open_returns"
           style="
             flex: 1;
@@ -647,16 +827,22 @@
             align-items: center;
             justify-content: center;
             gap: 4px;
-            transition: all 0.2s"
-          :style="!pos_profile?.posa_allow_return ? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6' : ''"
-          type="button">
+            transition: all 0.2s;
+          "
+          :style="
+            !pos_profile?.posa_allow_return
+              ? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6'
+              : ''
+          "
+          type="button"
+        >
           <i class="mdi mdi-keyboard-return" style="font-size: 16px"></i>
-          <span>{{ __("Return") }}</span>
+          <span>{{ __('Return') }}</span>
         </button>
 
         <!-- Quick Return Button -->
-        <button 
-          :disabled="!pos_profile?.posa_allow_quick_return" 
+        <button
+          :disabled="!pos_profile?.posa_allow_quick_return"
           @click="quick_return"
           style="
             flex: 1;
@@ -672,15 +858,21 @@
             align-items: center;
             justify-content: center;
             gap: 4px;
-            transition: all 0.2s"
-          :style="!pos_profile?.posa_allow_quick_return ? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6' : ''"
-          type="button">
+            transition: all 0.2s;
+          "
+          :style="
+            !pos_profile?.posa_allow_quick_return
+              ? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6'
+              : ''
+          "
+          type="button"
+        >
           <i class="mdi mdi-flash" style="font-size: 16px"></i>
-          <span>{{ __("Quick Return") }}</span>
+          <span>{{ __('Quick Return') }}</span>
         </button>
 
         <!-- Cancel Button -->
-        <button 
+        <button
           @click="cancel_invoice"
           style="
             flex: 1;
@@ -696,12 +888,13 @@
             align-items: center;
             justify-content: center;
             gap: 4px;
-            transition: all 0.2s"
-          type="button">
+            transition: all 0.2s;
+          "
+          type="button"
+        >
           <i class="mdi mdi-close-circle" style="font-size: 16px"></i>
-          <span>{{ __("Cancel") }}</span>
+          <span>{{ __('Cancel') }}</span>
         </button>
-
       </div>
     </div>
   </div>
