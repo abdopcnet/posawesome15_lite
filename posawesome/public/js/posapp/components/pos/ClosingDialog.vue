@@ -30,8 +30,9 @@
           border-radius: 16px;
           overflow: hidden;
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-          max-width: 550px;
-          width: 100%;
+          max-width: 90vw;
+          min-width: 550px;
+          width: auto;
           animation: dialogSlideIn 0.3s ease-out;
           border: 1px solid rgba(102, 126, 234, 0.1);
         "
@@ -220,8 +221,13 @@
                   "
                 >
                   <div style="display: flex; align-items: center; gap: 6px">
-                    <i class="mdi mdi-cash-multiple" style="font-size: 14px; color: #667eea"></i>
-                    <span style="font-weight: 500; color: #334155; font-size: 11px">
+                    <i
+                      class="mdi mdi-cash-multiple"
+                      style="font-size: 14px; color: #667eea; flex-shrink: 0"
+                    ></i>
+                    <span
+                      style="font-weight: 500; color: #334155; font-size: 11px; white-space: nowrap"
+                    >
                       {{ item.mode_of_payment }}
                     </span>
                   </div>
