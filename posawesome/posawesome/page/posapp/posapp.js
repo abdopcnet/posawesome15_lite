@@ -265,7 +265,7 @@ const posaTranslations = {
     'Allow Return': 'السماح بالإرجاع',
     'Allow Submissions in background job': 'السماح بإرسال الطلبات في مهمة خلفية',
     'Allow User to Edit Item Discount': 'السماح للمستخدم بتعديل خصم الصنف',
-    'Allow user to edit Additional Discount': 'السماح للمستخدم بتعديل الخصم الإضافي',
+    'Allow user to edit Invoice_discount': 'السماح للمستخدم بتعديل الخصم الإضافي',
     'Allow user to edit Rate': 'السماح للمستخدم بتعديل السعر',
     'Amended From': 'معدل من',
     Amount: 'المبلغ',
@@ -405,7 +405,6 @@ const posaTranslations = {
     'Valid Upto': 'صالح حتى',
     Warehouse: 'المستودع',
     Type: 'النوع',
-    'Total Qty': 'إجمالي الكمية',
     'Available QTY': 'الكمية المتاحة',
     'Create Only Sales Order': 'إنشاء أوامر مبيعات فقط',
     'Search Items': 'البحث عن الأصناف',
@@ -446,7 +445,7 @@ const posaTranslations = {
     Columns: 'الأعمدة',
     Name: 'الاسم',
     QTY: 'الكمية',
-    'Additional Discount': 'خصم إضافي',
+    Invoice_discount: 'خصم إضافي',
     'Items Discounts': 'خصومات الأصناف',
     Total: 'الإجمالي',
     'Save & Clear': 'حفظ ومسح',
@@ -861,9 +860,8 @@ const posaTranslations = {
     'Batch Expiry': 'إنتهاء صلاحية الباتش',
     'Batch No': 'رقم الباتش',
     'Additional Notes': 'ملاحظات إضافية',
-    'Total Qty': 'إجمالي الكمية',
-    'Additional Discount': 'الخصم علي الفاتورة',
-    'Apply Additional Discount': 'خصم علي الفاتورة',
+    Total_Qty: 'إجمالي الكمية',
+    'Apply Invoice_discount': 'خصم علي الفاتورة',
     'Items Discount': 'خصم الأصناف',
     'Please select customer': 'برجاء اختيار عميل',
     'Please make payment or select payments': 'برجاء إجراء دفعة أو اختيار دفعة',
@@ -926,9 +924,8 @@ const posaTranslations = {
       'الكمية للصنف {0} لا يمكن أن تكون أكبر من {1}',
     'You are not allowed to print pending invoices': 'لا يُسمح لك بطباعة الفواتير المعلقة',
     'Loyalty points offer applied': 'تم تطبيق عرض نقاط الولاء',
-    'inv_disc%': 'خصم الفاتورة %',
-    items_dis: 'خصم الأصناف',
-    before_disc: 'قبل الخصم',
+    items_discount: 'خصم الأصناف',
+    list_price_amounts: 'السعر الأصلي',
     net_total: 'الصافي',
     grand_total: 'الإجمالي الكلي',
     Print: 'طباعة',
@@ -991,15 +988,15 @@ window.__messages = posaTranslations[posa_language] || {};
 // =============================================================================
 
 frappe.pages['posapp'].on_page_load = function (wrapper) {
-	var page = frappe.ui.make_app_page({
-		parent: wrapper,
-		title: 'Andalus Group',
+  var page = frappe.ui.make_app_page({
+    parent: wrapper,
+    title: 'Andalus Group',
     single_column: true,
-	});
+  });
 
-	this.page.$PosApp = new frappe.PosApp.posapp(this.page);
+  this.page.$PosApp = new frappe.PosApp.posapp(this.page);
 
-	$('div.navbar-fixed-top').find('.container').css('padding', '0');
+  $('div.navbar-fixed-top').find('.container').css('padding', '0');
 
   $('head').append(
     "<link rel='stylesheet' href='/assets/posawesome/css/materialdesignicons.css' class='posapp-mdi-css'>",
