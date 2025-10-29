@@ -232,7 +232,6 @@ def get_offers(invoice_data):
         }
 
     except Exception as e:
-        frappe.log_error(f"Error in get_offers: {str(e)}", "POS Offers Error")
         return {
             "enabled": False,
             "applied_offers": [],
@@ -262,7 +261,6 @@ def get_applicable_offers(invoice_name):
         return posa_offers
 
     except Exception as e:
-        frappe.log_error(f"Error in get_applicable_offers: {str(e)}", "POS Offers Error")
         return []
 
 
@@ -300,7 +298,6 @@ def get_offers_for_profile(profile):
         return offers or []
 
     except Exception as e:
-        frappe.log_error(f"Error in get_offers_for_profile: {str(e)}", "POS Offers Error")
         return []
 
 
@@ -360,7 +357,6 @@ def get_applicable_offers_for_invoice_data(invoice_data):
         return applicable
 
     except Exception as e:
-        frappe.log_error(f"Error in get_applicable_offers_for_invoice_data: {str(e)}", "POS Offers Error")
         return []
 
 
@@ -408,7 +404,6 @@ def check_offer_applicable_for_data(offer, invoice_data, total_qty):
         return False
 
     except Exception as e:
-        frappe.log_error(f"Error in check_offer_applicable_for_data: {str(e)}", "POS Offers Error")
         return False
 
 
@@ -494,7 +489,6 @@ def apply_offer_by_type(offer, invoice_data):
         return False
 
     except Exception as e:
-        frappe.log_error(f"Error in apply_offer_by_type: {str(e)}", "POS Offers Error")
         return False
 
 
@@ -531,7 +525,6 @@ def apply_discount_percentage_on_grand_total(offer, invoice_data):
         return True
 
     except Exception as e:
-        frappe.log_error(f"Error in apply_discount_percentage_on_grand_total: {str(e)}", "POS Offers Error")
         return False
 
 
@@ -573,7 +566,6 @@ def apply_discount_percentage_on_item_code(offer, invoice_data):
         return applied
 
     except Exception as e:
-        frappe.log_error(f"Error in apply_discount_percentage_on_item_code: {str(e)}", "POS Offers Error")
         return False
 
 
@@ -615,7 +607,6 @@ def apply_discount_percentage_on_item_group(offer, invoice_data):
         return applied
 
     except Exception as e:
-        frappe.log_error(f"Error in apply_discount_percentage_on_item_group: {str(e)}", "POS Offers Error")
         return False
 
 
@@ -657,7 +648,6 @@ def apply_discount_percentage_on_brand(offer, invoice_data):
         return applied
 
     except Exception as e:
-        frappe.log_error(f"Error in apply_discount_percentage_on_brand: {str(e)}", "POS Offers Error")
         return False
 
 
@@ -682,7 +672,6 @@ def is_offer_applicable(offer, invoice):
         return check_offer_applicable_for_data(offer, invoice_data, total_qty)
 
     except Exception as e:
-        frappe.log_error(f"Error in is_offer_applicable: {str(e)}", "POS Offers Error")
         return False
 
 
@@ -690,7 +679,6 @@ def apply_offer_to_invoice(doc, offer):
     """Legacy function - Apply offer to document"""
     try:
         if not offer or not offer.name:
-            frappe.log_error(f"Invalid offer provided: {offer}", "POS Offers Error")
             return False
         # Convert doc to invoice_data
         invoice_data = {
@@ -730,5 +718,4 @@ def apply_offer_to_invoice(doc, offer):
         return False
 
     except Exception as e:
-        frappe.log_error(f"Error in apply_offer_to_invoice: {str(e)}", "POS Offers Error")
         return False
