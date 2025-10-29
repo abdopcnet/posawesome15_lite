@@ -272,11 +272,28 @@ export default {
       }
     },
     handleClickOutside(event) {
-      // Check if click is outside the menu wrapper
-      const menuWrapper = this.$el.querySelector('.menu-wrapper');
-      if (menuWrapper && !menuWrapper.contains(event.target)) {
+      try {
+        // Safely get the root element
+        const root =
+          this.$el instanceof HTMLElement
+            ? this.$el
+            : this.$el && this.$el.$el instanceof HTMLElement
+              ? this.$el.$el
+              : null;
+
+        if (!root) return;
+
+        // Check if click is outside the menu wrapper
+        const menuWrapper = root.querySelector('.menu-wrapper');
+        if (menuWrapper && !menuWrapper.contains(event.target)) {
+          this.showMenu = false;
+          document.removeEventListener('click', this.handleClickOutside);
+        }
+      } catch (err) {
+        // Non-fatal error, just close the menu
         this.showMenu = false;
         document.removeEventListener('click', this.handleClickOutside);
+        console.warn('handleClickOutside error:', err);
       }
     },
     go_desk() {
