@@ -451,6 +451,8 @@ export default {
 
       if (this.items.length === 1 && !this.invoice_doc?.name) {
         this.create_draft_invoice();
+        // Call calculateAndApplyOffers for first item to apply auto offers
+        this.calculateAndApplyOffers();
       } else {
         evntBus.emit('item_added', existing_item || new_item);
       }
@@ -539,9 +541,12 @@ export default {
       this.items = [];
       this.posa_offers = [];
       this.additional_discount_percentage = 0;
+      this.offer_discount_percentage = 0; // Reset offer discount
       evntBus.emit('update_invoice_type', this.invoiceType);
       // Clear invoice doc display in navbar
       evntBus.emit('update_invoice_doc', null);
+      // Reset offers in PosOffers component
+      evntBus.emit('reset_manual_offers');
     },
 
     hasValidPayments(invoice_doc = null) {
@@ -1166,12 +1171,26 @@ export default {
     },
 
     onDiscountInput(event) {
-      // Only allow input if user has permission to edit additional discount
+      console.log('[Invoice.onDiscountInput] USER INPUT:', {
+        input_value: event.target.value,
+        apply_discount_on: this.apply_discount_on,
+      });
+
+      // Only allow input if user has permission to edit Invoice_discount
       if (!this.pos_profile?.posa_allow_user_to_edit_additional_discount) {
+        console.log('[Invoice.onDiscountInput] PERMISSION DENIED');
         return; // User not allowed to edit manually
       }
+
       // Handle input as user types - update the value immediately
-      this.additional_discount_percentage = parseFloat(event.target.value) || 0;
+      const value = flt(event.target.value) || 0;
+      this.additional_discount_percentage = value;
+
+      console.log('[Invoice.onDiscountInput] VALUE UPDATED:', {
+        additional_discount_percentage: this.additional_discount_percentage,
+      });
+
+      this.update_discount_umount();
     },
 
     onDiscountBlur() {
@@ -1180,9 +1199,31 @@ export default {
     },
 
     update_discount_umount() {
+      console.log('[Invoice.update_discount_umount] START:', {
+        additional_discount_percentage: this.additional_discount_percentage,
+        allow_edit: this.pos_profile?.posa_allow_user_to_edit_additional_discount,
+        max_discount: this.pos_profile?.posa_invoice_max_discount_allowed,
+        offer_discount_percentage: this.offer_discount_percentage,
+      });
+
+      // If user is not allowed to edit, but we have an offer discount, use it
       if (!this.pos_profile?.posa_allow_user_to_edit_additional_discount) {
-        this.additional_discount_percentage = this.invoice_doc?.additional_discount_percentage || 0;
-        return;
+        // Allow automatic offers to set discount even if manual edit is disabled
+        if (this.offer_discount_percentage > 0 && this.additional_discount_percentage > 0) {
+          console.log(
+            '[Invoice.update_discount_umount] OFFER APPLIED - keeping discount:',
+            this.additional_discount_percentage,
+          );
+        } else {
+          // No active offer - reset to invoice default
+          this.additional_discount_percentage =
+            this.invoice_doc?.additional_discount_percentage || 0;
+          console.log(
+            '[Invoice.update_discount_umount] READONLY - using invoice value:',
+            this.additional_discount_percentage,
+          );
+          return;
+        }
       }
 
       const value = flt(this.additional_discount_percentage) || 0;
@@ -1190,8 +1231,10 @@ export default {
 
       if (value < 0) {
         this.additional_discount_percentage = 0;
+        console.log('[Invoice.update_discount_umount] NEGATIVE VALUE - set to 0');
       } else if (value > maxDiscount) {
         this.additional_discount_percentage = maxDiscount;
+        console.log('[Invoice.update_discount_umount] EXCEEDS MAX - clamped to:', maxDiscount);
         evntBus.emit('show_mesage', {
           text: `Maximum invoice discount is ${maxDiscount}%`,
           color: 'info',
@@ -1203,8 +1246,13 @@ export default {
         this.offer_discount_percentage > 0 &&
         this.additional_discount_percentage !== this.offer_discount_percentage
       ) {
+        console.log('[Invoice.update_discount_umount] CLEARING OFFER TRACKING');
         this.offer_discount_percentage = 0;
       }
+
+      console.log('[Invoice.update_discount_umount] FINAL:', {
+        additional_discount_percentage: this.additional_discount_percentage,
+      });
 
       this.updateInvoiceDocLocally();
     },
@@ -2319,6 +2367,11 @@ export default {
     // Register event listeners in created() to avoid duplicate registrations
 
     evntBus.on('register_pos_profile', (data) => {
+      console.log('[Invoice.register_pos_profile] RECEIVED:', {
+        pos_profile_name: data.pos_profile?.name,
+        apply_discount_on: data.pos_profile?.apply_discount_on,
+      });
+
       this.pos_profile = data.pos_profile;
       this.setCustomer(data.pos_profile?.customer);
       this.pos_opening_shift = data.pos_opening_shift;
@@ -2327,6 +2380,11 @@ export default {
       this.currency_precision = frappe.defaults.get_default('currency_precision') || 2;
       this.invoiceType = 'Invoice';
       evntBus.emit('update_invoice_type', this.invoiceType);
+
+      console.log('[Invoice.register_pos_profile] LOADED:', {
+        pos_profile_name: this.pos_profile?.name,
+        apply_discount_on: this.pos_profile?.apply_discount_on,
+      });
     });
     evntBus.on('add_item', (item) => {
       this.add_item(item);
@@ -2502,6 +2560,13 @@ export default {
     },
     offerApplied: {
       handler(newVal, oldVal) {
+        console.log('[Invoice.offerApplied] WATCHER TRIGGERED:', {
+          newVal: newVal,
+          oldVal: oldVal,
+          has_discount: newVal?.discount_percentage,
+          offer_type: newVal?.offer_type,
+        });
+
         if (!newVal) return;
 
         const offer = newVal;
@@ -2511,9 +2576,19 @@ export default {
           offer.discount_percentage &&
           ['grand_total', 'customer', 'customer_group', ''].includes(offer.offer_type || '')
         ) {
+          console.log('[Invoice.offerApplied] APPLYING TRANSACTION OFFER:', {
+            offer_type: offer.offer_type,
+            discount_percentage: offer.discount_percentage,
+          });
+
           // Update both discount fields
-          this.additional_discount_percentage = parseFloat(offer.discount_percentage);
-          this.offer_discount_percentage = parseFloat(offer.discount_percentage);
+          this.additional_discount_percentage = flt(offer.discount_percentage);
+          this.offer_discount_percentage = flt(offer.discount_percentage);
+
+          console.log('[Invoice.offerApplied] DISCOUNT SET:', {
+            additional_discount_percentage: this.additional_discount_percentage,
+            offer_discount_percentage: this.offer_discount_percentage,
+          });
 
           // Trigger backend sync
           this.$nextTick(() => {
@@ -2528,6 +2603,11 @@ export default {
           ['item_code', 'item_group', 'brand'].includes(offer.offer_type) &&
           offer.discount_percentage
         ) {
+          console.log('[Invoice.offerApplied] APPLYING ITEM OFFER:', {
+            offer_type: offer.offer_type,
+            discount_percentage: offer.discount_percentage,
+          });
+
           this.applyItemOffer(offer);
           return;
         }
