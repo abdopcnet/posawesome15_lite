@@ -228,7 +228,6 @@ def check_opening_time_allowed(pos_profile):
             }
 
     except Exception as e:
-        frappe.log_error(f"[pos_opening_shift.py][check_opening_time_allowed] Error: {str(e)}")
         return {"allowed": False, "message": f"Error: {str(e)}"}
 
 
@@ -338,7 +337,6 @@ def get_profile_users(doctype, txt, searchfield, start, page_len, filters):
         return result
 
     except Exception as e:
-        frappe.log_error(f"[pos_opening_shift.py][get_profile_users] Error: {str(e)}")
         frappe.throw(f"Error retrieving profile users: {str(e)}")
 
 
