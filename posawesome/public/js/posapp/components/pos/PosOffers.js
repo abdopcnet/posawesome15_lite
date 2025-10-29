@@ -84,16 +84,8 @@ export default {
     toggleOffer(offer) {
       // Skip if offer is disabled
       if (this.isOfferDisabled(offer)) {
-        console.log('[PosOffers.toggleOffer] DISABLED');
         return;
       }
-
-      console.log('[PosOffers.toggleOffer] BEFORE:', {
-        offer_name: offer.name || offer.offer_name,
-        offer_applied: offer.offer_applied,
-        discount_percentage: offer.discount_percentage,
-        offer_type: offer.offer_type,
-      });
 
       // Trigger handleOfferToggle to update local state
       this.handleOfferToggle();
@@ -106,11 +98,6 @@ export default {
         // Ensure offer_type is set for Invoice.js logic
         offer_type: offer.offer_type || this.inferOfferType(offer),
       };
-
-      console.log('[PosOffers.toggleOffer] EMIT:', {
-        offer_applied: offer.offer_applied,
-        normalizedOffer: normalizedOffer,
-      });
 
       // Emit based on current state (v-model already updated offer_applied)
       if (offer.offer_applied) {
@@ -345,7 +332,6 @@ export default {
       });
 
       evntBus.on('reset_manual_offers', () => {
-        console.log('[PosOffers.reset_manual_offers] Resetting manual offers');
         // Reset all manual offers to false (but keep auto offers if any)
         this.pos_offers = this.pos_offers.map((offer) => ({
           ...offer,
