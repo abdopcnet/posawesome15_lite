@@ -72,7 +72,7 @@ export default {
       _lastCustomer: null, // Track customer changes
 
       // ===== ERPNext STANDARD DISCOUNT FIELDS =====
-      apply_discount_on: 'Net Total', // ERPNext standard
+      apply_discount_on: null, // Read from POS Profile (not hardcoded)
       discount_amount: 0, // Calculated from additional_discount_percentage
       base_discount_amount: 0, // Multi-currency support
 
@@ -722,7 +722,14 @@ export default {
 
       // Discount fields (ERPNext standard)
       doc.additional_discount_percentage = flt(this.additional_discount_percentage);
-      doc.apply_discount_on = this.apply_discount_on || 'Net Total';
+      // Read apply_discount_on from POS Profile
+      doc.apply_discount_on = this.pos_profile?.apply_discount_on || 'Net Total';
+
+      console.log('[Invoice.get_invoice_doc] apply_discount_on SET:', {
+        from_pos_profile: this.pos_profile?.apply_discount_on,
+        final_value: doc.apply_discount_on,
+        pos_profile_name: this.pos_profile?.name,
+      });
 
       // Let backend calculate discount_amount (or send calculated value)
       if (this.discount_amount) {
@@ -1388,6 +1395,14 @@ export default {
     calculateTotalsLocally(doc) {
       if (!doc || !doc.items) return;
 
+      console.log('[Invoice.calculateTotalsLocally] START:', {
+        apply_discount_on: doc.apply_discount_on,
+        additional_discount_percentage: doc.additional_discount_percentage,
+        net_total: doc.net_total,
+        total_taxes_and_charges: doc.total_taxes_and_charges,
+        grand_total: doc.grand_total,
+      });
+
       // Step 1: Calculate item totals with item-level discounts
       let total = 0;
       let total_qty = 0;
@@ -1467,7 +1482,47 @@ export default {
       this.setDiscountAmount(doc);
       this.applyDiscountAmount(doc);
 
-      // Step 5: Rounding - Use ERPNext standard rounding logic
+      console.log('[Invoice.calculateTotalsLocally] AFTER DISCOUNT:', {
+        discount_amount: doc.discount_amount,
+        net_total: doc.net_total,
+        total_taxes_and_charges: doc.total_taxes_and_charges,
+        grand_total: doc.grand_total,
+      });
+
+      // Step 5: Recalculate tax if discount applied to net_total
+      // This is required when apply_discount_on = 'Net Total' and tax is Exclusive
+      const applyDiscountOn = doc.apply_discount_on || 'Net Total';
+      if (applyTax && doc.discount_amount > 0 && applyDiscountOn === 'Net Total') {
+        // Tax must be recalculated on discounted net_total
+        if (normalizedTaxType === 'Exclusive') {
+          doc.total_taxes_and_charges = flt(
+            doc.net_total * (taxPercent / 100),
+            this.getPrecision('total_taxes_and_charges'),
+          );
+          doc.grand_total = flt(
+            doc.net_total + doc.total_taxes_and_charges,
+            this.getPrecision('grand_total'),
+          );
+        } else if (normalizedTaxType === 'Inclusive') {
+          // For Inclusive tax, add tax back to discounted net_total
+          doc.grand_total = flt(
+            doc.net_total * (1 + taxPercent / 100),
+            this.getPrecision('grand_total'),
+          );
+          doc.total_taxes_and_charges = flt(
+            doc.grand_total - doc.net_total,
+            this.getPrecision('total_taxes_and_charges'),
+          );
+        }
+      }
+
+      console.log('[Invoice.calculateTotalsLocally] FINAL:', {
+        net_total: doc.net_total,
+        total_taxes_and_charges: doc.total_taxes_and_charges,
+        grand_total: doc.grand_total,
+      });
+
+      // Step 6: Rounding - Use ERPNext standard rounding logic
       if (typeof round_based_on_smallest_currency_fraction === 'function') {
         doc.rounded_total = round_based_on_smallest_currency_fraction(
           doc.grand_total,
@@ -1492,6 +1547,13 @@ export default {
 
     // ERPNext-compliant invoice discount calculation methods
     setDiscountAmount(doc) {
+      console.log('[Invoice.setDiscountAmount] INPUT:', {
+        apply_discount_on: doc.apply_discount_on,
+        additional_discount_percentage: doc.additional_discount_percentage,
+        net_total: doc.net_total,
+        grand_total: doc.grand_total,
+      });
+
       // Only calculate if additional_discount_percentage is set
       if (!doc.additional_discount_percentage || doc.additional_discount_percentage <= 0) {
         doc.discount_amount = 0;
@@ -1520,6 +1582,11 @@ export default {
         doc.discount_amount * (doc.conversion_rate || 1),
         this.getPrecision('base_discount_amount'),
       );
+
+      console.log('[Invoice.setDiscountAmount] OUTPUT:', {
+        discount_amount: doc.discount_amount,
+        base_discount_amount: doc.base_discount_amount,
+      });
     },
 
     applyDiscountAmount(doc) {
@@ -1984,7 +2051,7 @@ export default {
         return flt(b.discount_percentage) - flt(a.discount_percentage);
       });
 
-      // Apply transaction-level offer (only one allowed)
+      // Apply transaction-level offer (can coexist with item offers)
       const transactionOffer = sortedOffers.find(
         (offer) =>
           offer.auto &&
@@ -1996,6 +2063,7 @@ export default {
         this.additional_discount_percentage = flt(transactionOffer.discount_percentage);
         this.offer_discount_percentage = flt(transactionOffer.discount_percentage);
 
+        // Initialize posa_offers array
         this.posa_offers = [
           {
             offer_name: transactionOffer.name,
@@ -2006,10 +2074,13 @@ export default {
           },
         ];
       } else {
-        this.clearOfferDiscounts();
+        // No transaction offer, but keep posa_offers for item offers
+        this.posa_offers = [];
       }
 
-      // Apply item-level offers
+      // Apply item-level offers (works alongside transaction offer)
+      const appliedItemOffers = new Set(); // Track item offers to avoid duplicates
+
       sortedOffers.forEach((offer) => {
         if (!offer.auto || !offer.discount_percentage) return;
 
@@ -2031,6 +2102,25 @@ export default {
             shouldApply && (!item._offer_discount_applied || item._offer_name !== offerName);
 
           if (canApply) {
+            // Track this offer in posa_offers array
+            const offerKey = `${offerName}_${offer.offer_type}`;
+            if (!appliedItemOffers.has(offerKey)) {
+              appliedItemOffers.add(offerKey);
+
+              // Add to posa_offers array (append to existing transaction offers)
+              if (!this.posa_offers) {
+                this.posa_offers = [];
+              }
+
+              this.posa_offers.push({
+                offer_name: offerName,
+                offer_type: offer.offer_type,
+                discount_percentage: offer.discount_percentage,
+                offer_applied: true,
+                row_id: item.name || item.idx || '',
+              });
+            }
+
             // Store original discount before applying offer (for restoration when offer is removed)
             if (!item._original_discount_percentage) {
               item._original_discount_percentage = flt(item.discount_percentage || 0);
