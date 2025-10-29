@@ -211,7 +211,6 @@ def get_customer(customer_id):
             "tax_id": customer_doc.tax_id,
 
             # POS specific fields
-            "image": customer_doc.image,
             "gender": customer_doc.gender,
             "birthday": getattr(customer_doc, 'posa_birthday', None),
             "posa_discount": getattr(customer_doc, 'posa_discount', 0),
