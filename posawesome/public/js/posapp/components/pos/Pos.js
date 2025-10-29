@@ -59,6 +59,12 @@ export default {
   methods: {
     // ===== OFFER EVENT HANDLERS =====
     handleOfferApplied(offer) {
+      console.log('[Pos.handleOfferApplied] RECEIVED:', {
+        offer_name: offer.name || offer.offer_name,
+        discount_percentage: offer.discount_percentage,
+        offer_type: offer.offer_type,
+      });
+
       // Reset first to null to ensure reactivity
       this.offerApplied = null;
       this.offerRemoved = false;
@@ -70,6 +76,10 @@ export default {
           ...offer,
           _timestamp: Date.now(),
         };
+
+        console.log('[Pos.handleOfferApplied] PROP UPDATED:', {
+          offerApplied: this.offerApplied,
+        });
       });
     },
 
