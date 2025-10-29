@@ -284,28 +284,30 @@
                 "
               >
                 <div
-                  style="
-                    display: flex;
-                    align-items: center;
-                    gap: 3px;
-                    padding: 0px 3px;
-                    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-                    border-radius: 4px;
-                    min-width: 0;
-                    justify-content: center;
-                    place-self: center;
-                    overflow: hidden;
-                  "
+                  :style="{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    padding: '0px 3px',
+                    background: item._offer_discount_applied
+                      ? 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)'
+                      : 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)',
+                    borderRadius: '4px',
+                    minWidth: 0,
+                    justifyContent: 'center',
+                    placeSelf: 'center',
+                    overflow: 'hidden',
+                  }"
                 >
                   <span
-                    style="
-                      font-size: 0.7rem;
-                      font-weight: 700;
-                      color: #2e7d32;
-                      white-space: nowrap;
-                      overflow: hidden;
-                      text-overflow: ellipsis;
-                    "
+                    :style="{
+                      fontSize: '0.7rem',
+                      fontWeight: '700',
+                      color: item._offer_discount_applied ? '#e65100' : '#2e7d32',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }"
                   >
                     {{ formatCurrency(item.price_list_rate) }}
                   </span>
@@ -684,7 +686,7 @@
           border-radius: 4px;
         "
       >
-        <!-- Total Qty Field -->
+        <!-- Total_Qty Field -->
         <div
           style="
             display: flex;
@@ -707,7 +709,7 @@
               text-transform: uppercase;
               letter-spacing: 0.3px;
             "
-            >{{ __('Total Qty') }}</label
+            >{{ __('Total_Qty') }}</label
           >
           <div
             style="
@@ -724,7 +726,7 @@
           </div>
         </div>
 
-        <!-- Additional Discount Field (Editable) -->
+        <!-- Invoice_discount Field (Editable) -->
         <div
           :style="{
             display: 'flex',
@@ -752,7 +754,7 @@
               textTransform: 'uppercase',
               letterSpacing: '0.3px',
             }"
-            >{{ __('Additional Discount') }}</label
+            >{{ __('Invoice_discount') }}</label
           >
           <input
             type="number"
@@ -782,7 +784,7 @@
             placeholder="0.00"
             :disabled="!pos_profile?.posa_allow_user_to_edit_additional_discount"
           />
-          <!-- Offer badge for additional discount -->
+          <!-- Offer badge for Invoice_discount -->
           <span
             v-if="offer_discount_percentage > 0 && additional_discount_percentage > 0"
             style="
@@ -825,7 +827,7 @@
               text-transform: uppercase;
               letter-spacing: 0.3px;
             "
-            >{{ __('items_dis') }}</label
+            >{{ __('items_discount') }}</label
           >
           <div
             style="
@@ -866,7 +868,7 @@
               text-transform: uppercase;
               letter-spacing: 0.3px;
             "
-            >{{ __('before_disc') }}</label
+            >{{ __('list_price_amounts') }}</label
           >
           <div
             style="
