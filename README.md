@@ -116,10 +116,10 @@ Just a lightweight web interface built on top of ERPNext's proven foundation:
     <img src="./imgs/ERPNext-support.png" height="200" alt="Future Support" style="border-radius: 20px;">
 </div>
 
-**👨‍💻 Developer:** abdopcnet
-**🏢 Company:** [Future Support](https://www.future-support.online/)
-**📧 Email:** <abdopcnet@gmail.com>
-**🐙 GitHub:** [github.com/abdopcnet/posawesome15_lite](https://github.com/abdopcnet/posawesome15_lite)
+- 👨‍💻 Developer: abdopcnet
+- 🏢 Company: [Future Support](https://www.future-support.online/)
+- 📧 Email: <abdopcnet@gmail.com>
+- 🐙 GitHub: [github.com/abdopcnet/posawesome15_lite](https://github.com/abdopcnet/posawesome15_lite)
 
 **🤝 Need Support or Want to Join? Contact Now:**
 
