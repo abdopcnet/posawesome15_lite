@@ -139,7 +139,8 @@ def create_and_submit_invoice(invoice_doc):
         frappe.log_error(
             f"INPUT: apply_on={invoice_doc.get('apply_discount_on')}, "
             f"disc={invoice_doc.get('additional_discount_percentage', 0)}%, "
-            f"total={invoice_doc.get('grand_total', 0)}, items={len(invoice_doc.get('items', []))}",
+            f"total={invoice_doc.get('grand_total', 0)}, "
+            f"net={invoice_doc.get('net_total', 0)}, items={len(invoice_doc.get('items', []))}",
             "POS Invoice Input"
         )
 
