@@ -135,15 +135,6 @@ def create_and_submit_invoice(invoice_doc):
         if isinstance(invoice_doc, str):
             invoice_doc = json.loads(invoice_doc)
 
-        # Log input - show function name and important discount values
-        frappe.log_error(
-            f"INPUT: apply_on={invoice_doc.get('apply_discount_on')}, "
-            f"disc={invoice_doc.get('additional_discount_percentage', 0)}%, "
-            f"total={invoice_doc.get('grand_total', 0)}, "
-            f"net={invoice_doc.get('net_total', 0)}, items={len(invoice_doc.get('items', []))}",
-            "POS Invoice Input"
-        )
-
         # Create new document from dict - using ERPNext native method
         doc = frappe.get_doc(invoice_doc)
 
@@ -155,41 +146,19 @@ def create_and_submit_invoice(invoice_doc):
         # Step 1: Use ERPNext native set_missing_values() - fills all default values
         # This is called from SellingController and sets customer, warehouse, etc.
         doc.set_missing_values()
-        frappe.log_error(f"set_missing_values() - Doctype: {doc.doctype}", "POS Invoice Debug")
 
         # Step 2: Use ERPNext native validate() - full validation
         # This validates customer, items, taxes, payments, etc.
         doc.validate()
-
-        # Log after validation - show function name and important results
-        frappe.log_error(
-            f"VALIDATED: apply_on={doc.apply_discount_on}, "
-            f"disc_perc={doc.additional_discount_percentage}, "
-            f"disc_amt={doc.discount_amount}, "
-            f"net={doc.net_total}, total={doc.grand_total}",
-            "POS Invoice Validated"
-        )
 
         # Step 3: Use ERPNext native insert() - save draft
         # This saves the document and sets docstatus = 0
         doc.insert()
         invoice_name = doc.name
 
-        # Log after insert - show function name and invoice name
-        frappe.log_error(
-            f"INSERTED: invoice={doc.name}, total={doc.grand_total}",
-            "POS Invoice Inserted"
-        )
-
         # Step 4: Use ERPNext native submit() - submit document
         # This runs before_submit() then on_submit() hooks
         doc.submit()
-
-        # Log after submit - show function name and final result
-        frappe.log_error(
-            f"SUBMITTED: invoice={doc.name}, status={doc.docstatus}, total={doc.grand_total}",
-            "POS Invoice Submitted"
-        )
 
         # Return the submitted document
         return doc.as_dict()
