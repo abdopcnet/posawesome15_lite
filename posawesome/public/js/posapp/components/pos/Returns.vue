@@ -29,8 +29,9 @@
           background: white;
           border-radius: 8px;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-          max-width: 600px;
-          width: 90%;
+          max-width: 90vw;
+          min-width: 600px;
+          width: auto;
           max-height: 90vh;
           overflow: hidden;
           animation: modal-slide-in 0.3s ease;
@@ -214,6 +215,7 @@
                     border-collapse: collapse;
                     font-size: 0.875rem;
                     background: white;
+                    table-layout: auto;
                   "
                 >
                   <!-- Table Headers -->
@@ -227,6 +229,7 @@
                           color: #333;
                           font-size: 0.75rem;
                           text-transform: uppercase;
+                          white-space: nowrap;
                         "
                       >
                         Select
@@ -241,6 +244,7 @@
                           color: '#333',
                           fontSize: '0.75rem',
                           textTransform: 'uppercase',
+                          whiteSpace: 'nowrap',
                         }"
                       >
                         {{ header.title }}
@@ -271,17 +275,29 @@
                       </td>
 
                       <!-- Customer -->
-                      <td style="padding: 10px; text-align: left">{{ item.customer }}</td>
+                      <td style="padding: 10px; text-align: left; white-space: nowrap">
+                        {{ item.customer }}
+                      </td>
 
                       <!-- Posting Date -->
-                      <td style="padding: 10px; text-align: left">{{ item.posting_date }}</td>
+                      <td style="padding: 10px; text-align: left; white-space: nowrap">
+                        {{ item.posting_date }}
+                      </td>
 
                       <!-- Invoice Name -->
-                      <td style="padding: 10px; text-align: left">{{ item.name }}</td>
+                      <td style="padding: 10px; text-align: left; white-space: nowrap">
+                        {{ item.name }}
+                      </td>
 
                       <!-- Grand Total -->
                       <td
-                        style="padding: 10px; text-align: right; font-weight: 600; color: #1976d2"
+                        style="
+                          padding: 10px;
+                          text-align: right;
+                          font-weight: 600;
+                          color: #1976d2;
+                          white-space: nowrap;
+                        "
                       >
                         {{ currencySymbol(item.currency) }} {{ formatCurrency(item.grand_total) }}
                       </td>
