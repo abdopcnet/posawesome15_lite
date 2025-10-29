@@ -1,14 +1,10 @@
 # Discount Logic Implementation
 
-**💰 Budget**: TBD
+**💰 Budget**: 30$
 
-**👨‍💻 Developer**: TBD
+**👨‍💻 Developer**: 🔄 In Pending
 
-**💳 Payment**: TBD
-
-**🎯 Priority**: 🔥 High
-
-**📊 Status**: ⏳ In Progress
+**📊 Status**: 🔄 In Pending
 
 **🔧 Feature**: Discount Logic Compatibility with ERPNext
 
