@@ -165,10 +165,8 @@ def create_and_submit_invoice(invoice_doc):
 
     except frappe.exceptions.ValidationError as ve:
         error_msg = str(ve)
-        frappe.log_error(f"Validation error: {error_msg}", "POS Invoice Error")
         frappe.throw(_("Validation error: {0}").format(str(ve)))
 
     except Exception as e:
         error_msg = str(e)
-        frappe.log_error(f"Error: {error_msg}", "POS Invoice Error")
         frappe.throw(_("Error creating and submitting invoice: {0}").format(str(e)))
