@@ -154,7 +154,7 @@ class POSClosingShift(Document):
             try:
                 frappe.delete_doc("Sales Invoice", invoice.name, force=1, ignore_permissions=True)
             except Exception as e:
-                frappe.log_error(f"Error deleting draft invoice {invoice.name}: {str(e)}")
+                pass
 
 
 @frappe.whitelist()
@@ -236,7 +236,6 @@ def check_closing_time_allowed(pos_profile):
             }
 
     except Exception as e:
-        frappe.log_error(f"[pos_closing_shift.py][check_closing_time_allowed] Error: {str(e)}")
         return {"allowed": False, "message": f"Error: {str(e)}"}
 
 
@@ -256,7 +255,6 @@ def get_cashiers(doctype, txt, searchfield, start, page_len, filters):
         return result
 
     except Exception as e:
-        frappe.log_error(f"[pos_closing_shift.py][get_cashiers] Error: {str(e)}")
         return []
 
 
@@ -285,7 +283,6 @@ def get_pos_invoices(pos_opening_shift):
         return data
 
     except Exception as e:
-        frappe.log_error(f"[pos_closing_shift.py][get_pos_invoices] Error: {str(e)}")
         return []
 
 
@@ -313,7 +310,6 @@ def get_payments_entries(pos_opening_shift):
         )
 
     except Exception as e:
-        frappe.log_error(f"[pos_closing_shift.py][get_payments_entries] Error: {str(e)}")
         return []
 
 
@@ -376,7 +372,6 @@ def get_current_cash_total():
         return {"total": total_cash}
 
     except Exception as e:
-        frappe.log_error(f"[pos_closing_shift.py][get_current_cash_total] Error: {str(e)}")
         return {"total": 0, "error": str(e)}
 
 
@@ -437,7 +432,6 @@ def get_current_non_cash_total():
         return {"total": total_non_cash}
 
     except Exception as e:
-        frappe.log_error(f"[pos_closing_shift.py][get_current_non_cash_total] Error: {str(e)}")
         return {"total": 0, "error": str(e)}
 
 
@@ -573,7 +567,6 @@ def make_closing_shift_from_opening(opening_shift):
         return closing_shift
 
     except Exception as e:
-        frappe.log_error(f"[pos_closing_shift.py][make_closing_shift_from_opening] Error: {str(e)}")
         frappe.throw(f"Error creating closing shift: {str(e)}")
 
 
@@ -610,7 +603,7 @@ def _submit_printed_invoices(pos_opening_shift):
             invoice_doc = frappe.get_doc("Sales Invoice", invoice.name)
             invoice_doc.submit()
     except Exception as e:
-        frappe.log_error(f"[pos_closing_shift.py][_submit_printed_invoices] Error: {str(e)}")
+        pass
 
 
 def _get_pos_invoices_helper(pos_opening_shift):
@@ -631,7 +624,6 @@ def _get_pos_invoices_helper(pos_opening_shift):
 
         return [frappe.get_doc("Sales Invoice", d.name).as_dict() for d in data]
     except Exception as e:
-        frappe.log_error(f"[pos_closing_shift.py][_get_pos_invoices] Error: {str(e)}")
         return []
 
 
@@ -655,5 +647,4 @@ def _get_payments_entries_helper(pos_opening_shift):
             ],
         )
     except Exception as e:
-        frappe.log_error(f"[pos_closing_shift.py][_get_payments_entries] Error: {str(e)}")
         return []
