@@ -35,7 +35,7 @@ frappe.ui.form.on('POS Profile', {
   // posa_allow_user_to_edit_item_discount logic
   posa_allow_user_to_edit_item_discount: function (frm) {
     if (frm.doc.posa_allow_user_to_edit_item_discount) {
-      // Clear additional discount fields and auto_fetch_offers
+      // Clear Invoice_discount fields and auto_fetch_offers
       frm.set_value('posa_allow_user_to_edit_additional_discount', 0);
       frm.set_value('posa_invoice_max_discount_allowed', 0);
       frm.set_value('posa_auto_fetch_offers', 0);
