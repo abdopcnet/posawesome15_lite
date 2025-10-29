@@ -163,16 +163,20 @@
           :aria-selected="index === selectedIndex"
           @click="selectCustomer(item)"
           @mouseenter="selectedIndex = index"
+          class="customer-item"
+          :data-index="index"
+          :data-selected="index === selectedIndex"
           style="
             display: flex;
             gap: 12px;
             align-items: center;
             padding: 10px;
             cursor: pointer;
-            transition: background-color 120ms ease;
+            transition: background-color 150ms ease;
             border-radius: 8px;
+            background-color: var(--row-bg, rgba(255, 255, 255, 1));
           "
-          :style="index === selectedIndex ? 'background: rgba(16, 24, 40, 0.03)' : ''"
+          :data-even="index % 2 === 0"
         >
           <!-- Avatar Placeholder -->
           <div aria-hidden="true">
@@ -181,7 +185,6 @@
               :width="40"
               :height="40"
               viewBox="0 0 40 40"
-              xmlns="http://www.w3.org/2000/svg"
               style="flex-shrink: 0; display: block; border-radius: 8px; overflow: visible"
               role="img"
               :aria-label="(item.customer_name || '?').charAt(0).toUpperCase() + ' avatar'"
@@ -368,5 +371,28 @@ export default comp;
 </script>
 
 <style>
-/* Add any component-specific styles here */
+/* Zebra striping for customer list */
+.customer-item[data-even='true'] {
+  background-color: rgba(249, 250, 251, 1) !important;
+}
+
+.customer-item[data-even='false'] {
+  background-color: rgba(255, 255, 255, 1) !important;
+}
+
+/* Hover effect */
+.customer-item:hover {
+  background-color: rgba(25, 118, 210, 0.12) !important;
+  transition: background-color 150ms ease;
+}
+
+/* Selected item */
+.customer-item[data-selected='true'] {
+  background-color: rgba(25, 118, 210, 0.08) !important;
+}
+
+/* Selected + Hover */
+.customer-item[data-selected='true']:hover {
+  background-color: rgba(25, 118, 210, 0.16) !important;
+}
 </style>
