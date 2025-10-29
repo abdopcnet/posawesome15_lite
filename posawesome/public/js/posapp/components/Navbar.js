@@ -247,8 +247,18 @@ export default {
 
         // Position menu to stay within viewport
         this.$nextTick(() => {
-          const menuElement = this.$el.querySelector('.dropdown-menu');
-          const menuButton = this.$el.querySelector('.menu-btn');
+          // Safely get the root element
+          const root =
+            this.$el instanceof HTMLElement
+              ? this.$el
+              : this.$el && this.$el.$el instanceof HTMLElement
+                ? this.$el.$el
+                : null;
+
+          if (!root) return;
+
+          const menuElement = root.querySelector('.dropdown-menu');
+          const menuButton = root.querySelector('.menu-btn');
 
           if (menuElement && menuButton) {
             const buttonRect = menuButton.getBoundingClientRect();
