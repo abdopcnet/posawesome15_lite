@@ -297,7 +297,7 @@
                 <input
                   type="checkbox"
                   v-model="offer.offer_applied"
-                  @change="handleOfferToggle"
+                  @change="toggleOffer(offer)"
                   :disabled="isOfferDisabled(offer)"
                   style="opacity: 0; width: 0; height: 0"
                 />
