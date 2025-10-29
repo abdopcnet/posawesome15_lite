@@ -117,10 +117,15 @@ THEN:
 ```
 LOCATION: Invoice.js line 1388-1491 (calculateTotalsLocally)
 
+POS PROFILE TAX FIELDS (already used in code):
+  - posa_apply_tax: Checkbox to enable/disable tax
+  - posa_tax_type: 'Tax Inclusive' or 'Tax Exclusive'
+  - posa_tax_percent: Tax percentage (e.g., 15)
+
 CURRENT FLOW:
   1. Calculate item totals
   2. Set net_total
-  3. Calculate taxes
+  3. Calculate taxes (using pos_profile posa_apply_tax, posa_tax_type, posa_tax_percent)
   4. Apply invoice discount
 
   ❌ ISSUE: Tax not recalculated after discount
@@ -128,11 +133,11 @@ CURRENT FLOW:
 REQUIRED FLOW:
   1. Calculate item totals
   2. Set net_total
-  3. Calculate taxes on net_total
+  3. Calculate taxes on net_total (using POS Profile fields)
   4. Apply invoice discount
-  5. IF apply_discount_on = 'Net Total' AND tax exists:
+  5. IF apply_discount_on = 'Net Total' AND posa_apply_tax AND tax exists:
      - Recalculate tax on discounted net_total
-     - tax = discounted_net_total × tax_percent / 100
+     - tax = discounted_net_total × posa_tax_percent / 100
      - grand_total = discounted_net_total + recalculated_tax
 ```
 
@@ -240,29 +245,57 @@ CURRENT FLOW (✅ GOOD):
 
 ---
 
-## Required Fixes (Priority Order)
+## Implementation Tasks
 
-### Step 1: Use apply_discount_on from POS Profile (1 hour)
+### Task 1: Read apply_discount_on from POS Profile 🔥 CRITICAL
 
-**File:** `Invoice.js` line 75 and 702-750
+**Priority:** HIGHEST
+**Estimated Time:** 1 hour
+**File:** `Invoice.js`
+**Status:** ⏳ Pending
 
-**Changes:**
+**Objective:** Remove hardcoded value and read from POS Profile
 
-```
-Line 75: Change from:
-  apply_discount_on: 'Net Total',
-To:
-  apply_discount_on: null, // Read from POS Profile
+**Changes Required:**
 
-Line 720-725: Add in get_invoice_doc():
-  doc.apply_discount_on = this.pos_profile?.apply_discount_on || 'Net Total';
-```
+1. **Line 75:** Remove hardcoded value
 
-### Step 2: Fix tax recalculation (2-3 hours)
+   ```javascript
+   // FROM:
+   apply_discount_on: 'Net Total',
 
-**File:** `Invoice.js` line 1388-1491
+   // TO:
+   apply_discount_on: null, // Read from POS Profile
+   ```
 
-**Change:** Add Step 5 after Step 4 in calculateTotalsLocally()
+2. **Lines 720-725 (in get_invoice_doc function):** Read from POS Profile
+   ```javascript
+   // ADD THIS LINE:
+   doc.apply_discount_on = this.pos_profile?.apply_discount_on || 'Net Total';
+   ```
+
+**Acceptance Criteria:**
+
+- ✅ No hardcoded value in data()
+- ✅ Value read from pos_profile in get_invoice_doc()
+- ✅ Default to 'Net Total' if not set in profile
+
+---
+
+### Task 2: Fix Tax Recalculation After Discount
+
+**Priority:** HIGH
+**Estimated Time:** 2-3 hours
+**File:** `Invoice.js` (calculateTotalsLocally function)
+**Status:** ⏳ Pending
+
+**Objective:** Recalculate tax after applying discount to net_total
+
+**Changes Required:**
+
+**Location:** Line 1388-1491, after Step 4
+
+**Add Step 5:**
 
 ```javascript
 // Step 5: Recalculate tax if discount applied to net_total
@@ -281,47 +314,248 @@ if (applyTax && doc.discount_amount > 0 && applyDiscountOn === 'Net Total') {
 }
 ```
 
-### Step 3: Allow multiple offers (4-5 hours)
+**Note:** The following variables are already loaded from POS Profile in this function:
 
-**File:** `Invoice.js` line 1897-2054
+- `applyTax` = `this.pos_profile?.posa_apply_tax`
+- `taxType` = `this.pos_profile?.posa_tax_type`
+- `taxPercent` = `flt(this.pos_profile?.posa_tax_percent) || 0`
 
-**Change:** Remove limitation in calculateAndApplyOffers()
+**Acceptance Criteria:**
+
+- ✅ Tax recalculated when discount applied to net_total
+- ✅ Works with posa_apply_tax, posa_tax_type, posa_tax_percent
+- ✅ Grand total updated correctly after tax recalculation
+
+---
+
+### Task 3: Allow Multiple Offer Types Simultaneously
+
+**Priority:** MEDIUM
+**Estimated Time:** 4-5 hours
+**File:** `Invoice.js` (calculateAndApplyOffers function)
+**Status:** ⏳ Pending
+
+**Objective:** Allow Transaction-level AND Item-level offers at the same time
+
+**Changes Required:**
+
+**Location:** Line 1897-2054
+
+**Current Issue:** Only one type (Transaction OR Item) can be applied
+
+**Required Change:** Remove if/else limitation, allow both types
 
 ```javascript
-// Allow both transaction AND item offers
-const transactionOffer = sortedOffers.find(/* transaction */);
-const itemOffers = sortedOffers.filter(/* item */);
-
-// Apply BOTH types (remove if/else limitation)
-if (transactionOffer) {
-  // Apply transaction offer
+// BEFORE:
+if (transactionOffers.length > 0) {
+  // Apply transaction offers
+} else if (itemOffers.length > 0) {
+  // Apply item offers
 }
+
+// AFTER: Allow both
+const transactionOffer = sortedOffers.find(/* transaction-level */);
+const itemOffers = sortedOffers.filter(/* item-level */);
+
+// Apply transaction offer (if exists)
+if (transactionOffer) {
+  this.additional_discount_percentage = transactionOffer.discount_percentage;
+  // ... save to posa_offers
+}
+
+// Apply item offers (work alongside transaction offer)
 itemOffers.forEach((offer) => {
-  // Apply item offers (even if transaction offer exists)
+  this.items.forEach((item) => {
+    if (matchesOffer(item, offer)) {
+      item.discount_percentage = offer.discount_percentage;
+      // ... update item
+    }
+  });
 });
 ```
 
-### Step 4: Backend logging (1 hour)
+**Acceptance Criteria:**
 
-**File:** `sales_invoice.py`
+- ✅ Transaction-level offers can be applied
+- ✅ Item-level offers can be applied
+- ✅ Both types work together simultaneously
+- ✅ No conflicts between offer types
 
-**Add:** Logging for verification
+---
+
+### Task 4: Add Logging for Debugging
+
+**Priority:** LOW
+**Estimated Time:** 1 hour
+**Files:** `sales_invoice.py` + `Invoice.js`
+**Status:** ⏳ Pending
+
+**Objective:** Add logging in backend and frontend to debug discount logic
+
+---
+
+#### 4A: Backend Logging (sales_invoice.py)
+
+**Location:** Line 109-191 (create_and_submit_invoice function)
+
+**Add logging with function name:**
 
 ```python
-# Log before processing
-frappe.log_error(
-    f"Input: apply_discount_on={invoice_doc.get('apply_discount_on')}, "
-    f"additional_discount={invoice_doc.get('additional_discount_percentage')}",
-    "POS Invoice Input"
-)
+@frappe.whitelist()
+def create_and_submit_invoice(invoice_doc):
+    """Create and submit Sales Invoice using ERPNext native workflow"""
 
-# Log after validation
-frappe.log_error(
-    f"Validated: apply_discount_on={doc.apply_discount_on}, "
-    f"discount_amount={doc.discount_amount}",
-    "POS Invoice Validated"
-)
+    # Log input - show function name and important values
+    frappe.log_error(
+        f"[create_and_submit_invoice] INPUT: "
+        f"apply_discount_on={invoice_doc.get('apply_discount_on')}, "
+        f"additional_discount={invoice_doc.get('additional_discount_percentage')}, "
+        f"net_total={invoice_doc.get('net_total')}, "
+        f"grand_total={invoice_doc.get('grand_total')}, "
+        f"items_count={len(invoice_doc.get('items', []))}",
+        "POS Invoice Input"
+    )
+
+    # ... existing code ...
+
+    doc.validate()
+
+    # Log after validation - show function name and important results
+    frappe.log_error(
+        f"[create_and_submit_invoice] VALIDATED: "
+        f"apply_discount_on={doc.apply_discount_on}, "
+        f"additional_discount_percentage={doc.additional_discount_percentage}, "
+        f"discount_amount={doc.discount_amount}, "
+        f"net_total={doc.net_total}, "
+        f"grand_total={doc.grand_total}, "
+        f"base_discount_amount={doc.base_discount_amount}",
+        "POS Invoice Validated"
+    )
+
+    doc.insert()
+
+    # Log after insert - show function name and invoice name
+    frappe.log_error(
+        f"[create_and_submit_invoice] INSERTED: "
+        f"invoice_name={doc.name}, "
+        f"grand_total={doc.grand_total}",
+        "POS Invoice Inserted"
+    )
+
+    doc.submit()
+
+    # Log after submit - show function name and final result
+    frappe.log_error(
+        f"[create_and_submit_invoice] SUBMITTED: "
+        f"invoice_name={doc.name}, "
+        f"status={doc.docstatus}, "
+        f"grand_total={doc.grand_total}",
+        "POS Invoice Submitted"
+    )
+
+    return doc.as_dict()
 ```
+
+---
+
+#### 4B: Frontend Logging (Invoice.js)
+
+**Add console.log in key functions**
+
+**4B.1: In calculateTotalsLocally function (line ~1400):**
+
+```javascript
+calculateTotalsLocally(doc) {
+  console.log('[Invoice.calculateTotalsLocally] START:', {
+    apply_discount_on: doc.apply_discount_on,
+    additional_discount_percentage: doc.additional_discount_percentage,
+    net_total: doc.net_total,
+    total_taxes_and_charges: doc.total_taxes_and_charges,
+    grand_total: doc.grand_total,
+  });
+
+  // ... existing calculation code ...
+
+  // After applying discount
+  this.applyDiscountAmount(doc);
+
+  console.log('[Invoice.calculateTotalsLocally] AFTER DISCOUNT:', {
+    discount_amount: doc.discount_amount,
+    net_total: doc.net_total,
+    total_taxes_and_charges: doc.total_taxes_and_charges,
+    grand_total: doc.grand_total,
+  });
+
+  // After tax recalculation (Task 2)
+  // ... tax recalculation code ...
+
+  console.log('[Invoice.calculateTotalsLocally] FINAL:', {
+    net_total: doc.net_total,
+    total_taxes_and_charges: doc.total_taxes_and_charges,
+    grand_total: doc.grand_total,
+  });
+}
+```
+
+**4B.2: In setDiscountAmount function (line ~1494):**
+
+```javascript
+setDiscountAmount(doc) {
+  console.log('[Invoice.setDiscountAmount] INPUT:', {
+    apply_discount_on: doc.apply_discount_on,
+    additional_discount_percentage: doc.additional_discount_percentage,
+    net_total: doc.net_total,
+    grand_total: doc.grand_total,
+  });
+
+  // ... existing code ...
+
+  console.log('[Invoice.setDiscountAmount] OUTPUT:', {
+    discount_amount: doc.discount_amount,
+    base_discount_amount: doc.base_discount_amount,
+  });
+}
+```
+
+**4B.3: In get_invoice_doc function (line ~720):**
+
+```javascript
+get_invoice_doc(reason = 'auto') {
+  // ... existing code ...
+
+  // After setting apply_discount_on
+  doc.apply_discount_on = this.pos_profile?.apply_discount_on || 'Net Total';
+
+  console.log('[Invoice.get_invoice_doc] apply_discount_on SET:', {
+    from_pos_profile: this.pos_profile?.apply_discount_on,
+    final_value: doc.apply_discount_on,
+    pos_profile_name: this.pos_profile?.name,
+  });
+
+  // ... existing code ...
+}
+```
+
+---
+
+**Acceptance Criteria:**
+
+- ✅ Backend logs show function name in frappe.log_error
+- ✅ Backend logs show important discount values only
+- ✅ Frontend logs show function/file name in console.log
+- ✅ Frontend logs show important calculation results
+- ✅ Logs help debug discount calculation flow
+
+---
+
+## Task Summary
+
+| #   | Task                                    | Priority   | Time | Status |
+| --- | --------------------------------------- | ---------- | ---- | ------ |
+| 1   | Read apply_discount_on from POS Profile | 🔥 HIGHEST | 1h   | ⏳     |
+| 2   | Fix Tax Recalculation                   | ⚠️ HIGH    | 2-3h | ⏳     |
+| 3   | Allow Multiple Offers                   | ✓ MEDIUM   | 4-5h | ⏳     |
+| 4   | Add Logging for Debugging               | ○ LOW      | 1h   | ⏳     |
 
 **Total Estimated Time:** 8-10 hours
 
