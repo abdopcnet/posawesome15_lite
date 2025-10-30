@@ -1,7 +1,26 @@
 // ===== SECTION 1: IMPORTS =====
 import { evntBus } from '../bus';
 // Import cache manager utility
-import '../../utils/clearAllCaches.js';
+(function () {
+  if (window.clearCacheAndReload) return;
+  window.clearCacheAndReload = function () {
+    try {
+      localStorage.clear();
+    } catch (_) {
+      try {
+        Object.keys(localStorage).forEach((k) => localStorage.removeItem(k));
+      } catch (_) {}
+    }
+    try {
+      sessionStorage.clear();
+    } catch (_) {}
+    try {
+      location.reload(true);
+    } catch (_) {
+      location.reload();
+    }
+  };
+})();
 import { API_MAP } from '../api_mapper.js';
 
 // ===== SECTION 2: EXPORT DEFAULT =====
@@ -403,25 +422,18 @@ export default {
         });
 
         // Use the comprehensive cache manager
-        if (window.cacheManager) {
-          const success = await window.cacheManager.clearAllCaches();
+        if (window.clearCacheAndReload) {
+          await window.clearCacheAndReload();
 
-          if (success) {
-            this.show_mesage({
-              color: 'success',
-              text: 'Cache cleared successfully. Reloading...',
-            });
+          this.show_mesage({
+            color: 'success',
+            text: 'Cache cleared successfully. Reloading...',
+          });
 
-            // Reload page after short delay
-            setTimeout(() => {
-              location.reload();
-            }, 1000);
-          } else {
-            this.show_mesage({
-              color: 'error',
-              text: 'Error clearing cache',
-            });
-          }
+          // Reload page after short delay
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
         } else {
           // Fallback to basic cache clearing
           localStorage.clear();
