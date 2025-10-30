@@ -65,25 +65,28 @@ export default {
   computed: {
     invoiceNumberText() {
       if (!this.invoice_doc || !this.invoice_doc.name) {
-        // Check current mode
-        if (this.invoice_doc?.is_return) {
-          return 'Return_Invoice_Mode';
-        }
+        // Prefer quick return mode when active
         if (this.quick_return_value) {
-          return 'Quick_Return_Mode';
+          return 'Quick_Return';
         }
-        return 'Sales_Invoice_Mode';
+        if (this.invoice_doc?.is_return) {
+          return 'Return_Invoice';
+        }
+        return 'Sales_Mode';
       }
-      return this.invoice_doc.name;
+      // When an invoice exists, still reflect mode by flags
+      if (this.quick_return_value) return 'Quick_Return';
+      if (this.invoice_doc?.is_return) return 'Return_Invoice';
+      return 'Sales_Mode';
     },
     invoiceNumberClass() {
       if (!this.invoice_doc || !this.invoice_doc.name) {
-        // Check current mode for class
-        if (this.invoice_doc?.is_return) {
-          return 'return-invoice-mode';
-        }
+        // Prefer quick return mode when active
         if (this.quick_return_value) {
           return 'quick-return-mode';
+        }
+        if (this.invoice_doc?.is_return) {
+          return 'return-invoice-mode';
         }
         return 'sales-invoice-mode';
       }
@@ -91,16 +94,18 @@ export default {
     },
     invoiceIconColor() {
       if (!this.invoice_doc || !this.invoice_doc.name) {
-        // Check current mode for color
-        if (this.invoice_doc?.is_return) {
-          return '#757575'; // Grey for Return Invoice Mode
-        }
+        // Prefer quick return mode when active
         if (this.quick_return_value) {
           return '#9c27b0'; // Purple for Quick Return Mode
         }
+        if (this.invoice_doc?.is_return) {
+          return '#757575'; // Grey for Return Invoice Mode
+        }
         return '#4caf50'; // Green for Sales Invoice Mode
       }
-      return this.invoice_doc.is_return ? 'error' : 'primary';
+      // Use hex colors even when invoice exists
+      if (this.quick_return_value) return '#9c27b0';
+      return this.invoice_doc.is_return ? '#757575' : '#4caf50';
     },
     shiftNumberText() {
       if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
