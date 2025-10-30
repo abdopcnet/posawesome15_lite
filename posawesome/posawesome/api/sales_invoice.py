@@ -135,6 +135,17 @@ def create_and_submit_invoice(invoice_doc):
         if isinstance(invoice_doc, str):
             invoice_doc = json.loads(invoice_doc)
 
+        # Minimal diagnostic log
+        try:
+            frappe.log_error(title="api.sales_invoice.create_and_submit_invoice", message={
+                "fn": "create_and_submit_invoice",
+                "items": len(invoice_doc.get("items", [])) if isinstance(invoice_doc, dict) else None,
+                "customer": (invoice_doc.get("customer") if isinstance(invoice_doc, dict) else None),
+                "is_return": (invoice_doc.get("is_return") if isinstance(invoice_doc, dict) else None),
+            })
+        except Exception:
+            pass
+
         # Create new document from dict - using ERPNext native method
         doc = frappe.get_doc(invoice_doc)
 
@@ -165,8 +176,24 @@ def create_and_submit_invoice(invoice_doc):
 
     except frappe.exceptions.ValidationError as ve:
         error_msg = str(ve)
+        try:
+            frappe.log_error(title="api.sales_invoice.create_and_submit_invoice", message={
+                "fn": "create_and_submit_invoice",
+                "error_type": "ValidationError",
+                "error": error_msg,
+            })
+        except Exception:
+            pass
         frappe.throw(_("Validation error: {0}").format(str(ve)))
 
     except Exception as e:
         error_msg = str(e)
+        try:
+            frappe.log_error(title="api.sales_invoice.create_and_submit_invoice", message={
+                "fn": "create_and_submit_invoice",
+                "error_type": "Exception",
+                "error": error_msg,
+            })
+        except Exception:
+            pass
         frappe.throw(_("Error creating and submitting invoice: {0}").format(str(e)))
