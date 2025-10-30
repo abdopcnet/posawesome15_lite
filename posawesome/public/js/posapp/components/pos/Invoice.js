@@ -2088,7 +2088,6 @@ export default {
         if (!offer.auto || !offer.discount_percentage) return;
 
         const offerName = offer.offer_name || offer.name;
-
         this.items.forEach((item) => {
           let shouldApply = false;
 
