@@ -1144,7 +1144,7 @@
           type="button"
         >
           <i class="mdi mdi-flash" style="font-size: 16px"></i>
-          <span>{{ __('Quick Return') }}</span>
+          <span>{{ __('Quick_Return') }}</span>
         </button>
 
         <!-- Cancel Button -->
