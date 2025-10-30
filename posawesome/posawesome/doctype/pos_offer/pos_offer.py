@@ -224,12 +224,13 @@ def get_offers(invoice_data):
             if apply_offer_by_type(offer, updated_invoice):
                 applied_offers.append(offer)
 
-        return {
+        out = {
             "enabled": True,
             "applied_offers": applied_offers,
             "message": f"Applied {len(applied_offers)} offers",
             "updated_invoice": updated_invoice
         }
+        return out
 
     except Exception as e:
         return {
