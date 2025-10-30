@@ -46,6 +46,8 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
             where_conditions.append("(`tabItem`.name LIKE %(search)s OR `tabItem`.item_name LIKE %(search)s OR `tabItem`.name IN (SELECT parent FROM `tabItem Barcode` WHERE barcode LIKE %(search)s))")
             params["search"] = f"%{search_value}%"
 
+        # Only return items that have stock in the selected warehouse
+        where_conditions.append("COALESCE(`tabBin`.actual_qty, 0) > 0")
         where_clause = " AND ".join(where_conditions)
 
         # Single optimized query
@@ -55,6 +57,7 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
                 `tabItem`.name as item_code,
                 `tabItem`.item_name,
                 `tabItem`.item_group,
+                `tabItem`.brand,
                 `tabItem`.stock_uom,
                 `tabItem Price`.price_list_rate,
                 `tabItem Price`.price_list_rate as rate,
@@ -79,10 +82,24 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
             as_dict=True
         )
 
+        # Minimal diagnostic log
+        try:
+            frappe.log_error(title="api.item.get_items", message={
+                "fn": "get_items",
+                "count": len(items or []),
+                "item_group": item_group,
+                "search_value": search_value,
+                "brand_included": True,
+            })
+        except Exception:
+            pass
         return items
 
     except Exception as e:
-        frappe.logger().error(f"Error in get_items: {str(e)}")
+        try:
+            frappe.log_error(title="api.item.get_items", message={"fn": "get_items", "error": str(e)})
+        except Exception:
+            pass
         return []
 
 
