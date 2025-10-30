@@ -253,6 +253,10 @@
 // Translation data
 const posaTranslations = {
   ar: {
+    // Mode labels
+    Sales_Mode: 'وضع البيع',
+    Return_Invoice: 'مرتجع فاتورة',
+    Quick_Return: 'مرتجع سريع',
     Account: 'الحساب',
     'Account Head': 'رئيس الحسابات',
     'Accounts Manager': 'مدير الحسابات',
