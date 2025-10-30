@@ -326,6 +326,7 @@ export default {
               item_code: it.item_code,
               item_name: it.item_name,
               item_group: it.item_group, // ✅ Added for filtred_items
+              brand: it.brand,
               rate: it.rate,
               price_list_rate: it.price_list_rate,
               base_rate: it.base_rate,
