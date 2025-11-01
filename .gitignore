@@ -6,7 +6,3 @@ tags
 node_modules
 __pycache__
 dist
-
-# Ignore analysis directories
-POS-Awesome-V15
-POSNext
