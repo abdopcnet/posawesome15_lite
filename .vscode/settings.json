@@ -79,7 +79,7 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[python]": {
-    "editor.defaultFormatter": "ms-python.python"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   // Extension Settings - Prevent installation of other extensions
   "extensions.autoCheckUpdates": false,
