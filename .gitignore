@@ -6,4 +6,7 @@ tags
 node_modules
 __pycache__
 dist
+<<<<<<< HEAD
 
+=======
+>>>>>>> b60541b2d75b0b3fdd875afbdb40867724123ece
