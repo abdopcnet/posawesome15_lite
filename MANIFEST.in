@@ -6,13 +6,19 @@ include *.py
 include *.txt
 recursive-include posawesome *.css
 recursive-include posawesome *.csv
+recursive-include posawesome *.eot
 recursive-include posawesome *.html
 recursive-include posawesome *.ico
 recursive-include posawesome *.js
 recursive-include posawesome *.json
+recursive-include posawesome *.map
 recursive-include posawesome *.md
 recursive-include posawesome *.png
 recursive-include posawesome *.py
 recursive-include posawesome *.svg
 recursive-include posawesome *.txt
+recursive-include posawesome *.ttf
+recursive-include posawesome *.vue
+recursive-include posawesome *.woff
+recursive-include posawesome *.woff2
 recursive-exclude posawesome *.pyc
