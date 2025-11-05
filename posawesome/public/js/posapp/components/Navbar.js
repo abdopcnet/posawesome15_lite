@@ -121,9 +121,9 @@ export default {
     },
     shiftIconColor() {
       if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
-        return 'grey';
+        return '#757575';
       }
-      return this.pos_opening_shift.status === 'Open' ? 'success' : 'warning';
+      return this.pos_opening_shift.status === 'Open' ? '#4caf50' : '#ff9800';
     },
     currentUserName() {
       return frappe.session.user || 'Unknown User';
@@ -151,9 +151,9 @@ export default {
     },
     shiftStartIconColor() {
       if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
-        return 'grey';
+        return '#757575';
       }
-      return this.pos_opening_shift.status === 'Open' ? 'success' : 'warning';
+      return this.pos_opening_shift.status === 'Open' ? '#4caf50' : '#ff9800';
     },
     totalInvoicesQty() {
       // Get total invoices count for current shift
@@ -172,10 +172,10 @@ export default {
     },
     pingIconColor() {
       const ping = parseInt(this.pingTime);
-      if (ping < 100) return 'success';
-      if (ping < 300) return 'primary';
-      if (ping < 500) return 'warning';
-      return 'error';
+      if (ping < 100) return '#4caf50';
+      if (ping < 300) return '#1976d2';
+      if (ping < 500) return '#ff9800';
+      return '#f44336';
     },
   },
   // ===== SECTION 3.5: WATCHERS =====
