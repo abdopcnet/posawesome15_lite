@@ -58,9 +58,9 @@ def get_version_date():
 
 # Update version in __init__.py
 def update_version():
-    """Update __version__ in frappe_site/__init__.py and README.md."""
+    """Update __version__ in posawesome/__init__.py and README.md."""
     base_dir = os.path.dirname(__file__)
-    init_file = os.path.join(base_dir, "frappe_site", "__init__.py")
+    init_file = os.path.join(base_dir, "posawesome", "__init__.py")
     readme_file = os.path.join(base_dir, "README.md")
 
     # Get new version
