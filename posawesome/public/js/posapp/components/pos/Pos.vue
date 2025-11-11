@@ -3,7 +3,7 @@
   <!-- =========================================== -->
   <!-- POS CONTAINER -->
   <!-- =========================================== -->
-  <div style="padding: 0 3px 3px 3px; background: #f8f9fa; min-height: 100vh; overflow: visible">
+  <div style="padding: 0 3px 3px 3px; background: #c4763d85; min-height: 100vh; overflow: visible">
     <!-- =========================================== -->
     <!-- DIALOGS & OVERLAYS -->
     <!-- =========================================== -->
