@@ -84,8 +84,10 @@ class POSClosingShift(Document):
         period_end_dt = frappe.utils.get_datetime(self.period_end_date)
 
         # Create datetime objects for comparison
-        start_dt = period_end_dt.replace(hour=start_time.hour, minute=start_time.minute, second=start_time.second, microsecond=start_time.microsecond)
-        end_dt = period_end_dt.replace(hour=end_time.hour, minute=end_time.minute, second=end_time.second, microsecond=end_time.microsecond)
+        start_dt = period_end_dt.replace(
+            hour=start_time.hour, minute=start_time.minute, second=start_time.second, microsecond=start_time.microsecond)
+        end_dt = period_end_dt.replace(
+            hour=end_time.hour, minute=end_time.minute, second=end_time.second, microsecond=end_time.microsecond)
 
         # If start_time > end_time, assume end_time is next day
         if start_time > end_time:
@@ -100,19 +102,23 @@ class POSClosingShift(Document):
             if start_time > end_time:
                 end_str += " (next day)"
             frappe.throw(
-                _("Closing shift is not allowed at this time. Closing is allowed only between {0} and {1}").format(start_str, end_str),
+                _("Closing shift is not allowed at this time. Closing is allowed only between {0} and {1}").format(
+                    start_str, end_str),
                 title=_("Closing Time Not Allowed")
             )
 
     def update_payment_reconciliation(self):
         # update the difference values in Payment Reconciliation child table
         # get default precision for site
-        precision = frappe.get_cached_value("System Settings", None, "currency_precision") or 3
+        precision = frappe.get_cached_value(
+            "System Settings", None, "currency_precision") or 3
         for d in self.payment_reconciliation:
-            d.difference = +flt(d.closing_amount, precision) - flt(d.expected_amount, precision)
+            d.difference = +flt(d.closing_amount, precision) - \
+                flt(d.expected_amount, precision)
 
     def on_submit(self):
-        opening_entry = frappe.get_doc("POS Opening Shift", self.pos_opening_shift)
+        opening_entry = frappe.get_doc(
+            "POS Opening Shift", self.pos_opening_shift)
         opening_entry.pos_closing_shift = self.name
         opening_entry.set_status()
         self.delete_draft_invoices()
@@ -120,7 +126,8 @@ class POSClosingShift(Document):
 
     def on_cancel(self):
         if frappe.db.exists("POS Opening Shift", self.pos_opening_shift):
-            opening_entry = frappe.get_doc("POS Opening Shift", self.pos_opening_shift)
+            opening_entry = frappe.get_doc(
+                "POS Opening Shift", self.pos_opening_shift)
             if opening_entry.pos_closing_shift == self.name:
                 opening_entry.pos_closing_shift = ""
                 opening_entry.set_status()
@@ -128,11 +135,12 @@ class POSClosingShift(Document):
 
     @frappe.whitelist()
     def get_payment_reconciliation_details(self):
-            currency = frappe.get_cached_value("Company", self.company, "default_currency")
-            return frappe.render_template(
-                "posawesome/posawesome/doctype/pos_closing_shift/closing_shift_details.html",
-                {"data": self, "currency": currency},
-            )
+        currency = frappe.get_cached_value(
+            "Company", self.company, "default_currency")
+        return frappe.render_template(
+            "posawesome/posawesome/doctype/pos_closing_shift/closing_shift_details.html",
+            {"data": self, "currency": currency},
+        )
 
     def delete_draft_invoices(self):
         """Delete draft invoices for this shift if auto-delete is enabled in POS Profile."""
@@ -152,7 +160,8 @@ class POSClosingShift(Document):
         # Delete each draft invoice
         for invoice in draft_invoices:
             try:
-                frappe.delete_doc("Sales Invoice", invoice.name, force=1, ignore_permissions=True)
+                frappe.delete_doc("Sales Invoice", invoice.name,
+                                  force=1, ignore_permissions=True)
             except Exception as e:
                 pass
 
@@ -213,8 +222,10 @@ def check_closing_time_allowed(pos_profile):
         current_dt = frappe.utils.now_datetime()
 
         # Create datetime objects for comparison
-        start_dt = current_dt.replace(hour=start_time.hour, minute=start_time.minute, second=start_time.second, microsecond=start_time.microsecond)
-        end_dt = current_dt.replace(hour=end_time.hour, minute=end_time.minute, second=end_time.second, microsecond=end_time.microsecond)
+        start_dt = current_dt.replace(hour=start_time.hour, minute=start_time.minute,
+                                      second=start_time.second, microsecond=start_time.microsecond)
+        end_dt = current_dt.replace(hour=end_time.hour, minute=end_time.minute,
+                                    second=end_time.second, microsecond=end_time.microsecond)
 
         # If start_time > end_time, assume end_time is next day
         if start_time > end_time:
@@ -245,7 +256,8 @@ def get_cashiers(doctype, txt, searchfield, start, page_len, filters):
     GET - Get cashiers list for POS Profile
     """
     try:
-        cashiers_list = frappe.get_all("POS Profile User", filters=filters, fields=["user"])
+        cashiers_list = frappe.get_all(
+            "POS Profile User", filters=filters, fields=["user"])
         result = []
         for cashier in cashiers_list:
             user_email = frappe.get_value("User", cashier.user, "email")
@@ -278,7 +290,8 @@ def get_pos_invoices(pos_opening_shift):
             as_dict=1,
         )
 
-        data = [frappe.get_doc("Sales Invoice", d.name).as_dict() for d in data]
+        data = [frappe.get_doc("Sales Invoice", d.name).as_dict()
+                for d in data]
 
         return data
 
@@ -446,7 +459,8 @@ def make_closing_shift_from_opening(opening_shift):
         _submit_printed_invoices(opening_shift.get("name"))
         closing_shift = frappe.new_doc("POS Closing Shift")
         closing_shift.pos_opening_shift = opening_shift.get("name")
-        closing_shift.period_start_date = opening_shift.get("period_start_date")
+        closing_shift.period_start_date = opening_shift.get(
+            "period_start_date")
         closing_shift.period_end_date = frappe.utils.get_datetime()
         closing_shift.pos_profile = opening_shift.get("pos_profile")
         closing_shift.user = opening_shift.get("user")
@@ -491,7 +505,8 @@ def make_closing_shift_from_opening(opening_shift):
             closing_shift.total_quantity += flt(d.total_qty)
 
             for t in d.taxes:
-                existing_tax = [tx for tx in taxes if tx.account_head == t.account_head and tx.rate == t.rate]
+                existing_tax = [
+                    tx for tx in taxes if tx.account_head == t.account_head and tx.rate == t.rate]
                 if existing_tax:
                     existing_tax[0].amount += flt(t.tax_amount)
                 else:
@@ -506,7 +521,8 @@ def make_closing_shift_from_opening(opening_shift):
                     )
 
             for p in d.payments:
-                existing_pay = [pay for pay in payments if pay.mode_of_payment == p.mode_of_payment]
+                existing_pay = [
+                    pay for pay in payments if pay.mode_of_payment == p.mode_of_payment]
                 if existing_pay:
                     cash_mode_of_payment = frappe.get_value(
                         "POS Profile",
@@ -545,7 +561,8 @@ def make_closing_shift_from_opening(opening_shift):
                     }
                 )
             )
-            existing_pay = [pay for pay in payments if pay.mode_of_payment == py.mode_of_payment]
+            existing_pay = [
+                pay for pay in payments if pay.mode_of_payment == py.mode_of_payment]
             if existing_pay:
                 existing_pay[0].expected_amount += flt(py.paid_amount)
             else:
