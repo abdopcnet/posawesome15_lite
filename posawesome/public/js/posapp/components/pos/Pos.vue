@@ -34,25 +34,21 @@
         <!-- Items Selector Panel -->
         <div
           v-show="!payment && !offers"
-          :style="{
-            flex: '1',
-            display: 'flex',
-            flexDirection: 'column',
-            background: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-            overflow: 'hidden',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            border: '1px solid rgba(0, 0, 0, 0.05)',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            opacity: !payment && !offers ? 1 : 0,
-            visibility: !payment && !offers ? 'visible' : 'hidden',
-            pointerEvents: !payment && !offers ? 'auto' : 'none',
-          }"
+          style="
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+          "
         >
           <ItemsSelector></ItemsSelector>
         </div>
@@ -60,25 +56,21 @@
         <!-- Offers Panel -->
         <div
           v-show="offers"
-          :style="{
-            flex: '1',
-            display: 'flex',
-            flexDirection: 'column',
-            background: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-            overflow: 'hidden',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            border: '1px solid rgba(0, 0, 0, 0.05)',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            opacity: offers ? 1 : 0,
-            visibility: offers ? 'visible' : 'hidden',
-            pointerEvents: offers ? 'auto' : 'none',
-          }"
+          style="
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+          "
         >
           <PosOffers
             @offerApplied="handleOfferApplied"
@@ -89,25 +81,21 @@
         <!-- Payments Panel -->
         <div
           v-show="payment"
-          :style="{
-            flex: '1',
-            display: 'flex',
-            flexDirection: 'column',
-            background: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-            overflow: 'hidden',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            border: '1px solid rgba(0, 0, 0, 0.05)',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            opacity: payment ? 1 : 0,
-            visibility: payment ? 'visible' : 'hidden',
-            pointerEvents: payment ? 'auto' : 'none',
-          }"
+          style="
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+          "
         >
           <Payments ref="payments" @request-print="onPrintRequest"></Payments>
         </div>
