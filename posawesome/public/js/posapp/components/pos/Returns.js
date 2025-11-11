@@ -149,7 +149,9 @@ export default {
 
     validateReturnItems(return_items, original_invoice) {
       const original_items = original_invoice.items.map((i) => i.item_code);
-      const invalid_items = return_items.filter((item) => !original_items.includes(item.item_code));
+      const invalid_items = return_items.filter(
+        (item) => !original_items.includes(item.item_code),
+      );
 
       if (invalid_items.length > 0) {
         this.showMessage(
