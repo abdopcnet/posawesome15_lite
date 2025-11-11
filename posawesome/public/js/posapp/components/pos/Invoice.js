@@ -1802,7 +1802,8 @@ export default {
       );
 
       const itemOffers = offers.filter(
-        (o) => ['item_code', 'item_group', 'brand'].includes(o.offer_type) && o.discount_percentage,
+        (o) =>
+          ['item_code', 'item_group', 'brand'].includes(o.offer_type) && o.discount_percentage,
       );
 
       // Apply ONLY ONE type (POSAwesome constraint)
