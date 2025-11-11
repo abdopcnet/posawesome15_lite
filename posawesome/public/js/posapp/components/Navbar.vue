@@ -6,17 +6,17 @@
   <nav>
     <div
       style="
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 6px;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border-bottom: 1px solid #e0e0e0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  height: 32px;
-  position: sticky;
-  top: 0;
-  z-index: 1100;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 6px;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border-bottom: 1px solid #e0e0e0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        height: 32px;
+        position: sticky;
+        top: 0;
+        z-index: 1100;
       "
     >
       <!-- =========================================== -->
@@ -25,13 +25,13 @@
       <div
         @click="go_desk"
         style="
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 8px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: background 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 4px 8px;
+          cursor: pointer;
+          border-radius: 4px;
+          transition: background 0.2s;
         "
         title="Go to Desk"
       >
@@ -43,12 +43,12 @@
       <!-- =========================================== -->
       <div
         style="
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  overflow-x: auto;
-  scrollbar-width: none;
+          flex: 1;
+          display: flex;
+          align-items: center;
+          gap: 3px;
+          overflow-x: auto;
+          scrollbar-width: none;
         "
       >
         <div
@@ -94,22 +94,25 @@
                 : 'border-color: rgba(189, 189, 189, 0.65); background: #f9f9f9; color: #757575; font-style: italic; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
           "
           style="
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 6px;
-  border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 6px;
+            border-radius: 4px;
             border: 1px solid;
-  background: #fff;
-  font-size: 10px;
-  font-weight: 600;
-  white-space: nowrap;
-  line-height: 1;
-  height: 22px;
+            background: #fff;
+            font-size: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+            line-height: 1;
+            height: 22px;
             box-sizing: border-box;
           "
         >
-          <i class="mdi mdi-clock-outline" :style="`font-size: 12px; color: ${shiftIconColor}`"></i>
+          <i
+            class="mdi mdi-clock-outline"
+            :style="`font-size: 12px; color: ${shiftIconColor}`"
+          ></i>
           <span>{{ shiftNumberText }}</span>
         </div>
 
@@ -128,7 +131,7 @@
             color: #1976d2;
             font-size: 10px;
             font-weight: 600;
-  white-space: nowrap;
+            white-space: nowrap;
             line-height: 1;
             height: 22px;
             transition:
@@ -188,7 +191,7 @@
             border-radius: 4px;
             border: 1px solid rgba(25, 118, 210, 0.5);
             background: linear-gradient(135deg, #eaf4ff 0%, #dbeeff 100%);
-  color: #1976d2;
+            color: #1976d2;
             font-size: 10px;
             font-weight: 600;
             white-space: nowrap;
@@ -219,7 +222,7 @@
             border-radius: 4px;
             border: 1px solid rgba(76, 175, 80, 0.5);
             background: linear-gradient(135deg, #eefbe7 0%, #def2da 100%);
-  color: #2e7d32;
+            color: #2e7d32;
             font-size: 10px;
             font-weight: 600;
             white-space: nowrap;
@@ -314,9 +317,9 @@
             border-radius: 4px;
             border: 1px solid rgba(25, 118, 210, 0.5);
             background: linear-gradient(135deg, #eaf4ff 0%, #dbeeff 100%);
-  color: #1976d2;
+            color: #1976d2;
             font-size: 10px;
-  font-weight: 700;
+            font-weight: 700;
             white-space: nowrap;
             line-height: 1;
             height: 22px;
@@ -389,7 +392,7 @@
           :title="__('Clear Cache')"
           style="
             display: inline-flex;
-  align-items: center;
+            align-items: center;
             justify-content: center;
             gap: 6px;
             padding: 6px 8px;
@@ -431,20 +434,20 @@
           <button
             @click="toggleMenu"
             style="
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  padding: 3px 6px;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              gap: 3px;
+              padding: 3px 6px;
               border: 1px solid #1976d2;
-  border-radius: 4px;
+              border-radius: 4px;
               background: linear-gradient(135deg, #1976d2 0%, #1e88e5 100%);
               color: white;
-  cursor: pointer;
-  font-size: 11px;
-  font-weight: 600;
-  height: 24px;
-  min-width: 24px;
+              cursor: pointer;
+              font-size: 11px;
+              font-weight: 600;
+              height: 24px;
+              min-width: 24px;
             "
           >
             <i class="mdi mdi-menu" style="font-size: 14px"></i>
@@ -455,19 +458,19 @@
           <div
             v-if="showMenu"
             style="
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  z-index: 1200;
-  min-width: 200px;
-  margin-top: 4px;
-  overflow: hidden;
-  display: block !important;
-  max-width: calc(100vw - 10px);
+              position: absolute;
+              top: 100%;
+              right: 0;
+              background: white;
+              border: 1px solid #e0e0e0;
+              border-radius: 8px;
+              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+              z-index: 1200;
+              min-width: 200px;
+              margin-top: 4px;
+              overflow: hidden;
+              display: block !important;
+              max-width: calc(100vw - 10px);
             "
           >
             <div style="padding: 4px; background: white">
@@ -476,27 +479,27 @@
                 v-if="!pos_profile.posa_hide_closing_shift && menu_item == 0"
                 @click="close_shift_dialog"
                 style="
-  display: flex;
-  align-items: center;
-  padding: 8px 12px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  border-radius: 6px;
-  margin: 2px 0;
-  min-height: 40px;
+                  display: flex;
+                  align-items: center;
+                  padding: 8px 12px;
+                  cursor: pointer;
+                  transition: background-color 0.2s ease;
+                  border-radius: 6px;
+                  margin: 2px 0;
+                  min-height: 40px;
                 "
               >
                 <div
                   style="
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12px;
-  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
-  color: white;
+                    width: 28px;
+                    height: 28px;
+                    border-radius: 6px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-right: 12px;
+                    background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+                    color: white;
                     transition: all 0.2s ease;
                   "
                 >
@@ -532,8 +535,8 @@
                     align-items: center;
                     justify-content: center;
                     margin-right: 12px;
-  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
-  color: white;
+                    background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+                    color: white;
                     transition: all 0.2s ease;
                   "
                 >
@@ -569,8 +572,8 @@
                     align-items: center;
                     justify-content: center;
                     margin-right: 12px;
-  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
-  color: white;
+                    background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+                    color: white;
                     transition: all 0.2s ease;
                   "
                 >
@@ -602,22 +605,22 @@
       "
       @click="snack = false"
       style="
-  position: fixed;
-  top: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  min-width: 300px;
-  max-width: 500px;
-  padding: 12px 20px;
-  border-radius: 8px;
-  color: white;
-  font-weight: 600;
-  font-size: 14px;
-  z-index: 2000;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  animation: slideDown 0.3s ease-out;
-  text-align: center;
+        position: fixed;
+        top: 40px;
+        left: 50%;
+        transform: translateX(-50%);
+        min-width: 300px;
+        max-width: 500px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        z-index: 2000;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        animation: slideDown 0.3s ease-out;
+        text-align: center;
       "
     >
       {{ snackText }}
@@ -627,27 +630,27 @@
     <div
       v-if="freeze"
       style="
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 3000;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 3000;
       "
     >
       <div
         style="
-  background: white;
-  border-radius: 8px;
-  max-width: 500px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+          background: white;
+          border-radius: 8px;
+          max-width: 500px;
+          width: 90%;
+          max-height: 80vh;
+          overflow-y: auto;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         "
       >
         <div style="padding: 20px; border-bottom: 1px solid #e0e0e0">
