@@ -17,12 +17,20 @@
     <!-- =========================================== -->
     <div
       v-show="!dialog"
-      style="display: flex; gap: 5px; min-height: calc(100vh - 130px); width: 100%; margin-top: 3px"
+      style="
+        display: flex;
+        gap: 5px;
+        min-height: calc(100vh - 130px);
+        width: 100%;
+        margin-top: 3px;
+      "
     >
       <!-- =========================================== -->
       <!-- LEFT PANEL (Items/Offers/Payments) -->
       <!-- =========================================== -->
-      <div style="flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative">
+      <div
+        style="flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative"
+      >
         <!-- Items Selector Panel -->
         <div
           v-show="!payment && !offers"
