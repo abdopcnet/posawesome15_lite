@@ -169,6 +169,7 @@
               v-model="barcode_search"
               @keyup.enter="handle_barcode_input"
               ref="barcode_search"
+              autofocus
               style="
                 flex: 1;
                 border: none;
@@ -256,7 +257,6 @@
               v-model="debounce_search"
               @keydown.esc="esc_event"
               ref="debounce_search"
-              autofocus
               style="
                 flex: 1;
                 border: none;
