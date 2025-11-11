@@ -333,6 +333,7 @@ export default {
               currency: it.currency,
               actual_qty: it.actual_qty,
               stock_uom: it.stock_uom,
+              image: it.image, // ✅ Added for card view
               // Empty arrays for compatibility with barcode/batch/serial features
               item_barcode: [],
               serial_no_data: [],
@@ -476,6 +477,7 @@ export default {
               item_group: it.item_group,
               price_list_rate: it.price_list_rate || it.rate,
               base_rate: it.base_rate || it.rate,
+              image: it.image, // ✅ Added for card view
               item_barcode: Array.isArray(it.item_barcode) ? it.item_barcode : [],
               serial_no_data: Array.isArray(it.serial_no_data) ? it.serial_no_data : [],
               batch_no_data: Array.isArray(it.batch_no_data) ? it.batch_no_data : [],
