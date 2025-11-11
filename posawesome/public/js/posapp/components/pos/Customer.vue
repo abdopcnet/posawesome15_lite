@@ -8,9 +8,9 @@
       font-family:
         system-ui,
         -apple-system,
-        'Segoe UI',
+        Segoe UI,
         Roboto,
-        'Helvetica Neue',
+        Helvetica Neue,
         Arial;
     "
   >
