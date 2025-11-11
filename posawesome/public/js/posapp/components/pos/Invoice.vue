@@ -881,7 +881,8 @@
               line-height: 1.2;
             "
           >
-            {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(invoice_doc?.total || 0) }}
+            {{ currencySymbol(pos_profile?.currency)
+            }}{{ formatCurrency(invoice_doc?.total || 0) }}
           </div>
         </div>
 
