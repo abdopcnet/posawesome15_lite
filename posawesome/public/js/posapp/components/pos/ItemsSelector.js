@@ -576,6 +576,10 @@ export default {
       this.barcode_search = '';
       this.debounce_search = '';
       this.first_search = '';
+      if (this.item_group !== 'ALL') {
+        this.item_group = 'ALL';
+        this.get_items();
+      }
     });
   },
 
