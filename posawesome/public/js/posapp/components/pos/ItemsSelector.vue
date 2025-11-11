@@ -321,76 +321,117 @@
             <div
               v-for="(item, idx) in filtred_items"
               :key="idx"
-              style="display: flex; flex-direction: column"
+              @click="add_item(item)"
+              :title="item.item_name"
+              style="
+                position: relative;
+                border-radius: 8px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+                cursor: pointer;
+                user-select: none;
+                transition: transform 0.2s ease;
+                overflow: hidden;
+                background: white;
+                display: flex;
+                flex-direction: column;
+                height: 200px;
+                min-height: 200px;
+              "
+              @mouseenter="$event.currentTarget.style.transform = 'scale(1.02)'"
+              @mouseleave="$event.currentTarget.style.transform = 'scale(1)'"
             >
+              <!-- Quantity Pill -->
               <div
-                @click="add_item(item)"
+                v-if="item.actual_qty !== undefined"
                 style="
-                  height: 100%;
-                  min-height: 110px;
+                  position: absolute;
+                  top: 8px;
+                  right: 8px;
+                  z-index: 2;
                   display: flex;
-                  flex-direction: column;
-                  cursor: pointer;
-                  border-radius: 6px;
+                  align-items: center;
+                  padding: 2px 8px;
+                  border-radius: 12px;
+                  font-size: 11px;
+                  font-weight: 600;
+                  backdrop-filter: blur(4px);
+                "
+                :style="{
+                  background:
+                    item.actual_qty > 10
+                      ? 'rgba(76, 175, 80, 0.9)'
+                      : item.actual_qty <= 0
+                        ? 'rgba(244, 67, 54, 0.9)'
+                        : 'rgba(255, 152, 0, 0.9)',
+                  color: 'white',
+                }"
+              >
+                {{ formatFloat(item.actual_qty) }}
+              </div>
+
+              <!-- Image or Abbreviation -->
+              <div
+                v-if="item.image"
+                style="
+                  height: 128px;
+                  min-height: 128px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: #f5f5f5;
+                  border-bottom: 1px solid #e0e0e0;
                 "
               >
-                <div style="position: relative; height: 80px; overflow: hidden">
-                  <img
-                    :src="
-                      item.image ||
-                      '/assets/posawesome/js/posapp/components/pos/placeholder-image.png'
-                    "
-                    style="width: 100%; height: 100%; object-fit: cover"
-                  />
-                  <div
-                    v-if="item.actual_qty !== undefined"
-                    style="
-                      position: absolute;
-                      bottom: 4px;
-                      right: 4px;
-                      background: rgba(0, 0, 0, 0.7);
-                      color: white;
-                      padding: 2px 4px;
-                      border-radius: 4px;
-                      font-size: 10px;
-                    "
-                  >
-                    <span
-                      :style="{
-                        color: item.actual_qty > 0 ? '#4CAF50' : '#F44336',
-                        fontWeight: 'bold',
-                      }"
-                    >
-                      Qty: {{ formatFloat(item.actual_qty) }}
-                    </span>
-                  </div>
+                <img
+                  :src="item.image"
+                  :alt="item.item_name"
+                  @error="$event.target.style.display = 'none'"
+                  style="width: 100%; height: 100%; object-fit: cover"
+                />
+              </div>
+              <div
+                v-else
+                style="
+                  height: 128px;
+                  min-height: 128px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+                  border-bottom: 1px solid #e0e0e0;
+                  font-size: 2.5rem;
+                  font-weight: 700;
+                  color: #9e9e9e;
+                "
+              >
+                {{ item.item_name.substring(0, 2).toUpperCase() }}
+              </div>
+
+              <!-- Item Details -->
+              <div
+                style="
+                  padding: 10px 8px;
+                  flex: 1;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                "
+              >
+                <div
+                  style="
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    color: #333;
+                    margin-bottom: 4px;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                  "
+                >
+                  {{ item.item_name }}
                 </div>
-
-                <div style="padding: 8px; text-align: center">
-                  <div
-                    style="
-                      font-size: 0.7rem;
-                      line-height: 1.2;
-                      font-weight: bold;
-                      margin-bottom: 4px;
-                    "
-                  >
-                    {{ item.item_name }}
-                  </div>
-
-                  <div
-                    style="
-                      font-size: 0.7rem;
-                      line-height: 1.2;
-                      display: flex;
-                      justify-content: space-between;
-                    "
-                  >
-                    <span>{{ item.stock_uom || '' }}</span>
-                    <span style="color: #1976d2; font-weight: bold">
-                      {{ currencySymbol(item.currency) || '' }}{{ formatCurrency(item.rate) || 0 }}
-                    </span>
-                  </div>
+                <div style="font-size: 0.85rem; font-weight: 700; color: #1976d2">
+                  {{ formatCurrency(item.rate) }} / {{ item.stock_uom }}
                 </div>
               </div>
             </div>
