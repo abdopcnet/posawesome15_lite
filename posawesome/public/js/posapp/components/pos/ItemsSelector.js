@@ -103,6 +103,7 @@ export default {
 
       // Internal Flags
       _suppressCustomerWatcher: false,
+      _processingBarcode: false, // Track if barcode is being processed by scanner
       _detailsReady: false,
 
       // Caching & Performance
@@ -228,6 +229,13 @@ export default {
 
     handle_barcode_input() {
       if (!this.barcode_search.trim()) return;
+
+      // Skip if scanner already processed this
+      if (this._processingBarcode) {
+        this._processingBarcode = false;
+        this.barcode_search = '';
+        return;
+      }
 
       this.process_barcode(this.barcode_search.trim());
       this.barcode_search = '';
@@ -425,6 +433,10 @@ export default {
         qty: this.qty || 1,
       });
       this.qty = 1;
+      // Return focus to barcode field
+      this.$nextTick(() => {
+        this.$refs.barcode_search?.focus();
+      });
     },
 
     add_item(item) {
@@ -434,6 +446,10 @@ export default {
         qty: this.qty || 1,
       });
       this.qty = 1;
+      // Return focus to barcode field
+      this.$nextTick(() => {
+        this.$refs.barcode_search?.focus();
+      });
     },
 
     get_search(val) {
@@ -499,19 +515,34 @@ export default {
 
     scan_barcode() {
       const vm = this;
+
+      // Detach any existing onScan listener first to prevent duplicates
+      try {
+        onScan.detachFrom(document);
+      } catch (e) {
+        // Ignore if nothing to detach
+      }
+
       onScan.attachTo(document, {
-        suffixKeyCodes: [],
+        suffixKeyCodes: [13], // Enter key terminates scan
+        reactToKeydown: true,
+        reactToPaste: false,
         keyCodeMapper: function (oEvent) {
           oEvent.stopImmediatePropagation();
           return onScan.decodeKeyEvent(oEvent);
         },
         onScan: function (sCode) {
-          // Immediate addition to cart without condition
+          // Mark that scanner is processing to prevent manual handler from running
+          vm._processingBarcode = true;
+
+          // Clear the input field (prevents @keyup.enter from triggering)
+          vm.barcode_search = '';
+
+          // Process the scanned code
           vm.trigger_onscan(sCode);
         },
       });
     },
-
     trigger_onscan(sCode) {
       // Direct barcode processing using existing working method
       this.process_barcode(sCode);
@@ -530,10 +561,7 @@ export default {
       this.get_items_groups();
       this.items_view = this.pos_profile.posa_default_card_view ? 'card' : 'list';
     });
-    // Removed: This was causing infinite recursion
-    // evntBus.on("update_cur_items_details", () => {
-    //   this.update_items_details(this.filtred_items);
-    // });
+
     evntBus.on('update_offers_counters', (data) => {
       this.offersCount = data.offersCount;
       this.appliedOffersCount = data.appliedOffersCount;
@@ -553,7 +581,13 @@ export default {
 
   // ===== SECTION 6: LIFECYCLE HOOKS =====
   mounted() {
-    this.scan_barcode();
+    // Delay onScan attachment to prevent double-scan during initialization
+    this.$nextTick(() => {
+      setTimeout(() => {
+        this.scan_barcode();
+      }, 300); // Small delay to ensure component is fully ready
+    });
+
     // Calculate scrollable area as soon as the card renders
     this.scheduleScrollHeightUpdate();
     window.addEventListener('resize', this.scheduleScrollHeightUpdate);
@@ -564,6 +598,13 @@ export default {
     // Clear timer
     if (this._searchDebounceTimer) {
       clearTimeout(this._searchDebounceTimer);
+    }
+
+    // Detach onScan listener
+    try {
+      onScan.detachFrom(document);
+    } catch (e) {
+      // Ignore if already detached
     }
 
     // Clean up event listeners
