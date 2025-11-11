@@ -20,7 +20,7 @@
         display: flex;
         gap: 4px;
         padding: 4px;
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        background: #c4763d85;
         border-bottom: 1px solid #e0e0e0;
       "
     >
@@ -141,7 +141,7 @@
           display: flex;
           gap: 3px;
           padding: 4px;
-          background: #fafafa;
+          background: #c4763d85;
           border-bottom: 1px solid #e0e0e0;
         "
       >
