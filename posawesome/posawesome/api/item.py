@@ -10,10 +10,11 @@ from frappe.utils import flt
 
 
 @frappe.whitelist()
-def get_items(pos_profile, price_list=None, item_group="", search_value="", customer=None):
+def get_items(pos_profile, price_list=None, item_group="", search_value="", customer=None, include_zero_stock=False):
     """
     Search items by name, code, or barcode.
     Uses LIKE search for flexibility.
+    include_zero_stock: Set True for barcode lookups to allow items with no stock
     """
     try:
         if isinstance(pos_profile, str):
@@ -41,13 +42,17 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
             where_conditions.append("`tabItem`.item_group LIKE %(item_group)s")
             params["item_group"] = f"%{item_group}%"
 
-        # Add search filter
+        # Add search filter - enhanced to search by exact barcode match
         if search_value:
-            where_conditions.append("(`tabItem`.name LIKE %(search)s OR `tabItem`.item_name LIKE %(search)s OR `tabItem`.name IN (SELECT parent FROM `tabItem Barcode` WHERE barcode LIKE %(search)s))")
+            where_conditions.append(
+                "(`tabItem`.name LIKE %(search)s OR `tabItem`.item_name LIKE %(search)s OR `tabItem`.name IN (SELECT parent FROM `tabItem Barcode` WHERE barcode = %(exact_search)s) OR `tabItem`.name IN (SELECT parent FROM `tabItem Barcode` WHERE barcode LIKE %(search)s))")
             params["search"] = f"%{search_value}%"
+            params["exact_search"] = search_value
 
-        # Only return items that have stock in the selected warehouse
-        where_conditions.append("COALESCE(`tabBin`.actual_qty, 0) > 0")
+        # Only return items that have stock (unless include_zero_stock is True for barcode scans)
+        if not include_zero_stock:
+            where_conditions.append("COALESCE(`tabBin`.actual_qty, 0) > 0")
+
         where_clause = " AND ".join(where_conditions)
 
         # Single optimized query
@@ -97,7 +102,8 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
 
     except Exception as e:
         try:
-            frappe.log_error(title="api.item.get_items", message={"fn": "get_items", "error": str(e)})
+            frappe.log_error(title="api.item.get_items", message={
+                             "fn": "get_items", "error": str(e)})
         except Exception:
             pass
         return []
@@ -159,10 +165,12 @@ def _check_scale_barcode(profile, barcode):
     # Extract item_code and weight
     prefix_len = len(prefix)
     item_code = barcode[prefix_len:prefix_len + item_len]
-    weight_part = barcode[prefix_len + item_len:prefix_len + item_len + weight_len]
+    weight_part = barcode[prefix_len +
+                          item_len:prefix_len + item_len + weight_len]
 
-    # Get item
-    items = get_items(profile, profile.get("selling_price_list"), search_value=item_code)
+    # Get item using get_items with include_zero_stock=True
+    items = get_items(profile, profile.get("selling_price_list"),
+                      search_value=item_code, include_zero_stock=True)
     if not items:
         return None
 
@@ -198,8 +206,9 @@ def _check_private_barcode(profile, barcode):
     # Extract item_code
     item_code = barcode[len(matched_prefix):len(matched_prefix) + item_len]
 
-    # Get item
-    items = get_items(profile, profile.get("selling_price_list"), search_value=item_code)
+    # Get item using get_items with include_zero_stock=True
+    items = get_items(profile, profile.get("selling_price_list"),
+                      search_value=item_code, include_zero_stock=True)
     if not items:
         return None
 
@@ -210,13 +219,10 @@ def _check_private_barcode(profile, barcode):
 
 def _check_normal_barcode(profile, barcode):
     """Check normal barcode in Item Barcode table."""
-    item_code = frappe.db.get_value("Item Barcode", {"barcode": barcode}, "parent")
+    # Simply use get_items with the barcode value and include_zero_stock=True
+    items = get_items(profile, profile.get("selling_price_list"),
+                      search_value=barcode, include_zero_stock=True)
 
-    if not item_code:
-        return None
-
-    # Get item
-    items = get_items(profile, profile.get("selling_price_list"), search_value=item_code)
     if not items:
         return None
 
