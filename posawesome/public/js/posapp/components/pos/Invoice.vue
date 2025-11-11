@@ -665,7 +665,7 @@
         bottom: 0;
         left: 0;
         right: 0;
-        background: white;
+        background: #c4763d85;
         border-radius: 8px 8px 0 0;
         padding: 8px;
         border: 1px solid #e0e0e0;
