@@ -234,7 +234,8 @@ export default {
         }
       } catch (err) {
         // non-fatal; avoid breaking UI if something unexpected occurs
-        console.warn && console.warn('handleClickOutside error', err);
+        this.showDropdown = false;
+        console.warn('handleClickOutside error', err);
       }
     },
 
