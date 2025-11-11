@@ -64,6 +64,7 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
                 `tabItem`.item_group,
                 `tabItem`.brand,
                 `tabItem`.stock_uom,
+                `tabItem`.image,
                 `tabItem Price`.price_list_rate,
                 `tabItem Price`.price_list_rate as rate,
                 `tabItem Price`.price_list_rate as base_rate,
