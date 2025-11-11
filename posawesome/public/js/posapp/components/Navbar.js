@@ -560,8 +560,7 @@ export default {
         el.style.filter = 'brightness(1.03)';
         el.style.borderColor = 'rgba(0,0,0,0.08)';
       } catch (err) {
-        // non-fatal - avoid console spam in production
-        console.warn && console.warn('badgeMouseEnter error', err);
+        console.warn('badgeMouseEnter error', err);
       }
     },
 
@@ -578,7 +577,7 @@ export default {
           el.style.borderColor = '';
         }
       } catch (err) {
-        console.warn && console.warn('badgeMouseLeave error', err);
+        console.warn('badgeMouseLeave error', err);
       }
     },
   },
