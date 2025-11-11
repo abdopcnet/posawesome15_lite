@@ -12,8 +12,6 @@ app_email = "abdopcnet@gmail.com"
 app_license = "GPLv3"
 
 
-
-
 app_include_js = [
     "posawesome.bundle.js",
 ]
@@ -26,10 +24,8 @@ doctype_js = {
 }
 
 
-
 doc_events = {
     "Sales Invoice": {
         "before_cancel": "posawesome.posawesome.api.before_cancel.before_cancel",
     },
 }
-
