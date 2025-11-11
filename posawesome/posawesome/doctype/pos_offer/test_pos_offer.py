@@ -6,5 +6,6 @@ from __future__ import unicode_literals
 # import frappe
 import unittest
 
+
 class TestPOSOffer(unittest.TestCase):
-	pass
+    pass
