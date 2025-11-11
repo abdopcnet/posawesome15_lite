@@ -4,7 +4,13 @@
   <!-- ITEMS SELECTOR COMPONENT -->
   <!-- =========================================== -->
   <div
-    style="display: flex; flex-direction: column; height: 100%; background: white; overflow: hidden"
+    style="
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: white;
+      overflow: hidden;
+    "
   >
     <!-- =========================================== -->
     <!-- COMPACT HEADER WITH FILTERS AND COUNTERS -->
