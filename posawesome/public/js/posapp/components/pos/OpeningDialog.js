@@ -195,7 +195,10 @@ export default {
           if (r.message) {
             evntBus.emit(EVENT_NAMES.REGISTER_POS_DATA, r.message);
             evntBus.emit(EVENT_NAMES.SET_COMPANY, r.message.company);
-            showMessage(`POS Opening Shift ${r.message.pos_opening_shift.name} Created`, 'success');
+            showMessage(
+              `POS Opening Shift ${r.message.pos_opening_shift.name} Created`,
+              'success',
+            );
             close_opening_dialog();
           } else {
             showMessage('Failed to create opening document', 'error');
