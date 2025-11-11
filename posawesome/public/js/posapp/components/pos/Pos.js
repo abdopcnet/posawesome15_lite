@@ -133,7 +133,9 @@ export default {
           method: API_MAP.POS_OPENING_SHIFT.GET_CURRENT_SHIFT_NAME,
         });
 
-        const pos_opening_shift = shiftResponse.message.success ? shiftResponse.message.data : null;
+        const pos_opening_shift = shiftResponse.message.success
+          ? shiftResponse.message.data
+          : null;
 
         // Update component state
         this.pos_profile = pos_profile;
