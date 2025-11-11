@@ -373,13 +373,14 @@
               <div
                 v-if="item.image"
                 style="
-                  height: 128px;
-                  min-height: 128px;
+                  flex: 1;
+                  min-height: 140px;
                   display: flex;
                   align-items: center;
                   justify-content: center;
                   background: #f5f5f5;
                   border-bottom: 1px solid #e0e0e0;
+                  overflow: hidden;
                 "
               >
                 <img
@@ -392,8 +393,8 @@
               <div
                 v-else
                 style="
-                  height: 128px;
-                  min-height: 128px;
+                  flex: 1;
+                  min-height: 140px;
                   display: flex;
                   align-items: center;
                   justify-content: center;
@@ -410,11 +411,11 @@
               <!-- Item Details -->
               <div
                 style="
-                  padding: 10px 8px;
-                  flex: 1;
+                  padding: 8px;
+                  background: white;
                   display: flex;
                   flex-direction: column;
-                  justify-content: space-between;
+                  gap: 2px;
                 "
               >
                 <div
