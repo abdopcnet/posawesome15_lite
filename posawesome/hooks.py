@@ -33,11 +33,3 @@ doc_events = {
     },
 }
 
-
-
-
-
-fixtures = [
-    {"doctype": "Custom Field", "filters": [["module", "=", "POSAwesome"]]},
-    {"doctype": "Property Setter", "filters": [["module", "=", "POSAwesome"]]},
-]
