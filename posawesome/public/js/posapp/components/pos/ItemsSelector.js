@@ -544,6 +544,11 @@ export default {
     evntBus.on('update_customer', (data) => {
       this.customer = data;
     });
+    evntBus.on('clear_search_fields', () => {
+      this.barcode_search = '';
+      this.debounce_search = '';
+      this.first_search = '';
+    });
   },
 
   // ===== SECTION 6: LIFECYCLE HOOKS =====
@@ -567,6 +572,7 @@ export default {
     evntBus.$off('update_offers_counters');
     evntBus.$off('update_customer_price_list');
     evntBus.$off('update_customer');
+    evntBus.$off('clear_search_fields');
 
     // Remove window listener
     window.removeEventListener('resize', this.scheduleScrollHeightUpdate);
