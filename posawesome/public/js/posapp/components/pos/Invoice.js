@@ -908,10 +908,10 @@ export default {
     },
 
     async process_invoice() {
-      // استخدام get_invoice_doc لبناء المستند الكامل
+      // Use get_invoice_doc to build the complete document
       const doc = this.get_invoice_doc('payment');
 
-      // حساب الإجماليات محلياً
+      // Calculate totals locally
       this.calculateTotalsLocally(doc);
 
       // نسخ الإجماليات إلى invoice_doc للاحتفاظ بها
@@ -935,7 +935,7 @@ export default {
       evntBus.emit('show_loading', { text: 'Loading...', color: 'info' });
 
       try {
-        // التأكد من تحديث الإجماليات محلياً قبل فتح نافذة الدفع
+        // Ensure totals are updated locally before opening payment window
         this.updateInvoiceDocLocally();
 
         const invoice_doc = await this.process_invoice();
@@ -2253,11 +2253,14 @@ export default {
               color: 'success',
             });
 
-            // إعادة تعيين الجلسة بعد الطباعة الناجحة (جميع الحالات: عادي، مرتجع، مرتجع سريع)
+            // Reset session after successful print (all cases: normal, return, quick return)
             this.reset_invoice_session();
-            // إغلاق نافذة الدفع
+
+            // Close payment window
             evntBus.emit('show_payment', 'false');
+
             evntBus.emit('invoice_submitted');
+
             // Clear search fields in ItemsSelector
             evntBus.emit('clear_search_fields');
           } else {
@@ -2348,7 +2351,7 @@ export default {
       this.fetch_customer_details();
     });
     evntBus.on('new_invoice', () => {
-      // في نهج __islocal: فقط إعادة تعيين الجلسة بدون حذف
+      // In __islocal approach: just reset the session without deleting
       this.reset_invoice_session();
       evntBus.emit('show_payment', 'false');
     });
