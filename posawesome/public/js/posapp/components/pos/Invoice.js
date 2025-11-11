@@ -2258,6 +2258,8 @@ export default {
             // إغلاق نافذة الدفع
             evntBus.emit('show_payment', 'false');
             evntBus.emit('invoice_submitted');
+            // Clear search fields in ItemsSelector
+            evntBus.emit('clear_search_fields');
           } else {
             console.error('Invoice.js - Submit failed: No invoice name returned');
             evntBus.emit('show_mesage', {
