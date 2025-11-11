@@ -87,25 +87,11 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
             as_dict=True
         )
 
-        # Minimal diagnostic log
-        try:
-            frappe.log_error(title="api.item.get_items", message={
-                "fn": "get_items",
-                "count": len(items or []),
-                "item_group": item_group,
-                "search_value": search_value,
-                "brand_included": True,
-            })
-        except Exception:
-            pass
         return items
 
     except Exception as e:
-        try:
-            frappe.log_error(title="api.item.get_items", message={
-                             "fn": "get_items", "error": str(e)})
-        except Exception:
-            pass
+        frappe.log_error(title="api.item.get_items", message={
+            "fn": "get_items", "error": str(e)})
         return []
 
 
