@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
+from posawesome.hooks import app_publisher, app_email, app_name, version
 from setuptools import setup, find_packages
 
 # No external dependencies required - frappe and erpnext are managed by bench
 install_requires = []
 
 # get all values from hooks.py
-from posawesome.hooks import app_publisher, app_email, app_name, version
 
 setup(
     name=app_name,
