@@ -62,17 +62,21 @@ def create_customer(
 
         # Check permissions
         if not frappe.has_permission("Customer", "create"):
-            frappe.throw(_("You don't have permission to create customers"), frappe.PermissionError)
+            frappe.throw(
+                _("You don't have permission to create customers"), frappe.PermissionError)
 
         # Check for duplicate customer by name
         if frappe.db.exists("Customer", {"customer_name": customer_name}):
-            frappe.throw(_("Customer with name '{0}' already exists").format(customer_name))
+            frappe.throw(
+                _("Customer with name '{0}' already exists").format(customer_name))
 
         # Check for duplicate by mobile number if provided
         if mobile_no and mobile_no.strip():
-            existing_customer = frappe.db.get_value("Customer", {"mobile_no": mobile_no.strip()}, "name")
+            existing_customer = frappe.db.get_value(
+                "Customer", {"mobile_no": mobile_no.strip()}, "name")
             if existing_customer:
-                frappe.throw(_("Customer with mobile number '{0}' already exists: {1}").format(mobile_no, existing_customer))
+                frappe.throw(_("Customer with mobile number '{0}' already exists: {1}").format(
+                    mobile_no, existing_customer))
 
         # Process birthday date
         formatted_birthday = None
@@ -256,7 +260,8 @@ def get_customer(customer_id):
     except Exception as e:
         frappe.logger().error(f"Error in get_customer: {str(e)}")
         frappe.logger().error(frappe.get_traceback())
-        frappe.throw(_("Error retrieving customer information: {0}").format(str(e)))
+        frappe.throw(
+            _("Error retrieving customer information: {0}").format(str(e)))
 
 
 @frappe.whitelist()
@@ -280,7 +285,6 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
         limit = min(int(limit or 50), 200)  # Cap at 200 for performance
         offset = int(offset or 0)
 
-
         # Base query filters
         query_filters = {
             "disabled": 0  # Only active customers
@@ -295,7 +299,8 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
                 # Handle both POS Profile name and JSON data
                 if isinstance(pos_profile, str) and not pos_profile.startswith('{'):
                     # It's a POS Profile name - get the document
-                    profile_doc = frappe.get_cached_doc("POS Profile", pos_profile)
+                    profile_doc = frappe.get_cached_doc(
+                        "POS Profile", pos_profile)
                     if hasattr(profile_doc, 'customer_group') and profile_doc.customer_group:
                         query_filters["customer_group"] = profile_doc.customer_group
                 else:
@@ -305,10 +310,12 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
                         customer_groups = []
                         for cg_data in pos_profile_data.get("customer_groups", []):
                             if cg_data.get("customer_group"):
-                                customer_groups.append(cg_data.get("customer_group"))
+                                customer_groups.append(
+                                    cg_data.get("customer_group"))
 
                         if customer_groups:
-                            query_filters["customer_group"] = ["in", customer_groups]
+                            query_filters["customer_group"] = [
+                                "in", customer_groups]
             except Exception as profile_error:
                 # Silent fallback for POS profile processing
                 pass
@@ -319,9 +326,12 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
             search_term = search_term.strip()
             # Priority-based search fields (most important first)
             search_filters = [
-                ["customer_name", "like", f"%{search_term}%"],   # Primary search field
-                ["name", "like", f"%{search_term}%"],           # Customer ID search
-                ["mobile_no", "like", f"%{search_term}%"],      # Mobile number search
+                # Primary search field
+                ["customer_name", "like", f"%{search_term}%"],
+                # Customer ID search
+                ["name", "like", f"%{search_term}%"],
+                # Mobile number search
+                ["mobile_no", "like", f"%{search_term}%"],
                 ["email_id", "like", f"%{search_term}%"],       # Email search
                 ["tax_id", "like", f"%{search_term}%"]          # Tax ID search
             ]
@@ -390,15 +400,18 @@ def get_customers_count(search_term="", pos_profile=None, filters=None):
         if pos_profile:
             try:
                 if isinstance(pos_profile, str) and not pos_profile.startswith('{'):
-                    profile_doc = frappe.get_cached_doc("POS Profile", pos_profile)
+                    profile_doc = frappe.get_cached_doc(
+                        "POS Profile", pos_profile)
                     if hasattr(profile_doc, 'customer_group') and profile_doc.customer_group:
                         query_filters["customer_group"] = profile_doc.customer_group
                 else:
                     pos_profile_data = frappe.parse_json(pos_profile)
                     if pos_profile_data.get("customer_groups"):
-                        customer_groups = [cg.get("customer_group") for cg in pos_profile_data.get("customer_groups", [])]
+                        customer_groups = [
+                            cg.get("customer_group") for cg in pos_profile_data.get("customer_groups", [])]
                         if customer_groups:
-                            query_filters["customer_group"] = ["in", customer_groups]
+                            query_filters["customer_group"] = [
+                                "in", customer_groups]
             except:
                 pass
 
@@ -462,7 +475,8 @@ def get_many_customer_addresses(customer_id):
         return addresses
 
     except Exception as e:
-        frappe.logger().error(f"Error in get_many_customer_addresses: {str(e)}")
+        frappe.logger().error(
+            f"Error in get_many_customer_addresses: {str(e)}")
         frappe.throw(_("Error retrieving addresses: {0}").format(str(e)))
 
 
@@ -518,7 +532,8 @@ def update_customer(
 
         # Check permissions
         if not frappe.has_permission("Customer", "write", customer_id):
-            frappe.throw(_("You don't have permission to update this customer"), frappe.PermissionError)
+            frappe.throw(
+                _("You don't have permission to update this customer"), frappe.PermissionError)
 
         # Get the customer document
         customer_doc = frappe.get_doc("Customer", customer_id)
@@ -530,9 +545,11 @@ def update_customer(
         if customer_name is not None and customer_name.strip():
             new_name = customer_name.strip()
             # Check for duplicate customer name (excluding current customer)
-            existing = frappe.db.get_value("Customer", {"customer_name": new_name, "name": ["!=", customer_id]}, "name")
+            existing = frappe.db.get_value(
+                "Customer", {"customer_name": new_name, "name": ["!=", customer_id]}, "name")
             if existing:
-                frappe.throw(_("Customer with name '{0}' already exists: {1}").format(new_name, existing))
+                frappe.throw(_("Customer with name '{0}' already exists: {1}").format(
+                    new_name, existing))
             customer_doc.customer_name = new_name
             updated_fields.append("customer_name")
 
@@ -540,9 +557,11 @@ def update_customer(
             mobile_no = mobile_no.strip() if mobile_no else ""
             # Check for duplicate mobile (excluding current customer)
             if mobile_no:
-                existing = frappe.db.get_value("Customer", {"mobile_no": mobile_no, "name": ["!=", customer_id]}, "name")
+                existing = frappe.db.get_value(
+                    "Customer", {"mobile_no": mobile_no, "name": ["!=", customer_id]}, "name")
                 if existing:
-                    frappe.throw(_("Customer with mobile number '{0}' already exists: {1}").format(mobile_no, existing))
+                    frappe.throw(_("Customer with mobile number '{0}' already exists: {1}").format(
+                        mobile_no, existing))
             customer_doc.mobile_no = mobile_no
             updated_fields.append("mobile_no")
 
@@ -561,14 +580,16 @@ def update_customer(
         if customer_group is not None:
             # Validate customer group exists
             if customer_group and not frappe.db.exists("Customer Group", customer_group):
-                frappe.throw(_("Customer Group '{0}' does not exist").format(customer_group))
+                frappe.throw(
+                    _("Customer Group '{0}' does not exist").format(customer_group))
             customer_doc.customer_group = customer_group
             updated_fields.append("customer_group")
 
         if territory is not None:
             # Validate territory exists
             if territory and not frappe.db.exists("Territory", territory):
-                frappe.throw(_("Territory '{0}' does not exist").format(territory))
+                frappe.throw(
+                    _("Territory '{0}' does not exist").format(territory))
             customer_doc.territory = territory
             updated_fields.append("territory")
 
@@ -582,16 +603,19 @@ def update_customer(
 
         # Handle POS-specific fields if they exist
         if birthday is not None and hasattr(customer_doc, 'posa_birthday'):
-            formatted_birthday = _parse_birthday(birthday) if birthday else None
+            formatted_birthday = _parse_birthday(
+                birthday) if birthday else None
             customer_doc.posa_birthday = formatted_birthday
             updated_fields.append("posa_birthday")
 
         if discount_percentage is not None and hasattr(customer_doc, 'posa_discount'):
             try:
-                customer_doc.posa_discount = float(discount_percentage) if discount_percentage else 0
+                customer_doc.posa_discount = float(
+                    discount_percentage) if discount_percentage else 0
                 updated_fields.append("posa_discount")
             except (ValueError, TypeError):
-                frappe.throw(_("Invalid discount percentage: {0}").format(discount_percentage))
+                frappe.throw(_("Invalid discount percentage: {0}").format(
+                    discount_percentage))
 
         # Update any additional fields from kwargs
         for field_name, field_value in kwargs.items():
@@ -633,7 +657,8 @@ def patch_customer(customer_id, **kwargs):
     """
     try:
         # Filter out None values and empty strings for true partial update
-        update_data = {k: v for k, v in kwargs.items() if v is not None and v != ""}
+        update_data = {k: v for k,
+                       v in kwargs.items() if v is not None and v != ""}
 
         if not update_data:
             frappe.throw(_("No fields provided to update"))
@@ -690,8 +715,10 @@ def get_customer_credit(customer_id, company=None):
         result["credit_sources"].extend(advance_credits)
 
         # Calculate totals
-        invoice_total = sum(credit["available_amount"] for credit in invoice_credits)
-        advance_total = sum(credit["available_amount"] for credit in advance_credits)
+        invoice_total = sum(credit["available_amount"]
+                            for credit in invoice_credits)
+        advance_total = sum(credit["available_amount"]
+                            for credit in advance_credits)
 
         result["summary"]["invoice_credits"] = invoice_total
         result["summary"]["advance_credits"] = advance_total
@@ -759,7 +786,8 @@ def get_customer_credit_summary(customer_id, company=None):
             order_by="posting_date desc"
         )
 
-        invoice_credit = sum(abs(inv.get("outstanding_amount", 0)) for inv in invoice_credits)
+        invoice_credit = sum(abs(inv.get("outstanding_amount", 0))
+                             for inv in invoice_credits)
 
         # Get advance credits using ORM (Backend Improvement Policy)
         advance_credit_filters = {
@@ -779,7 +807,8 @@ def get_customer_credit_summary(customer_id, company=None):
             order_by="posting_date desc"
         )
 
-        advance_credit = sum(payment.get("unallocated_amount", 0) for payment in advance_credits)
+        advance_credit = sum(payment.get("unallocated_amount", 0)
+                             for payment in advance_credits)
 
         total_credit = invoice_credit + advance_credit
 
@@ -792,8 +821,10 @@ def get_customer_credit_summary(customer_id, company=None):
         }
 
     except Exception as e:
-        frappe.logger().error(f"Error in get_customer_credit_summary: {str(e)}")
-        frappe.throw(_("Error retrieving customer credit summary: {0}").format(str(e)))
+        frappe.logger().error(
+            f"Error in get_customer_credit_summary: {str(e)}")
+        frappe.throw(
+            _("Error retrieving customer credit summary: {0}").format(str(e)))
 
 
 # =============================================================================
@@ -816,7 +847,8 @@ def _parse_birthday(birthday_input):
     try:
         # Handle JavaScript Date string format (e.g., "Mon Oct 17 2025 00:00:00 GMT+0000")
         if 'GMT' in birthday_input or 'UTC' in birthday_input:
-            match = re.search(r'(\w{3})\s+(\w{3})\s+(\d{1,2})\s+(\d{4})', birthday_input)
+            match = re.search(
+                r'(\w{3})\s+(\w{3})\s+(\d{1,2})\s+(\d{4})', birthday_input)
             if match:
                 day_name, month_name, day, year = match.groups()
                 month_map = {
@@ -880,7 +912,8 @@ def _get_invoice_credits(customer_id, company=None):
     outstanding_invoices = frappe.get_all(
         "Sales Invoice",
         filters=filters,
-        fields=["name", "outstanding_amount", "posting_date", "grand_total", "company"],
+        fields=["name", "outstanding_amount",
+                "posting_date", "grand_total", "company"],
         order_by="posting_date desc"
     )
 
@@ -921,7 +954,8 @@ def _get_advance_credits(customer_id, company=None):
     advances = frappe.get_all(
         "Payment Entry",
         filters=filters,
-        fields=["name", "unallocated_amount", "posting_date", "paid_amount", "company", "mode_of_payment"],
+        fields=["name", "unallocated_amount", "posting_date",
+                "paid_amount", "company", "mode_of_payment"],
         order_by="posting_date desc"
     )
 
