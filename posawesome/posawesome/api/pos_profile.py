@@ -32,7 +32,8 @@ def get_default_payment_from_pos_profile(pos_profile, company):
         # If no default found, use first payment method
         if pos_profile_doc.payments:
             first_payment = pos_profile_doc.payments[0]
-            account = get_payment_account(first_payment.mode_of_payment, company)
+            account = get_payment_account(
+                first_payment.mode_of_payment, company)
             result = {
                 "mode_of_payment": first_payment.mode_of_payment,
                 "account": account.get("account", "")
@@ -52,7 +53,8 @@ def get_opening_dialog_data():
     """
     try:
         data = {}
-        data["companies"] = frappe.get_list("Company", limit_page_length=0, order_by="name")
+        data["companies"] = frappe.get_list(
+            "Company", limit_page_length=0, order_by="name")
 
         data["pos_profiles_data"] = frappe.get_list(
             "POS Profile",
@@ -70,7 +72,8 @@ def get_opening_dialog_data():
         data["payments_method"] = frappe.get_list(
             payment_method_table,
             filters={"parent": ["in", pos_profiles_list]},
-            fields=["default", "mode_of_payment", "allow_in_returns","parent"],
+            fields=["default", "mode_of_payment",
+                    "allow_in_returns", "parent"],
             limit_page_length=0,
             order_by="parent, idx",
             ignore_permissions=True,
