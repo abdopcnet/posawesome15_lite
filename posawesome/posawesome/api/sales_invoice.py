@@ -31,7 +31,8 @@ def delete_invoice(invoice_name):
 
         # Only allow deletion of draft documents
         if doc.docstatus != 0:
-            frappe.throw(_("Cannot delete submitted invoice. Use cancel instead."))
+            frappe.throw(
+                _("Cannot delete submitted invoice. Use cancel instead."))
 
         # Use ERPNext native delete method
         doc.delete()
@@ -76,7 +77,8 @@ def get_invoices_for_return(invoice_name, company):
         invoices = frappe.get_all(
             "Sales Invoice",
             filters=filters,
-            fields=["name", "customer", "grand_total", "outstanding_amount", "posting_date", "currency"],
+            fields=["name", "customer", "grand_total",
+                    "outstanding_amount", "posting_date", "currency"],
             order_by="posting_date desc",
             limit=50
         )
@@ -196,4 +198,5 @@ def create_and_submit_invoice(invoice_doc):
             })
         except Exception:
             pass
-        frappe.throw(_("Error creating and submitting invoice: {0}").format(str(e)))
+        frappe.throw(
+            _("Error creating and submitting invoice: {0}").format(str(e)))
