@@ -7,6 +7,7 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import nowdate, flt
 
+
 class POSOffer(Document):
     def validate(self):
         # Clear non-relevant fields based on offer_type to prevent conflicts
@@ -54,7 +55,8 @@ class POSOffer(Document):
 
         # Validate discount fields
         if self.discount_type == "Discount Percentage" and not self.discount_percentage:
-            frappe.throw("Discount Percentage is required when Discount Type is 'Discount Percentage'")
+            frappe.throw(
+                "Discount Percentage is required when Discount Type is 'Discount Percentage'")
 
         # Validate date range
         if self.valid_from and self.valid_upto:
@@ -64,10 +66,12 @@ class POSOffer(Document):
 
         # Validate offer_type specific fields
         if self.offer_type == "item_code" and not self.item_code:
-            frappe.throw("Item Code is required when Offer Type is 'Item Code'")
+            frappe.throw(
+                "Item Code is required when Offer Type is 'Item Code'")
 
         if self.offer_type == "item_group" and not self.item_group:
-            frappe.throw("Item Group is required when Offer Type is 'Item Group'")
+            frappe.throw(
+                "Item Group is required when Offer Type is 'Item Group'")
 
         if self.offer_type == "brand" and not self.brand:
             frappe.throw("Brand is required when Offer Type is 'Brand'")
@@ -76,7 +80,8 @@ class POSOffer(Document):
             frappe.throw("Customer is required when Offer Type is 'Customer'")
 
         if self.offer_type == "customer_group" and not self.customer_group:
-            frappe.throw("Customer Group is required when Offer Type is 'Customer Group'")
+            frappe.throw(
+                "Customer Group is required when Offer Type is 'Customer Group'")
 
         # Validate no duplicate offers
         self.check_duplicate_offers()
@@ -197,7 +202,8 @@ def get_offers(invoice_data):
             }
 
         # Get all applicable offers
-        applicable_offers = get_applicable_offers_for_invoice_data(invoice_data)
+        applicable_offers = get_applicable_offers_for_invoice_data(
+            invoice_data)
 
         if not applicable_offers:
             return {
@@ -214,7 +220,8 @@ def get_offers(invoice_data):
         # Get existing offers to avoid duplicates
         existing_offers = set()
         if "posa_offers" in updated_invoice and updated_invoice["posa_offers"]:
-            existing_offers = {offer.get("offer_name") for offer in updated_invoice["posa_offers"] if offer.get("offer_name")}
+            existing_offers = {offer.get(
+                "offer_name") for offer in updated_invoice["posa_offers"] if offer.get("offer_name")}
 
         for offer in applicable_offers:
             # Skip if offer is already applied
@@ -328,9 +335,10 @@ def get_applicable_offers_for_invoice_data(invoice_data):
         posting_date = invoice_data.get("posting_date") or nowdate()
 
         # Calculate total quantity
-        total_qty = sum(flt(item.get("qty", 0)) for item in invoice_data.get("items", []))
+        total_qty = sum(flt(item.get("qty", 0))
+                        for item in invoice_data.get("items", []))
         total_amount = sum(flt(item.get("qty", 0)) * flt(item.get("rate", 0))
-                          for item in invoice_data.get("items", []))
+                           for item in invoice_data.get("items", []))
         # Get applicable offers
         offers = frappe.get_all(
             "POS Offer",
@@ -371,7 +379,7 @@ def check_offer_applicable_for_data(offer, invoice_data, total_qty):
         if offer.get('max_qty') and total_qty > flt(offer.max_qty):
             return False
         total_amount = sum(flt(item.get("qty", 0)) * flt(item.get("rate", 0))
-                          for item in invoice_data.get("items", []))
+                           for item in invoice_data.get("items", []))
 
         if offer.get('min_amt') and total_amount < flt(offer.min_amt):
             return False
@@ -458,7 +466,8 @@ def check_customer_group_match(offer, invoice_data):
         return False
 
     try:
-        customer_group = frappe.get_value("Customer", invoice_data.get("customer"), "customer_group")
+        customer_group = frappe.get_value(
+            "Customer", invoice_data.get("customer"), "customer_group")
         return customer_group == offer.customer_group
     except:
         return False
@@ -509,7 +518,8 @@ def apply_discount_percentage_on_grand_total(offer, invoice_data):
                     return False  # Already applied
 
         # Apply discount on grand total
-        invoice_data["additional_discount_percentage"] = flt(discount_percentage)
+        invoice_data["additional_discount_percentage"] = flt(
+            discount_percentage)
 
         # Record the offer
         if offer_name and str(offer_name).strip():
@@ -710,7 +720,8 @@ def apply_offer_to_invoice(doc, offer):
                     # Validate offer_name before appending
                     if offer_data.get("offer_name") and str(offer_data["offer_name"]).strip():
                         # Check if this offer is already in the document
-                        existing_offers = [row.offer_name for row in doc.get("posa_offers", [])]
+                        existing_offers = [
+                            row.offer_name for row in doc.get("posa_offers", [])]
                         if offer_data["offer_name"] not in existing_offers:
                             doc.append("posa_offers", offer_data)
 
