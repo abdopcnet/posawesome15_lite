@@ -48,6 +48,8 @@ EMOJI = {
 }
 
 # Get current date in DD.MM.YYYY format (no leading zeros)
+
+
 def get_version_date():
     """Get current date formatted as version (DD.MM.YYYY, no leading zeros)."""
     now = datetime.now()
@@ -57,6 +59,8 @@ def get_version_date():
     return f"{day}.{month}.{year}"
 
 # Update version in __init__.py
+
+
 def update_version():
     """Update __version__ in posawesome/__init__.py and README.md."""
     base_dir = os.path.dirname(__file__)
@@ -122,6 +126,7 @@ def update_version():
         print(f"✓ Updated README.md version badge to: {new_version}")
 
     return True
+
 
 # Main execution
 if __name__ == "__main__":
