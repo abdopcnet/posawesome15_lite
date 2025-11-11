@@ -18,7 +18,8 @@ class OverAllowanceError(frappe.ValidationError):
 def validate_status(status, options):
     try:
         if status not in options:
-            frappe.throw(_("Status must be one of {0}").format(comma_or(options)))
+            frappe.throw(
+                _("Status must be one of {0}").format(comma_or(options)))
     except Exception as e:
         raise
 
@@ -71,7 +72,8 @@ class StatusUpdater(Document):
                     self.add_comment("Label", _(self.status))
 
                 if update:
-                    self.db_set('status', self.status, update_modified=update_modified)
+                    self.db_set('status', self.status,
+                                update_modified=update_modified)
         except Exception as e:
             raise
 
@@ -88,10 +90,12 @@ class POSOpeningShift(StatusUpdater):
     def validate_pos_profile_and_cashier(self):
         try:
             if self.company != frappe.db.get_value("POS Profile", self.pos_profile, "company"):
-                frappe.throw(_("POS Profile {} does not belongs to company {}".format(self.pos_profile, self.company)))
+                frappe.throw(_("POS Profile {} does not belongs to company {}".format(
+                    self.pos_profile, self.company)))
 
             if not cint(frappe.db.get_value("User", self.user, "enabled")):
-                frappe.throw(_("User {} has been disabled. Please select valid user/cashier".format(self.user)))
+                frappe.throw(
+                    _("User {} has been disabled. Please select valid user/cashier".format(self.user)))
 
             # Verify that the user is registered in POS Profile
             if self.pos_profile and self.user:
@@ -101,7 +105,8 @@ class POSOpeningShift(StatusUpdater):
                 })
 
                 if not user_exists:
-                    frappe.throw(_("User {} is not registered in POS Profile {}. Please select a user registered in the profile".format(self.user, self.pos_profile)))
+                    frappe.throw(_("User {} is not registered in POS Profile {}. Please select a user registered in the profile".format(
+                        self.user, self.pos_profile)))
         except Exception as e:
             raise
 
@@ -131,7 +136,8 @@ class POSOpeningShift(StatusUpdater):
             negative_amounts = 0
 
             for detail in self.balance_details:
-                amount = frappe.utils.flt(detail.amount) if detail.amount else 0
+                amount = frappe.utils.flt(
+                    detail.amount) if detail.amount else 0
                 if amount > 0:
                     total_opening_amount += amount
                 elif amount < 0:
@@ -204,8 +210,10 @@ def check_opening_time_allowed(pos_profile):
         current_dt = frappe.utils.now_datetime()
 
         # Create datetime objects for comparison
-        start_dt = current_dt.replace(hour=start_time.hour, minute=start_time.minute, second=start_time.second, microsecond=start_time.microsecond)
-        end_dt = current_dt.replace(hour=end_time.hour, minute=end_time.minute, second=end_time.second, microsecond=end_time.microsecond)
+        start_dt = current_dt.replace(hour=start_time.hour, minute=start_time.minute,
+                                      second=start_time.second, microsecond=start_time.microsecond)
+        end_dt = current_dt.replace(hour=end_time.hour, minute=end_time.minute,
+                                    second=end_time.second, microsecond=end_time.microsecond)
 
         # If start_time > end_time, assume end_time is next day
         if start_time > end_time:
@@ -279,7 +287,8 @@ def get_current_shift_name():
                 "docstatus": 1,
                 "status": "Open",
             },
-            fields=["name", "company", "period_start_date", "pos_profile", "user"],
+            fields=["name", "company", "period_start_date",
+                    "pos_profile", "user"],
             order_by="period_start_date desc",
             limit=1,
         )
@@ -402,12 +411,14 @@ def update_opening_shift_data(data, pos_profile):
     """
     try:
         data["pos_profile"] = frappe.get_doc("POS Profile", pos_profile)
-        data["company"] = frappe.get_doc("Company", data["pos_profile"].company)
+        data["company"] = frappe.get_doc(
+            "Company", data["pos_profile"].company)
         allow_negative_stock = frappe.get_value(
             "Stock Settings", None, "allow_negative_stock"
         )
         data["stock_settings"] = {}
-        data["stock_settings"].update({"allow_negative_stock": allow_negative_stock})
+        data["stock_settings"].update(
+            {"allow_negative_stock": allow_negative_stock})
     except Exception as e:
         pass
 
