@@ -1,52 +1,48 @@
 {
- "actions": [],
- "creation": "2025-10-24 21:18:00",
- "doctype": "DocType",
- "editable_grid": 1,
- "engine": "InnoDB",
- "field_order": [
-  "offer_name",
-  "offer_type",
-  "discount_percentage"
- ],
- "fields": [
-  {
-   "fieldname": "offer_name",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Offer Name",
-   "options": "POS Offer",
-   "read_only": 1,
-   "reqd": 1
-  },
-  {
-   "fieldname": "offer_type",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Offer Type",
-   "options": "item_code\nitem_group\nbrand\ncustomer\ncustomer_group\ngrand_total",
-   "read_only": 1
-  },
-  {
-   "fieldname": "discount_percentage",
-   "fieldtype": "Percent",
-   "in_list_view": 1,
-   "label": "Discount Percentage",
-   "read_only": 1
-  }
- ],
- "istable": 1,
- "links": [],
- "modified": "2025-10-24 23:06:54.472873",
- "modified_by": "Administrator",
- "module": "POSAwesome",
- "name": "POS Offer Detail",
- "owner": "Administrator",
- "permissions": [],
- "quick_entry": 1,
- "row_format": "Dynamic",
- "sort_field": "modified",
- "sort_order": "DESC",
- "states": [],
- "track_changes": 1
+  "actions": [],
+  "creation": "2025-10-24 21:18:00",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": ["offer_name", "offer_type", "discount_percentage"],
+  "fields": [
+    {
+      "fieldname": "offer_name",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Offer Name",
+      "options": "POS Offer",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "offer_type",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Offer Type",
+      "options": "item_code\nitem_group\nbrand\ncustomer\ncustomer_group\ngrand_total",
+      "read_only": 1
+    },
+    {
+      "fieldname": "discount_percentage",
+      "fieldtype": "Percent",
+      "in_list_view": 1,
+      "label": "Discount Percentage",
+      "read_only": 1
+    }
+  ],
+  "istable": 1,
+  "links": [],
+  "modified": "2025-10-24 23:06:54.472873",
+  "modified_by": "Administrator",
+  "module": "POSAwesome",
+  "name": "POS Offer Detail",
+  "owner": "Administrator",
+  "permissions": [],
+  "quick_entry": 1,
+  "row_format": "Dynamic",
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
 }
