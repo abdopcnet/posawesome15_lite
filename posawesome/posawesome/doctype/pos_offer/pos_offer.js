@@ -26,7 +26,9 @@ frappe.ui.form.on('POS Offer', {
         frappe.throw('Offer Type is required');
       }
       if (frm.doc.discount_type === 'Discount Percentage' && !frm.doc.discount_percentage) {
-        frappe.throw("Discount Percentage is required when Discount Type is 'Discount Percentage'");
+        frappe.throw(
+          "Discount Percentage is required when Discount Type is 'Discount Percentage'",
+        );
       }
     } catch (e) {
       console.error('[ERROR] Exception in validate:', e);
