@@ -44,7 +44,9 @@ export default {
   },
 
   beforeDestroy() {
-    // Clean up event listener
-    evntBus.$off('open_new_address');
+    // Clean up event listener (use .off if available)
+    if (evntBus && typeof evntBus.off === 'function') {
+      evntBus.off('open_new_address');
+    }
   },
 };
