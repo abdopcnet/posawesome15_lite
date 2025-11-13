@@ -62,6 +62,7 @@ export default {
       quick_return_value: false,
 
       isUpdatingTotals: false,
+      isPrinting: false, // Flag to prevent double-click on print button
       // Simple State Management
       _itemOperationTimer: null,
       _updatingFromAPI: false,
@@ -2137,8 +2138,9 @@ export default {
     },
 
     printInvoice() {
-      if (!this.invoice_doc) return;
+      if (!this.invoice_doc || this.isPrinting) return;
 
+      this.isPrinting = true; // Disable print button
       evntBus.emit("show_loading", { text: "Processing...", color: "info" });
 
       // Build invoice_doc locally as __islocal (ERPNext native approach)
@@ -2152,6 +2154,7 @@ export default {
       if (!this.hasValidPayments(doc)) {
         evntBus.emit("show_payment", "true");
         evntBus.emit("hide_loading");
+        this.isPrinting = false; // Re-enable print button
         return;
       }
 
@@ -2163,6 +2166,7 @@ export default {
         },
         callback: (r) => {
           evntBus.emit("hide_loading");
+          this.isPrinting = false; // Re-enable print button
 
           if (r.message?.name) {
             const print_format = this.pos_profile?.print_format;
@@ -2201,6 +2205,7 @@ export default {
         error: (err) => {
           console.error("Invoice.js - Server error:", err?.message || "Unknown error");
           evntBus.emit("hide_loading");
+          this.isPrinting = false; // Re-enable print button on error
           evntBus.emit("show_mesage", {
             text: err?.message || "Failed to submit",
             color: "error",

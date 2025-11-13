@@ -4,16 +4,7 @@
     <!-- =========================================== -->
     <!-- INVOICE CONTAINER -->
     <!-- =========================================== -->
-    <div
-      style="
-        position: relative;
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
-        flex-grow: 1;
-        height: 100%;
-      "
-    >
+    <div style="position: relative; min-height: 0; display: flex; flex-direction: column; flex-grow: 1; height: 100%">
       <!-- =========================================== -->
       <!-- CUSTOMER SECTION -->
       <!-- =========================================== -->
@@ -56,11 +47,7 @@
                 v-for="header in dynamicHeaders"
                 :key="header.key"
                 style="
-                  background: linear-gradient(
-                    180deg,
-                    rgba(128, 166, 255, 1) 0%,
-                    rgba(128, 166, 255, 0.25) 50%
-                  );
+                  background: linear-gradient(180deg, rgba(128, 166, 255, 1) 0%, rgba(128, 166, 255, 0.25) 50%);
                   border-bottom: 1px solid #e0e0e0;
                   padding: 8px 2px;
                   font-weight: 600;
@@ -95,10 +82,7 @@
               "
               :style="{
                 borderBottom: '1px solid #f1f1f1',
-                borderLeft:
-                  item.discount_percentage > 0 || item.posa_offer_applied
-                    ? '3px solid #ff9800'
-                    : 'none',
+                borderLeft: item.discount_percentage > 0 || item.posa_offer_applied ? '3px solid #ff9800' : 'none',
               }"
             >
               <!-- ITEM NAME COLUMN -->
@@ -184,13 +168,7 @@
                     :disabled="!(item.qty && Math.abs(item.qty) > 0)"
                     type="button"
                   >
-                    <span
-                      style="
-                        /* font-size: 0.85rem; */
-                        font-size: 0.75rem;
-                        font-weight: 700;
-                        line-height: 1;
-                      "
+                    <span style="/* font-size: 0.85rem; */ font-size: 0.75rem; font-weight: 700; line-height: 1"
                       >−</span
                     >
                   </button>
@@ -241,13 +219,7 @@
                     @click="increaseQuantity(item)"
                     type="button"
                   >
-                    <span
-                      style="
-                        /* font-size: 0.85rem; */
-                        font-size: 0.75rem;
-                        font-weight: 700;
-                        line-height: 1;
-                      "
+                    <span style="/* font-size: 0.85rem; */ font-size: 0.75rem; font-weight: 700; line-height: 1"
                       >+</span
                     >
                   </button>
@@ -343,8 +315,7 @@
                     maxWidth: '65px',
                     justifyContent: 'center',
                     position: 'relative',
-                    border:
-                      flt(item.rate) !== flt(item.price_list_rate) ? '1px solid #ff9800' : 'none',
+                    border: flt(item.rate) !== flt(item.price_list_rate) ? '1px solid #ff9800' : 'none',
                   }"
                 >
                   <input
@@ -355,18 +326,12 @@
                     @blur="handleRateBlur(item, $event)"
                     :disabled="
                       Boolean(
-                        item.posa_is_offer ||
-                          item.posa_is_replace ||
-                          item.posa_offer_applied ||
-                          invoice_doc?.is_return,
+                        item.posa_is_offer || item.posa_is_replace || item.posa_offer_applied || invoice_doc?.is_return
                       )
                     "
                     :style="
                       Boolean(
-                        item.posa_is_offer ||
-                          item.posa_is_replace ||
-                          item.posa_offer_applied ||
-                          invoice_doc?.is_return,
+                        item.posa_is_offer || item.posa_is_replace || item.posa_offer_applied || invoice_doc?.is_return
                       )
                         ? 'flex: 1; width: 100%; border: none;background: #f5f5f5; color: #9e9e9e; font-size: 0.7rem; padding: 2px 2px; border-radius: 3px; outline: none; cursor: not-allowed; max-width: 45px;'
                         : 'flex: 1; width: 100%; border: none; background: transparent; font-size: 0.75rem; font-weight: 700; color: #f57c00; padding: 0; outline: none; text-align: right; max-width: 45px;'
@@ -440,7 +405,7 @@
                           item.posa_is_replace ||
                           item.posa_offer_applied ||
                           !pos_profile?.posa_allow_user_to_edit_item_discount ||
-                          invoice_doc?.is_return,
+                          invoice_doc?.is_return
                       )
                     "
                     :style="
@@ -449,7 +414,7 @@
                           item.posa_is_replace ||
                           item.posa_offer_applied ||
                           !pos_profile?.posa_allow_user_to_edit_item_discount ||
-                          invoice_doc?.is_return,
+                          invoice_doc?.is_return
                       )
                         ? 'flex: 1; width: 100%; border: none; background: #f5f5f5; color: #9e9e9e; font-size: 0.75rem; padding: 2px 4px; border-radius: 3px; outline: none; cursor: not-allowed; text-align: right'
                         : 'flex: 1; width: 100%; border: none; background: transparent; font-size: 0.75rem; font-weight: 700; color: #f57c00; padding: 0; outline: none; text-align: right'
@@ -462,13 +427,7 @@
                   />
 
                   <span
-                    style="
-                      font-size: 0.65rem;
-                      font-weight: 700;
-                      color: #f57c00;
-                      white-space: nowrap;
-                      flex-shrink: 0;
-                    "
+                    style="font-size: 0.65rem; font-weight: 700; color: #f57c00; white-space: nowrap; flex-shrink: 0"
                     >%</span
                   >
 
@@ -589,11 +548,7 @@
                       text-overflow: ellipsis;
                     "
                   >
-                    {{
-                      formatCurrency(
-                        flt(item.qty, float_precision) * flt(item.rate, currency_precision),
-                      )
-                    }}
+                    {{ formatCurrency(flt(item.qty, float_precision) * flt(item.rate, currency_precision)) }}
                   </span>
                 </div>
               </td>
@@ -622,16 +577,14 @@
                       if (!$event.currentTarget.disabled) {
                         $event.currentTarget.style.transform = 'translateY(-2px)';
                         $event.currentTarget.style.boxShadow = '0 10px 30px rgba(198,40,40,0.12)';
-                        $event.currentTarget.style.background =
-                          'linear-gradient(180deg,#ffebee,#ffcdd2)';
+                        $event.currentTarget.style.background = 'linear-gradient(180deg,#ffebee,#ffcdd2)';
                       }
                     "
                     @mouseleave="
                       if (!$event.currentTarget.disabled) {
                         $event.currentTarget.style.transform = '';
                         $event.currentTarget.style.boxShadow = '';
-                        $event.currentTarget.style.background =
-                          'linear-gradient(180deg,#fff5f5,#ffffff)';
+                        $event.currentTarget.style.background = 'linear-gradient(180deg,#fff5f5,#ffffff)';
                       }
                     "
                     @click.stop="remove_item(item)"
@@ -639,13 +592,7 @@
                   >
                     <i
                       class="mdi mdi-delete"
-                      style="
-                        font-size: 18px;
-                        color: #b71c1c;
-                        line-height: 1;
-                        display: block;
-                        pointer-events: none;
-                      "
+                      style="font-size: 18px; color: #b71c1c; line-height: 1; display: block; pointer-events: none"
                     ></i>
                   </button>
                 </div>
@@ -709,7 +656,7 @@
               text-transform: uppercase;
               letter-spacing: 0.3px;
             "
-            >{{ __('Total_Qty') }}</label
+            >{{ __("Total_Qty") }}</label
           >
           <div
             style="
@@ -732,9 +679,7 @@
             display: 'flex',
             flexDirection: 'column',
             padding: '4px 6px',
-            background: pos_profile?.posa_allow_user_to_edit_additional_discount
-              ? 'white'
-              : '#f5f5f5',
+            background: pos_profile?.posa_allow_user_to_edit_additional_discount ? 'white' : '#f5f5f5',
             borderRadius: '3px',
             border: pos_profile?.posa_allow_user_to_edit_additional_discount
               ? '1px solid #e0e0e0'
@@ -754,7 +699,7 @@
               textTransform: 'uppercase',
               letterSpacing: '0.3px',
             }"
-            >{{ __('Invoice_discount') }}</label
+            >{{ __("Invoice_discount") }}</label
           >
           <input
             type="number"
@@ -772,14 +717,10 @@
               background: 'transparent',
               fontSize: '0.9rem',
               fontWeight: '700',
-              color: pos_profile?.posa_allow_user_to_edit_additional_discount
-                ? '#1976d2'
-                : '#9e9e9e',
+              color: pos_profile?.posa_allow_user_to_edit_additional_discount ? '#1976d2' : '#9e9e9e',
               padding: '0',
               textAlign: 'left',
-              cursor: pos_profile?.posa_allow_user_to_edit_additional_discount
-                ? 'text'
-                : 'not-allowed',
+              cursor: pos_profile?.posa_allow_user_to_edit_additional_discount ? 'text' : 'not-allowed',
             }"
             placeholder="0.00"
             :disabled="!pos_profile?.posa_allow_user_to_edit_additional_discount"
@@ -827,7 +768,7 @@
               text-transform: uppercase;
               letter-spacing: 0.3px;
             "
-            >{{ __('items_discount') }}</label
+            >{{ __("items_discount") }}</label
           >
           <div
             style="
@@ -840,8 +781,7 @@
               line-height: 1.2;
             "
           >
-            {{ currencySymbol(pos_profile?.currency)
-            }}{{ formatCurrency(invoice_doc?.posa_item_discount_total || 0) }}
+            {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(invoice_doc?.posa_item_discount_total || 0) }}
           </div>
         </div>
 
@@ -868,7 +808,7 @@
               text-transform: uppercase;
               letter-spacing: 0.3px;
             "
-            >{{ __('list_price_amounts') }}</label
+            >{{ __("list_price_amounts") }}</label
           >
           <div
             style="
@@ -881,8 +821,7 @@
               line-height: 1.2;
             "
           >
-            {{ currencySymbol(pos_profile?.currency)
-            }}{{ formatCurrency(invoice_doc?.total || 0) }}
+            {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(invoice_doc?.total || 0) }}
           </div>
         </div>
 
@@ -909,7 +848,7 @@
               text-transform: uppercase;
               letter-spacing: 0.3px;
             "
-            >{{ __('net_total') }}</label
+            >{{ __("net_total") }}</label
           >
           <div
             style="
@@ -922,8 +861,7 @@
               line-height: 1.2;
             "
           >
-            {{ currencySymbol(pos_profile?.currency)
-            }}{{ formatCurrency(invoice_doc?.net_total || 0) }}
+            {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(invoice_doc?.net_total || 0) }}
           </div>
         </div>
 
@@ -950,7 +888,7 @@
               text-transform: uppercase;
               letter-spacing: 0.3px;
             "
-            >{{ __('Tax') }}</label
+            >{{ __("Tax") }}</label
           >
           <div
             style="
@@ -990,7 +928,7 @@
               text-transform: uppercase;
               letter-spacing: 0.3px;
             "
-            >{{ __('grand_total') }}</label
+            >{{ __("grand_total") }}</label
           >
           <div
             style="
@@ -1003,8 +941,7 @@
               line-height: 1.2;
             "
           >
-            {{ currencySymbol(pos_profile?.currency)
-            }}{{ formatCurrency(invoice_doc?.grand_total || 0) }}
+            {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(invoice_doc?.grand_total || 0) }}
           </div>
         </div>
       </div>
@@ -1025,7 +962,7 @@
       >
         <!-- Print Button -->
         <button
-          :disabled="!hasItems"
+          :disabled="!hasItems || isPrinting"
           @click="printInvoice"
           :title="__('Print invoice')"
           style="
@@ -1045,14 +982,12 @@
             transition: all 0.2s;
           "
           :style="
-            !hasItems
-              ? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6'
-              : ''
+            !hasItems || isPrinting ? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6' : ''
           "
           type="button"
         >
           <i class="mdi mdi-printer" style="font-size: 16px"></i>
-          <span>{{ __('Print') }}</span>
+          <span>{{ isPrinting ? __("Printing...") : __("Print") }}</span>
         </button>
 
         <!-- Pay Button -->
@@ -1083,7 +1018,7 @@
           type="button"
         >
           <i class="mdi mdi-cash-multiple" style="font-size: 16px"></i>
-          <span>{{ __('Pay') }}</span>
+          <span>{{ __("Pay") }}</span>
         </button>
 
         <!-- Return Button -->
@@ -1114,7 +1049,7 @@
           type="button"
         >
           <i class="mdi mdi-keyboard-return" style="font-size: 16px"></i>
-          <span>{{ __('Return') }}</span>
+          <span>{{ __("Return") }}</span>
         </button>
 
         <!-- Quick Return Button -->
@@ -1145,7 +1080,7 @@
           type="button"
         >
           <i class="mdi mdi-flash" style="font-size: 16px"></i>
-          <span>{{ __('Quick_Return') }}</span>
+          <span>{{ __("Quick_Return") }}</span>
         </button>
 
         <!-- Cancel Button -->
@@ -1170,7 +1105,7 @@
           type="button"
         >
           <i class="mdi mdi-close-circle" style="font-size: 16px"></i>
-          <span>{{ __('Cancel') }}</span>
+          <span>{{ __("Cancel") }}</span>
         </button>
       </div>
     </div>
