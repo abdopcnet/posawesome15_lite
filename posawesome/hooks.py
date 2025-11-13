@@ -20,7 +20,7 @@ app_include_js = [
 doctype_js = {
     "POS Profile": "public/js/pos_profile.js",
     "Sales Invoice": "public/js/invoice.js",
-    "sales invoice": "public/js/check_and_set_pos_opening_shift.js",
+    "Sales Invoice": "public/js/check_and_set_pos_opening_shift.js",
     "Company": "public/js/company.js",
 
 }
