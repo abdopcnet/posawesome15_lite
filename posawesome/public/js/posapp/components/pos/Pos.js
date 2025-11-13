@@ -146,7 +146,6 @@ export default {
           pos_profile: pos_profile,
           pos_opening_shift: pos_opening_shift,
           company: { name: pos_profile.company },
-          stock_settings: { allow_negative_stock: 0 },
         };
 
         // Load offers for this profile
