@@ -15,6 +15,11 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
     Search items by name, code, or barcode.
     Uses LIKE search for flexibility.
     
+    Item Group filtering logic:
+    - If item_group specified (not "ALL"): Shows items from that specific group
+    - If item_group = "ALL" and POS Profile has item_groups configured: Shows items from allowed groups only
+    - If item_group = "ALL" and NO item_groups in POS Profile: Shows all items
+    
     Stock filtering logic:
     - If POS Profile.posa_fetch_zero_qty = 1: Shows items with zero stock
     - If POS Profile.posa_fetch_zero_qty = 0: Only shows items with stock > 0
@@ -51,10 +56,27 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
             "warehouse": warehouse
         }
 
-        # Add item_group filter
+        # Get allowed item groups from POS Profile
+        allowed_item_groups = []
+        if pos_profile.get("item_groups"):
+            # POS Profile has item_groups child table
+            for ig in pos_profile.get("item_groups"):
+                if ig.get("item_group"):
+                    allowed_item_groups.append(ig.get("item_group"))
+        
+        # Add item_group filter based on selection and allowed groups
         if item_group and item_group.strip() and item_group != "ALL":
+            # User selected specific group - filter by it
             where_conditions.append("`tabItem`.item_group LIKE %(item_group)s")
             params["item_group"] = f"%{item_group}%"
+        elif allowed_item_groups:
+            # item_group = "ALL" but we have allowed groups in POS Profile
+            # Show only items from allowed groups
+            placeholders = ", ".join([f"%(item_group_{i})s" for i in range(len(allowed_item_groups))])
+            where_conditions.append(f"`tabItem`.item_group IN ({placeholders})")
+            for i, group in enumerate(allowed_item_groups):
+                params[f"item_group_{i}"] = group
+        # else: No allowed groups configured - show all items (no filter)
 
         # Add search filter - enhanced to search by exact barcode match
         if search_value:
