@@ -14,7 +14,15 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
     """
     Search items by name, code, or barcode.
     Uses LIKE search for flexibility.
-    include_zero_stock: Set True for barcode lookups to allow items with no stock
+    
+    Stock filtering logic:
+    - If POS Profile.posa_fetch_zero_qty = 1: Shows items with zero stock
+    - If POS Profile.posa_fetch_zero_qty = 0: Only shows items with stock > 0
+    - include_zero_stock: Override for barcode lookups to always allow zero stock items
+    
+    Price filtering logic:
+    - If POS Profile.posa_hide_zero_price_items = 1: Only shows items with price > 0
+    - If POS Profile.posa_hide_zero_price_items = 0 or NULL: Shows all items regardless of price
     """
     try:
         if isinstance(pos_profile, str):
@@ -24,6 +32,12 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
             price_list = pos_profile.get("selling_price_list")
 
         warehouse = pos_profile.get("warehouse", "")
+        
+        # Check POS Profile setting for fetching zero qty items
+        posa_fetch_zero_qty = pos_profile.get("posa_fetch_zero_qty", 0)
+        
+        # Check POS Profile setting for hiding zero price items
+        posa_hide_zero_price_items = pos_profile.get("posa_hide_zero_price_items", 0)
 
         # Build WHERE conditions
         where_conditions = [
@@ -49,9 +63,16 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
             params["search"] = f"%{search_value}%"
             params["exact_search"] = search_value
 
-        # Only return items that have stock (unless include_zero_stock is True for barcode scans)
-        if not include_zero_stock:
+        # Filter stock based on POS Profile setting and include_zero_stock parameter
+        # If posa_fetch_zero_qty = 1, allow zero stock items
+        # If posa_fetch_zero_qty = 0, only show items with stock (unless include_zero_stock is True for barcode scans)
+        if not posa_fetch_zero_qty and not include_zero_stock:
             where_conditions.append("COALESCE(`tabBin`.actual_qty, 0) > 0")
+        
+        # Filter items with zero price based on POS Profile setting
+        # If posa_hide_zero_price_items = 1, only show items with price > 0
+        if posa_hide_zero_price_items:
+            where_conditions.append("`tabItem Price`.price_list_rate IS NOT NULL AND `tabItem Price`.price_list_rate > 0")
 
         where_clause = " AND ".join(where_conditions)
 
