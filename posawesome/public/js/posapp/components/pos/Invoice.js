@@ -45,7 +45,6 @@ export default {
 
       pos_profile: null,
       pos_opening_shift: null,
-      stock_settings: null,
       invoice_doc: null,
       return_doc: null,
       customer: '',
@@ -2330,7 +2329,6 @@ export default {
       this.pos_profile = data.pos_profile;
       this.setCustomer(data.pos_profile?.customer);
       this.pos_opening_shift = data.pos_opening_shift;
-      this.stock_settings = data.stock_settings;
       this.float_precision = frappe.defaults.get_default('float_precision') || 2;
       this.currency_precision = frappe.defaults.get_default('currency_precision') || 2;
       this.invoiceType = 'Invoice';
