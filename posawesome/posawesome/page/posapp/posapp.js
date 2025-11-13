@@ -716,7 +716,7 @@ const posaTranslations = {
 // =============================================================================
 // LANGUAGE SELECTION - Change this value to switch languages
 // =============================================================================
-const posa_language = 'en'; // Options: 'ar' (Arabic) or 'en' (English)
+const posa_language = 'ar'; // Options: 'ar' (Arabic) or 'en' (English)
 
 // =============================================================================
 // TRANSLATION FUNCTION
