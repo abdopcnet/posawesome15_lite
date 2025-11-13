@@ -290,11 +290,13 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
             "disabled": 0  # Only active customers
         }
 
-        # Additional filters can be added here if needed in future
-        # For now, we only use the base filters and pos_profile filtering
-
-        # Apply POS Profile filtering
-        if pos_profile:
+        # Apply POS Profile customer group filtering ONLY when searching
+        # When no search term, we want to show all customers including the default customer
+        apply_customer_group_filter = False
+        
+        if pos_profile and search_term and search_term.strip():
+            # Only apply customer group filter when actively searching
+            apply_customer_group_filter = True
             try:
                 # Handle both POS Profile name and JSON data
                 if isinstance(pos_profile, str) and not pos_profile.startswith('{'):
@@ -342,6 +344,8 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
             "customer_group", "territory", "disabled"
         ]
 
+        default_customer_name = _resolve_default_customer_name(pos_profile)
+
         # Handle search term with ORM-only approach (POSNext style)
         if search_filters:
             # Use Frappe's or_filters parameter for OR search
@@ -354,8 +358,14 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
                 start=offset,
                 order_by="customer_name asc"
             )
+            
+            if apply_customer_group_filter:
+                customers = _ensure_default_customer_in_results(
+                    customers, default_customer_name, fields_to_fetch
+                )
         else:
-            # Simple query without search terms
+            # Simple query without search terms - no need to add default customer separately
+            # It will already be in the results since no customer_group filter is applied
             customers = frappe.get_all(
                 "Customer",
                 filters=query_filters,
@@ -364,6 +374,10 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
                 start=offset,
                 order_by="customer_name asc"
             )
+
+        customers = _ensure_default_customer_in_results(
+            customers, default_customer_name, fields_to_fetch
+        )
 
         return customers
 
@@ -974,3 +988,69 @@ def _get_advance_credits(customer_id, company=None):
         })
 
     return advance_credits
+
+
+def _resolve_default_customer_name(pos_profile):
+    """
+    Determine the default customer linked to the provided POS Profile input.
+
+    Args:
+        pos_profile (str|dict): POS Profile identifier or serialized data
+
+    Returns:
+        str|None: Default customer name if configured
+    """
+    if not pos_profile:
+        return None
+
+    try:
+        if isinstance(pos_profile, str) and not pos_profile.startswith('{'):
+            profile_doc = frappe.get_cached_doc("POS Profile", pos_profile)
+            return getattr(profile_doc, "customer", None)
+
+        pos_profile_data = frappe.parse_json(pos_profile)
+        if isinstance(pos_profile_data, dict):
+            return pos_profile_data.get("customer")
+    except Exception:
+        # Silent fallback - default customer remains None
+        return None
+
+    return None
+
+
+def _ensure_default_customer_in_results(customers, default_customer_name, fields_to_fetch):
+    """
+    Ensure the configured default customer is present in the provided customer list.
+
+    Args:
+        customers (list): Current customer list (mutated when default customer added)
+        default_customer_name (str): Customer name to include if missing
+        fields_to_fetch (list): Fields to retrieve when fetching the default customer
+
+    Returns:
+        list: Updated customer list with default customer prepended when needed
+    """
+    if not default_customer_name:
+        return customers
+
+    try:
+        if any(c.get("name") == default_customer_name for c in customers):
+            return customers
+
+        default_customer_data = frappe.get_all(
+            "Customer",
+            filters={
+                "name": default_customer_name,
+                "disabled": 0
+            },
+            fields=fields_to_fetch,
+            limit=1
+        )
+
+        if default_customer_data:
+            customers.insert(0, default_customer_data[0])
+    except Exception:
+        # Silent fallback - return the original list unchanged
+        return customers
+
+    return customers
