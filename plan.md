@@ -1,7 +1,8 @@
-## Default Customer Lookup Issue
+## POS Boot & Return Fixes
 
-1. Inspect frontend logic that loads default customer data to see how the list of customers is cached and validated.
-2. Review backend methods such as `posawesome.posawesome.api.customer.get_customer` and related helpers to confirm expected payload structure.
-3. Determine why the configured default customer (`عميل نقدي الجموم`) is missing from the loaded customer set during POS initialization.
-4. Implement a fix to ensure the default customer is available (or gracefully fetched) before the POS proceeds.
-5. Test the POS boot flow to verify the default customer loads without console errors and document any remaining concerns.
+1. Reproduce the POS boot flow to inspect duplicated requests and confirm the default customer fix holds.
+2. Re-run the return invoice path to verify `sales_invoice_item`/`si_detail` linkage and collect any remaining warnings.
+3. Patch `get_invoice_items_minimal` and `createReturnInvoiceDoc` so return metadata (warehouse, stock_qty, link fields) is always present.
+4. Update the frontend API mapper to point item calls at `posawesome.posawesome.api.item` (singular) and remove references to the non-existent `items` module.
+5. Validate the POS launch and return submission again, ensuring both the missing-module error and previous warnings are resolved.
+6. Document open edge cases (negative stock scenario, quick returns) and any follow-up actions.
