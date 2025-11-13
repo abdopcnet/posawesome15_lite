@@ -1,9 +1,7 @@
-## POS Search Field Focus Investigation
+## Default Customer Lookup Issue
 
-1. Review `ItemsSelector` component logic around clearing and focusing inputs after invoice submission.
-2. Trace event flow from invoice submission (`Invoice.js`) to ensure no UI locks or overlays remain.
-3. Inspect any global styles or body-level mutations triggered post-print that could block pointer events in Chrome.
-4. Formulate hypotheses for Chrome-specific behavior (e.g., stale pointer-events, focus lock, hidden overlay).
-5. Validate findings and implement targeted fix.
-6. Test in Chrome and Firefox; document outcome and any remaining caveats.
-
+1. Inspect frontend logic that loads default customer data to see how the list of customers is cached and validated.
+2. Review backend methods such as `posawesome.posawesome.api.customer.get_customer` and related helpers to confirm expected payload structure.
+3. Determine why the configured default customer (`عميل نقدي الجموم`) is missing from the loaded customer set during POS initialization.
+4. Implement a fix to ensure the default customer is available (or gracefully fetched) before the POS proceeds.
+5. Test the POS boot flow to verify the default customer loads without console errors and document any remaining concerns.
