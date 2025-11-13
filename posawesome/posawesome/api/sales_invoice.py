@@ -59,32 +59,66 @@ def delete_invoice(invoice_name):
 # ===== GET RETURN OPERATIONS =====
 
 @frappe.whitelist()
-def get_invoices_for_return(invoice_name, company):
+def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
     """
     Search invoices for return operations
+
+    Filters:
+    - Only POS invoices (is_pos=1)
+    - Only from current POS profile
+    - Only submitted invoices (docstatus=1)
+    - Not already returns (is_return=0)
+    - Not already returned (status != 'Credit Note Issued')
+    - Only paid or partly paid (outstanding_amount < grand_total)
     """
     try:
-        # Search for invoices that can be returned
+        # Build filters
         filters = {
-            "company": company,
             "docstatus": 1,  # Only submitted invoices
             "is_return": 0,  # Not already a return
+            "is_pos": 1,     # Only POS invoices
+            # Exclude already returned invoices
+            "status": ["!=", "Credit Note Issued"],
         }
 
+        # Add company filter if provided
+        if company:
+            filters["company"] = company
+
+        # Add pos_profile filter if provided
+        if pos_profile:
+            filters["pos_profile"] = pos_profile
+
+        # Add invoice name search if provided
         if invoice_name:
             filters["name"] = ["like", f"%{invoice_name}%"]
 
+        # Get invoices
         invoices = frappe.get_all(
             "Sales Invoice",
             filters=filters,
-            fields=["name", "customer", "grand_total",
-                    "outstanding_amount", "posting_date", "currency"],
-            order_by="posting_date desc",
+            fields=[
+                "name", "customer", "grand_total",
+                "outstanding_amount", "posting_date", "currency",
+                "status", "pos_profile"
+            ],
+            order_by="posting_date desc, creation desc",
             limit=50
         )
 
-        # Get items data for each invoice with essential fields
+        # Filter to only paid or partly paid invoices
+        # (outstanding_amount < grand_total means at least partially paid)
+        paid_invoices = []
         for invoice in invoices:
+            outstanding = flt(invoice.get("outstanding_amount", 0))
+            grand_total = flt(invoice.get("grand_total", 0))
+
+            # Include if paid or partly paid (outstanding < grand_total)
+            if outstanding < grand_total:
+                paid_invoices.append(invoice)
+
+        # Get items data for each paid invoice with essential fields
+        for invoice in paid_invoices:
             items = frappe.get_all(
                 "Sales Invoice Item",
                 filters={"parent": invoice["name"]},
@@ -96,10 +130,17 @@ def get_invoices_for_return(invoice_name, company):
             )
             invoice["items"] = items
 
-        return invoices
+        return paid_invoices
 
     except Exception as e:
         frappe.logger().error(f"Error in get_invoices_for_return: {str(e)}")
+        frappe.log_error(title="api.sales_invoice.get_invoices_for_return", message={
+            "fn": "get_invoices_for_return",
+            "error": str(e),
+            "invoice_name": invoice_name,
+            "company": company,
+            "pos_profile": pos_profile
+        })
         return []
 
 
