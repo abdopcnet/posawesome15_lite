@@ -273,6 +273,7 @@ def process_batch_selection(item_code, current_item_row_id, existing_items_data,
             "data": {}
         }
     except Exception as e:
+        frappe.logger().error(f"[item.py] process_batch_selection: {str(e)}")
         return {
             "success": False,
             "message": str(e),
