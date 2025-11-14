@@ -34,7 +34,7 @@
           min-width: 550px;
           width: auto;
           animation: dialogSlideIn 0.3s ease-out;
-          border: 1px solid rgba(102, 126, 234, 0.1);
+          border: 1px solid rgba(255, 152, 0, 0.1);
         "
       >
         <!-- =========================================== -->
@@ -42,12 +42,12 @@
         <!-- =========================================== -->
         <div
           style="
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ff6f00 0%, #ff9800 100%);
             padding: 12px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
             position: relative;
             overflow: hidden;
           "
@@ -105,14 +105,7 @@
         <!-- =========================================== -->
         <div v-if="pos_profile" style="padding: 8px; background: #fafbfc">
           <!-- Payment Table -->
-          <div
-            style="
-              background: white;
-              border-radius: 8px;
-              overflow: hidden;
-              border: 1px solid #e8eaed;
-            "
-          >
+          <div style="background: white; border-radius: 8px; overflow: hidden; border: 1px solid #e8eaed">
             <!-- Table Header -->
             <div
               style="
@@ -221,18 +214,8 @@
                   "
                 >
                   <div style="display: flex; align-items: center; gap: 6px">
-                    <i
-                      class="mdi mdi-cash-multiple"
-                      style="font-size: 14px; color: #667eea; flex-shrink: 0"
-                    ></i>
-                    <span
-                      style="
-                        font-weight: 500;
-                        color: #334155;
-                        font-size: 11px;
-                        white-space: nowrap;
-                      "
-                    >
+                    <i class="mdi mdi-cash-multiple" style="font-size: 14px; color: #ff6f00; flex-shrink: 0"></i>
+                    <span style="font-weight: 500; color: #334155; font-size: 11px; white-space: nowrap">
                       {{ item.mode_of_payment }}
                     </span>
                   </div>
@@ -249,14 +232,7 @@
                     min-height: 32px;
                   "
                 >
-                  <span
-                    style="
-                      font-weight: 600;
-                      color: #1e293b;
-                      font-size: 11px;
-                      font-family: monospace;
-                    "
-                  >
+                  <span style="font-weight: 600; color: #1e293b; font-size: 11px; font-family: monospace">
                     {{ formatCurrency(item.opening_amount) }}
                   </span>
                 </div>
@@ -316,14 +292,7 @@
                       background: rgba(99, 102, 241, 0.05);
                     "
                   >
-                    <span
-                      style="
-                        font-weight: 600;
-                        color: #1e293b;
-                        font-size: 11px;
-                        font-family: monospace;
-                      "
-                    >
+                    <span style="font-weight: 600; color: #1e293b; font-size: 11px; font-family: monospace">
                       {{ formatCurrency(item.closing_amount) }}
                     </span>
                     <i
@@ -351,14 +320,7 @@
                     min-height: 32px;
                   "
                 >
-                  <span
-                    style="
-                      font-weight: 600;
-                      color: #1e293b;
-                      font-size: 11px;
-                      font-family: monospace;
-                    "
-                  >
+                  <span style="font-weight: 600; color: #1e293b; font-size: 11px; font-family: monospace">
                     {{ formatCurrency(item.expected_amount) }}
                   </span>
                 </div>
@@ -381,8 +343,8 @@
                       item.expected_amount - item.closing_amount > 0
                         ? 'color: #059669'
                         : item.expected_amount - item.closing_amount < 0
-                          ? 'color: #dc2626'
-                          : 'color: #64748b'
+                        ? 'color: #dc2626'
+                        : 'color: #64748b'
                     "
                   >
                     {{ formatCurrency(item.expected_amount - item.closing_amount) }}
