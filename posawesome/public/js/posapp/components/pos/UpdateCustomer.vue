@@ -38,12 +38,7 @@
       >
         <!-- Modal Content -->
         <div
-          style="
-            background: #fff;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-          "
+          style="background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08)"
         >
           <!-- =========================================== -->
           <!-- MODAL HEADER -->
@@ -60,14 +55,11 @@
           >
             <i
               class="mdi mdi-account-circle"
-              style="
-                color: white;
-                font-size: 20px;
-                filter: drop-shadow(0 6px 16px rgba(33, 150, 243, 0.1));
-              "
+              style="color: white; font-size: 20px; filter: drop-shadow(0 6px 16px rgba(33, 150, 243, 0.1))"
             ></i>
+            <!-- Update Customer / New Customer -->
             <span style="flex: 1; font-size: 13px; font-weight: 600; letter-spacing: 0.3px">
-              {{ customer_id ? 'Update Customer' : 'New Customer' }}
+              {{ customer_id ? "تحديث العميل" : "عميل جديد" }}
             </span>
             <button
               @click="close_dialog"
@@ -85,11 +77,7 @@
             >
               <i
                 class="mdi mdi-close"
-                style="
-                  color: white;
-                  font-size: 18px;
-                  filter: drop-shadow(0 6px 14px rgba(244, 67, 54, 0.1));
-                "
+                style="color: white; font-size: 18px; filter: drop-shadow(0 6px 14px rgba(244, 67, 54, 0.1))"
               ></i>
             </button>
           </div>
@@ -100,21 +88,14 @@
           <div style="padding: 8px 10px">
             <!-- Customer Name -->
             <div style="margin-bottom: 6px">
-              <label
-                style="
-                  display: block;
-                  font-size: 11px;
-                  color: #555;
-                  margin-bottom: 2px;
-                  font-weight: 500;
-                "
-              >
-                Customer Name *
+              <!-- Customer Name -->
+              <label style="display: block; font-size: 11px; color: #555; margin-bottom: 2px; font-weight: 500">
+                اسم العميل *
               </label>
               <input
                 type="text"
                 v-model="customer_name"
-                placeholder="Enter name"
+                placeholder="أدخل الاسم"
                 style="
                   width: 100%;
                   padding: 5px 8px;
@@ -133,21 +114,14 @@
             <!-- Tax ID & Mobile -->
             <div style="display: flex; gap: 6px; margin-bottom: 6px">
               <div style="flex: 1; min-width: 0; margin-bottom: 6px">
-                <label
-                  style="
-                    display: block;
-                    font-size: 11px;
-                    color: #555;
-                    margin-bottom: 2px;
-                    font-weight: 500;
-                  "
-                >
-                  Tax ID
+                <!-- Tax ID -->
+                <label style="display: block; font-size: 11px; color: #555; margin-bottom: 2px; font-weight: 500">
+                  الرقم الضريبي
                 </label>
                 <input
                   type="text"
                   v-model="tax_id"
-                  placeholder="Tax ID"
+                  placeholder="الرقم الضريبي"
                   style="
                     width: 100%;
                     padding: 5px 8px;
@@ -163,21 +137,14 @@
                 />
               </div>
               <div style="flex: 1; min-width: 0; margin-bottom: 6px">
-                <label
-                  style="
-                    display: block;
-                    font-size: 11px;
-                    color: #555;
-                    margin-bottom: 2px;
-                    font-weight: 500;
-                  "
-                >
-                  Mobile
+                <!-- Mobile -->
+                <label style="display: block; font-size: 11px; color: #555; margin-bottom: 2px; font-weight: 500">
+                  الجوال
                 </label>
                 <input
                   type="text"
                   v-model="mobile_no"
-                  placeholder="Mobile"
+                  placeholder="الجوال"
                   style="
                     width: 100%;
                     padding: 5px 8px;
@@ -197,21 +164,14 @@
             <!-- Email & Gender -->
             <div style="display: flex; gap: 6px; margin-bottom: 6px">
               <div style="flex: 1; min-width: 0; margin-bottom: 6px">
-                <label
-                  style="
-                    display: block;
-                    font-size: 11px;
-                    color: #555;
-                    margin-bottom: 2px;
-                    font-weight: 500;
-                  "
-                >
-                  Email
+                <!-- Email -->
+                <label style="display: block; font-size: 11px; color: #555; margin-bottom: 2px; font-weight: 500">
+                  البريد الإلكتروني
                 </label>
                 <input
                   type="email"
                   v-model="email_id"
-                  placeholder="Email"
+                  placeholder="البريد الإلكتروني"
                   style="
                     width: 100%;
                     padding: 5px 8px;
@@ -227,16 +187,9 @@
                 />
               </div>
               <div style="flex: 1; min-width: 0; margin-bottom: 6px">
-                <label
-                  style="
-                    display: block;
-                    font-size: 11px;
-                    color: #555;
-                    margin-bottom: 2px;
-                    font-weight: 500;
-                  "
-                >
-                  Gender
+                <!-- Gender -->
+                <label style="display: block; font-size: 11px; color: #555; margin-bottom: 2px; font-weight: 500">
+                  الجنس
                 </label>
                 <select
                   v-model="gender"
@@ -259,7 +212,8 @@
                     padding-right: 24px;
                   "
                 >
-                  <option value="">Select</option>
+                  <!-- Select -->
+                  <option value="">اختر</option>
                   <option v-for="g in genders" :key="g" :value="g">{{ g }}</option>
                 </select>
               </div>
@@ -268,21 +222,14 @@
             <!-- Referral Code & Date of Birth -->
             <div style="display: flex; gap: 6px; margin-bottom: 6px">
               <div style="flex: 1; min-width: 0; margin-bottom: 6px">
-                <label
-                  style="
-                    display: block;
-                    font-size: 11px;
-                    color: #555;
-                    margin-bottom: 2px;
-                    font-weight: 500;
-                  "
-                >
-                  Referral Code
+                <!-- Referral Code -->
+                <label style="display: block; font-size: 11px; color: #555; margin-bottom: 2px; font-weight: 500">
+                  كود الإحالة
                 </label>
                 <input
                   type="text"
                   v-model="referral_code"
-                  placeholder="Code"
+                  placeholder="الكود"
                   style="
                     width: 100%;
                     padding: 5px 8px;
@@ -298,23 +245,16 @@
                 />
               </div>
               <div style="flex: 1; min-width: 0; margin-bottom: 6px">
-                <label
-                  style="
-                    display: block;
-                    font-size: 11px;
-                    color: #555;
-                    margin-bottom: 2px;
-                    font-weight: 500;
-                  "
-                >
-                  Date of Birth
+                <!-- Date of Birth -->
+                <label style="display: block; font-size: 11px; color: #555; margin-bottom: 2px; font-weight: 500">
+                  تاريخ الميلاد
                 </label>
                 <input
                   type="text"
                   v-model="birthday"
                   readonly
                   @click="birthday_menu = true"
-                  placeholder="DOB"
+                  placeholder="تاريخ الميلاد"
                   style="
                     width: 100%;
                     padding: 5px 8px;
@@ -384,16 +324,9 @@
             <!-- Customer Group & Territory -->
             <div style="display: flex; gap: 6px; margin-bottom: 6px">
               <div style="flex: 1; min-width: 0; margin-bottom: 6px">
-                <label
-                  style="
-                    display: block;
-                    font-size: 11px;
-                    color: #555;
-                    margin-bottom: 2px;
-                    font-weight: 500;
-                  "
-                >
-                  Customer Group *
+                <!-- Customer Group -->
+                <label style="display: block; font-size: 11px; color: #555; margin-bottom: 2px; font-weight: 500">
+                  مجموعة العملاء *
                 </label>
                 <select
                   v-model="group"
@@ -411,27 +344,21 @@
                     height: 28px;
                     cursor: pointer;
                     appearance: none;
-                    background-image: url('data:image/svg+xml,%3Csvg width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath fill=%22%23666%22 d=%22M6 9L1 4h10z%22/%3E%3C/svg%3E');
+                    background-image: url('data:image/svg+xml,%3Csvg width=%2712%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath fill=%22%23666%22 d=%22M6 9L1 4h10z%22/%3E%3C/svg%3E');
                     background-repeat: no-repeat;
                     background-position: right 6px center;
                     padding-right: 24px;
                   "
                 >
-                  <option value="">Select</option>
+                  <!-- Select -->
+                  <option value="">اختر</option>
                   <option v-for="g in groups" :key="g" :value="g">{{ g }}</option>
                 </select>
               </div>
               <div style="flex: 1; min-width: 0; margin-bottom: 6px">
-                <label
-                  style="
-                    display: block;
-                    font-size: 11px;
-                    color: #555;
-                    margin-bottom: 2px;
-                    font-weight: 500;
-                  "
-                >
-                  Territory *
+                <!-- Territory -->
+                <label style="display: block; font-size: 11px; color: #555; margin-bottom: 2px; font-weight: 500">
+                  المنطقة *
                 </label>
                 <select
                   v-model="territory"
@@ -455,28 +382,19 @@
                     padding-right: 24px;
                   "
                 >
-                  <option value="">Select</option>
+                  <!-- Select -->
+                  <option value="">اختر</option>
                   <option v-for="t in territorys" :key="t" :value="t">{{ t }}</option>
                 </select>
               </div>
             </div>
 
             <!-- Loyalty Program & Points (if available) -->
-            <div
-              v-if="loyalty_program || loyalty_points"
-              style="display: flex; gap: 6px; margin-bottom: 6px"
-            >
+            <div v-if="loyalty_program || loyalty_points" style="display: flex; gap: 6px; margin-bottom: 6px">
               <div v-if="loyalty_program" style="flex: 1; min-width: 0; margin-bottom: 6px">
-                <label
-                  style="
-                    display: block;
-                    font-size: 11px;
-                    color: #555;
-                    margin-bottom: 2px;
-                    font-weight: 500;
-                  "
-                >
-                  Loyalty Program
+                <!-- Loyalty Program -->
+                <label style="display: block; font-size: 11px; color: #555; margin-bottom: 2px; font-weight: 500">
+                  برنامج الولاء
                 </label>
                 <input
                   type="text"
@@ -498,16 +416,9 @@
                 />
               </div>
               <div v-if="loyalty_points" style="flex: 1; min-width: 0; margin-bottom: 6px">
-                <label
-                  style="
-                    display: block;
-                    font-size: 11px;
-                    color: #555;
-                    margin-bottom: 2px;
-                    font-weight: 500;
-                  "
-                >
-                  Points
+                <!-- Points -->
+                <label style="display: block; font-size: 11px; color: #555; margin-bottom: 2px; font-weight: 500">
+                  النقاط
                 </label>
                 <input
                   type="text"
@@ -564,7 +475,8 @@
               color: #374151;
             "
           >
-            <i class="mdi mdi-close" style="font-size: 13px"></i> Cancel
+            <!-- Cancel -->
+            <i class="mdi mdi-close" style="font-size: 13px"></i> إلغاء
           </button>
 
           <!-- Submit Button -->
@@ -586,8 +498,9 @@
               color: white;
             "
           >
+            <!-- Update / Register -->
             <i class="mdi mdi-check" style="font-size: 13px"></i>
-            {{ customer_id ? 'Update' : 'Register' }}
+            {{ customer_id ? "تحديث" : "تسجيل" }}
           </button>
         </div>
       </div>
