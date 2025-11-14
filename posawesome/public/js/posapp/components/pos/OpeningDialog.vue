@@ -39,12 +39,12 @@
         <!-- =========================================== -->
         <div
           style="
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ff6f00 0%, #ff9800 100%);
             padding: 12px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
             position: relative;
             overflow: hidden;
           "
@@ -322,8 +322,7 @@
                         @focus="
                           (event) => {
                             event.target.parentElement.style.borderColor = '#6366f1';
-                            event.target.parentElement.style.boxShadow =
-                              '0 0 0 2px rgba(99, 102, 241, 0.1)';
+                            event.target.parentElement.style.boxShadow = '0 0 0 2px rgba(99, 102, 241, 0.1)';
                           }
                         "
                         @blur="
@@ -396,12 +395,8 @@
             @click="submit_dialog"
           >
             <i class="mdi mdi-check" v-if="!is_loading" style="font-size: 14px"></i>
-            <i
-              class="mdi mdi-loading"
-              v-else
-              style="font-size: 14px; animation: rotate 1s linear infinite"
-            ></i>
-            {{ is_loading ? 'Creating...' : 'Confirm' }}
+            <i class="mdi mdi-loading" v-else style="font-size: 14px; animation: rotate 1s linear infinite"></i>
+            {{ is_loading ? "Creating..." : "Confirm" }}
           </button>
 
           <div
