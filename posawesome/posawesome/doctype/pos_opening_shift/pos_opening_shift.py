@@ -127,6 +127,31 @@ class POSOpeningShift(StatusUpdater):
             if not self.user:
                 frappe.throw(_("User is required"))
 
+            # Check for existing open shift for same user, company, and POS profile
+            if self.docstatus == 0:  # Only check when creating/saving draft
+                existing_shift = frappe.db.exists(
+                    "POS Opening Shift",
+                    {
+                        "user": self.user,
+                        "company": self.company,
+                        "pos_profile": self.pos_profile,
+                        "docstatus": 1,
+                        "status": "Open",
+                        "name": ["!=", self.name]  # Exclude current document
+                    }
+                )
+
+                if existing_shift:
+                    frappe.throw(_(
+                        "An open POS Opening Shift already exists for user {0}, company {1}, and POS profile {2}. "
+                        "Please close shift {3} before opening a new one."
+                    ).format(
+                        frappe.bold(self.user),
+                        frappe.bold(self.company),
+                        frappe.bold(self.pos_profile),
+                        frappe.bold(existing_shift)
+                    ))
+
             # Validate opening balance details
             if not self.balance_details:
                 frappe.throw(_("Opening balance details are required"))
@@ -247,13 +272,39 @@ def create_opening_voucher(pos_profile, company, balance_details):
     try:
         import json
         balance_details = json.loads(balance_details)
+        
+        user = frappe.session.user
+
+        # Check if user already has an open shift for this company and POS profile
+        existing_shift = frappe.db.get_value(
+            "POS Opening Shift",
+            {
+                "user": user,
+                "company": company,
+                "pos_profile": pos_profile,
+                "docstatus": 1,
+                "status": "Open"
+            },
+            "name"
+        )
+
+        if existing_shift:
+            frappe.throw(_(
+                "An open POS Opening Shift already exists for user {0}, company {1}, and POS profile {2}. "
+                "Please close shift {3} before opening a new one."
+            ).format(
+                frappe.bold(user),
+                frappe.bold(company),
+                frappe.bold(pos_profile),
+                frappe.bold(existing_shift)
+            ))
 
         new_pos_opening = frappe.get_doc(
             {
                 "doctype": "POS Opening Shift",
                 "period_start_date": frappe.utils.get_datetime(),
                 "posting_date": frappe.utils.getdate(),
-                "user": frappe.session.user,
+                "user": user,
                 "pos_profile": pos_profile,
                 "company": company,
                 "docstatus": 1,
@@ -316,6 +367,46 @@ def get_current_shift_name():
             "success": False,
             "message": f"Error getting current shift: {str(e)}",
             "data": None,
+        }
+
+
+@frappe.whitelist()
+def get_all_open_shifts():
+    """
+    GET - Get all open shifts for current user (for info display)
+    """
+    try:
+        user = frappe.session.user
+
+        # Find all open shifts for this user
+        shifts = frappe.get_all(
+            "POS Opening Shift",
+            filters={
+                "user": user,
+                "docstatus": 1,
+                "status": "Open",
+            },
+            fields=["name", "company", "period_start_date", "pos_profile", "user"],
+            order_by="period_start_date desc",
+        )
+
+        # Make dates serializable
+        for shift in shifts:
+            if shift.get("period_start_date"):
+                shift["period_start_date"] = str(shift["period_start_date"])
+
+        return {
+            "success": True,
+            "count": len(shifts),
+            "shifts": shifts,
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "message": f"Error getting open shifts: {str(e)}",
+            "count": 0,
+            "shifts": [],
         }
 
 
