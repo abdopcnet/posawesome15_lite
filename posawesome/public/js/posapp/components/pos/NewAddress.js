@@ -1,10 +1,10 @@
-import { evntBus } from '../../bus';
-import { API_MAP } from '../../api_mapper.js';
+import { evntBus } from "../../bus";
+import { API_MAP } from "../../api_mapper.js";
 export default {
   data: () => ({
     addressDialog: false,
     address: {},
-    customer: '',
+    customer: "",
   }),
 
   methods: {
@@ -15,7 +15,7 @@ export default {
     submit_dialog() {
       const vm = this;
       this.address.customer = this.customer;
-      this.address.doctype = 'Customer';
+      this.address.doctype = "Customer";
       frappe.call({
         method: API_MAP.CUSTOMER.CREATE_CUSTOMER_ADDRESS,
         args: {
@@ -23,13 +23,14 @@ export default {
         },
         callback: (r) => {
           if (!r.exc) {
-            evntBus.emit('add_the_new_address', r.message);
-            evntBus.emit('show_mesage', {
-              text: 'Customer address created successfully.',
-              color: 'success',
+            evntBus.emit("add_the_new_address", r.message);
+            evntBus.emit("show_mesage", {
+              // Customer address created successfully
+              text: "تم إنشاء عنوان العميل بنجاح.",
+              color: "success",
             });
             vm.addressDialog = false;
-            vm.customer = '';
+            vm.customer = "";
             vm.address = {};
           }
         },
@@ -37,7 +38,7 @@ export default {
     },
   },
   created: function () {
-    evntBus.on('open_new_address', (data) => {
+    evntBus.on("open_new_address", (data) => {
       this.addressDialog = true;
       this.customer = data;
     });
@@ -45,8 +46,8 @@ export default {
 
   beforeDestroy() {
     // Clean up event listener (use .off if available)
-    if (evntBus && typeof evntBus.off === 'function') {
-      evntBus.off('open_new_address');
+    if (evntBus && typeof evntBus.off === "function") {
+      evntBus.off("open_new_address");
     }
   },
 };
