@@ -1,28 +1,28 @@
 // ===== SECTION 1: IMPORTS =====
-import { evntBus } from '../../bus';
-import format from '../../format';
-import { API_MAP } from '../../api_mapper.js';
+import { evntBus } from "../../bus";
+import format from "../../format";
+import { API_MAP } from "../../api_mapper.js";
 
 const EVENT_NAMES = {
-  SHOW_PAYMENT: 'show_payment',
-  SET_CUSTOMER_READONLY: 'set_customer_readonly',
-  SHOW_MESSAGE: 'show_mesage',
-  SET_LAST_INVOICE: 'set_last_invoice',
-  NEW_INVOICE: 'new_invoice',
-  INVOICE_SUBMITTED: 'invoice_submitted',
-  PAYMENTS_UPDATED: 'payments_updated',
-  FREEZE: 'freeze',
-  UNFREEZE: 'unfreeze',
-  OPEN_EDIT_CUSTOMER: 'open_edit_customer',
-  OPEN_NEW_ADDRESS: 'open_new_address',
-  TOGGLE_QUICK_RETURN: 'toggle_quick_return',
-  SEND_INVOICE_DOC_PAYMENT: 'send_invoice_doc_payment',
-  REGISTER_POS_PROFILE: 'register_pos_profile',
-  ADD_THE_NEW_ADDRESS: 'add_the_new_address',
-  UPDATE_CUSTOMER: 'update_customer',
-  SET_POS_SETTINGS: 'set_pos_settings',
-  SET_CUSTOMER_INFO_TO_EDIT: 'set_customer_info_to_edit',
-  UPDATE_DUE_DATE: 'update_due_date',
+  SHOW_PAYMENT: "show_payment",
+  SET_CUSTOMER_READONLY: "set_customer_readonly",
+  SHOW_MESSAGE: "show_mesage",
+  SET_LAST_INVOICE: "set_last_invoice",
+  NEW_INVOICE: "new_invoice",
+  INVOICE_SUBMITTED: "invoice_submitted",
+  PAYMENTS_UPDATED: "payments_updated",
+  FREEZE: "freeze",
+  UNFREEZE: "unfreeze",
+  OPEN_EDIT_CUSTOMER: "open_edit_customer",
+  OPEN_NEW_ADDRESS: "open_new_address",
+  TOGGLE_QUICK_RETURN: "toggle_quick_return",
+  SEND_INVOICE_DOC_PAYMENT: "send_invoice_doc_payment",
+  REGISTER_POS_PROFILE: "register_pos_profile",
+  ADD_THE_NEW_ADDRESS: "add_the_new_address",
+  UPDATE_CUSTOMER: "update_customer",
+  SET_POS_SETTINGS: "set_pos_settings",
+  SET_CUSTOMER_INFO_TO_EDIT: "set_customer_info_to_edit",
+  UPDATE_DUE_DATE: "update_due_date",
 };
 
 // ===== SECTION 2: EXPORT DEFAULT =====
@@ -33,9 +33,9 @@ export default {
   data() {
     return {
       loading: false,
-      pos_profile: '',
-      invoice_doc: '',
-      customer: '',
+      pos_profile: "",
+      invoice_doc: "",
+      customer: "",
       loyalty_amount: 0,
       is_credit_sale: 0,
       is_write_off_change: 0,
@@ -47,8 +47,8 @@ export default {
       redeem_customer_credit: false,
       customer_credit_dict: [],
       phone_dialog: false,
-      pos_settings: '',
-      customer_info: '',
+      pos_settings: "",
+      customer_info: "",
       quick_return: false,
       selected_return_payment_idx: null,
     };
@@ -75,8 +75,12 @@ export default {
     diff_payment() {
       // Apply flt() for consistent precision with set_full_amount and set_rest_amount
       const target_amount =
-        flt(this.invoice_doc.rounded_total) || flt(this.invoice_doc.grand_total);
-      const diff_payment = this.flt(target_amount - this.total_payments, this.currency_precision);
+        flt(this.invoice_doc.rounded_total) ||
+        flt(this.invoice_doc.grand_total);
+      const diff_payment = this.flt(
+        target_amount - this.total_payments,
+        this.currency_precision
+      );
       this.paid_change = -diff_payment;
       return diff_payment >= 0 ? diff_payment : 0;
     },
@@ -93,7 +97,10 @@ export default {
     },
 
     available_customer_credit() {
-      return this.customer_credit_dict.reduce((total, row) => total + row.total_credit, 0);
+      return this.customer_credit_dict.reduce(
+        (total, row) => total + row.total_credit,
+        0
+      );
     },
 
     redeemed_customer_credit() {
@@ -109,7 +116,11 @@ export default {
     },
 
     request_payment_field() {
-      return this.invoice_doc?.payments?.some((payment) => payment.type === 'Phone') || false;
+      return (
+        this.invoice_doc?.payments?.some(
+          (payment) => payment.type === "Phone"
+        ) || false
+      );
     },
   },
 
@@ -120,7 +131,7 @@ export default {
     },
 
     emitPrintRequest() {
-      this.$emit('request-print');
+      this.$emit("request-print");
     },
 
     exposeSubmit(print = true, autoMode = false) {
@@ -131,39 +142,45 @@ export default {
       this.invoice_doc = invoice_doc;
       const defaultPayment = this.getDefaultPayment();
       if (defaultPayment) {
-        const total = this.flt(invoice_doc.rounded_total) || this.flt(invoice_doc.grand_total);
+        const total =
+          this.flt(invoice_doc.rounded_total) ||
+          this.flt(invoice_doc.grand_total);
         defaultPayment.amount = this.flt(total, this.currency_precision);
       }
       this.exposeSubmit(true, true);
     },
 
     getDefaultPayment() {
-      const payments = Array.isArray(this.invoice_doc?.payments) ? this.invoice_doc.payments : [];
-      return payments.find((payment) => payment.default == 1) || payments[0] || null;
+      const payments = Array.isArray(this.invoice_doc?.payments)
+        ? this.invoice_doc.payments
+        : [];
+      return (
+        payments.find((payment) => payment.default == 1) || payments[0] || null
+      );
     },
 
     back_to_invoice() {
-      evntBus.emit(EVENT_NAMES.SHOW_PAYMENT, 'false');
+      evntBus.emit(EVENT_NAMES.SHOW_PAYMENT, "false");
       evntBus.emit(EVENT_NAMES.SET_CUSTOMER_READONLY, false);
     },
 
     async submit(event, autoMode = false, print = false) {
-      if (event && typeof event.preventDefault === 'function') {
+      if (event && typeof event.preventDefault === "function") {
         event.preventDefault();
       }
       try {
         await this.refreshInvoiceDoc();
       } catch (error) {
-        console.warn(error?.message || 'Failed to refresh invoice before submit');
+        console.log("[Payments.js] refreshInvoiceDoc error:", error);
       }
 
       if (this.invoice_doc?.docstatus === 1) {
         if (print) {
           this.load_print_page();
         }
-        this.showMessage('Invoice has already been submitted', 'info');
+        this.showMessage("Invoice has already been submitted", "info");
         evntBus.emit(EVENT_NAMES.SET_LAST_INVOICE, this.invoice_doc.name);
-        evntBus.emit(EVENT_NAMES.NEW_INVOICE, 'false');
+        evntBus.emit(EVENT_NAMES.NEW_INVOICE, "false");
         this.back_to_invoice();
         return;
       }
@@ -171,11 +188,12 @@ export default {
       if (autoMode) {
         const defaultPayment = this.getDefaultPayment();
         if (!defaultPayment) {
-          this.showMessage('No default payment method in POS profile', 'error');
+          this.showMessage("No default payment method in POS profile", "error");
           return;
         }
         const total =
-          this.flt(this.invoice_doc.rounded_total) || this.flt(this.invoice_doc.grand_total);
+          this.flt(this.invoice_doc.rounded_total) ||
+          this.flt(this.invoice_doc.grand_total);
         defaultPayment.amount = this.flt(total, this.currency_precision);
       }
 
@@ -203,9 +221,10 @@ export default {
         this.invoice_doc.base_net_total = total;
         this.invoice_doc.base_grand_total = total;
 
-        if (typeof this.selected_return_payment_idx === 'number') {
+        if (typeof this.selected_return_payment_idx === "number") {
           this.invoice_doc.payments.forEach((payment) => {
-            payment.amount = payment.idx === this.selected_return_payment_idx ? total : 0;
+            payment.amount =
+              payment.idx === this.selected_return_payment_idx ? total : 0;
           });
         } else {
           if (this.invoice_doc.payments?.length > 0) {
@@ -223,13 +242,14 @@ export default {
       });
 
       const targetAmount =
-        flt(this.invoice_doc.rounded_total) || flt(this.invoice_doc.grand_total);
+        flt(this.invoice_doc.rounded_total) ||
+        flt(this.invoice_doc.grand_total);
       const difference = Math.abs(totalPayedAmount - targetAmount);
 
       if (difference > 0.05) {
         this.showMessage(
           `Payment mismatch: Total ${totalPayedAmount} vs Target ${targetAmount}`,
-          'error',
+          "error"
         );
         return;
       }
@@ -255,8 +275,11 @@ export default {
 
       if (autoMode) {
         this.load_print_page();
-        this.showMessage('Invoice printed using default payment method', 'success');
-        evntBus.emit(EVENT_NAMES.NEW_INVOICE, 'false');
+        this.showMessage(
+          "Invoice printed using default payment method",
+          "success"
+        );
+        evntBus.emit(EVENT_NAMES.NEW_INVOICE, "false");
         this.back_to_invoice();
         return;
       }
@@ -295,19 +318,23 @@ export default {
               this.load_print_page();
             }
             evntBus.emit(EVENT_NAMES.SET_LAST_INVOICE, this.invoice_doc.name);
-            this.showMessage(`Invoice ${r.message.name} submitted successfully`, 'success');
+            this.showMessage(
+              `Invoice ${r.message.name} submitted successfully`,
+              "success"
+            );
             this.addresses = [];
-            evntBus.emit(EVENT_NAMES.NEW_INVOICE, 'false');
+            evntBus.emit(EVENT_NAMES.NEW_INVOICE, "false");
             evntBus.emit(EVENT_NAMES.INVOICE_SUBMITTED);
             this.back_to_invoice();
           } else {
-            this.showMessage('Failed to submit invoice', 'error');
+            this.showMessage("Failed to submit invoice", "error");
           }
         },
         error: (err) => {
-          const errorMsg = err?.message || '';
+          const errorMsg = err?.message || "";
           const isTimestampError =
-            typeof errorMsg === 'string' && errorMsg.includes('Document has been modified');
+            typeof errorMsg === "string" &&
+            errorMsg.includes("Document has been modified");
 
           if (!retrying && isTimestampError) {
             this.refreshInvoiceDoc()
@@ -315,12 +342,15 @@ export default {
                 this.submit_invoice(print, autoMode, true);
               })
               .catch(() => {
-                this.showMessage('Invoice was modified elsewhere, please try again', 'warning');
+                this.showMessage(
+                  "Invoice was modified elsewhere, please try again",
+                  "warning"
+                );
               });
             return;
           }
 
-          this.showMessage(err?.message || 'Failed to submit invoice', 'error');
+          this.showMessage(err?.message || "Failed to submit invoice", "error");
         },
       });
     },
@@ -340,7 +370,7 @@ export default {
         frappe.call({
           method: API_MAP.FRAPPE.CLIENT_GET,
           args: {
-            doctype: 'Sales Invoice',
+            doctype: "Sales Invoice",
             name: this.invoice_doc.name,
           },
           async: true,
@@ -349,25 +379,37 @@ export default {
               const freshDoc = res.message;
 
               if (shouldMergeLocalPayments && freshDoc.docstatus === 0) {
-                const mergedPayments = (freshDoc.payments || []).map((payment) => {
-                  const localMatch = localPayments.find((localPayment) => {
-                    if (localPayment.idx !== undefined && payment.idx !== undefined) {
-                      return payment.idx === localPayment.idx;
-                    }
-                    return payment.mode_of_payment === localPayment.mode_of_payment;
-                  });
+                const mergedPayments = (freshDoc.payments || []).map(
+                  (payment) => {
+                    const localMatch = localPayments.find((localPayment) => {
+                      if (
+                        localPayment.idx !== undefined &&
+                        payment.idx !== undefined
+                      ) {
+                        return payment.idx === localPayment.idx;
+                      }
+                      return (
+                        payment.mode_of_payment === localPayment.mode_of_payment
+                      );
+                    });
 
-                  return localMatch ? { ...payment, amount: localMatch.amount } : payment;
-                });
+                    return localMatch
+                      ? { ...payment, amount: localMatch.amount }
+                      : payment;
+                  }
+                );
 
                 const seen = new Set(
                   mergedPayments.map(
-                    (payment) => `${payment.mode_of_payment || ''}__${payment.idx || ''}`,
-                  ),
+                    (payment) =>
+                      `${payment.mode_of_payment || ""}__${payment.idx || ""}`
+                  )
                 );
 
                 localPayments.forEach((localPayment) => {
-                  const key = `${localPayment.mode_of_payment || ''}__${localPayment.idx || ''}`;
+                  const key = `${localPayment.mode_of_payment || ""}__${
+                    localPayment.idx || ""
+                  }`;
                   if (!seen.has(key) && flt(localPayment.amount)) {
                     mergedPayments.push(localPayment);
                   }
@@ -379,7 +421,7 @@ export default {
               this.invoice_doc = freshDoc;
               resolve();
             } else {
-              reject(new Error('Failed to refresh invoice'));
+              reject(new Error("Failed to refresh invoice"));
             }
           },
           error: (err) => reject(err),
@@ -390,15 +432,17 @@ export default {
     set_full_amount(idx) {
       const isReturn = !!this.invoice_doc.is_return;
       // Apply flt() to ensure consistent precision with diff_payment calculation
-      const total = flt(this.invoice_doc.rounded_total) || flt(this.invoice_doc.grand_total);
-      
+      const total =
+        flt(this.invoice_doc.rounded_total) ||
+        flt(this.invoice_doc.grand_total);
+
       // DEBUG: Log values when setting payment amount
       console.log("set_full_amount called:", {
         idx: idx,
         rounded_total: this.invoice_doc.rounded_total,
         grand_total: this.invoice_doc.grand_total,
         total: total,
-        precision: this.currency_precision
+        precision: this.currency_precision,
       });
 
       this.invoice_doc.payments.forEach((p) => {
@@ -412,21 +456,26 @@ export default {
         const amount = this.flt(total, this.currency_precision);
         console.log("Setting payment amount to:", amount);
         payment.amount = isReturn ? -Math.abs(amount) : amount;
-        if (payment.base_amount !== undefined) payment.base_amount = payment.amount;
+        if (payment.base_amount !== undefined)
+          payment.base_amount = payment.amount;
       }
 
       evntBus.emit(
         EVENT_NAMES.PAYMENTS_UPDATED,
-        JSON.parse(JSON.stringify(this.invoice_doc.payments)),
+        JSON.parse(JSON.stringify(this.invoice_doc.payments))
       );
     },
 
     set_rest_amount(idx) {
       const isReturn = !!this.invoice_doc.is_return;
       const invoice_total =
-        flt(this.invoice_doc.rounded_total) || flt(this.invoice_doc.grand_total);
+        flt(this.invoice_doc.rounded_total) ||
+        flt(this.invoice_doc.grand_total);
       const total_payments = this.total_payments;
-      const actual_remaining = this.flt(invoice_total - total_payments, this.currency_precision);
+      const actual_remaining = this.flt(
+        invoice_total - total_payments,
+        this.currency_precision
+      );
 
       const payment = this.invoice_doc.payments.find((p) => p.idx === idx);
       if (!payment || this.flt(payment.amount) !== 0) {
@@ -444,20 +493,25 @@ export default {
         }
         evntBus.emit(
           EVENT_NAMES.PAYMENTS_UPDATED,
-          JSON.parse(JSON.stringify(this.invoice_doc.payments)),
+          JSON.parse(JSON.stringify(this.invoice_doc.payments))
         );
       } else if (actual_remaining < 0) {
         // Apply currency precision to match diff_payment calculation
-        let excess_amount = this.flt(Math.abs(actual_remaining), this.currency_precision);
+        let excess_amount = this.flt(
+          Math.abs(actual_remaining),
+          this.currency_precision
+        );
         if (isReturn) excess_amount = -Math.abs(excess_amount);
 
         payment.amount = excess_amount;
         if (payment.base_amount !== undefined) {
-          payment.base_amount = isReturn ? -Math.abs(excess_amount) : excess_amount;
+          payment.base_amount = isReturn
+            ? -Math.abs(excess_amount)
+            : excess_amount;
         }
         evntBus.emit(
           EVENT_NAMES.PAYMENTS_UPDATED,
-          JSON.parse(JSON.stringify(this.invoice_doc.payments)),
+          JSON.parse(JSON.stringify(this.invoice_doc.payments))
         );
       }
     },
@@ -470,18 +524,21 @@ export default {
 
     load_print_page() {
       const print_format =
-        this.pos_profile.print_format_for_online || this.pos_profile.print_format;
+        this.pos_profile.print_format_for_online ||
+        this.pos_profile.print_format;
       const letter_head = this.pos_profile.letter_head || 0;
-      const url = `${frappe.urllib.get_base_url()}/printview?doctype=Sales%20Invoice&name=${this.invoice_doc.name}&trigger_print=1&format=${print_format}&no_letterhead=${letter_head}`;
+      const url = `${frappe.urllib.get_base_url()}/printview?doctype=Sales%20Invoice&name=${
+        this.invoice_doc.name
+      }&trigger_print=1&format=${print_format}&no_letterhead=${letter_head}`;
 
-      const printWindow = window.open(url, 'Print');
+      const printWindow = window.open(url, "Print");
       printWindow.addEventListener(
-        'load',
+        "load",
         function () {
           printWindow.print();
           setTimeout(() => printWindow.close(), 1000);
         },
-        true,
+        true
       );
     },
 
@@ -498,7 +555,7 @@ export default {
     },
 
     shortPay(e) {
-      if (e.key === 'x' && (e.ctrlKey || e.metaKey)) {
+      if (e.key === "x" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         this.submit();
       }
@@ -511,7 +568,9 @@ export default {
       const change = -this.diff_payment;
 
       if (this.paid_change > change) {
-        this.paid_change_rules = ['Paid change cannot be greater than total change!'];
+        this.paid_change_rules = [
+          "Paid change cannot be greater than total change!",
+        ];
         this.credit_change = 0;
       }
     },
@@ -544,7 +603,9 @@ export default {
           data.forEach((row) => {
             if (remainAmount > 0) {
               row.credit_to_redeem =
-                remainAmount >= row.total_credit ? row.total_credit : remainAmount;
+                remainAmount >= row.total_credit
+                  ? row.total_credit
+                  : remainAmount;
               remainAmount -= row.credit_to_redeem;
             } else {
               row.credit_to_redeem = 0;
@@ -597,20 +658,20 @@ export default {
       this.phone_dialog = false;
 
       if (!this.invoice_doc.contact_mobile) {
-        this.showMessage('Please enter customer phone number', 'error');
+        this.showMessage("Please enter customer phone number", "error");
         evntBus.emit(EVENT_NAMES.OPEN_EDIT_CUSTOMER);
         this.back_to_invoice();
         return;
       }
 
-      evntBus.emit(EVENT_NAMES.FREEZE, { title: 'Please wait for payment...' });
+      evntBus.emit(EVENT_NAMES.FREEZE, { title: "Please wait for payment..." });
 
       this.invoice_doc.payments.forEach((payment) => {
         payment.amount = flt(payment.amount);
       });
 
       evntBus.emit(EVENT_NAMES.UNFREEZE);
-      this.showMessage('Payment request feature has been disabled', 'info');
+      this.showMessage("Payment request feature has been disabled", "info");
     },
   },
 
@@ -627,13 +688,13 @@ export default {
           total: invoice_doc.total,
           net_total: invoice_doc.net_total,
           grand_total: invoice_doc.grand_total,
-          rounded_total: invoice_doc.rounded_total
+          rounded_total: invoice_doc.rounded_total,
         });
-        
+
         this.invoice_doc = invoice_doc;
 
         if (!Array.isArray(this.invoice_doc.payments)) {
-          this.showMessage('No payments array in invoice document', 'error');
+          this.showMessage("No payments array in invoice document", "error");
           this.invoice_doc.payments = [];
         } else {
           this.invoice_doc.payments.forEach((payment, index) => {
@@ -641,12 +702,16 @@ export default {
           });
         }
 
-        const default_payment = this.invoice_doc.payments.find((payment) => payment.default == 1);
+        const default_payment = this.invoice_doc.payments.find(
+          (payment) => payment.default == 1
+        );
         this.is_credit_sale = 0;
         this.is_write_off_change = 0;
 
         if (default_payment && !invoice_doc.is_return) {
-          const total = this.flt(invoice_doc.rounded_total) || this.flt(invoice_doc.grand_total);
+          const total =
+            this.flt(invoice_doc.rounded_total) ||
+            this.flt(invoice_doc.grand_total);
           default_payment.amount = this.flt(total, this.currency_precision);
         }
 
@@ -662,7 +727,8 @@ export default {
           if (default_payment) {
             const neg = -Math.abs(total);
             default_payment.amount = neg;
-            if (default_payment.base_amount !== undefined) default_payment.base_amount = neg;
+            if (default_payment.base_amount !== undefined)
+              default_payment.base_amount = neg;
           }
         }
 
@@ -708,7 +774,7 @@ export default {
   },
 
   created() {
-    document.addEventListener('keydown', this.shortPay.bind(this));
+    document.addEventListener("keydown", this.shortPay.bind(this));
   },
 
   beforeUnmount() {
@@ -722,14 +788,14 @@ export default {
       EVENT_NAMES.SET_POS_SETTINGS,
       EVENT_NAMES.SET_CUSTOMER_INFO_TO_EDIT,
       EVENT_NAMES.UPDATE_DUE_DATE,
-      'update_delivery_date',
+      "update_delivery_date",
     ];
 
     events.forEach((event) => evntBus.$off(event));
   },
 
   destroyed() {
-    document.removeEventListener('keydown', this.shortPay);
+    document.removeEventListener("keydown", this.shortPay);
   },
 
   // ===== WATCHERS =====
@@ -741,7 +807,7 @@ export default {
         this.invoice_doc.loyalty_points = 0;
         this.showMessage(
           `Cannot enter points greater than available balance ${this.available_pioints_amount}`,
-          'error',
+          "error"
         );
       } else {
         this.invoice_doc.loyalty_amount = this.flt(this.loyalty_amount);
@@ -773,7 +839,7 @@ export default {
       if (value > this.available_customer_credit) {
         this.showMessage(
           `Customer credit can be redeemed up to ${this.available_customer_credit}`,
-          'error',
+          "error"
         );
       }
     },
