@@ -723,6 +723,16 @@ export default {
         this.is_return_invoice
       );
     });
+
+    // Clear highlighting after invoice is printed/submitted in Return Invoice mode
+    evntBus.on("invoice_submitted", () => {
+      if (this.is_return_invoice) {
+        console.log(
+          "[ItemsSelector] Invoice submitted in return mode, clearing highlighting"
+        );
+        this.is_return_invoice = false;
+      }
+    });
   },
 
   // ===== SECTION 6: LIFECYCLE HOOKS =====
@@ -762,6 +772,7 @@ export default {
     evntBus.$off("clear_search_fields");
     evntBus.$off("load_return_invoice");
     evntBus.$off("new_invoice");
+    evntBus.$off("invoice_submitted");
 
     // Remove window listener
     window.removeEventListener("resize", this.scheduleScrollHeightUpdate);
