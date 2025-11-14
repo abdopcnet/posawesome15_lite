@@ -39,7 +39,12 @@
       >
         <!-- Card -->
         <div
-          style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1)"
+          style="
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          "
         >
           <!-- =========================================== -->
           <!-- CARD HEADER -->
@@ -65,7 +70,8 @@
               "
             >
               <i class="mdi mdi-keyboard-return" style="font-size: 18px"></i>
-              Return Invoice
+              <!-- Return Invoice -->
+              إرجاع فاتورة
             </span>
             <button
               @click="invoicesDialog = false"
@@ -94,18 +100,42 @@
           <!-- =========================================== -->
           <!-- CARD BODY -->
           <!-- =========================================== -->
-          <div style="max-height: 60vh; overflow-y: auto; display: flex; flex-direction: column; padding: 16px">
+          <div
+            style="
+              max-height: 60vh;
+              overflow-y: auto;
+              display: flex;
+              flex-direction: column;
+              padding: 16px;
+            "
+          >
             <!-- Search Row -->
             <div style="display: flex; gap: 8px; margin-bottom: 12px">
               <!-- Invoice Number Input -->
-              <div style="display: flex; flex-direction: column; gap: 4px; width: 100%; flex: 1">
-                <label style="font-size: 0.75rem; font-weight: 600; color: #555; margin-bottom: 2px">
-                  Invoice Number
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 4px;
+                  width: 100%;
+                  flex: 1;
+                "
+              >
+                <label
+                  style="
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    color: #555;
+                    margin-bottom: 2px;
+                  "
+                >
+                  <!-- Invoice Number -->
+                  رقم الفاتورة
                 </label>
                 <input
                   type="text"
                   v-model="invoice_name"
-                  placeholder="Invoice Number"
+                  placeholder="رقم الفاتورة"
                   @keydown.enter="search_invoices"
                   style="
                     width: 100%;
@@ -144,7 +174,8 @@
                   margin-top: 20px;
                 "
               >
-                Search
+                <!-- Search -->
+                بحث
               </button>
             </div>
 
@@ -173,7 +204,10 @@
                       animation: spin 1s linear infinite;
                     "
                   ></div>
-                  <span style="font-size: 14px; color: #666"> Loading invoices... </span>
+                  <span style="font-size: 14px; color: #666">
+                    <!-- Loading invoices... -->
+                    جاري تحميل الفواتير...
+                  </span>
                 </div>
 
                 <!-- No Data -->
@@ -189,7 +223,8 @@
                     font-size: 14px;
                   "
                 >
-                  No invoices found
+                  <!-- No invoices found -->
+                  لم يتم العثور على فواتير
                 </div>
 
                 <!-- Table -->
@@ -205,7 +240,12 @@
                 >
                   <!-- Table Headers -->
                   <thead>
-                    <tr style="border-bottom: 2px solid #e0e0e0; background: #f5f5f5">
+                    <tr
+                      style="
+                        border-bottom: 2px solid #e0e0e0;
+                        background: #f5f5f5;
+                      "
+                    >
                       <th
                         style="
                           padding: 10px;
@@ -217,7 +257,8 @@
                           white-space: nowrap;
                         "
                       >
-                        Select
+                        <!-- Select -->
+                        اختر
                       </th>
                       <th
                         v-for="header in headers"
@@ -242,8 +283,13 @@
                     <tr
                       v-for="item in dialog_data"
                       :key="item.name"
-                      style="border-bottom: 1px solid #f0f0f0; transition: background-color 0.15s ease"
-                      :style="`background: ${item.checked ? '#f0f7ff' : 'white'}`"
+                      style="
+                        border-bottom: 1px solid #f0f0f0;
+                        transition: background-color 0.15s ease;
+                      "
+                      :style="`background: ${
+                        item.checked ? '#f0f7ff' : 'white'
+                      }`"
                     >
                       <!-- Radio Select -->
                       <td style="padding: 10px">
@@ -257,25 +303,50 @@
                       </td>
 
                       <!-- Customer -->
-                      <td style="padding: 10px; text-align: left; white-space: nowrap">
+                      <td
+                        style="
+                          padding: 10px;
+                          text-align: left;
+                          white-space: nowrap;
+                        "
+                      >
                         {{ item.customer }}
                       </td>
 
                       <!-- Posting Date -->
-                      <td style="padding: 10px; text-align: left; white-space: nowrap">
+                      <td
+                        style="
+                          padding: 10px;
+                          text-align: left;
+                          white-space: nowrap;
+                        "
+                      >
                         {{ item.posting_date }}
                       </td>
 
                       <!-- Invoice Name -->
-                      <td style="padding: 10px; text-align: left; white-space: nowrap">
+                      <td
+                        style="
+                          padding: 10px;
+                          text-align: left;
+                          white-space: nowrap;
+                        "
+                      >
                         {{ item.name }}
                       </td>
 
                       <!-- Grand Total -->
                       <td
-                        style="padding: 10px; text-align: right; font-weight: 600; color: #1976d2; white-space: nowrap"
+                        style="
+                          padding: 10px;
+                          text-align: right;
+                          font-weight: 600;
+                          color: #1976d2;
+                          white-space: nowrap;
+                        "
                       >
-                        {{ currencySymbol(item.currency) }} {{ formatCurrency(item.grand_total) }}
+                        {{ currencySymbol(item.currency) }}
+                        {{ formatCurrency(item.grand_total) }}
                       </td>
                     </tr>
                   </tbody>
@@ -321,7 +392,8 @@
                 color: #d32f2f;
               "
             >
-              Close
+              <!-- Close -->
+              إغلاق
             </button>
 
             <!-- Select Button -->
@@ -344,7 +416,8 @@
                 color: white;
               "
             >
-              Select
+              <!-- Select -->
+              اختر
             </button>
           </div>
         </div>
