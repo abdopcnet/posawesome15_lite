@@ -608,9 +608,12 @@ export default {
 
       // Detach any existing onScan listener first to prevent duplicates
       try {
-        onScan.detachFrom(document);
+        // Check if scannerDetectionData exists before detaching
+        if (document.scannerDetectionData && document.scannerDetectionData.options) {
+          onScan.detachFrom(document);
+        }
       } catch (e) {
-        console.log("[ItemsSelector.js] Error:", e);
+        console.log("[ItemsSelector.js] scan_barcode detachFrom error:", e);
       }
 
       onScan.attachTo(document, {
@@ -758,9 +761,12 @@ export default {
 
     // Detach onScan listener
     try {
-      onScan.detachFrom(document);
+      // Check if scannerDetectionData exists before detaching
+      if (document.scannerDetectionData && document.scannerDetectionData.options) {
+        onScan.detachFrom(document);
+      }
     } catch (e) {
-      console.log("[ItemsSelector.js] Error:", e);
+      console.log("[ItemsSelector.js] beforeUnmount detachFrom error:", e);
     }
 
     // Clean up event listeners
