@@ -29,3 +29,11 @@ doc_events = {
         "before_cancel": "posawesome.posawesome.api.before_cancel.before_cancel",
     },
 }
+
+# Fixtures - Export Custom HTML Blocks with the app
+fixtures = [
+    {
+        "dt": "Custom HTML Block",
+        "filters": [["name", "in", ["POS Awesome"]]]
+    }
+]
