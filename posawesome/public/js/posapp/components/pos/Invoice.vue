@@ -808,7 +808,7 @@
               text-transform: uppercase;
               letter-spacing: 0.3px;
             "
-            >{{ __("list_price_amounts") }}</label
+            >{{ __("list_price_total") }}</label
           >
           <div
             style="
