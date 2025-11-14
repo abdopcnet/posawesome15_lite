@@ -18,13 +18,20 @@ const EVENT_NAMES = {
 };
 
 const ERROR_MESSAGES = {
-  UNEXPECTED_ERROR: "An unexpected error occurred while fetching customers",
-  POS_PROFILE_NOT_LOADED: "POS Profile not loaded",
-  DEFAULT_CUSTOMER_NOT_DEFINED: "Default customer not defined in POS Profile",
-  FAILED_TO_FETCH: "Failed to fetch customers",
-  NEW_CUSTOMER_ERROR: "Error opening new customer form",
-  EDIT_CUSTOMER_ERROR: "Error opening customer edit form",
-  INITIALIZATION_ERROR: "An error occurred during component initialization",
+  // An unexpected error occurred while fetching customers
+  UNEXPECTED_ERROR: "حدث خطأ غير متوقع أثناء جلب العملاء",
+  // POS Profile not loaded
+  POS_PROFILE_NOT_LOADED: "ملف نقطة البيع غير محمّل",
+  // Default customer not defined in POS Profile
+  DEFAULT_CUSTOMER_NOT_DEFINED: "العميل الافتراضي غير محدد في ملف نقطة البيع",
+  // Failed to fetch customers
+  FAILED_TO_FETCH: "فشل جلب العملاء",
+  // Error opening new customer form
+  NEW_CUSTOMER_ERROR: "خطأ في فتح نموذج عميل جديد",
+  // Error opening customer edit form
+  EDIT_CUSTOMER_ERROR: "خطأ في فتح نموذج تعديل العميل",
+  // An error occurred during component initialization
+  INITIALIZATION_ERROR: "حدث خطأ أثناء تهيئة المكون",
 };
 
 export default {
@@ -93,14 +100,19 @@ export default {
 
             // ✅ After customers loaded, if default not yet shown, show it now
             if (!this.defaultLoaded && this.customer) {
-              const selected = this.customers.find((c) => c.name === this.customer);
+              const selected = this.customers.find(
+                (c) => c.name === this.customer
+              );
               if (selected) {
                 this.customer_search = selected.customer_name;
                 this.customer_info = selected;
                 this.defaultLoaded = true;
                 console.log("Default customer loaded successfully:", selected);
               } else {
-                console.warn("Default customer not found in loaded customers list:", this.customer);
+                console.warn(
+                  "Default customer not found in loaded customers list:",
+                  this.customer
+                );
               }
             }
           }
@@ -180,7 +192,10 @@ export default {
     handleClickOutside(e) {
       try {
         // Prefer composedPath for Shadow DOM / web components compatibility
-        const path = (typeof e.composedPath === "function" && e.composedPath()) || e.path || [];
+        const path =
+          (typeof e.composedPath === "function" && e.composedPath()) ||
+          e.path ||
+          [];
 
         // Resolve the component root element safely (some test harnesses can wrap $el)
         const root =
@@ -192,13 +207,18 @@ export default {
 
         // Find the autocomplete wrapper starting from component root if possible,
         // otherwise fall back to querying the document (safe fallback).
-        const wrapper = root ? root.querySelector(".autocomplete") : document.querySelector(".autocomplete");
+        const wrapper = root
+          ? root.querySelector(".autocomplete")
+          : document.querySelector(".autocomplete");
         if (!wrapper) return;
 
         // If event path exists, check whether any node in the path is the wrapper (or inside it).
         if (path && path.length) {
           for (let i = 0; i < path.length; i++) {
-            if (path[i] === wrapper || (path[i] instanceof Node && wrapper.contains(path[i]))) {
+            if (
+              path[i] === wrapper ||
+              (path[i] instanceof Node && wrapper.contains(path[i]))
+            ) {
               return; // click occurred inside the wrapper -> do nothing
             }
           }
@@ -220,15 +240,39 @@ export default {
 
     registerEventListeners() {
       try {
-        evntBus.on(EVENT_NAMES.TOGGLE_QUICK_RETURN, this.handleToggleQuickReturn);
-        evntBus.on(EVENT_NAMES.REGISTER_POS_PROFILE, this.handleRegisterPosProfile);
-        evntBus.on(EVENT_NAMES.PAYMENTS_REGISTER_POS_PROFILE, this.handlePaymentsRegisterPosProfile);
+        evntBus.on(
+          EVENT_NAMES.TOGGLE_QUICK_RETURN,
+          this.handleToggleQuickReturn
+        );
+        evntBus.on(
+          EVENT_NAMES.REGISTER_POS_PROFILE,
+          this.handleRegisterPosProfile
+        );
+        evntBus.on(
+          EVENT_NAMES.PAYMENTS_REGISTER_POS_PROFILE,
+          this.handlePaymentsRegisterPosProfile
+        );
         evntBus.on(EVENT_NAMES.SET_CUSTOMER, this.handleSetCustomer);
-        evntBus.on(EVENT_NAMES.ADD_CUSTOMER_TO_LIST, this.handleAddCustomerToList);
-        evntBus.on(EVENT_NAMES.SET_CUSTOMER_READONLY, this.handleSetCustomerReadonly);
-        evntBus.on(EVENT_NAMES.SET_CUSTOMER_INFO_TO_EDIT, this.handleSetCustomerInfoToEdit);
-        evntBus.on(EVENT_NAMES.FETCH_CUSTOMER_DETAILS, this.handleFetchCustomerDetails);
-        evntBus.on(EVENT_NAMES.CUSTOMER_DROPDOWN_OPENED, this.handleCustomerDropdownOpened);
+        evntBus.on(
+          EVENT_NAMES.ADD_CUSTOMER_TO_LIST,
+          this.handleAddCustomerToList
+        );
+        evntBus.on(
+          EVENT_NAMES.SET_CUSTOMER_READONLY,
+          this.handleSetCustomerReadonly
+        );
+        evntBus.on(
+          EVENT_NAMES.SET_CUSTOMER_INFO_TO_EDIT,
+          this.handleSetCustomerInfoToEdit
+        );
+        evntBus.on(
+          EVENT_NAMES.FETCH_CUSTOMER_DETAILS,
+          this.handleFetchCustomerDetails
+        );
+        evntBus.on(
+          EVENT_NAMES.CUSTOMER_DROPDOWN_OPENED,
+          this.handleCustomerDropdownOpened
+        );
       } catch {
         this.showMessage(ERROR_MESSAGES.INITIALIZATION_ERROR, "error");
       }
@@ -275,7 +319,11 @@ export default {
 
   beforeUnmount() {
     if (this._boundHandleClickOutside) {
-      document.removeEventListener("click", this._boundHandleClickOutside, true);
+      document.removeEventListener(
+        "click",
+        this._boundHandleClickOutside,
+        true
+      );
       this._boundHandleClickOutside = null;
     }
   },
