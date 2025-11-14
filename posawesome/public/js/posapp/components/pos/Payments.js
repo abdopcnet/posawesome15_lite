@@ -178,7 +178,6 @@ export default {
         if (print) {
           this.load_print_page();
         }
-        this.showMessage("Invoice has already been submitted", "info");
         evntBus.emit(EVENT_NAMES.SET_LAST_INVOICE, this.invoice_doc.name);
         evntBus.emit(EVENT_NAMES.NEW_INVOICE, "false");
         this.back_to_invoice();
@@ -275,10 +274,6 @@ export default {
 
       if (autoMode) {
         this.load_print_page();
-        this.showMessage(
-          "Invoice printed using default payment method",
-          "success"
-        );
         evntBus.emit(EVENT_NAMES.NEW_INVOICE, "false");
         this.back_to_invoice();
         return;
@@ -318,10 +313,6 @@ export default {
               this.load_print_page();
             }
             evntBus.emit(EVENT_NAMES.SET_LAST_INVOICE, this.invoice_doc.name);
-            this.showMessage(
-              `Invoice ${r.message.name} submitted successfully`,
-              "success"
-            );
             this.addresses = [];
             evntBus.emit(EVENT_NAMES.NEW_INVOICE, "false");
             evntBus.emit(EVENT_NAMES.INVOICE_SUBMITTED);
@@ -671,7 +662,6 @@ export default {
       });
 
       evntBus.emit(EVENT_NAMES.UNFREEZE);
-      this.showMessage("Payment request feature has been disabled", "info");
     },
   },
 
