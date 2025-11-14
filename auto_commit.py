@@ -149,8 +149,10 @@ if __name__ == "__main__":
         ext = f[f.rfind('.'):] if '.' in f else ''
         emoji = EMOJI.get(ext, '📄')
         filename = f.split('/')[-1]  # Get only filename without path
-        subprocess.run(f"git add {f}", shell=True)
-        subprocess.run(f'git commit -m "{emoji} {filename}"', shell=True)
+        
+        # Use list form to avoid shell escaping issues with Arabic filenames
+        subprocess.run(["git", "add", f])
+        subprocess.run(["git", "commit", "-m", f"{emoji} {filename}"])
 
     # Check if no more changes, then push
     if not subprocess.getoutput("git status --porcelain"):
