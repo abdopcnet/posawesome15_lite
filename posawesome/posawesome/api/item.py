@@ -134,8 +134,8 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
         return items
 
     except Exception as e:
-        frappe.log_error(title="api.item.get_items", message={
-            "fn": "get_items", "error": str(e)})
+        frappe.logger().error(f"[item.py] get_items: {str(e)}")
+        frappe.throw(_("Error fetching items"))
         return []
 
 
@@ -150,7 +150,8 @@ def get_items_groups():
             order_by="name"
         )
     except Exception as e:
-        frappe.logger().error(f"Error in get_items_groups: {str(e)}")
+        frappe.logger().error(f"[item.py] get_items_groups: {str(e)}")
+        frappe.throw(_("Error fetching item groups"))
         return []
 
 
@@ -172,7 +173,8 @@ def get_barcode_item(pos_profile, barcode_value):
         return result or {}
 
     except Exception as e:
-        frappe.logger().error(f"Error in get_barcode_item: {str(e)}")
+        frappe.logger().error(f"[item.py] get_barcode_item: {str(e)}")
+        frappe.throw(_("Error processing barcode"))
         return {}
 
 
