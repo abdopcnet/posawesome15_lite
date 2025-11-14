@@ -57,6 +57,8 @@ const API_MAP = {
       'posawesome.posawesome.doctype.pos_opening_shift.pos_opening_shift.create_opening_voucher',
     GET_CURRENT_SHIFT_NAME:
       'posawesome.posawesome.doctype.pos_opening_shift.pos_opening_shift.get_current_shift_name',
+    GET_ALL_OPEN_SHIFTS:
+      'posawesome.posawesome.doctype.pos_opening_shift.pos_opening_shift.get_all_open_shifts',
     GET_USER_SHIFT_INVOICE_COUNT:
       'posawesome.posawesome.doctype.pos_opening_shift.pos_opening_shift.get_user_shift_invoice_count',
     GET_PROFILE_USERS:
