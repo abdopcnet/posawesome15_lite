@@ -166,7 +166,7 @@ if __name__ == "__main__":
     for status, f in files_data:
         ext = f[f.rfind('.'):] if '.' in f else ''
         filename = f.split('/')[-1]  # Get only filename without path
-        
+
         # Handle deleted files
         if 'D' in status:
             emoji = '🗑️'
