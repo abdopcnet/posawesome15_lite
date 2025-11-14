@@ -137,9 +137,13 @@ if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
 
     # Get changed files
-    result = subprocess.run(["git", "status", "--short"], capture_output=True, text=True)
+    result = subprocess.run(["git", "status", "--short"],
+                            capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"❌ Error running git status: {result.stderr.strip()}")
+        exit(1)
     files_raw = result.stdout.strip().split('\n')
-    
+
     if not files_raw or files_raw == ['']:
         print("✅ No changes")
         exit()
@@ -161,13 +165,13 @@ if __name__ == "__main__":
     # Commit each file
     for status, f in files_data:
         ext = f[f.rfind('.'):] if '.' in f else ''
-        emoji = EMOJI.get(ext, '📄')
-        filename = f.split('/')[-1]  # Get only filename without path
-        
+        # Handle deleted files
+        if status.startswith('D') or status == 'D':
+            emoji = '🗑️'
         # Handle deleted files
         if 'D' in status:
             emoji = '🗑️'
-        
+
         # Use list form to avoid shell escaping issues with Arabic filenames
         subprocess.run(["git", "add", f])
         subprocess.run(["git", "commit", "-m", f"{emoji} {filename}"])
