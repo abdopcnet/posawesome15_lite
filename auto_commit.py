@@ -137,18 +137,36 @@ if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
 
     # Get changed files
-    files = subprocess.getoutput("git status --short").strip().split('\n')
-    files = [f.split()[1] for f in files if f.strip()]
+    result = subprocess.run(["git", "status", "--short"], capture_output=True, text=True)
+    files_raw = result.stdout.strip().split('\n')
+    
+    if not files_raw or files_raw == ['']:
+        print("✅ No changes")
+        exit()
 
-    if not files:
+    # Process files with their status (M, A, D, etc.)
+    files_data = []
+    for line in files_raw:
+        if not line.strip():
+            continue
+        parts = line.split(maxsplit=1)
+        if len(parts) == 2:
+            status, filepath = parts
+            files_data.append((status.strip(), filepath.strip()))
+
+    if not files_data:
         print("✅ No changes")
         exit()
 
     # Commit each file
-    for f in files:
+    for status, f in files_data:
         ext = f[f.rfind('.'):] if '.' in f else ''
         emoji = EMOJI.get(ext, '📄')
         filename = f.split('/')[-1]  # Get only filename without path
+        
+        # Handle deleted files
+        if 'D' in status:
+            emoji = '🗑️'
         
         # Use list form to avoid shell escaping issues with Arabic filenames
         subprocess.run(["git", "add", f])
