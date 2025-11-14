@@ -375,10 +375,7 @@ def get_current_shift_name():
             row["period_start_date"] = str(row["period_start_date"])
 
         # Log POS Profile for language debugging
-        frappe.log_error(
-            title="[pos_opening_shift.py] get_current_shift_name",
-            message=f"User: {user}, POS Profile: {row.get('pos_profile')}"
-        )
+        frappe.logger().error(f"[pos_opening_shift.py] get_current_shift_name: User: {user}, POS Profile: {row.get('pos_profile')}")
 
         result = {
             "success": True,
