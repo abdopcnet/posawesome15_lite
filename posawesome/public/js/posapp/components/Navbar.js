@@ -239,7 +239,7 @@ export default {
           }
         },
         error: (err) => {
-          console.error("Error fetching cash total:", err);
+          console.log("[Navbar.js] Error fetching cash total:", err);
           this.totalCash = 0;
         },
       });
@@ -263,7 +263,7 @@ export default {
           }
         },
         error: (err) => {
-          console.error("Error fetching non-cash total:", err);
+          console.log("[Navbar.js] Error fetching non-cash total:", err);
           this.totalNonCash = 0;
         },
       });
@@ -462,20 +462,20 @@ export default {
       if (this.errorSound && this.soundEnabled) {
         this.errorSound.currentTime = 0;
         this.errorSound.play().catch((err) => {
-          console.error("[Navbar] Failed to play error sound:", err);
+          console.log("[Navbar.js] Failed to play error sound:", err);
         });
       } else {
         // If sound not enabled yet, try to enable it and play
         if (!this.soundEnabled) {
-          console.warn("[Navbar] Sound not enabled, attempting to enable...");
+          console.log("[Navbar.js] Sound not enabled, attempting to enable...");
           this.enableSound();
           // Try to play after a short delay
           setTimeout(() => {
             if (this.errorSound && this.soundEnabled) {
               this.errorSound.currentTime = 0;
               this.errorSound.play().catch((err) => {
-                console.error(
-                  "[Navbar] Failed to play error sound after enable:",
+                console.log(
+                  "[Navbar.js] Failed to play error sound after enable:",
                   err
                 );
               });
@@ -494,8 +494,8 @@ export default {
       const timeoutId = setTimeout(() => {
         if (!responded) {
           timeoutTriggered = true;
-          console.warn(
-            "[Navbar] Ping timeout after 2 seconds - no response from server"
+          console.log(
+            "[Navbar.js] Ping timeout after 2 seconds - no response from server"
           );
           this.pingTime = "999";
           this.playErrorSound();
@@ -533,7 +533,7 @@ export default {
             if (!timeoutTriggered) {
               responded = true;
               clearTimeout(timeoutId);
-              console.warn("[Navbar] Ping error:", err);
+              console.log("[Navbar.js] Ping error:", err);
               this.pingTime = "999";
               // Mark connection as lost
               this.wasConnectionLost = true;
@@ -547,7 +547,7 @@ export default {
         console.log("[Navbar.js] measurePing error:", error);
         // Exception happens immediately when connection is lost
         if (!timeoutTriggered) {
-          console.error("[Navbar] Ping exception (connection lost):", error);
+          console.log("[Navbar.js] Ping exception (connection lost):", error);
           this.pingTime = "999";
           // Play sound immediately on exception (connection lost)
           this.playErrorSound();
