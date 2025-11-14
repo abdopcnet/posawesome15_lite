@@ -374,7 +374,8 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
         return customers
 
     except Exception as e:
-        frappe.throw(_("Error searching customers: {0}").format(str(e)))
+        frappe.logger().error(f"[customer.py] get_many_customers: {str(e)}")
+        frappe.throw(_("Error searching customers"))
 
 
 @frappe.whitelist()
@@ -438,6 +439,7 @@ def get_customers_count(search_term="", pos_profile=None, filters=None):
         return count
 
     except Exception as e:
+        frappe.logger().error(f"[customer.py] get_customers_count: {str(e)}")
         return 0
 
 
@@ -884,7 +886,7 @@ def _parse_birthday(birthday_input):
     except ValueError:
         return None
     except Exception as e:
-        frappe.logger().error(f"Error parsing birthday: {e}")
+        frappe.logger().error(f"[customer.py] _parse_birthday: {str(e)}")
         return None
 
 
