@@ -57,7 +57,8 @@
             "
           >
             <span style="font-size: 1.25rem; font-weight: 700; color: #1976d2">
-              Add New Address
+              <!-- Add New Address -->
+              إضافة عنوان جديد
             </span>
             <button
               @click="addressDialog = false"
@@ -90,16 +91,29 @@
             <div style="padding: 8px">
               <!-- Address Title -->
               <div style="padding: 4px; margin-bottom: 4px">
-                <div style="display: flex; flex-direction: column; gap: 4px; width: 100%">
+                <div
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                    width: 100%;
+                  "
+                >
                   <label
-                    style="font-size: 0.75rem; font-weight: 600; color: #555; margin-bottom: 2px"
+                    style="
+                      font-size: 0.75rem;
+                      font-weight: 600;
+                      color: #555;
+                      margin-bottom: 2px;
+                    "
                   >
-                    Address Title
+                    <!-- Address Title -->
+                    عنوان العنوان
                   </label>
                   <input
                     type="text"
                     v-model="address.name"
-                    placeholder="Enter address title"
+                    placeholder="أدخل عنوان العنوان"
                     style="
                       width: 100%;
                       padding: 6px 10px;
@@ -118,16 +132,29 @@
 
               <!-- Address Line 1 -->
               <div style="padding: 4px; margin-bottom: 4px">
-                <div style="display: flex; flex-direction: column; gap: 4px; width: 100%">
+                <div
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                    width: 100%;
+                  "
+                >
                   <label
-                    style="font-size: 0.75rem; font-weight: 600; color: #555; margin-bottom: 2px"
+                    style="
+                      font-size: 0.75rem;
+                      font-weight: 600;
+                      color: #555;
+                      margin-bottom: 2px;
+                    "
                   >
-                    Address Line 1
+                    <!-- Address Line 1 -->
+                    السطر الأول من العنوان
                   </label>
                   <input
                     type="text"
                     v-model="address.address_line1"
-                    placeholder="Enter address line 1"
+                    placeholder="أدخل السطر الأول من العنوان"
                     style="
                       width: 100%;
                       padding: 6px 10px;
@@ -146,16 +173,29 @@
 
               <!-- Address Line 2 -->
               <div style="padding: 4px; margin-bottom: 4px">
-                <div style="display: flex; flex-direction: column; gap: 4px; width: 100%">
+                <div
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                    width: 100%;
+                  "
+                >
                   <label
-                    style="font-size: 0.75rem; font-weight: 600; color: #555; margin-bottom: 2px"
+                    style="
+                      font-size: 0.75rem;
+                      font-weight: 600;
+                      color: #555;
+                      margin-bottom: 2px;
+                    "
                   >
-                    Address Line 2
+                    <!-- Address Line 2 -->
+                    السطر الثاني من العنوان
                   </label>
                   <input
                     type="text"
                     v-model="address.address_line2"
-                    placeholder="Enter address line 2"
+                    placeholder="أدخل السطر الثاني من العنوان"
                     style="
                       width: 100%;
                       padding: 6px 10px;
@@ -175,17 +215,36 @@
               <!-- City & State -->
               <div style="display: flex; gap: 8px; margin-bottom: 4px">
                 <!-- City -->
-                <div style="flex: 0 0 calc(50% - 4px); max-width: calc(50% - 4px); padding: 4px">
-                  <div style="display: flex; flex-direction: column; gap: 4px; width: 100%">
+                <div
+                  style="
+                    flex: 0 0 calc(50% - 4px);
+                    max-width: calc(50% - 4px);
+                    padding: 4px;
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      gap: 4px;
+                      width: 100%;
+                    "
+                  >
                     <label
-                      style="font-size: 0.75rem; font-weight: 600; color: #555; margin-bottom: 2px"
+                      style="
+                        font-size: 0.75rem;
+                        font-weight: 600;
+                        color: #555;
+                        margin-bottom: 2px;
+                      "
                     >
-                      City
+                      <!-- City -->
+                      المدينة
                     </label>
                     <input
                       type="text"
                       v-model="address.city"
-                      placeholder="Enter city"
+                      placeholder="أدخل المدينة"
                       style="
                         width: 100%;
                         padding: 6px 10px;
@@ -203,17 +262,36 @@
                 </div>
 
                 <!-- State -->
-                <div style="flex: 0 0 calc(50% - 4px); max-width: calc(50% - 4px); padding: 4px">
-                  <div style="display: flex; flex-direction: column; gap: 4px; width: 100%">
+                <div
+                  style="
+                    flex: 0 0 calc(50% - 4px);
+                    max-width: calc(50% - 4px);
+                    padding: 4px;
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      gap: 4px;
+                      width: 100%;
+                    "
+                  >
                     <label
-                      style="font-size: 0.75rem; font-weight: 600; color: #555; margin-bottom: 2px"
+                      style="
+                        font-size: 0.75rem;
+                        font-weight: 600;
+                        color: #555;
+                        margin-bottom: 2px;
+                      "
                     >
-                      State
+                      <!-- State -->
+                      الولاية
                     </label>
                     <input
                       type="text"
                       v-model="address.state"
-                      placeholder="Enter state"
+                      placeholder="أدخل الولاية"
                       style="
                         width: 100%;
                         padding: 6px 10px;
@@ -270,7 +348,8 @@
                 margin-right: 8px;
               "
             >
-              Cancel
+              <!-- Cancel -->
+              إلغاء
             </button>
 
             <!-- Confirm Button -->
@@ -294,7 +373,8 @@
                 border-radius: 6px;
               "
             >
-              Confirm
+              <!-- Confirm -->
+              تأكيد
             </button>
           </div>
         </div>
