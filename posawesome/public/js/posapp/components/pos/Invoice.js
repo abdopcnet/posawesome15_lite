@@ -1170,10 +1170,6 @@ export default {
       if (dis_percent > maxDiscount) {
         dis_percent = maxDiscount;
         // Maximum discount applied
-        evntBus.emit("show_mesage", {
-          text: `تم تطبيق الحد الأقصى للخصم: ${maxDiscount}%`,
-          color: "info",
-        });
       }
 
       item.discount_percentage = dis_percent;
@@ -1253,10 +1249,6 @@ export default {
           this.getPrecision("rate", item)
         );
         // Maximum discount applied
-        evntBus.emit("show_mesage", {
-          text: `تم تطبيق الحد الأقصى للخصم: ${maxDiscount}%`,
-          color: "info",
-        });
       }
 
       item.rate = newRate;
@@ -1315,11 +1307,6 @@ export default {
         this.additional_discount_percentage = 0;
       } else if (value > maxDiscount) {
         this.additional_discount_percentage = maxDiscount;
-        evntBus.emit("show_mesage", {
-          // Maximum invoice discount is
-          text: `الحد الأقصى لخصم الفاتورة هو ${maxDiscount}%`,
-          color: "info",
-        });
       }
 
       // Clear offer tracking if manually changed
@@ -2452,11 +2439,6 @@ export default {
             window.open(print_url);
 
             evntBus.emit("set_last_invoice", r.message.name);
-            evntBus.emit("show_mesage", {
-              // Invoice X submitted
-              text: `تم إرسال الفاتورة ${r.message.name}`,
-              color: "success",
-            });
 
             // Reset session after successful print (all cases: normal, return, quick return)
             this.reset_invoice_session();
