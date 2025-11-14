@@ -610,7 +610,7 @@ export default {
       try {
         onScan.detachFrom(document);
       } catch (e) {
-        // Ignore if nothing to detach
+        console.log("[ItemsSelector.js] Error:", e);
       }
 
       onScan.attachTo(document, {
@@ -760,7 +760,7 @@ export default {
     try {
       onScan.detachFrom(document);
     } catch (e) {
-      // Ignore if already detached
+      console.log("[ItemsSelector.js] Error:", e);
     }
 
     // Clean up event listeners
