@@ -284,15 +284,6 @@ export default {
           if (response?.message?.item_code) {
             // Add item to cart
             this.add_item_to_cart(response.message);
-
-            // Show success message with quantity info
-            const qty = response.message.qty || 1;
-            const qtyText = qty !== 1 ? ` (qty: ${qty})` : "";
-
-            evntBus.emit("show_mesage", {
-              text: `Added ${response.message.item_name}${qtyText} to cart`,
-              color: "success",
-            });
           } else {
             evntBus.emit("show_mesage", {
               text: "Item not found with this barcode",
@@ -609,7 +600,10 @@ export default {
       // Detach any existing onScan listener first to prevent duplicates
       try {
         // Check if scannerDetectionData exists before detaching
-        if (document.scannerDetectionData && document.scannerDetectionData.options) {
+        if (
+          document.scannerDetectionData &&
+          document.scannerDetectionData.options
+        ) {
           onScan.detachFrom(document);
         }
       } catch (e) {
@@ -762,7 +756,10 @@ export default {
     // Detach onScan listener
     try {
       // Check if scannerDetectionData exists before detaching
-      if (document.scannerDetectionData && document.scannerDetectionData.options) {
+      if (
+        document.scannerDetectionData &&
+        document.scannerDetectionData.options
+      ) {
         onScan.detachFrom(document);
       }
     } catch (e) {
