@@ -163,9 +163,10 @@
               <i class="mdi mdi-barcode" style="color: #4caf50; font-size: 20px"></i>
             </div>
 
+            <!-- Barcode disabled in return mode or Scan Barcode -->
             <input
               type="text"
-              :placeholder="is_return_invoice ? __('Barcode disabled in return mode') : __('Scan Barcode')"
+              :placeholder="is_return_invoice ? 'الباركود معطل في وضع المرتجعات' : 'مسح الباركود'"
               v-model="barcode_search"
               @keyup.enter="handle_barcode_input"
               ref="barcode_search"
@@ -252,9 +253,10 @@
               <i class="mdi mdi-magnify" style="color: #1976d2; font-size: 20px"></i>
             </div>
 
+            <!-- Search Item -->
             <input
               type="text"
-              :placeholder="__('Search Item')"
+              placeholder="بحث عن صنف"
               v-model="debounce_search"
               @keydown.esc="esc_event"
               ref="debounce_search"
