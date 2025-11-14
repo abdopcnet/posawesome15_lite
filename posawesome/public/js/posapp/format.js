@@ -15,7 +15,7 @@ export default {
         rounding_method = "Banker's Rounding";
         return flt(value, precision, number_format, rounding_method);
       } catch (error) {
-        console.error('format: flt error', error);
+        console.log("[format.js] flt error:", error);
         return parseFloat(value || 0).toFixed(precision || 2);
       }
     },
@@ -26,10 +26,10 @@ export default {
         return format_number(
           value,
           null, // Use default number format
-          precision || this.currency_precision || 2,
+          precision || this.currency_precision || 2
         );
       } catch (error) {
-        console.error('format: currency error', error);
+        console.log("[format.js] currency error:", error);
         return parseFloat(value || 0).toFixed(precision || 2);
       }
     },
@@ -37,14 +37,24 @@ export default {
     formatFloat(value, precision) {
       try {
         // Simplified for single currency - use your float_precision=3
-        return format_number(value, null, precision || this.float_precision || 3);
+        return format_number(
+          value,
+          null,
+          precision || this.float_precision || 3
+        );
       } catch (error) {
-        console.error('format: float error', error);
+        console.log("[format.js] float error:", error);
         return parseFloat(value || 0).toFixed(precision || 3);
       }
     },
 
-    setFormatedCurrency(el, field_name, precision, no_negative = false, $event) {
+    setFormatedCurrency(
+      el,
+      field_name,
+      precision,
+      no_negative = false,
+      $event
+    ) {
       let value = 0;
       try {
         let _value = parseFloat($event.target.value);
@@ -56,11 +66,11 @@ export default {
         }
         value = this.formatCurrency($event.target.value, precision);
       } catch (e) {
-        console.error('format: setCurrency error', e);
+        console.log("[format.js] setCurrency error:", e);
         value = parseFloat($event.target.value || 0).toFixed(precision || 2);
       }
 
-      if (typeof el === 'object') {
+      if (typeof el === "object") {
         el[field_name] = value;
       } else {
         this[field_name] = value;
@@ -79,11 +89,11 @@ export default {
         }
         value = this.formatFloat($event.target.value, precision);
       } catch (e) {
-        console.error('format: setFloat error', e);
+        console.log("[format.js] setFloat error:", e);
         value = parseFloat($event.target.value || 0).toFixed(precision || 3);
       }
 
-      if (typeof el === 'object') {
+      if (typeof el === "object") {
         el[field_name] = value;
       } else {
         this[field_name] = value;
@@ -92,15 +102,15 @@ export default {
     },
 
     currencySymbol(currency) {
-      return '';
+      return "";
     },
 
     isNumber(value) {
       try {
         const pattern = /^-?(\d+|\d{1,3}(\.\d{3})*)(,\d+)?$/;
-        return pattern.test(value) || 'invalid number';
+        return pattern.test(value) || "invalid number";
       } catch (error) {
-        console.error('format: isNumber error', error);
+        console.log("[format.js] isNumber error:", error);
         return false;
       }
     },
@@ -108,7 +118,8 @@ export default {
 
   mounted() {
     // Use your fixed System Settings values
-    this.float_precision = frappe.defaults.get_default('float_precision') || 3;
-    this.currency_precision = frappe.defaults.get_default('currency_precision') || 2;
+    this.float_precision = frappe.defaults.get_default("float_precision") || 3;
+    this.currency_precision =
+      frappe.defaults.get_default("currency_precision") || 2;
   },
 };
