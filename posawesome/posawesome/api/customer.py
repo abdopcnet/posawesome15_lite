@@ -124,15 +124,12 @@ def create_customer(
         # Return the created customer with all details
         return customer_doc.as_dict()
 
+    except (frappe.exceptions.ValidationError, frappe.exceptions.PermissionError, frappe.exceptions.DoesNotExistError):
+        raise  # Re-raise validation/permission errors as-is
     except Exception as e:
-        frappe.logger().error(f"Error in post_customer: {str(e)}")
+        frappe.logger().error(f"Error in create_customer: {str(e)}")
         frappe.logger().error(frappe.get_traceback())
-
-        # Re-raise the error with a user-friendly message
-        if "already exists" in str(e):
-            raise  # Re-raise duplicate errors as-is
-        else:
-            frappe.throw(_("Error creating customer: {0}").format(str(e)))
+        frappe.throw(_("Error creating customer: {0}").format(str(e)))
 
 
 @frappe.whitelist()
@@ -171,6 +168,8 @@ def create_customer_address(args):
 
         return address.as_dict()
 
+    except (frappe.exceptions.ValidationError, frappe.exceptions.PermissionError):
+        raise  # Re-raise validation/permission errors as-is
     except Exception as e:
         frappe.logger().error(f"Error in create_customer_address: {str(e)}")
         frappe.throw(_("Error creating address: {0}").format(str(e)))
@@ -257,11 +256,11 @@ def get_customer(customer_id):
 
         return result
 
+    except (frappe.exceptions.ValidationError, frappe.exceptions.PermissionError, frappe.exceptions.DoesNotExistError):
+        raise  # Re-raise validation/permission errors as-is
     except Exception as e:
         frappe.logger().error(f"Error in get_customer: {str(e)}")
-        frappe.logger().error(frappe.get_traceback())
-        frappe.throw(
-            _("Error retrieving customer information: {0}").format(str(e)))
+        frappe.throw(_("Error retrieving customer information: {0}").format(str(e)))
 
 
 @frappe.whitelist()
@@ -488,9 +487,10 @@ def get_many_customer_addresses(customer_id):
 
         return addresses
 
+    except (frappe.exceptions.ValidationError, frappe.exceptions.PermissionError):
+        raise  # Re-raise validation/permission errors as-is
     except Exception as e:
-        frappe.logger().error(
-            f"Error in get_many_customer_addresses: {str(e)}")
+        frappe.logger().error(f"Error in get_many_customer_addresses: {str(e)}")
         frappe.throw(_("Error retrieving addresses: {0}").format(str(e)))
 
 
@@ -645,15 +645,11 @@ def update_customer(
         # Return the updated customer document
         return customer_doc.as_dict()
 
+    except (frappe.exceptions.ValidationError, frappe.exceptions.PermissionError, frappe.exceptions.DoesNotExistError):
+        raise  # Re-raise validation/permission errors as-is
     except Exception as e:
         frappe.logger().error(f"Error in update_customer: {str(e)}")
-        frappe.logger().error(frappe.get_traceback())
-
-        # Re-raise validation errors as-is
-        if "already exists" in str(e) or "does not exist" in str(e) or "permission" in str(e).lower():
-            raise
-        else:
-            frappe.throw(_("Error updating customer: {0}").format(str(e)))
+        frappe.throw(_("Error updating customer: {0}").format(str(e)))
 
 
 @frappe.whitelist()
@@ -679,6 +675,8 @@ def patch_customer(customer_id, **kwargs):
 
         return update_customer(customer_id, **update_data)
 
+    except (frappe.exceptions.ValidationError, frappe.exceptions.PermissionError, frappe.exceptions.DoesNotExistError):
+        raise  # Re-raise validation/permission errors as-is
     except Exception as e:
         frappe.logger().error(f"Error in patch_customer: {str(e)}")
         raise
@@ -741,9 +739,10 @@ def get_customer_credit(customer_id, company=None):
 
         return result
 
+    except (frappe.exceptions.ValidationError, frappe.exceptions.PermissionError, frappe.exceptions.DoesNotExistError):
+        raise  # Re-raise validation/permission errors as-is
     except Exception as e:
         frappe.logger().error(f"Error in get_customer_credit: {str(e)}")
-        frappe.logger().error(frappe.get_traceback())
         frappe.throw(_("Error retrieving customer credit: {0}").format(str(e)))
 
 
@@ -834,11 +833,11 @@ def get_customer_credit_summary(customer_id, company=None):
             "total_available_credit": total_credit
         }
 
+    except (frappe.exceptions.ValidationError, frappe.exceptions.PermissionError, frappe.exceptions.DoesNotExistError):
+        raise  # Re-raise validation/permission errors as-is
     except Exception as e:
-        frappe.logger().error(
-            f"Error in get_customer_credit_summary: {str(e)}")
-        frappe.throw(
-            _("Error retrieving customer credit summary: {0}").format(str(e)))
+        frappe.logger().error(f"Error in get_customer_credit_summary: {str(e)}")
+        frappe.throw(_("Error retrieving customer credit summary: {0}").format(str(e)))
 
 
 # =============================================================================
