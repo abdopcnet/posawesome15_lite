@@ -403,6 +403,7 @@ export default {
           }, 1000);
         }
       } catch (error) {
+        console.log("[Navbar.js] clearCacheAndReload error:", error);
         this.show_mesage({
           color: "error",
           text: "Error clearing cache: " + error.message,
@@ -427,6 +428,7 @@ export default {
           this.shift_invoice_count = response.message;
         }
       } catch (error) {
+        console.log("[Navbar.js] getShiftInvoiceCount error:", error);
         this.shift_invoice_count = 0;
       }
     },
@@ -449,10 +451,10 @@ export default {
             console.log("[Navbar] Sound enabled successfully");
           })
           .catch((err) => {
-            console.warn("[Navbar] Could not enable sound:", err);
+            console.log("[Navbar.js] enableSound play error:", err);
           });
       } catch (err) {
-        console.warn("[Navbar] Error enabling sound:", err);
+        console.log("[Navbar.js] enableSound error:", err);
       }
     },
     // Play error sound (only if enabled)
@@ -542,6 +544,7 @@ export default {
           async: true,
         });
       } catch (error) {
+        console.log("[Navbar.js] measurePing error:", error);
         // Exception happens immediately when connection is lost
         if (!timeoutTriggered) {
           console.error("[Navbar] Ping exception (connection lost):", error);
@@ -602,7 +605,7 @@ export default {
         el.style.filter = "brightness(1.03)";
         el.style.borderColor = "rgba(0,0,0,0.08)";
       } catch (err) {
-        console.warn("badgeMouseEnter error", err);
+        console.log("[Navbar.js] badgeMouseEnter error:", err);
       }
     },
 
@@ -619,7 +622,7 @@ export default {
           el.style.borderColor = "";
         }
       } catch (err) {
-        console.warn("badgeMouseLeave error", err);
+        console.log("[Navbar.js] badgeMouseLeave error:", err);
       }
     },
   },
@@ -725,6 +728,7 @@ export default {
           this.togglePingMonitoring(enable);
         });
       } catch (error) {
+        console.log("[Navbar.js] created error:", error);
         this.show_mesage({
           color: "error",
           text: "An error occurred while loading the menu.",
