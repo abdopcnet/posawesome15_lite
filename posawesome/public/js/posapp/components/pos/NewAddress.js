@@ -24,11 +24,6 @@ export default {
         callback: (r) => {
           if (!r.exc) {
             evntBus.emit("add_the_new_address", r.message);
-            evntBus.emit("show_mesage", {
-              // Customer address created successfully
-              text: "تم إنشاء عنوان العميل بنجاح.",
-              color: "success",
-            });
             vm.addressDialog = false;
             vm.customer = "";
             vm.address = {};
