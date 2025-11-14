@@ -11,26 +11,19 @@
     <Returns></Returns>
     <NewAddress></NewAddress>
     <OpeningDialog v-if="dialog" :dialog="dialog"></OpeningDialog>
+    <OpenShiftsWarning :isOpen="showOpenShiftsWarning" :shifts="openShifts"></OpenShiftsWarning>
 
     <!-- =========================================== -->
     <!-- MAIN POS INTERFACE -->
     <!-- =========================================== -->
     <div
       v-show="!dialog"
-      style="
-        display: flex;
-        gap: 5px;
-        min-height: calc(100vh - 130px);
-        width: 100%;
-        margin-top: 3px;
-      "
+      style="display: flex; gap: 5px; min-height: calc(100vh - 130px); width: 100%; margin-top: 3px"
     >
       <!-- =========================================== -->
       <!-- LEFT PANEL (Items/Offers/Payments) -->
       <!-- =========================================== -->
-      <div
-        style="flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative"
-      >
+      <div style="flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative">
         <!-- Items Selector Panel -->
         <div
           v-show="!payment && !offers"
@@ -72,10 +65,7 @@
             bottom: 0;
           "
         >
-          <PosOffers
-            @offerApplied="handleOfferApplied"
-            @offerRemoved="handleOfferRemoved"
-          ></PosOffers>
+          <PosOffers @offerApplied="handleOfferApplied" @offerRemoved="handleOfferRemoved"></PosOffers>
         </div>
 
         <!-- Payments Panel -->
@@ -118,12 +108,7 @@
             border: 1px solid rgba(0, 0, 0, 0.05);
           "
         >
-          <Invoice
-            :is_payment="payment"
-            :offer-applied="offerApplied"
-            :offer-removed="offerRemoved"
-          >
-          </Invoice>
+          <Invoice :is_payment="payment" :offer-applied="offerApplied" :offer-removed="offerRemoved"> </Invoice>
         </div>
       </div>
     </div>
