@@ -1,37 +1,37 @@
-import { evntBus } from '../../bus';
-import { API_MAP } from '../../api_mapper.js';
+import { evntBus } from "../../bus";
+import { API_MAP } from "../../api_mapper.js";
 
 const EVENT_NAMES = {
-  SHOW_MESSAGE: 'show_mesage',
-  ADD_CUSTOMER_TO_LIST: 'add_customer_to_list',
-  SET_CUSTOMER: 'set_customer',
-  FETCH_CUSTOMER_DETAILS: 'fetch_customer_details',
+  SHOW_MESSAGE: "show_mesage",
+  ADD_CUSTOMER_TO_LIST: "add_customer_to_list",
+  SET_CUSTOMER: "set_customer",
+  FETCH_CUSTOMER_DETAILS: "fetch_customer_details",
 
-  OPEN_UPDATE_CUSTOMER: 'open_update_customer',
-  REGISTER_POS_PROFILE: 'register_pos_profile',
-  PAYMENTS_REGISTER_POS_PROFILE: 'payments_register_pos_profile',
+  OPEN_UPDATE_CUSTOMER: "open_update_customer",
+  REGISTER_POS_PROFILE: "register_pos_profile",
+  PAYMENTS_REGISTER_POS_PROFILE: "payments_register_pos_profile",
 };
 
 const VALIDATION_MESSAGES = {
-  CUSTOMER_NAME_REQUIRED: 'Customer name is required.',
-  CUSTOMER_GROUP_REQUIRED: 'Customer group name is required.',
-  TERRITORY_REQUIRED: 'Territory name is required.',
+  CUSTOMER_NAME_REQUIRED: "Customer name is required.",
+  CUSTOMER_GROUP_REQUIRED: "Customer group name is required.",
+  TERRITORY_REQUIRED: "Territory name is required.",
 };
 
 const SUCCESS_MESSAGES = {
-  CUSTOMER_CREATED: 'Customer created successfully.',
-  CUSTOMER_UPDATED: 'Customer data updated successfully.',
+  CUSTOMER_CREATED: "Customer created successfully.",
+  CUSTOMER_UPDATED: "Customer data updated successfully.",
 };
 
 const ERROR_MESSAGES = {
-  FAILED_TO_CREATE: 'Failed to create customer.',
-  FAILED_TO_LOAD_GROUPS: 'Error loading customer groups',
-  FAILED_TO_LOAD_TERRITORIES: 'Error loading territories',
-  FAILED_TO_LOAD_GENDERS: 'Error loading genders',
+  FAILED_TO_CREATE: "Failed to create customer.",
+  FAILED_TO_LOAD_GROUPS: "Error loading customer groups",
+  FAILED_TO_LOAD_TERRITORIES: "Error loading territories",
+  FAILED_TO_LOAD_GENDERS: "Error loading genders",
 };
 
 const CUSTOMER_TYPE = {
-  INDIVIDUAL: 'Individual',
+  INDIVIDUAL: "Individual",
 };
 
 const DB_LIMITS = {
@@ -41,31 +41,31 @@ const DB_LIMITS = {
 };
 
 const DEFAULT_VALUES = {
-  CUSTOMER_GROUP: 'Individual',
-  TERRITORY: 'Rest Of The World',
+  CUSTOMER_GROUP: "Individual",
+  TERRITORY: "Rest Of The World",
 };
 
 export default {
-  name: 'UpdateCustomer',
+  name: "UpdateCustomer",
   data() {
     return {
       customerDialog: false,
       pos_profile: null,
-      customer_id: '',
-      customer_name: '',
-      tax_id: '',
-      mobile_no: '',
-      email_id: '',
-      referral_code: '',
+      customer_id: "",
+      customer_name: "",
+      tax_id: "",
+      mobile_no: "",
+      email_id: "",
+      referral_code: "",
       birthday: null,
       birthday_menu: false,
       customer_type: CUSTOMER_TYPE.INDIVIDUAL,
-      gender: '',
+      gender: "",
       loyalty_points: null,
       loyalty_program: null,
-      group: '',
+      group: "",
       groups: [],
-      territory: '',
+      territory: "",
       territorys: [],
       genders: [],
     };
@@ -77,17 +77,17 @@ export default {
       this.clear_customer();
     },
     clear_customer() {
-      this.customer_name = '';
-      this.tax_id = '';
-      this.mobile_no = '';
-      this.email_id = '';
-      this.referral_code = '';
-      this.birthday = '';
-      this.group = frappe.defaults.get_user_default('Customer Group');
-      this.territory = frappe.defaults.get_user_default('Territory');
-      this.customer_id = '';
+      this.customer_name = "";
+      this.tax_id = "";
+      this.mobile_no = "";
+      this.email_id = "";
+      this.referral_code = "";
+      this.birthday = "";
+      this.group = frappe.defaults.get_user_default("Customer Group");
+      this.territory = frappe.defaults.get_user_default("Territory");
+      this.customer_id = "";
       this.customer_type = CUSTOMER_TYPE.INDIVIDUAL;
-      this.gender = '';
+      this.gender = "";
       this.loyalty_points = null;
       this.loyalty_program = null;
     },
@@ -96,11 +96,11 @@ export default {
       if (this.groups.length > 0) return;
 
       frappe.db
-        .get_list('Customer Group', {
-          fields: ['name'],
+        .get_list("Customer Group", {
+          fields: ["name"],
           filters: { is_group: 0 },
           limit: DB_LIMITS.CUSTOMER_GROUPS,
-          order_by: 'name',
+          order_by: "name",
         })
         .then((data) => {
           if (data.length > 0) {
@@ -108,7 +108,8 @@ export default {
           }
         })
         .catch((err) => {
-          this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_GROUPS, 'error');
+          console.log("[UpdateCustomer.js] loadGroups error:", err);
+          this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_GROUPS, "error");
         });
     },
 
@@ -116,11 +117,11 @@ export default {
       if (this.territorys.length > 0) return;
 
       frappe.db
-        .get_list('Territory', {
-          fields: ['name'],
+        .get_list("Territory", {
+          fields: ["name"],
           filters: { is_group: 0 },
           limit: DB_LIMITS.TERRITORIES,
-          order_by: 'name',
+          order_by: "name",
         })
         .then((data) => {
           if (data.length > 0) {
@@ -128,14 +129,15 @@ export default {
           }
         })
         .catch((err) => {
-          this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_TERRITORIES, 'error');
+          console.log("[UpdateCustomer.js] loadTerritories error:", err);
+          this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_TERRITORIES, "error");
         });
     },
 
     getGenders() {
       frappe.db
-        .get_list('Gender', {
-          fields: ['name'],
+        .get_list("Gender", {
+          fields: ["name"],
           page_length: DB_LIMITS.GENDERS,
         })
         .then((data) => {
@@ -144,21 +146,22 @@ export default {
           }
         })
         .catch((err) => {
-          this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_GENDERS, 'error');
+          console.log("[UpdateCustomer.js] loadGenders error:", err);
+          this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_GENDERS, "error");
         });
     },
 
     validateForm() {
       if (!this.customer_name) {
-        this.showMessage(VALIDATION_MESSAGES.CUSTOMER_NAME_REQUIRED, 'error');
+        this.showMessage(VALIDATION_MESSAGES.CUSTOMER_NAME_REQUIRED, "error");
         return false;
       }
       if (!this.group) {
-        this.showMessage(VALIDATION_MESSAGES.CUSTOMER_GROUP_REQUIRED, 'error');
+        this.showMessage(VALIDATION_MESSAGES.CUSTOMER_GROUP_REQUIRED, "error");
         return false;
       }
       if (!this.territory) {
-        this.showMessage(VALIDATION_MESSAGES.TERRITORY_REQUIRED, 'error');
+        this.showMessage(VALIDATION_MESSAGES.TERRITORY_REQUIRED, "error");
         return false;
       }
       return true;
@@ -182,7 +185,7 @@ export default {
         territory: this.territory,
         customer_type: this.customer_type,
         gender: this.gender,
-        method: this.customer_id ? 'update' : 'create',
+        method: this.customer_id ? "update" : "create",
         pos_profile_doc: JSON.stringify(this.pos_profile),
       };
 
@@ -221,7 +224,7 @@ export default {
     },
 
     handleCustomerError() {
-      this.showMessage(ERROR_MESSAGES.FAILED_TO_CREATE, 'error');
+      this.showMessage(ERROR_MESSAGES.FAILED_TO_CREATE, "error");
     },
 
     showMessage(text, color) {
@@ -246,9 +249,18 @@ export default {
     },
 
     registerEventListeners() {
-      evntBus.on(EVENT_NAMES.OPEN_UPDATE_CUSTOMER, this.handleOpenUpdateCustomer);
-      evntBus.on(EVENT_NAMES.REGISTER_POS_PROFILE, this.handleRegisterPosProfile);
-      evntBus.on(EVENT_NAMES.PAYMENTS_REGISTER_POS_PROFILE, this.handlePaymentsRegisterPosProfile);
+      evntBus.on(
+        EVENT_NAMES.OPEN_UPDATE_CUSTOMER,
+        this.handleOpenUpdateCustomer
+      );
+      evntBus.on(
+        EVENT_NAMES.REGISTER_POS_PROFILE,
+        this.handleRegisterPosProfile
+      );
+      evntBus.on(
+        EVENT_NAMES.PAYMENTS_REGISTER_POS_PROFILE,
+        this.handlePaymentsRegisterPosProfile
+      );
     },
 
     handleOpenUpdateCustomer(data) {
@@ -273,14 +285,25 @@ export default {
     this.registerEventListeners();
 
     this.group =
-      frappe.defaults.get_user_default('Customer Group') || DEFAULT_VALUES.CUSTOMER_GROUP;
-    this.territory = frappe.defaults.get_user_default('Territory') || DEFAULT_VALUES.TERRITORY;
+      frappe.defaults.get_user_default("Customer Group") ||
+      DEFAULT_VALUES.CUSTOMER_GROUP;
+    this.territory =
+      frappe.defaults.get_user_default("Territory") || DEFAULT_VALUES.TERRITORY;
   },
 
   beforeDestroy() {
     // Clean up all event listeners
-    evntBus.$off(EVENT_NAMES.OPEN_UPDATE_CUSTOMER, this.handleOpenUpdateCustomer);
-    evntBus.$off(EVENT_NAMES.REGISTER_POS_PROFILE, this.handleRegisterPosProfile);
-    evntBus.$off(EVENT_NAMES.PAYMENTS_REGISTER_POS_PROFILE, this.handlePaymentsRegisterPosProfile);
+    evntBus.$off(
+      EVENT_NAMES.OPEN_UPDATE_CUSTOMER,
+      this.handleOpenUpdateCustomer
+    );
+    evntBus.$off(
+      EVENT_NAMES.REGISTER_POS_PROFILE,
+      this.handleRegisterPosProfile
+    );
+    evntBus.$off(
+      EVENT_NAMES.PAYMENTS_REGISTER_POS_PROFILE,
+      this.handlePaymentsRegisterPosProfile
+    );
   },
 };
