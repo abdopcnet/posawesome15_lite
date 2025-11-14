@@ -1,0 +1,50 @@
+{
+ "add_total_row": 0,
+ "add_translate_data": 0,
+ "columns": [],
+ "creation": "2025-11-14 08:04:56.949020",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "json": "{\"filters\":[[\"Sales Invoice\",\"posa_pos_opening_shift\",\"=\",\"POSA-OS-25-0001043\",false]],\"fields\":[[\"name\",\"Sales Invoice\"],[\"docstatus\",\"Sales Invoice\"],[\"title\",\"Sales Invoice\"],[\"customer\",\"Sales Invoice\"],[\"pos_profile\",\"Sales Invoice\"],[\"posa_pos_opening_shift\",\"Sales Invoice\"],[\"posa_pos_shift_status\",\"Sales Invoice\"],[\"grand_total\",\"Sales Invoice\"],[\"outstanding_amount\",\"Sales Invoice\"],[\"change_amount\",\"Sales Invoice\"],[\"paid_amount\",\"Sales Invoice\"],[\"status\",\"Sales Invoice\"]],\"order_by\":\"`tabSales Invoice`.`modified` desc\",\"add_totals_row\":true,\"page_length\":2500,\"column_widths\":{\"name\":120,\"title\":120,\"customer\":120,\"pos_profile\":120,\"posa_pos_opening_shift\":120,\"posa_pos_shift_status\":120,\"grand_total\":120,\"outstanding_amount\":120,\"change_amount\":120,\"paid_amount\":120,\"status\":120},\"group_by\":null}",
+ "letterhead": null,
+ "modified": "2025-11-14 08:05:29.499340",
+ "modified_by": "Administrator",
+ "module": "POSAwesome",
+ "name": "\u062a\u0642\u0631\u064a\u0631 \u0627\u0644\u0648\u0631\u062f\u064a\u0629 \u0644\u0644\u0641\u0631\u0639",
+ "owner": "elkadraa1@andalus-sweets.com",
+ "prepared_report": 0,
+ "ref_doctype": "Sales Invoice",
+ "report_name": "\u062a\u0642\u0631\u064a\u0631 \u0627\u0644\u0648\u0631\u062f\u064a\u0629 \u0644\u0644\u0641\u0631\u0639",
+ "report_type": "Report Builder",
+ "roles": [
+  {
+   "role": "Accounts User"
+  },
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "Employee Self Service"
+  },
+  {
+   "role": "Sales User"
+  },
+  {
+   "role": "Sales Manager"
+  },
+  {
+   "role": "pos_user"
+  },
+  {
+   "role": "sales_orders"
+  },
+  {
+   "role": "System Manager"
+  }
+ ],
+ "timeout": 0
+}
