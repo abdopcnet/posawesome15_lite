@@ -1,58 +1,58 @@
-import { ref, onMounted, watch } from 'vue';
-import { evntBus } from '../../bus';
-import format from '../../format';
+import { ref, onMounted, watch } from "vue";
+import { evntBus } from "../../bus";
+import format from "../../format";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CONSTANTS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 // Import API mapper
-import { API_MAP } from '../../api_mapper.js';
+import { API_MAP } from "../../api_mapper.js";
 
 /**
  * Event names for bus communication
  */
 const EVENT_NAMES = {
-  CLOSE_OPENING_DIALOG: 'close_opening_dialog',
-  REGISTER_POS_DATA: 'register_pos_data',
-  SET_COMPANY: 'set_company',
-  SHOW_MESSAGE: 'show_mesage',
+  CLOSE_OPENING_DIALOG: "close_opening_dialog",
+  REGISTER_POS_DATA: "register_pos_data",
+  SET_COMPANY: "set_company",
+  SHOW_MESSAGE: "show_mesage",
 };
 
 /**
  * Payment method icons and colors
  */
 const PAYMENT_ICONS = {
-  Cash: { icon: 'mdi-cash', color: '#4CAF50' },
-  Card: { icon: 'mdi-credit-card', color: '#2196F3' },
-  'Credit Card': { icon: 'mdi-credit-card', color: '#2196F3' },
-  'Debit Card': { icon: 'mdi-credit-card-outline', color: '#FF9800' },
-  'Bank Transfer': { icon: 'mdi-bank-transfer', color: '#9C27B0' },
-  'Mobile Payment': { icon: 'mdi-cellphone', color: '#E91E63' },
-  'Digital Wallet': { icon: 'mdi-wallet', color: '#00BCD4' },
-  Check: { icon: 'mdi-checkbook', color: '#795548' },
-  Voucher: { icon: 'mdi-ticket', color: '#FF5722' },
+  Cash: { icon: "mdi-cash", color: "#4CAF50" },
+  Card: { icon: "mdi-credit-card", color: "#2196F3" },
+  "Credit Card": { icon: "mdi-credit-card", color: "#2196F3" },
+  "Debit Card": { icon: "mdi-credit-card-outline", color: "#FF9800" },
+  "Bank Transfer": { icon: "mdi-bank-transfer", color: "#9C27B0" },
+  "Mobile Payment": { icon: "mdi-cellphone", color: "#E91E63" },
+  "Digital Wallet": { icon: "mdi-wallet", color: "#00BCD4" },
+  Check: { icon: "mdi-checkbook", color: "#795548" },
+  Voucher: { icon: "mdi-ticket", color: "#FF5722" },
 };
 
 /**
  * Default payment icon for unknown methods
  */
-const DEFAULT_PAYMENT_ICON = { icon: 'mdi-currency-usd', color: '#607D8B' };
+const DEFAULT_PAYMENT_ICON = { icon: "mdi-currency-usd", color: "#607D8B" };
 
 /**
  * Table headers configuration
  */
 const TABLE_HEADERS = [
   {
-    title: 'Payment Method',
-    align: 'start',
+    title: "Payment Method",
+    align: "start",
     sortable: false,
-    key: 'mode_of_payment',
+    key: "mode_of_payment",
   },
   {
-    title: 'Opening Amount',
-    key: 'amount',
-    align: 'center',
+    title: "Opening Amount",
+    key: "amount",
+    align: "center",
     sortable: false,
   },
 ];
@@ -61,7 +61,7 @@ const TABLE_HEADERS = [
  * Validation rules
  */
 const VALIDATION_RULES = {
-  MAX_CHARS: (v) => v.length <= 12 || 'Text too long!',
+  MAX_CHARS: (v) => v.length <= 12 || "Text too long!",
 };
 
 /**
@@ -76,7 +76,7 @@ const UI_CONFIG = {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export default {
-  name: 'OpeningDialog',
+  name: "OpeningDialog",
 
   mixins: [format],
 
@@ -98,12 +98,12 @@ export default {
 
     // Company data
     const companies = ref([]);
-    const company = ref('');
+    const company = ref("");
 
     // POS Profile data
     const pos_profiles_data = ref([]);
     const pos_profiles = ref([]);
-    const pos_profile = ref('');
+    const pos_profile = ref("");
 
     // Payment methods data
     const payments_method_data = ref([]);
@@ -113,9 +113,9 @@ export default {
 
     // Time control
     const isOpeningAllowed = ref(true);
-    const openingTimeStart = ref('');
-    const openingTimeEnd = ref('');
-    const openingTimeMessage = ref('');
+    const openingTimeStart = ref("");
+    const openingTimeEnd = ref("");
+    const openingTimeMessage = ref("");
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // DATA LOADING
@@ -141,7 +141,8 @@ export default {
             pos_profiles_data.value = r.message.pos_profiles_data;
             payments_method_data.value = r.message.payments_method;
           } else {
-            showMessage('Failed to load POS opening data', 'error');
+            // Failed to load POS opening data
+            showMessage("فشل تحميل بيانات فتح نقطة البيع", "error");
           }
         },
       });
@@ -164,8 +165,13 @@ export default {
      * @returns {boolean} True if valid, false otherwise
      */
     const validateForm = () => {
-      if (!payments_methods.value.length || !company.value || !pos_profile.value) {
-        showMessage('Please fill all required fields', 'error');
+      if (
+        !payments_methods.value.length ||
+        !company.value ||
+        !pos_profile.value
+      ) {
+        // Please fill all required fields
+        showMessage("يرجى ملء جميع الحقول المطلوبة", "error");
         return false;
       }
       return true;
@@ -195,19 +201,22 @@ export default {
           if (r.message) {
             evntBus.emit(EVENT_NAMES.REGISTER_POS_DATA, r.message);
             evntBus.emit(EVENT_NAMES.SET_COMPANY, r.message.company);
+            // POS Opening Shift Created
             showMessage(
-              `POS Opening Shift ${r.message.pos_opening_shift.name} Created`,
-              'success',
+              `تم إنشاء نوبة فتح نقطة البيع ${r.message.pos_opening_shift.name}`,
+              "success"
             );
             close_opening_dialog();
           } else {
-            showMessage('Failed to create opening document', 'error');
+            // Failed to create opening document
+            showMessage("فشل إنشاء مستند الافتتاح", "error");
           }
           is_loading.value = false;
         })
         .catch((error) => {
-          console.error('Error creating opening voucher:', error);
-          showMessage('Failed to create opening document', 'error');
+          console.error("Error creating opening voucher:", error);
+          // Failed to create opening document
+          showMessage("فشل إنشاء مستند الافتتاح", "error");
           is_loading.value = false;
         });
     };
@@ -217,7 +226,7 @@ export default {
      * Reloads the application
      */
     const go_desk = () => {
-      frappe.set_route('/');
+      frappe.set_route("/");
       location.reload();
     };
 
@@ -232,7 +241,7 @@ export default {
      */
     const getPaymentIcon = (paymentMethod) => {
       const method = Object.keys(PAYMENT_ICONS).find((key) =>
-        paymentMethod.toLowerCase().includes(key.toLowerCase()),
+        paymentMethod.toLowerCase().includes(key.toLowerCase())
       );
 
       return method ? PAYMENT_ICONS[method] : DEFAULT_PAYMENT_ICON;
@@ -264,7 +273,8 @@ export default {
           }
         },
       });
-    }; /**
+    };
+    /**
      * Show message to user via event bus
      * @param {string} text - Message text
      * @param {string} color - Message color (success, error, warning, info)
@@ -288,7 +298,9 @@ export default {
           pos_profiles.value.push(element.name);
         }
       });
-      pos_profile.value = pos_profiles.value.length ? pos_profiles.value[0] : '';
+      pos_profile.value = pos_profiles.value.length
+        ? pos_profiles.value[0]
+        : "";
     });
 
     /**
