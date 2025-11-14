@@ -165,12 +165,13 @@ if __name__ == "__main__":
     # Commit each file
     for status, f in files_data:
         ext = f[f.rfind('.'):] if '.' in f else ''
-        # Handle deleted files
-        if status.startswith('D') or status == 'D':
-            emoji = '🗑️'
+        filename = f.split('/')[-1]  # Get only filename without path
+        
         # Handle deleted files
         if 'D' in status:
             emoji = '🗑️'
+        else:
+            emoji = EMOJI.get(ext, '📄')
 
         # Use list form to avoid shell escaping issues with Arabic filenames
         subprocess.run(["git", "add", f])
