@@ -77,7 +77,8 @@
                 z-index: 2;
               "
             >
-              Close POS
+              <!-- Close POS -->
+              إغلاق نقطة البيع
             </h3>
           </div>
 
@@ -127,7 +128,8 @@
                   justify-content: flex-start;
                 "
               >
-                Method
+                <!-- Method -->
+                الطريقة
               </div>
               <div
                 style="
@@ -141,7 +143,8 @@
                   justify-content: flex-end;
                 "
               >
-                System
+                <!-- System -->
+                النظام
               </div>
               <div
                 style="
@@ -155,22 +158,8 @@
                   justify-content: flex-end;
                 "
               >
-                Actual
-              </div>
-              <div
-                v-if="!pos_profile.posa_hide_expected_amount"
-                style="
-                  padding: 6px 8px;
-                  font-size: 10px;
-                  font-weight: 600;
-                  color: #475569;
-                  text-transform: uppercase;
-                  display: flex;
-                  align-items: center;
-                  justify-content: flex-end;
-                "
-              >
-                Expected
+                <!-- Actual -->
+                الفعلي
               </div>
               <div
                 v-if="!pos_profile.posa_hide_expected_amount"
@@ -185,7 +174,24 @@
                   justify-content: flex-end;
                 "
               >
-                Diff
+                <!-- Expected -->
+                المتوقع
+              </div>
+              <div
+                v-if="!pos_profile.posa_hide_expected_amount"
+                style="
+                  padding: 6px 8px;
+                  font-size: 10px;
+                  font-weight: 600;
+                  color: #475569;
+                  text-transform: uppercase;
+                  display: flex;
+                  align-items: center;
+                  justify-content: flex-end;
+                "
+              >
+                <!-- Diff -->
+                الفرق
               </div>
             </div>
 
@@ -386,8 +392,9 @@
               color: #475569;
             "
           >
+            <!-- Cancel -->
             <i class="mdi mdi-close" style="font-size: 14px"></i>
-            Cancel
+            إلغاء
           </button>
 
           <!-- Submit Button -->
@@ -409,8 +416,9 @@
               color: white;
             "
           >
+            <!-- Submit -->
             <i class="mdi mdi-check" style="font-size: 14px"></i>
-            Submit
+            تأكيد
           </button>
 
           <!-- Time Restriction Message -->
