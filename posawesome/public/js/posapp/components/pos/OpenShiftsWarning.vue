@@ -61,7 +61,10 @@
                 justify-content: center;
               "
             >
-              <i class="mdi mdi-alert-circle" style="color: white; font-size: 18px"></i>
+              <i
+                class="mdi mdi-alert-circle"
+                style="color: white; font-size: 18px"
+              ></i>
             </div>
 
             <h3
@@ -112,9 +115,19 @@
               margin-bottom: 12px;
             "
           >
-            <p style="margin: 0; color: #e65100; font-weight: 500; font-size: 13px; line-height: 1.5">
+            <p
+              style="
+                margin: 0;
+                color: #e65100;
+                font-weight: 500;
+                font-size: 13px;
+                line-height: 1.5;
+              "
+            >
               <i class="mdi mdi-information" style="margin-right: 6px"></i>
-              You have {{ shifts.length }} open shift(s). Please close these shifts before opening a new one.
+              <!-- You have X open shift(s). Please close these shifts before opening a new one. -->
+              لديك {{ shifts.length }} نوبة مفتوحة. يرجى إغلاق هذه النوبات قبل
+              فتح نوبة جديدة.
             </p>
           </div>
 
@@ -130,7 +143,15 @@
           >
             <table style="width: 100%; border-collapse: collapse">
               <thead>
-                <tr style="background: linear-gradient(to bottom, #f9fafb 0%, #f3f4f6 100%)">
+                <tr
+                  style="
+                    background: linear-gradient(
+                      to bottom,
+                      #f9fafb 0%,
+                      #f3f4f6 100%
+                    );
+                  "
+                >
                   <th
                     style="
                       padding: 10px 12px;
@@ -181,7 +202,8 @@
                   :key="shift.name"
                   :style="{
                     background: index % 2 === 0 ? 'white' : '#f9fafb',
-                    borderBottom: index < shifts.length - 1 ? '1px solid #f3f4f6' : 'none',
+                    borderBottom:
+                      index < shifts.length - 1 ? '1px solid #f3f4f6' : 'none',
                   }"
                 >
                   <td style="padding: 10px 12px">
@@ -196,17 +218,35 @@
                         text-decoration: none;
                         transition: all 0.2s;
                       "
-                      @mouseenter="$event.target.style.color = '#2563eb'; $event.target.style.textDecoration = 'underline'"
-                      @mouseleave="$event.target.style.color = '#3b82f6'; $event.target.style.textDecoration = 'none'"
+                      @mouseenter="
+                        $event.target.style.color = '#2563eb';
+                        $event.target.style.textDecoration = 'underline';
+                      "
+                      @mouseleave="
+                        $event.target.style.color = '#3b82f6';
+                        $event.target.style.textDecoration = 'none';
+                      "
                     >
                       {{ shift.name }}
-                      <i class="mdi mdi-open-in-new" style="font-size: 10px; margin-left: 4px"></i>
+                      <i
+                        class="mdi mdi-open-in-new"
+                        style="font-size: 10px; margin-left: 4px"
+                      ></i>
                     </a>
                   </td>
-                  <td style="padding: 10px 12px; color: #374151; font-size: 13px; font-weight: 500">
+                  <td
+                    style="
+                      padding: 10px 12px;
+                      color: #374151;
+                      font-size: 13px;
+                      font-weight: 500;
+                    "
+                  >
                     {{ shift.pos_profile }}
                   </td>
-                  <td style="padding: 10px 12px; color: #6b7280; font-size: 12px">
+                  <td
+                    style="padding: 10px 12px; color: #6b7280; font-size: 12px"
+                  >
                     {{ formatDateTime(shift.period_start_date) }}
                   </td>
                 </tr>
@@ -263,11 +303,13 @@
             "
             @mouseenter="
               $event.target.style.transform = 'translateY(-1px)';
-              $event.target.style.boxShadow = '0 4px 8px rgba(255, 152, 0, 0.3)';
+              $event.target.style.boxShadow =
+                '0 4px 8px rgba(255, 152, 0, 0.3)';
             "
             @mouseleave="
               $event.target.style.transform = 'translateY(0)';
-              $event.target.style.boxShadow = '0 2px 4px rgba(255, 152, 0, 0.2)';
+              $event.target.style.boxShadow =
+                '0 2px 4px rgba(255, 152, 0, 0.2)';
             "
           >
             <i class="mdi mdi-refresh" style="margin-right: 4px"></i>
