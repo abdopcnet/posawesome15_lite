@@ -382,7 +382,7 @@ comp.methods = {
       el.style.color = "#0b66d1";
       el.style.boxShadow = "0 8px 22px rgba(11,102,209,0.12)";
     } catch (err) {
-      console.warn("buttonHoverEnter", err);
+      console.log("[Customer.vue] buttonHoverEnter error:", err);
     }
   },
 
@@ -397,7 +397,7 @@ comp.methods = {
       delete el.dataset._origColor;
       delete el.dataset._origBox;
     } catch (err) {
-      console.warn("buttonHoverLeave", err);
+      console.log("[Customer.vue] buttonHoverLeave error:", err);
     }
   },
 };
