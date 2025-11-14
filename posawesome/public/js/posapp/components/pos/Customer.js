@@ -67,6 +67,7 @@ export default {
           evntBus.emit(EVENT_NAMES.UPDATE_CUSTOMER, this.customer);
         }
       } catch (error) {
+        console.log("[Customer.js] Error:", error);
         this.showMessage(ERROR_MESSAGES.UNEXPECTED_ERROR, "error");
       }
     },
@@ -232,7 +233,7 @@ export default {
           this.showDropdown = false;
         }
       } catch (err) {
-        // non-fatal; avoid breaking UI if something unexpected occurs
+        console.log("[Customer.js] Error:", err);
         this.showDropdown = false;
         console.warn("handleClickOutside error", err);
       }
