@@ -623,6 +623,9 @@ export default {
     },
 
     new_invoice(data = {}) {
+      // Emit event to notify other components (e.g., ItemsSelector) that a new invoice is being created
+      evntBus.emit("new_invoice", data);
+
       evntBus.emit("set_customer_readonly", false);
       this.posa_offers = [];
       this.return_doc = "";
@@ -920,10 +923,19 @@ export default {
       evntBus.emit("show_loading", { text: "Loading...", color: "info" });
 
       try {
-        // Ensure totals are updated locally before opening payment window
+        // Force fresh calculation of all totals before opening payment window
+        // This ensures rounded_total is calculated from current grand_total
         this.updateInvoiceDocLocally();
 
         const invoice_doc = await this.process_invoice();
+
+        // DEBUG: Log to verify rounded_total is correct
+        console.log("show_payment - invoice totals:", {
+          total: invoice_doc.total,
+          net_total: invoice_doc.net_total,
+          grand_total: invoice_doc.grand_total,
+          rounded_total: invoice_doc.rounded_total,
+        });
 
         // Add default payment method if no payments exist
         if (!invoice_doc?.payments || invoice_doc?.payments.length === 0) {
@@ -1387,7 +1399,11 @@ export default {
       let item_discount_total = 0;
 
       doc.items.forEach((item) => {
-        const qty = flt(item.qty) || 0;
+        // CRITICAL FIX: Round qty to proper precision BEFORE calculations (ERPNext behavior)
+        // This ensures 0.167727 becomes 0.168, making amount = 110 × 0.168 = 18.48
+        item.qty = flt(item.qty, this.getPrecision("qty", item));
+
+        const qty = item.qty || 0;
         const priceListRate = flt(item.price_list_rate) || 0;
         const discountPercent = flt(item.discount_percentage) || 0;
 
@@ -1403,7 +1419,7 @@ export default {
           item.discount_amount = 0;
         }
 
-        // Calculate amount
+        // Calculate amount using ROUNDED qty (matches ERPNext)
         item.amount = flt(item.rate * qty, this.getPrecision("amount", item));
 
         total += item.amount;
