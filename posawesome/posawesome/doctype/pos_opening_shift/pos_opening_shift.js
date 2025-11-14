@@ -14,7 +14,8 @@ frappe.ui.form.on("POS Opening Shift", {
       // Filter users dropdown - show only users registered in selected POS Profile
       frm.set_query("user", function (doc) {
         return {
-          query: "posawesome.posawesome.doctype.pos_opening_shift.pos_opening_shift.get_profile_users",
+          query:
+            "posawesome.posawesome.doctype.pos_opening_shift.pos_opening_shift.get_profile_users",
           filters: { parent: doc.pos_profile },
         };
       });
@@ -26,7 +27,7 @@ frappe.ui.form.on("POS Opening Shift", {
         };
       });
     } catch (error) {
-      console.error("[ERROR] setup error:", error);
+      console.log("[pos_opening_shift.js] setup error:", error);
     }
   },
 
@@ -98,7 +99,7 @@ frappe.ui.form.on("POS Opening Shift", {
         }
       }
     } catch (error) {
-      console.error("[ERROR] refresh error:", error);
+      console.log("[pos_opening_shift.js] refresh error:", error);
     }
   },
 
@@ -111,7 +112,10 @@ frappe.ui.form.on("POS Opening Shift", {
         frm.set_df_property("posting_date", "read_only", 1); // Read-only
       }
     } catch (error) {
-      console.error("[ERROR] set_posting_date_read_only error:", error);
+      console.log(
+        "[pos_opening_shift.js] set_posting_date_read_only error:",
+        error
+      );
     }
   },
 
@@ -120,7 +124,7 @@ frappe.ui.form.on("POS Opening Shift", {
     try {
       frm.trigger("set_posting_date_read_only");
     } catch (error) {
-      console.error("[ERROR] set_posting_date error:", error);
+      console.log("[pos_opening_shift.js] set_posting_date error:", error);
     }
   },
 
@@ -147,14 +151,17 @@ frappe.ui.form.on("POS Opening Shift", {
             }
           })
           .catch((error) => {
-            console.error("[ERROR] pos_profile get_doc error:", error);
+            console.log(
+              "[pos_opening_shift.js] pos_profile get_doc error:",
+              error
+            );
           });
       } else {
         // Lock user field if POS Profile not selected
         frm.set_df_property("user", "read_only", 1);
       }
     } catch (error) {
-      console.error("[ERROR] pos_profile error:", error);
+      console.log("[pos_opening_shift.js] pos_profile error:", error);
     }
   },
 });
