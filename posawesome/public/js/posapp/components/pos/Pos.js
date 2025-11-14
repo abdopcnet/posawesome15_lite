@@ -100,9 +100,15 @@ export default {
 
         console.log("[Pos.js] All open shifts response:", allShiftsResponse);
 
-        if (allShiftsResponse.message.success && allShiftsResponse.message.count > 1) {
+        if (
+          allShiftsResponse.message.success &&
+          allShiftsResponse.message.count > 1
+        ) {
           // User has MULTIPLE open shifts - show warning component
-          console.log("[Pos.js] Multiple open shifts found:", allShiftsResponse.message.count);
+          console.log(
+            "[Pos.js] Multiple open shifts found:",
+            allShiftsResponse.message.count
+          );
           this.openShifts = allShiftsResponse.message.shifts;
           this.showOpenShiftsWarning = true;
           return;
@@ -115,12 +121,18 @@ export default {
 
         console.log("[Pos.js] check_opening_entry response:", response);
         console.log("[Pos.js] response.message:", response.message);
-        console.log("[Pos.js] response.message.success:", response.message?.success);
+        console.log(
+          "[Pos.js] response.message.success:",
+          response.message?.success
+        );
         console.log("[Pos.js] response.message.data:", response.message?.data);
 
         if (response.message.success && response.message.data) {
           // Active shift exists - load full profile data
-          console.log("[Pos.js] Active shift found, loading profile:", response.message.data.pos_profile);
+          console.log(
+            "[Pos.js] Active shift found, loading profile:",
+            response.message.data.pos_profile
+          );
           await this.get_full_profile_data(response.message.data.pos_profile);
         } else {
           // No active shift - show opening dialog
@@ -129,7 +141,8 @@ export default {
         }
       } catch (error) {
         console.error("Pos.vue(check_opening_entry): Error", error);
-        this.show_message("Failed to check opening entry", "error");
+        // Failed to check opening entry
+        this.show_message("فشل التحقق من إدخال الافتتاح", "error");
       }
     },
 
@@ -150,12 +163,16 @@ export default {
 
         const pos_profile = profileResponse.message;
 
+        // Check and apply language from POS Profile
+
         // Fetch current shift data
         const shiftResponse = await frappe.call({
           method: API_MAP.POS_OPENING_SHIFT.GET_CURRENT_SHIFT_NAME,
         });
 
-        const pos_opening_shift = shiftResponse.message.success ? shiftResponse.message.data : null;
+        const pos_opening_shift = shiftResponse.message.success
+          ? shiftResponse.message.data
+          : null;
 
         // Update component state
         this.pos_profile = pos_profile;
@@ -171,13 +188,6 @@ export default {
         // Load offers for this profile
         await this.get_offers(pos_profile.name);
 
-        // Emit custom event for translation loading
-        window.dispatchEvent(
-          new CustomEvent("posProfileLoaded", {
-            detail: { pos_profile: pos_profile },
-          })
-        );
-
         // Emit events to notify other components
         evntBus.emit(EVENTS.REGISTER_POS_PROFILE, shift_data);
         evntBus.emit(EVENTS.SET_COMPANY, { name: pos_profile.company });
@@ -185,7 +195,8 @@ export default {
         evntBus.emit(EVENTS.SET_POS_OPENING_SHIFT, pos_opening_shift);
       } catch (error) {
         console.error("Pos.vue(get_full_profile_data): Error", error);
-        this.show_message("Failed to load profile data", "error");
+        // Failed to load profile data
+        this.show_message("فشل تحميل بيانات الملف الشخصي", "error");
       }
     },
 
@@ -234,11 +245,13 @@ export default {
         if (response.message) {
           evntBus.emit(EVENTS.SET_OFFERS, response.message);
         } else {
-          this.show_message("Failed to load offers", "error");
+          // Failed to load offers
+          this.show_message("فشل تحميل العروض", "error");
         }
       } catch (error) {
         console.error("[ERROR] Pos.vue(get_offers): Error", error);
-        this.show_message("Failed to load offers", "error");
+        // Failed to load offers
+        this.show_message("فشل تحميل العروض", "error");
       }
     },
 
@@ -256,11 +269,12 @@ export default {
           evntBus.emit(EVENTS.OPEN_CLOSING_DIALOG_EMIT, response.message);
         } else {
           // Failed to load closing data
-          this.show_message("Failed to load closing data", "error");
+          this.show_message("فشل تحميل بيانات الإغلاق", "error");
         }
       } catch (error) {
         console.error("Pos.vue(get_closing_data): Error", error);
-        this.show_message("Failed to load closing data", "error");
+        // Failed to load closing data
+        this.show_message("فشل تحميل بيانات الإغلاق", "error");
       }
     },
 
@@ -274,15 +288,17 @@ export default {
         });
 
         if (response.message) {
-          // Closing shift submitted successfully
-          this.show_message("Cashier shift closed successfully", "success");
+          // Cashier shift closed successfully
+          this.show_message("تم إغلاق نوبة الصراف بنجاح", "success");
           await this.check_opening_entry();
         } else {
-          this.show_message("Failed to close cashier shift", "error");
+          // Failed to close cashier shift
+          this.show_message("فشل إغلاق نوبة الصراف", "error");
         }
       } catch (error) {
         console.error("Pos.vue(submit_closing_pos): Error", error);
-        this.show_message("Failed to close cashier shift", "error");
+        // Failed to close cashier shift
+        this.show_message("فشل إغلاق نوبة الصراف", "error");
       }
     },
 
