@@ -114,7 +114,9 @@ export default {
       if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
         return "no-shift";
       }
-      return this.pos_opening_shift.status === "Open" ? "open-shift" : "closed-shift";
+      return this.pos_opening_shift.status === "Open"
+        ? "open-shift"
+        : "closed-shift";
     },
     shiftIconColor() {
       if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
@@ -144,7 +146,9 @@ export default {
       if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
         return "no-shift-start";
       }
-      return this.pos_opening_shift.status === "Open" ? "open-shift-start" : "closed-shift-start";
+      return this.pos_opening_shift.status === "Open"
+        ? "open-shift-start"
+        : "closed-shift-start";
     },
     shiftStartIconColor() {
       if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
@@ -154,7 +158,11 @@ export default {
     },
     totalInvoicesQty() {
       // Get total invoices count for current shift
-      if (!this.pos_opening_shift || !this.pos_opening_shift.name || !this.pos_profile) {
+      if (
+        !this.pos_opening_shift ||
+        !this.pos_opening_shift.name ||
+        !this.pos_profile
+      ) {
         return "000";
       }
       return this.shift_invoice_count || "000";
@@ -215,7 +223,11 @@ export default {
           user: frappe.session.user,
         },
         callback: (r) => {
-          if (r.message && r.message.total !== undefined && r.message.total !== null) {
+          if (
+            r.message &&
+            r.message.total !== undefined &&
+            r.message.total !== null
+          ) {
             this.totalCash = parseFloat(r.message.total) || 0;
           } else {
             this.totalCash = 0;
@@ -235,7 +247,11 @@ export default {
           user: frappe.session.user,
         },
         callback: (r) => {
-          if (r.message && r.message.total !== undefined && r.message.total !== null) {
+          if (
+            r.message &&
+            r.message.total !== undefined &&
+            r.message.total !== null
+          ) {
             this.totalNonCash = parseFloat(r.message.total) || 0;
           } else {
             this.totalNonCash = 0;
@@ -299,10 +315,12 @@ export default {
             text: "Logged out successfully. Click to reload.",
           });
           // Only reload when user clicks on the message
-          document.querySelector(".snackbar").addEventListener("click", function () {
-            frappe.set_route("/login");
-            location.reload();
-          });
+          document
+            .querySelector(".snackbar")
+            .addEventListener("click", function () {
+              frappe.set_route("/login");
+              location.reload();
+            });
         },
       });
     },
@@ -310,7 +328,9 @@ export default {
       if (!this.last_invoice) {
         return;
       }
-      const print_format = this.pos_profile.print_format_for_online || this.pos_profile.print_format;
+      const print_format =
+        this.pos_profile.print_format_for_online ||
+        this.pos_profile.print_format;
       const letter_head = this.pos_profile.letter_head || 0;
       const url =
         frappe.urllib.get_base_url() +
@@ -414,25 +434,44 @@ export default {
       }
 
       const startTime = performance.now();
+      let responded = false;
+
+      // Set timeout for 2 seconds - play error sound if no response
+      const timeoutId = setTimeout(() => {
+        if (!responded) {
+          // Play error sound on timeout
+          const soundUrl =
+            frappe.urllib.get_base_url() +
+            "/assets/posawesome/sounds/error.mp3";
+          const audio = new Audio(soundUrl);
+          audio.play().catch(() => {});
+          this.pingTime = "999";
+        }
+      }, 2000); // 2 seconds timeout
+
       try {
         await frappe.call({
           method: "frappe.ping",
           args: {},
           callback: () => {
+            responded = true;
+            clearTimeout(timeoutId);
             const endTime = performance.now();
             const ping = Math.round(endTime - startTime);
             this.pingTime = ping.toString().padStart(3, "0");
           },
           error: () => {
-            // Silently handle error without triggering page reload
+            responded = true;
+            clearTimeout(timeoutId);
             this.pingTime = "999";
           },
-          freeze: false, // Don't freeze the UI
-          show_spinner: false, // Don't show spinner
-          async: true, // Make sure it's async
+          freeze: false,
+          show_spinner: false,
+          async: true,
         });
       } catch (error) {
-        // Capture error without allowing it to affect the application
+        responded = true;
+        clearTimeout(timeoutId);
         this.pingTime = "999";
       }
     },
@@ -478,7 +517,8 @@ export default {
       try {
         const el = e.currentTarget;
         // store original border color for restore
-        el.dataset._origBorder = el.style.borderColor || getComputedStyle(el).borderColor || "";
+        el.dataset._origBorder =
+          el.style.borderColor || getComputedStyle(el).borderColor || "";
         // subtle hover visual (no translate)
         el.style.boxShadow = "0 6px 18px rgba(12, 24, 40, 0.06)";
         el.style.filter = "brightness(1.03)";
@@ -510,7 +550,8 @@ export default {
       try {
         // Check if ping monitoring should be enabled
         // We can add a global setting to control this
-        const enablePingMonitoring = sessionStorage.getItem("pos_enable_ping_monitoring") !== "false";
+        const enablePingMonitoring =
+          sessionStorage.getItem("pos_enable_ping_monitoring") !== "false";
 
         if (enablePingMonitoring) {
           // Start ping monitoring
@@ -531,7 +572,10 @@ export default {
         };
         // Track ping monitor state before hiding
         this._wasRunningBeforeHidden = true;
-        document.addEventListener("visibilitychange", this.handleVisibilityChange);
+        document.addEventListener(
+          "visibilitychange",
+          this.handleVisibilityChange
+        );
 
         evntBus.on("show_mesage", (data) => {
           this.show_mesage(data);
@@ -607,7 +651,10 @@ export default {
     document.removeEventListener("click", this.handleClickOutside);
 
     // Clean up page visibility listener
-    document.removeEventListener("visibilitychange", this.handleVisibilityChange);
+    document.removeEventListener(
+      "visibilitychange",
+      this.handleVisibilityChange
+    );
 
     // Clean up payment totals interval
     if (this.cashUpdateInterval) {
