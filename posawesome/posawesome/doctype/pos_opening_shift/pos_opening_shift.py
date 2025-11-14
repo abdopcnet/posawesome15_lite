@@ -15,6 +15,7 @@ class OverAllowanceError(frappe.ValidationError):
     pass
 
 
+# Validate if status value is in allowed options list
 def validate_status(status, options):
     try:
         if status not in options:
@@ -24,6 +25,7 @@ def validate_status(status, options):
         raise
 
 
+# Status workflow rules for POS Opening Shift
 status_map = {
     "POS Opening Shift": [
         ["Draft", None],
@@ -34,6 +36,7 @@ status_map = {
 }
 
 
+# Auto-update status based on workflow rules
 class StatusUpdater(Document):
 
     def set_status(self, update=False, status=None, update_modified=True):
@@ -45,9 +48,12 @@ class StatusUpdater(Document):
 
             if self.doctype in status_map:
                 _status = self.status
+
+                # Manual status update (if provided)
                 if status and update:
                     self.db_set("status", status)
 
+                # Auto-calculate status based on workflow rules
                 sl = status_map[self.doctype][:]
                 sl.reverse()
                 for s in sl:
@@ -67,10 +73,12 @@ class StatusUpdater(Document):
                         self.status = s[0]
                         break
 
+                # Add comment log if status changed
                 if self.status != _status and self.status not in ("Cancelled", "Partially Ordered",
                                                                   "Ordered", "Issued", "Transferred"):
                     self.add_comment("Label", _(self.status))
 
+                # Save to database
                 if update:
                     self.db_set('status', self.status,
                                 update_modified=update_modified)
@@ -78,7 +86,9 @@ class StatusUpdater(Document):
             raise
 
 
+# Main POS Opening Shift document class
 class POSOpeningShift(StatusUpdater):
+    # Run validations before saving
     def validate(self):
         try:
             self.validate_pos_profile_and_cashier()
@@ -87,17 +97,20 @@ class POSOpeningShift(StatusUpdater):
         except Exception as e:
             raise
 
+    # Validate POS Profile, Company, and User
     def validate_pos_profile_and_cashier(self):
         try:
+            # Check if POS Profile belongs to selected company
             if self.company != frappe.db.get_value("POS Profile", self.pos_profile, "company"):
                 frappe.throw(_("POS Profile {} does not belongs to company {}".format(
                     self.pos_profile, self.company)))
 
+            # Check if user is enabled/active
             if not cint(frappe.db.get_value("User", self.user, "enabled")):
                 frappe.throw(
                     _("User {} has been disabled. Please select valid user/cashier".format(self.user)))
 
-            # Verify that the user is registered in POS Profile
+            # Check if user is registered in POS Profile User child table
             if self.pos_profile and self.user:
                 user_exists = frappe.db.exists("POS Profile User", {
                     "parent": self.pos_profile,
@@ -110,24 +123,23 @@ class POSOpeningShift(StatusUpdater):
         except Exception as e:
             raise
 
+    # Validate shift-specific rules (prevent duplicate open shifts)
     def validate_pos_shift(self):
         """
         Validate POS Opening Shift specific rules
         """
         try:
-            # Validate company
+            # Validate required fields
             if not self.company:
                 frappe.throw(_("Company is required"))
 
-            # Validate POS Profile
             if not self.pos_profile:
                 frappe.throw(_("POS Profile is required"))
 
-            # Validate user
             if not self.user:
                 frappe.throw(_("User is required"))
 
-            # Check for existing open shift for same user, company, and POS profile
+            # Prevent duplicate open shifts (same user + company + POS profile)
             if self.docstatus == 0:  # Only check when creating/saving draft
                 existing_shift = frappe.db.exists(
                     "POS Opening Shift",
@@ -152,11 +164,11 @@ class POSOpeningShift(StatusUpdater):
                         frappe.bold(existing_shift)
                     ))
 
-            # Validate opening balance details
+            # Validate opening balance details exist
             if not self.balance_details:
                 frappe.throw(_("Opening balance details are required"))
 
-            # Flexible validation - allow zero opening balance
+            # Allow zero opening balance but prevent negative amounts
             total_opening_amount = 0
             negative_amounts = 0
 
@@ -168,14 +180,14 @@ class POSOpeningShift(StatusUpdater):
                 elif amount < 0:
                     negative_amounts += abs(amount)
 
-            # Allow zero opening balance (for digital stores)
-            # But prevent negative amounts
+            # Prevent negative opening cash
             if negative_amounts > 0:
                 frappe.throw(_("Opening cash amount cannot be negative"))
 
         except Exception as e:
             raise
 
+    # Helper: Parse time string to datetime.time object
     def _parse_time(self, time_value):
         """Parse time value to datetime.time object."""
         if not time_value:
@@ -191,6 +203,7 @@ class POSOpeningShift(StatusUpdater):
         except (ValueError, TypeError):
             return None
 
+    # Update status on document submit
     def on_submit(self):
         try:
             self.set_status(update=True)
@@ -199,9 +212,10 @@ class POSOpeningShift(StatusUpdater):
 
 
 # =============================================================================
-# API FUNCTIONS - Consolidated from api/pos_opening_shift.py
+# API FUNCTIONS - Whitelisted endpoints for POS Opening Shift
 # =============================================================================
 
+# Check if opening shift is allowed at current time (time-based restrictions)
 @frappe.whitelist()
 def check_opening_time_allowed(pos_profile):
     """
@@ -214,7 +228,7 @@ def check_opening_time_allowed(pos_profile):
 
         profile = frappe.get_doc("POS Profile", pos_profile)
 
-        # Check if opening time control is enabled
+        # Check if time control is enabled in POS Profile
         if not profile.get("posa_opening_time_control"):
             return {"allowed": True, "message": "Time control disabled"}
 
@@ -224,14 +238,14 @@ def check_opening_time_allowed(pos_profile):
         if not opening_start_time or not opening_end_time:
             return {"allowed": True, "message": "Time not configured"}
 
-        # Parse times using helper function
+        # Parse time strings
         start_time = _parse_time_helper(opening_start_time)
         end_time = _parse_time_helper(opening_end_time)
 
         if not start_time or not end_time:
             return {"allowed": True, "message": "Invalid time format"}
 
-        # Get current datetime
+        # Get current time
         current_dt = frappe.utils.now_datetime()
 
         # Create datetime objects for comparison
@@ -240,11 +254,11 @@ def check_opening_time_allowed(pos_profile):
         end_dt = current_dt.replace(hour=end_time.hour, minute=end_time.minute,
                                     second=end_time.second, microsecond=end_time.microsecond)
 
-        # If start_time > end_time, assume end_time is next day
+        # Handle overnight shifts (e.g., 23:00 to 02:00)
         if start_time > end_time:
             end_dt = end_dt + timedelta(days=1)
 
-        # Check if current time is within [start_dt, end_dt]
+        # Check if current time is within allowed range
         allowed = start_dt <= current_dt <= end_dt
 
         if allowed:
@@ -264,6 +278,7 @@ def check_opening_time_allowed(pos_profile):
         return {"allowed": False, "message": f"Error: {str(e)}"}
 
 
+# Create new POS Opening Shift (API endpoint)
 @frappe.whitelist()
 def create_opening_voucher(pos_profile, company, balance_details):
     """
@@ -272,10 +287,10 @@ def create_opening_voucher(pos_profile, company, balance_details):
     try:
         import json
         balance_details = json.loads(balance_details)
-        
+
         user = frappe.session.user
 
-        # Check if user already has an open shift for this company and POS profile
+        # Prevent duplicate open shifts for same user + company + POS profile
         existing_shift = frappe.db.get_value(
             "POS Opening Shift",
             {
@@ -299,6 +314,7 @@ def create_opening_voucher(pos_profile, company, balance_details):
                 frappe.bold(existing_shift)
             ))
 
+        # Create and submit new shift
         new_pos_opening = frappe.get_doc(
             {
                 "doctype": "POS Opening Shift",
@@ -313,6 +329,7 @@ def create_opening_voucher(pos_profile, company, balance_details):
         new_pos_opening.set("balance_details", balance_details)
         new_pos_opening.insert(ignore_permissions=True)
 
+        # Return shift data with profile and company info
         data = {}
         data["pos_opening_shift"] = new_pos_opening.as_dict()
         update_opening_shift_data(data, new_pos_opening.pos_profile)
@@ -322,6 +339,7 @@ def create_opening_voucher(pos_profile, company, balance_details):
         frappe.throw(f"Error creating opening voucher: {str(e)}")
 
 
+# Get current user's open shift info
 @frappe.whitelist()
 def get_current_shift_name():
     """
@@ -330,7 +348,7 @@ def get_current_shift_name():
     try:
         user = frappe.session.user
 
-        # Find latest open shift for this user
+        # Find latest open shift for current user
         rows = frappe.get_all(
             "POS Opening Shift",
             filters={
@@ -352,7 +370,7 @@ def get_current_shift_name():
             }
 
         row = rows[0]
-        # Ensure period_start_date is serializable
+        # Make datetime serializable
         if row.get("period_start_date"):
             row["period_start_date"] = str(row["period_start_date"])
 
@@ -370,6 +388,7 @@ def get_current_shift_name():
         }
 
 
+# Get all open shifts for current user (for multi-shift warnings)
 @frappe.whitelist()
 def get_all_open_shifts():
     """
@@ -386,11 +405,12 @@ def get_all_open_shifts():
                 "docstatus": 1,
                 "status": "Open",
             },
-            fields=["name", "company", "period_start_date", "pos_profile", "user"],
+            fields=["name", "company", "period_start_date",
+                    "pos_profile", "user"],
             order_by="period_start_date desc",
         )
 
-        # Make dates serializable
+        # Make dates JSON-serializable
         for shift in shifts:
             if shift.get("period_start_date"):
                 shift["period_start_date"] = str(shift["period_start_date"])
@@ -410,6 +430,7 @@ def get_all_open_shifts():
         }
 
 
+# Get users registered in POS Profile (for user dropdown filter)
 @frappe.whitelist()
 def get_profile_users(doctype, txt, searchfield, start, page_len, filters):
     """
@@ -418,7 +439,7 @@ def get_profile_users(doctype, txt, searchfield, start, page_len, filters):
     try:
         pos_profile = filters.get("parent")
 
-        # Use frappe.get_all instead of direct SQL
+        # Query POS Profile User child table
         users = frappe.get_all(
             "POS Profile User",
             filters={
@@ -431,7 +452,7 @@ def get_profile_users(doctype, txt, searchfield, start, page_len, filters):
             limit_page_length=page_len
         )
 
-        # Convert result to required format
+        # Convert to format expected by set_query [[user1], [user2], ...]
         result = [[user.user] for user in users]
 
         return result
@@ -440,6 +461,7 @@ def get_profile_users(doctype, txt, searchfield, start, page_len, filters):
         frappe.throw(f"Error retrieving profile users: {str(e)}")
 
 
+# Get invoice count for specific shift
 @frappe.whitelist()
 def get_user_shift_invoice_count(pos_profile, pos_opening_shift):
     """
@@ -456,13 +478,14 @@ def get_user_shift_invoice_count(pos_profile, pos_opening_shift):
         return 0
 
 
+# Get shift statistics (total sales, invoice count)
 @frappe.whitelist()
 def get_user_shift_stats(pos_profile, pos_opening_shift):
     """
     GET - Get user shift statistics
     """
     try:
-        # Get total sales amount
+        # Calculate total sales amount for shift
         total_sales = frappe.db.sql("""
             SELECT SUM(grand_total) as total
             FROM `tabSales Invoice`
@@ -470,7 +493,7 @@ def get_user_shift_stats(pos_profile, pos_opening_shift):
             AND docstatus = 1
         """, (pos_opening_shift,), as_dict=True)
 
-        # Get invoice count
+        # Count submitted invoices
         invoice_count = frappe.db.count("Sales Invoice", {
             "posa_pos_opening_shift": pos_opening_shift,
             "docstatus": 1
@@ -496,6 +519,7 @@ def get_user_shift_stats(pos_profile, pos_opening_shift):
 # HELPER FUNCTIONS
 # =============================================================================
 
+# Populate data with POS Profile and Company info
 def update_opening_shift_data(data, pos_profile):
     """
     Helper function to update opening shift data
@@ -514,6 +538,7 @@ def update_opening_shift_data(data, pos_profile):
         pass
 
 
+# Parse time from various formats (string, datetime.time)
 def _parse_time_helper(time_value):
     """Helper function to parse time from various formats"""
     from datetime import datetime, time as dtime
