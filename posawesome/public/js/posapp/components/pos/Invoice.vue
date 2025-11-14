@@ -4,11 +4,26 @@
     <!-- =========================================== -->
     <!-- INVOICE CONTAINER -->
     <!-- =========================================== -->
-    <div style="position: relative; min-height: 0; display: flex; flex-direction: column; flex-grow: 1; height: 100%">
+    <div
+      style="
+        position: relative;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        height: 100%;
+      "
+    >
       <!-- =========================================== -->
       <!-- CUSTOMER SECTION -->
       <!-- =========================================== -->
-      <div style="padding: 4px 6px; border-bottom: 1px solid #e0e0e0; margin-bottom: 0">
+      <div
+        style="
+          padding: 4px 6px;
+          border-bottom: 1px solid #e0e0e0;
+          margin-bottom: 0;
+        "
+      >
         <Customer></Customer>
       </div>
 
@@ -47,7 +62,11 @@
                 v-for="header in dynamicHeaders"
                 :key="header.key"
                 style="
-                  background: linear-gradient(180deg, rgba(128, 166, 255, 1) 0%, rgba(128, 166, 255, 0.25) 50%);
+                  background: linear-gradient(
+                    180deg,
+                    rgba(128, 166, 255, 1) 0%,
+                    rgba(128, 166, 255, 0.25) 50%
+                  );
                   border-bottom: 1px solid #e0e0e0;
                   padding: 8px 2px;
                   font-weight: 600;
@@ -74,15 +93,20 @@
               :key="item.posa_row_id"
               @mouseenter="
                 $event.currentTarget.style.background = 'rgba(16,24,40,0.09)';
-                $event.currentTarget.style.transition = 'background-color 160ms ease';
+                $event.currentTarget.style.transition =
+                  'background-color 160ms ease';
               "
               @mouseleave="
                 $event.currentTarget.style.background = '';
-                $event.currentTarget.style.transition = 'background-color 160ms ease';
+                $event.currentTarget.style.transition =
+                  'background-color 160ms ease';
               "
               :style="{
                 borderBottom: '1px solid #f1f1f1',
-                borderLeft: item.discount_percentage > 0 || item.posa_offer_applied ? '3px solid #ff9800' : 'none',
+                borderLeft:
+                  item.discount_percentage > 0 || item.posa_offer_applied
+                    ? '3px solid #ff9800'
+                    : 'none',
               }"
             >
               <!-- ITEM NAME COLUMN -->
@@ -136,7 +160,11 @@
                     padding: 2px; */
                     gap: 0px;
                     padding: 0px;
-                    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+                    background: linear-gradient(
+                      135deg,
+                      #f8f9fa 0%,
+                      #ffffff 100%
+                    );
                     border-radius: 4px;
                     width: 100%;
                     /* max-width: 85px; */
@@ -161,14 +189,24 @@
                       font-size: 0;
                       position: relative;
                       color: white;
-                      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+                      background: linear-gradient(
+                        135deg,
+                        #ff9800 0%,
+                        #f57c00 100%
+                      );
                       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
                     "
                     @click="decreaseQuantity(item)"
                     :disabled="!(item.qty && Math.abs(item.qty) > 0)"
                     type="button"
                   >
-                    <span style="/* font-size: 0.85rem; */ font-size: 0.75rem; font-weight: 700; line-height: 1"
+                    <span
+                      style="
+                        /* font-size: 0.85rem; */
+                        font-size: 0.75rem;
+                        font-weight: 700;
+                        line-height: 1;
+                      "
                       >−</span
                     >
                   </button>
@@ -213,13 +251,23 @@
                       font-size: 0;
                       position: relative;
                       color: white;
-                      background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+                      background: linear-gradient(
+                        135deg,
+                        #4caf50 0%,
+                        #388e3c 100%
+                      );
                       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
                     "
                     @click="increaseQuantity(item)"
                     type="button"
                   >
-                    <span style="/* font-size: 0.85rem; */ font-size: 0.75rem; font-weight: 700; line-height: 1"
+                    <span
+                      style="
+                        /* font-size: 0.85rem; */
+                        font-size: 0.75rem;
+                        font-weight: 700;
+                        line-height: 1;
+                      "
                       >+</span
                     >
                   </button>
@@ -275,7 +323,9 @@
                     :style="{
                       fontSize: '0.7rem',
                       fontWeight: '700',
-                      color: item._offer_discount_applied ? '#e65100' : '#2e7d32',
+                      color: item._offer_discount_applied
+                        ? '#e65100'
+                        : '#2e7d32',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -315,7 +365,10 @@
                     maxWidth: '65px',
                     justifyContent: 'center',
                     position: 'relative',
-                    border: flt(item.rate) !== flt(item.price_list_rate) ? '1px solid #ff9800' : 'none',
+                    border:
+                      flt(item.rate) !== flt(item.price_list_rate)
+                        ? '1px solid #ff9800'
+                        : 'none',
                   }"
                 >
                   <input
@@ -326,18 +379,28 @@
                     @blur="handleRateBlur(item, $event)"
                     :disabled="
                       Boolean(
-                        item.posa_is_offer || item.posa_is_replace || item.posa_offer_applied || invoice_doc?.is_return
+                        item.posa_is_offer ||
+                          item.posa_is_replace ||
+                          item.posa_offer_applied ||
+                          invoice_doc?.is_return
                       )
                     "
                     :style="
                       Boolean(
-                        item.posa_is_offer || item.posa_is_replace || item.posa_offer_applied || invoice_doc?.is_return
+                        item.posa_is_offer ||
+                          item.posa_is_replace ||
+                          item.posa_offer_applied ||
+                          invoice_doc?.is_return
                       )
                         ? 'flex: 1; width: 100%; border: none;background: #f5f5f5; color: #9e9e9e; font-size: 0.7rem; padding: 2px 2px; border-radius: 3px; outline: none; cursor: not-allowed; max-width: 45px;'
                         : 'flex: 1; width: 100%; border: none; background: transparent; font-size: 0.75rem; font-weight: 700; color: #f57c00; padding: 0; outline: none; text-align: right; max-width: 45px;'
                     "
                     placeholder="0.00"
-                    style="box-sizing: border-box; min-width: 0; max-width: 100%"
+                    style="
+                      box-sizing: border-box;
+                      min-width: 0;
+                      max-width: 100%;
+                    "
                   />
 
                   <!-- Discount indicator for rate -->
@@ -366,7 +429,9 @@
 
               <!-- DISCOUNT PERCENTAGE COLUMN (Editable) -->
               <td
-                v-if="dynamicHeaders.find((h) => h.key === 'discount_percentage')"
+                v-if="
+                  dynamicHeaders.find((h) => h.key === 'discount_percentage')
+                "
                 style="
                   padding: 12px 0px;
                   vertical-align: middle;
@@ -423,17 +488,29 @@
                     min="0"
                     :max="pos_profile?.posa_item_max_discount_allowed || 100"
                     step="0.01"
-                    style="box-sizing: border-box; min-width: 0; max-width: 100%"
+                    style="
+                      box-sizing: border-box;
+                      min-width: 0;
+                      max-width: 100%;
+                    "
                   />
 
                   <span
-                    style="font-size: 0.65rem; font-weight: 700; color: #f57c00; white-space: nowrap; flex-shrink: 0"
+                    style="
+                      font-size: 0.65rem;
+                      font-weight: 700;
+                      color: #f57c00;
+                      white-space: nowrap;
+                      flex-shrink: 0;
+                    "
                     >%</span
                   >
 
                   <!-- Offer badge for discount percentage -->
                   <span
-                    v-if="item.posa_offer_applied && item.discount_percentage > 0"
+                    v-if="
+                      item.posa_offer_applied && item.discount_percentage > 0
+                    "
                     style="
                       position: absolute;
                       top: -2px;
@@ -487,14 +564,17 @@
                     :style="{
                       fontSize: '0.75rem',
                       fontWeight: '700',
-                      color: getDiscountAmount(item) > 0 ? '#f57c00' : '#9e9e9e',
+                      color:
+                        getDiscountAmount(item) > 0 ? '#f57c00' : '#9e9e9e',
                     }"
                   >
                     {{ formatCurrency(getDiscountAmount(item)) }}
                   </span>
                   <!-- Offer badge for discount amount -->
                   <span
-                    v-if="item.posa_offer_applied && getDiscountAmount(item) > 0"
+                    v-if="
+                      item.posa_offer_applied && getDiscountAmount(item) > 0
+                    "
                     style="
                       position: absolute;
                       top: -2px;
@@ -531,7 +611,11 @@
                     align-items: center;
                     gap: 3px;
                     padding: 0px 6px;
-                    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+                    background: linear-gradient(
+                      135deg,
+                      #e8f5e9 0%,
+                      #c8e6c9 100%
+                    );
                     border-radius: 4px;
                     min-width: 0;
                     justify-content: center;
@@ -548,7 +632,12 @@
                       text-overflow: ellipsis;
                     "
                   >
-                    {{ formatCurrency(flt(item.qty, float_precision) * flt(item.rate, currency_precision)) }}
+                    {{
+                      formatCurrency(
+                        flt(item.qty, float_precision) *
+                          flt(item.rate, currency_precision)
+                      )
+                    }}
                   </span>
                 </div>
               </td>
@@ -565,9 +654,17 @@
                   min-width: 0;
                 "
               >
-                <div style="display: flex; justify-content: center; align-items: center">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                  "
+                >
                   <button
-                    :disabled="Boolean(item.posa_is_offer || item.posa_is_replace)"
+                    :disabled="
+                      Boolean(item.posa_is_offer || item.posa_is_replace)
+                    "
                     :style="
                       item.posa_is_offer || item.posa_is_replace
                         ? 'width:18px;height:18px;padding:0;border-radius:6px;border:none;background:#f3f3f3;color:#9e9e9e;display:flex;align-items:center;justify-content:center;cursor:not-allowed;opacity:0.6;transition:transform 140ms ease,box-shadow 140ms ease,background 140ms ease'
@@ -575,24 +672,34 @@
                     "
                     @mouseenter="
                       if (!$event.currentTarget.disabled) {
-                        $event.currentTarget.style.transform = 'translateY(-2px)';
-                        $event.currentTarget.style.boxShadow = '0 10px 30px rgba(198,40,40,0.12)';
-                        $event.currentTarget.style.background = 'linear-gradient(180deg,#ffebee,#ffcdd2)';
+                        $event.currentTarget.style.transform =
+                          'translateY(-2px)';
+                        $event.currentTarget.style.boxShadow =
+                          '0 10px 30px rgba(198,40,40,0.12)';
+                        $event.currentTarget.style.background =
+                          'linear-gradient(180deg,#ffebee,#ffcdd2)';
                       }
                     "
                     @mouseleave="
                       if (!$event.currentTarget.disabled) {
                         $event.currentTarget.style.transform = '';
                         $event.currentTarget.style.boxShadow = '';
-                        $event.currentTarget.style.background = 'linear-gradient(180deg,#fff5f5,#ffffff)';
+                        $event.currentTarget.style.background =
+                          'linear-gradient(180deg,#fff5f5,#ffffff)';
                       }
                     "
                     @click.stop="remove_item(item)"
-                    title="Delete item"
+                    title="حذف الصنف"
                   >
                     <i
                       class="mdi mdi-delete"
-                      style="font-size: 18px; color: #b71c1c; line-height: 1; display: block; pointer-events: none"
+                      style="
+                        font-size: 18px;
+                        color: #b71c1c;
+                        line-height: 1;
+                        display: block;
+                        pointer-events: none;
+                      "
                     ></i>
                   </button>
                 </div>
@@ -656,7 +763,8 @@
               text-transform: uppercase;
               letter-spacing: 0.3px;
             "
-            >{{ __("Total_Qty") }}</label
+            ><!-- Total_Qty -->
+            إجمالي الكمية</label
           >
           <div
             style="
@@ -679,7 +787,9 @@
             display: 'flex',
             flexDirection: 'column',
             padding: '4px 6px',
-            background: pos_profile?.posa_allow_user_to_edit_additional_discount ? 'white' : '#f5f5f5',
+            background: pos_profile?.posa_allow_user_to_edit_additional_discount
+              ? 'white'
+              : '#f5f5f5',
             borderRadius: '3px',
             border: pos_profile?.posa_allow_user_to_edit_additional_discount
               ? '1px solid #e0e0e0'
@@ -692,14 +802,17 @@
               fontSize: '0.65rem',
               marginBottom: '0',
               fontWeight: '600',
-              color: pos_profile?.posa_allow_user_to_edit_additional_discount ? '#666' : '#9e9e9e',
+              color: pos_profile?.posa_allow_user_to_edit_additional_discount
+                ? '#666'
+                : '#9e9e9e',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               textTransform: 'uppercase',
               letterSpacing: '0.3px',
             }"
-            >{{ __("Invoice_discount") }}</label
+            ><!-- Invoice_discount -->
+            خصم الفاتورة</label
           >
           <input
             type="number"
@@ -717,17 +830,26 @@
               background: 'transparent',
               fontSize: '0.9rem',
               fontWeight: '700',
-              color: pos_profile?.posa_allow_user_to_edit_additional_discount ? '#1976d2' : '#9e9e9e',
+              color: pos_profile?.posa_allow_user_to_edit_additional_discount
+                ? '#1976d2'
+                : '#9e9e9e',
               padding: '0',
               textAlign: 'left',
-              cursor: pos_profile?.posa_allow_user_to_edit_additional_discount ? 'text' : 'not-allowed',
+              cursor: pos_profile?.posa_allow_user_to_edit_additional_discount
+                ? 'text'
+                : 'not-allowed',
             }"
             placeholder="0.00"
-            :disabled="!pos_profile?.posa_allow_user_to_edit_additional_discount"
+            :disabled="
+              !pos_profile?.posa_allow_user_to_edit_additional_discount
+            "
           />
           <!-- Offer badge for Invoice_discount -->
           <span
-            v-if="offer_discount_percentage > 0 && additional_discount_percentage > 0"
+            v-if="
+              offer_discount_percentage > 0 &&
+              additional_discount_percentage > 0
+            "
             style="
               position: absolute;
               top: -2px;
@@ -768,7 +890,8 @@
               text-transform: uppercase;
               letter-spacing: 0.3px;
             "
-            >{{ __("items_discount") }}</label
+            ><!-- items_discount -->
+            خصم الأصناف</label
           >
           <div
             style="
@@ -781,7 +904,8 @@
               line-height: 1.2;
             "
           >
-            {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(invoice_doc?.posa_item_discount_total || 0) }}
+            {{ currencySymbol(pos_profile?.currency)
+            }}{{ formatCurrency(invoice_doc?.posa_item_discount_total || 0) }}
           </div>
         </div>
 
@@ -808,7 +932,8 @@
               text-transform: uppercase;
               letter-spacing: 0.3px;
             "
-            >{{ __("list_price_total") }}</label
+            ><!-- list_price_total -->
+            الإجمالي قبل الخصم</label
           >
           <div
             style="
@@ -821,7 +946,8 @@
               line-height: 1.2;
             "
           >
-            {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(invoice_doc?.total || 0) }}
+            {{ currencySymbol(pos_profile?.currency)
+            }}{{ formatCurrency(invoice_doc?.total || 0) }}
           </div>
         </div>
 
@@ -848,7 +974,8 @@
               text-transform: uppercase;
               letter-spacing: 0.3px;
             "
-            >{{ __("net_total") }}</label
+            ><!-- net_total -->
+            الصافي</label
           >
           <div
             style="
@@ -861,7 +988,8 @@
               line-height: 1.2;
             "
           >
-            {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(invoice_doc?.net_total || 0) }}
+            {{ currencySymbol(pos_profile?.currency)
+            }}{{ formatCurrency(invoice_doc?.net_total || 0) }}
           </div>
         </div>
 
@@ -888,7 +1016,8 @@
               text-transform: uppercase;
               letter-spacing: 0.3px;
             "
-            >{{ __("Tax") }}</label
+            ><!-- Tax -->
+            الضريبة</label
           >
           <div
             style="
@@ -901,7 +1030,8 @@
               line-height: 1.2;
             "
           >
-            {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(computedTaxAmount) }}
+            {{ currencySymbol(pos_profile?.currency)
+            }}{{ formatCurrency(computedTaxAmount) }}
           </div>
         </div>
 
@@ -928,7 +1058,8 @@
               text-transform: uppercase;
               letter-spacing: 0.3px;
             "
-            >{{ __("grand_total") }}</label
+            ><!-- grand_total -->
+            الإجمالي الكلي</label
           >
           <div
             style="
@@ -941,7 +1072,8 @@
               line-height: 1.2;
             "
           >
-            {{ currencySymbol(pos_profile?.currency) }}{{ formatCurrency(invoice_doc?.grand_total || 0) }}
+            {{ currencySymbol(pos_profile?.currency)
+            }}{{ formatCurrency(invoice_doc?.grand_total || 0) }}
           </div>
         </div>
       </div>
@@ -961,10 +1093,11 @@
         "
       >
         <!-- Print Button -->
+        <!-- Print Button -->
         <button
           :disabled="!hasItems || isPrinting"
           @click="printInvoice"
-          :title="__('Print invoice')"
+          title="طباعة الفاتورة"
           style="
             flex: 1;
             padding: 8px 4px;
@@ -982,12 +1115,15 @@
             transition: all 0.2s;
           "
           :style="
-            !hasItems || isPrinting ? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6' : ''
+            !hasItems || isPrinting
+              ? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6'
+              : ''
           "
           type="button"
         >
           <i class="mdi mdi-printer" style="font-size: 16px"></i>
-          <span>{{ isPrinting ? __("Printing...") : __("Print") }}</span>
+          <!-- Printing / Print -->
+          <span>{{ isPrinting ? "جاري الطباعة..." : "طباعة" }}</span>
         </button>
 
         <!-- Pay Button -->
@@ -1018,7 +1154,8 @@
           type="button"
         >
           <i class="mdi mdi-cash-multiple" style="font-size: 16px"></i>
-          <span>{{ __("Pay") }}</span>
+          <!-- Pay -->
+          <span>دفع</span>
         </button>
 
         <!-- Return Button -->
@@ -1049,7 +1186,8 @@
           type="button"
         >
           <i class="mdi mdi-keyboard-return" style="font-size: 16px"></i>
-          <span>{{ __("Return") }}</span>
+          <!-- Return -->
+          <span>مرتجع</span>
         </button>
 
         <!-- Quick Return Button -->
@@ -1080,7 +1218,8 @@
           type="button"
         >
           <i class="mdi mdi-flash" style="font-size: 16px"></i>
-          <span>{{ __("Quick_Return") }}</span>
+          <!-- Quick_Return -->
+          <span>مرتجع سريع</span>
         </button>
 
         <!-- Cancel Button -->
@@ -1105,7 +1244,8 @@
           type="button"
         >
           <i class="mdi mdi-close-circle" style="font-size: 16px"></i>
-          <span>{{ __("Cancel") }}</span>
+          <!-- Cancel -->
+          <span>إلغاء</span>
         </button>
       </div>
     </div>
