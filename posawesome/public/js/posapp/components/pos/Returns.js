@@ -147,7 +147,7 @@ export default {
         });
         return response.message;
       } catch (e) {
-        // Failed to fetch original invoice
+        console.log("[Returns.js] fetchOriginalInvoice error:", e);
         this.showMessage("فشل جلب الفاتورة الأصلية", "error");
         return null;
       }
