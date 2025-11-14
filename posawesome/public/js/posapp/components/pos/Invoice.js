@@ -551,8 +551,8 @@ export default {
     // DEPRECATED: Use calculateItemAmount() instead
     // Kept for backward compatibility with legacy code
     calculateDiscountedPrice(item, discountPercent) {
-      console.warn(
-        "calculateDiscountedPrice is deprecated, use calculateItemAmount"
+      console.log(
+        "[Invoice.js] calculateDiscountedPrice is deprecated, use calculateItemAmount"
       );
 
       const priceListRate = flt(item.price_list_rate) || 0;
@@ -1751,14 +1751,17 @@ export default {
           );
 
           if (Math.abs(item.discount_amount - expectedDiscountAmount) > 0.01) {
-            console.warn(`Item ${item.item_code}: discount_amount mismatch`, {
-              expected: expectedDiscountAmount,
-              actual: item.discount_amount,
-            });
+            console.log(
+              `[Invoice.js] Item ${item.item_code}: discount_amount mismatch`,
+              {
+                expected: expectedDiscountAmount,
+                actual: item.discount_amount,
+              }
+            );
           }
 
           if (Math.abs(item.rate - expectedRate) > 0.01) {
-            console.warn(`Item ${item.item_code}: rate mismatch`, {
+            console.log(`[Invoice.js] Item ${item.item_code}: rate mismatch`, {
               expected: expectedRate,
               actual: item.rate,
             });
@@ -1778,7 +1781,7 @@ export default {
         );
 
         if (Math.abs(doc.discount_amount - expectedDiscount) > 0.01) {
-          console.warn("Invoice discount_amount mismatch", {
+          console.log("[Invoice.js] Invoice discount_amount mismatch", {
             expected: expectedDiscount,
             actual: doc.discount_amount,
           });
@@ -1787,8 +1790,8 @@ export default {
 
       // Warn if both types are active (should not happen in POSAwesome)
       if (hasItemDiscounts && hasInvoiceDiscount) {
-        console.warn(
-          "Both item and invoice discounts active - this may cause issues"
+        console.log(
+          "[Invoice.js] Both item and invoice discounts active - this may cause issues"
         );
       }
 
@@ -2466,9 +2469,7 @@ export default {
             // Clear search fields in ItemsSelector
             evntBus.emit("clear_search_fields");
           } else {
-            console.error(
-              "Invoice.js - Submit failed: No invoice name returned"
-            );
+            console.log("Invoice.js - Submit failed: No invoice name returned");
             evntBus.emit("show_mesage", {
               // Submit failed
               text: "فشل الإرسال",
@@ -2477,8 +2478,8 @@ export default {
           }
         },
         error: (err) => {
-          console.error(
-            "Invoice.js - Server error:",
+          console.log(
+            "[Invoice.js] Server error:",
             err?.message || "Unknown error"
           );
           evntBus.emit("hide_loading");
