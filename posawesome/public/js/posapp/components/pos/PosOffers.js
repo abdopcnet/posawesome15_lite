@@ -177,8 +177,7 @@ export default {
           this.discount_percentage_offer_name = null;
         }
       } catch (error) {
-        console.error("[ERROR] handleManualOfferChange exception:", error);
-        // Error processing offer change
+        console.log("[PosOffers.js] handleManualOfferChange error:", error);
         this.showMessage("خطأ في معالجة تغيير العرض", "error");
       }
     },
@@ -202,7 +201,7 @@ export default {
           );
         });
       } catch (error) {
-        console.error("[ERROR] updatePosOffers exception:", error);
+        console.log("[PosOffers.js] updatePosOffers error:", error);
       }
     },
 
@@ -234,7 +233,7 @@ export default {
           this.discount_percentage_offer_name = grandTotalOffers[0].name;
         }
       } catch (error) {
-        // Error applying best offer
+        console.log("[PosOffers.js] applyBestOffer error:", error);
         this.showMessage("خطأ في تطبيق أفضل عرض", "error");
       }
     },
@@ -245,7 +244,7 @@ export default {
           (offer) => !offers_id_list.includes(offer.name || offer.offer_name)
         );
       } catch (error) {
-        // Error removing offers
+        console.log("[PosOffers.js] removeAllOffers error:", error);
         this.showMessage("خطأ في إزالة العروض", "error");
       }
     },
@@ -257,7 +256,7 @@ export default {
         );
         evntBus.emit(EVENT_NAMES.UPDATE_INVOICE_OFFERS, applyedOffers);
       } catch (error) {
-        // Error processing offers
+        console.log("[PosOffers.js] processOffers error:", error);
         this.showMessage("خطأ في معالجة العروض", "error");
       }
     },
@@ -288,7 +287,7 @@ export default {
 
         return [];
       } catch (error) {
-        // Error getting free items
+        console.log("[PosOffers.js] getFreeItems error:", error);
         this.showMessage("خطأ في جلب الأصناف المجانية", "error");
         return [];
       }
@@ -301,7 +300,7 @@ export default {
           appliedOffersCount: this.appliedOffersCount,
         });
       } catch (error) {
-        // Error updating counters
+        console.log("[PosOffers.js] updateCounters error:", error);
         this.showMessage("خطأ في تحديث العدادات", "error");
       }
     },
