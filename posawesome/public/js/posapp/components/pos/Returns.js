@@ -10,10 +10,10 @@ const EVENT_NAMES = {
 };
 
 const TABLE_HEADERS = [
-  { title: "Customer", key: "customer", align: "start", sortable: true },
-  { title: "Date", key: "posting_date", align: "start", sortable: true },
-  { title: "Invoice Number", key: "name", align: "start", sortable: true },
-  { title: "Amount", key: "grand_total", align: "end", sortable: false },
+  { title: "العميل", key: "customer", align: "start", sortable: true },
+  { title: "التاريخ", key: "posting_date", align: "start", sortable: true },
+  { title: "رقم الفاتورة", key: "name", align: "start", sortable: true },
+  { title: "المبلغ", key: "grand_total", align: "end", sortable: false },
 ];
 
 const DEFAULT_COMPANY = "Khaleej Women";
@@ -60,7 +60,12 @@ export default {
     },
 
     getCompany() {
-      return this.pos_profile?.company || this.pos_opening_shift?.company || this.company || DEFAULT_COMPANY;
+      return (
+        this.pos_profile?.company ||
+        this.pos_opening_shift?.company ||
+        this.company ||
+        DEFAULT_COMPANY
+      );
     },
 
     // Removed toggleSelectAll - not needed for radio buttons
@@ -107,7 +112,8 @@ export default {
         },
         error: () => {
           this.isLoading = false;
-          this.showMessage("Failed to search for invoices", "error");
+          // Failed to search for invoices
+          this.showMessage("فشل البحث عن الفواتير", "error");
         },
       });
     },
@@ -116,11 +122,17 @@ export default {
     displaySearchResultsMessage() {
       if (this.dialog_data.length === 0) {
         const message = this.invoice_name
-          ? "No invoices found matching search"
-          : `No submitted invoices available for return in company: ${this.company}`;
+          ? // No invoices found matching search
+            "لم يتم العثور على فواتير مطابقة للبحث"
+          : // No submitted invoices available for return in company
+            `لا توجد فواتير متاحة للإرجاع في الشركة: ${this.company}`;
         this.showMessage(message, "info");
       } else {
-        this.showMessage(`Found ${this.dialog_data.length} invoices available for return`, "success");
+        // Found X invoices available for return
+        this.showMessage(
+          `تم العثور على ${this.dialog_data.length} فاتورة متاحة للإرجاع`,
+          "success"
+        );
       }
     },
 
@@ -135,18 +147,24 @@ export default {
         });
         return response.message;
       } catch (e) {
-        this.showMessage("Failed to fetch original invoice", "error");
+        // Failed to fetch original invoice
+        this.showMessage("فشل جلب الفاتورة الأصلية", "error");
         return null;
       }
     },
 
     validateReturnItems(return_items, original_invoice) {
       const original_items = original_invoice.items.map((i) => i.item_code);
-      const invalid_items = return_items.filter((item) => !original_items.includes(item.item_code));
+      const invalid_items = return_items.filter(
+        (item) => !original_items.includes(item.item_code)
+      );
 
       if (invalid_items.length > 0) {
+        // The following items are not in the original invoice
         this.showMessage(
-          `The following items are not in the original invoice: ${invalid_items.map((i) => i.item_code).join(", ")}`,
+          `الأصناف التالية غير موجودة في الفاتورة الأصلية: ${invalid_items
+            .map((i) => i.item_code)
+            .join(", ")}`,
           "error"
         );
         return false;
@@ -161,7 +179,8 @@ export default {
           qty: Math.abs(item.qty) * -1,
           stock_qty: Math.abs(item.stock_qty || item.qty) * -1,
           amount: Math.abs(item.amount) * -1,
-          posa_row_id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+          posa_row_id:
+            Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
           posa_offers: "[]",
           posa_offer_applied: 0,
           posa_is_offer: 0,
@@ -183,13 +202,17 @@ export default {
     // Submit selected invoice for return
     async submit_dialog() {
       if (!this.selected || !this.dialog_data.length) {
-        this.showMessage("Please select a valid invoice", "error");
+        // Please select a valid invoice
+        this.showMessage("يرجى اختيار فاتورة صحيحة", "error");
         return;
       }
 
-      const selectedItem = this.dialog_data.find((item) => item.name === this.selected);
+      const selectedItem = this.dialog_data.find(
+        (item) => item.name === this.selected
+      );
       if (!selectedItem) {
-        this.showMessage("Selected invoice not found", "error");
+        // Selected invoice not found
+        this.showMessage("الفاتورة المحددة غير موجودة", "error");
         return;
       }
 
@@ -197,7 +220,8 @@ export default {
       const original_invoice = await this.fetchOriginalInvoice(return_doc.name);
 
       if (!original_invoice) {
-        this.showMessage("Original invoice not found", "error");
+        // Original invoice not found
+        this.showMessage("الفاتورة الأصلية غير موجودة", "error");
         return;
       }
 
@@ -216,7 +240,10 @@ export default {
       this.invoice_name = "";
 
       // Emit event after closing
-      evntBus.emit(EVENT_NAMES.LOAD_RETURN_INVOICE, { invoice_doc, return_doc });
+      evntBus.emit(EVENT_NAMES.LOAD_RETURN_INVOICE, {
+        invoice_doc,
+        return_doc,
+      });
     },
   },
 
