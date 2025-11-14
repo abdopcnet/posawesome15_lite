@@ -5,7 +5,12 @@
   <!-- =========================================== -->
   <div
     v-if="offersEnabled"
-    style="display: flex; flex-direction: column; height: 91vh; background: #f8f9fa"
+    style="
+      display: flex;
+      flex-direction: column;
+      height: 91vh;
+      background: #f8f9fa;
+    "
   >
     <!-- =========================================== -->
     <!-- HEADER WITH STATS -->
@@ -18,9 +23,18 @@
         z-index: 10;
       "
     >
-      <div style="display: flex; justify-content: space-between; align-items: center">
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
         <div style="display: flex; align-items: center; gap: 6px">
-          <i class="mdi mdi-tag-multiple" style="color: white; font-size: 22px"></i>
+          <i
+            class="mdi mdi-tag-multiple"
+            style="color: white; font-size: 22px"
+          ></i>
           <h2
             style="
               color: white;
@@ -30,7 +44,8 @@
               letter-spacing: 0.3px;
             "
           >
-            {{ __('Special Offers Total') }}
+            <!-- Special Offers Total -->
+            إجمالي العروض الخاصة
           </h2>
         </div>
 
@@ -57,9 +72,17 @@
                 line-height: 1;
               "
             >
-              {{ __('Total') }}
+              <!-- Total -->
+              الإجمالي
             </span>
-            <span style="font-size: 0.6rem; color: white; font-weight: 700; line-height: 1">
+            <span
+              style="
+                font-size: 0.6rem;
+                color: white;
+                font-weight: 700;
+                line-height: 1;
+              "
+            >
               {{ offersCount }}
             </span>
           </div>
@@ -85,9 +108,17 @@
                 line-height: 1;
               "
             >
-              {{ __('Active') }}
+              <!-- Active -->
+              مفعل
             </span>
-            <span style="font-size: 0.6rem; color: white; font-weight: 700; line-height: 1">
+            <span
+              style="
+                font-size: 0.6rem;
+                color: white;
+                font-weight: 700;
+                line-height: 1;
+              "
+            >
               {{ appliedOffersCount }}
             </span>
           </div>
@@ -135,7 +166,8 @@
           <div style="position: relative; height: 70px; overflow: hidden">
             <img
               :src="
-                offer.image || '/assets/posawesome/js/posapp/components/pos/placeholder-image.png'
+                offer.image ||
+                '/assets/posawesome/js/posapp/components/pos/placeholder-image.png'
               "
               @error="handleImageError"
               style="width: 100%; height: 100%; object-fit: cover"
@@ -148,7 +180,11 @@
                 bottom: 0;
                 left: 0;
                 right: 0;
-                background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+                background: linear-gradient(
+                  to top,
+                  rgba(0, 0, 0, 0.8),
+                  transparent
+                );
                 padding: 4px 6px 3px;
               "
             >
@@ -184,22 +220,46 @@
                 box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
               "
             >
-              <i class="mdi mdi-check-circle" style="color: white; font-size: 14px"></i>
-              <span>{{ __('Active') }}</span>
+              <i
+                class="mdi mdi-check-circle"
+                style="color: white; font-size: 14px"
+              ></i>
+              <!-- Active -->
+              <span>مفعل</span>
             </div>
           </div>
 
           <!-- =========================================== -->
           <!-- OFFER CONTENT -->
           <!-- =========================================== -->
-          <div style="padding: 6px; display: flex; flex-direction: column; gap: 5px; flex: 1">
+          <div
+            style="
+              padding: 6px;
+              display: flex;
+              flex-direction: column;
+              gap: 5px;
+              flex: 1;
+            "
+          >
             <!-- Discount Info -->
             <div style="flex: 1">
               <div
                 v-if="offer.discount_percentage"
-                style="display: flex; align-items: baseline; gap: 3px; padding: 3px 0"
+                style="
+                  display: flex;
+                  align-items: baseline;
+                  gap: 3px;
+                  padding: 3px 0;
+                "
               >
-                <span style="font-size: 1.1rem; font-weight: 700; color: #1976d2; line-height: 1">
+                <span
+                  style="
+                    font-size: 1.1rem;
+                    font-weight: 700;
+                    color: #1976d2;
+                    line-height: 1;
+                  "
+                >
                   {{ offer.discount_percentage }}%
                 </span>
                 <span
@@ -211,15 +271,28 @@
                     letter-spacing: 0.3px;
                   "
                 >
-                  OFF
+                  <!-- OFF -->
+                  خصم
                 </span>
               </div>
 
               <div
                 v-else-if="offer.discount_amount"
-                style="display: flex; align-items: baseline; gap: 3px; padding: 3px 0"
+                style="
+                  display: flex;
+                  align-items: baseline;
+                  gap: 3px;
+                  padding: 3px 0;
+                "
               >
-                <span style="font-size: 1.1rem; font-weight: 700; color: #1976d2; line-height: 1">
+                <span
+                  style="
+                    font-size: 1.1rem;
+                    font-weight: 700;
+                    color: #1976d2;
+                    line-height: 1;
+                  "
+                >
                   {{ formatCurrency(offer.discount_amount) }}
                 </span>
                 <span
@@ -231,12 +304,24 @@
                     letter-spacing: 0.3px;
                   "
                 >
-                  OFF
+                  <!-- OFF -->
+                  خصم
                 </span>
               </div>
 
-              <div v-else style="display: flex; align-items: center; gap: 4px; padding: 3px 0">
-                <i class="mdi mdi-gift" style="color: #4caf50; font-size: 18px"></i>
+              <div
+                v-else
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                  padding: 3px 0;
+                "
+              >
+                <i
+                  class="mdi mdi-gift"
+                  style="color: #4caf50; font-size: 18px"
+                ></i>
                 <span
                   style="
                     font-size: 0.6rem;
@@ -246,7 +331,8 @@
                     letter-spacing: 0.3px;
                   "
                 >
-                  {{ __('Special Offer') }}
+                  <!-- Special Offer -->
+                  عرض خاص
                 </span>
               </div>
             </div>
@@ -271,8 +357,12 @@
                 border-left: 2px solid #ff9800;
               "
             >
-              <i class="mdi mdi-alert-circle" style="color: #ff9800; font-size: 12px"></i>
-              <span>{{ __('Another offer active') }}</span>
+              <i
+                class="mdi mdi-alert-circle"
+                style="color: #ff9800; font-size: 12px"
+              ></i>
+              <!-- Another offer active -->
+              <span>عرض آخر نشط</span>
             </div>
 
             <!-- Apply Toggle -->
@@ -334,8 +424,16 @@
                     "
                   ></span>
                 </span>
-                <span style="font-size: 0.65rem; font-weight: 600; color: #666; margin-left: 8px">
-                  {{ offer.offer_applied ? __('Applied') : __('Apply') }}
+                <!-- Applied / Apply -->
+                <span
+                  style="
+                    font-size: 0.65rem;
+                    font-weight: 600;
+                    color: #666;
+                    margin-left: 8px;
+                  "
+                >
+                  {{ offer.offer_applied ? "مطبق" : "تطبيق" }}
                 </span>
               </label>
             </div>
@@ -375,7 +473,8 @@
         "
       >
         <i class="mdi mdi-arrow-left" style="font-size: 18px"></i>
-        <span>{{ __('Back to Invoice') }}</span>
+        <!-- Back to Invoice -->
+        <span>رجوع إلى الفاتورة</span>
       </button>
     </div>
   </div>
@@ -404,14 +503,19 @@
         max-width: 400px;
       "
     >
-      <i class="mdi mdi-tag-off" style="font-size: 48px; color: #ccc; margin-bottom: 16px"></i>
+      <i
+        class="mdi mdi-tag-off"
+        style="font-size: 48px; color: #ccc; margin-bottom: 16px"
+      ></i>
 
+      <!-- Offers Disabled -->
       <h3 style="color: #666; margin-bottom: 8px; font-size: 1.2rem">
-        {{ __('Offers Disabled') }}
+        العروض غير مفعلة
       </h3>
 
+      <!-- Offers are disabled in POS Profile settings -->
       <p style="color: #999; margin-bottom: 24px; font-size: 0.9rem">
-        {{ __('Offers are disabled in POS Profile settings') }}
+        تم تعطيل العروض في إعدادات ملف نقاط البيع
       </p>
 
       <button
@@ -434,7 +538,8 @@
         "
       >
         <i class="mdi mdi-arrow-left" style="font-size: 18px"></i>
-        <span>{{ __('Back to Invoice') }}</span>
+        <!-- Back to Invoice -->
+        <span>رجوع إلى الفاتورة</span>
       </button>
     </div>
   </div>
