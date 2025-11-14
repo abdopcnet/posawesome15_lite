@@ -30,7 +30,7 @@ doc_events = {
     },
 }
 
-# Fixtures - Export Custom HTML Blocks with the app
+# Fixtures - bench --site erp.andalus-sweets.com export-fixtures --app posawesome
 fixtures = [
     {
         "dt": "Custom HTML Block",
