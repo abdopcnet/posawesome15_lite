@@ -214,8 +214,10 @@ export default {
           is_loading.value = false;
         })
         .catch((error) => {
-          console.error("Error creating opening voucher:", error);
-          // Failed to create opening document
+          console.log(
+            "[OpeningDialog.js] Error creating opening voucher:",
+            error
+          );
           showMessage("فشل إنشاء مستند الافتتاح", "error");
           is_loading.value = false;
         });
