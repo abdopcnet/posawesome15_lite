@@ -1,7 +1,7 @@
 // ===== IMPORTS =====
-import { evntBus } from '../../bus';
-import format from '../../format';
-import { API_MAP } from '../../api_mapper.js';
+import { evntBus } from "../../bus";
+import format from "../../format";
+import { API_MAP } from "../../api_mapper.js";
 
 // Lightweight debounce function (replaces lodash)
 // CRITICAL: Preserve 'this' context for Vue component methods
@@ -20,21 +20,21 @@ function debounce(func, wait) {
 
 const EVENT_NAMES = {
   // Item Events
-  ADD_ITEM: 'add_item',
-  SET_ALL_ITEMS: 'set_all_items',
-  UPDATE_CUR_ITEMS_DETAILS: 'update_cur_items_details',
+  ADD_ITEM: "add_item",
+  SET_ALL_ITEMS: "set_all_items",
+  UPDATE_CUR_ITEMS_DETAILS: "update_cur_items_details",
 
   // UI Events
-  SHOW_OFFERS: 'show_offers',
-  SHOW_MESSAGE: 'show_mesage',
+  SHOW_OFFERS: "show_offers",
+  SHOW_MESSAGE: "show_mesage",
 
   // Configuration Events
-  REGISTER_POS_PROFILE: 'register_pos_profile',
-  UPDATE_CUSTOMER: 'update_customer',
-  UPDATE_CUSTOMER_PRICE_LIST: 'update_customer_price_list',
+  REGISTER_POS_PROFILE: "register_pos_profile",
+  UPDATE_CUSTOMER: "update_customer",
+  UPDATE_CUSTOMER_PRICE_LIST: "update_customer_price_list",
 
   // Counter Events
-  UPDATE_OFFERS_COUNTERS: 'update_offers_counters',
+  UPDATE_OFFERS_COUNTERS: "update_offers_counters",
 };
 
 const UI_CONFIG = {
@@ -46,19 +46,19 @@ const UI_CONFIG = {
 };
 
 const VIEW_MODES = {
-  CARD: 'card',
-  LIST: 'list',
+  CARD: "card",
+  LIST: "list",
 };
 
 const BARCODE_TYPES = {
-  SCALE: 'scale',
-  PRIVATE: 'private',
-  NORMAL: 'normal',
+  SCALE: "scale",
+  PRIVATE: "private",
+  NORMAL: "normal",
 };
 
 // ===== COMPONENT =====
 export default {
-  name: 'ItemsSelector',
+  name: "ItemsSelector",
 
   mixins: [format],
 
@@ -71,18 +71,18 @@ export default {
 
       // View State
       items_view: VIEW_MODES.LIST,
-      item_group: 'ALL',
+      item_group: "ALL",
       loading: false,
       search_loading: false,
 
       // Items Data
-      items_group: ['ALL'],
+      items_group: ["ALL"],
       items: [],
 
       // Search State
-      search: '',
-      first_search: '',
-      barcode_search: '',
+      search: "",
+      first_search: "",
+      barcode_search: "",
 
       // Pagination
       itemsPerPage: 1000,
@@ -104,6 +104,9 @@ export default {
       // Internal Flags
       _suppressCustomerWatcher: false,
       _processingBarcode: false, // Track if barcode is being processed by scanner
+
+      // Return Invoice State
+      is_return_invoice: false, // Track if current invoice is a return invoice with return_against
       _detailsReady: false,
 
       // Caching & Performance
@@ -141,7 +144,7 @@ export default {
       this.search = this.get_search(this.first_search);
 
       // Cache expensive operations
-      const groupFilter = this.item_group !== 'ALL';
+      const groupFilter = this.item_group !== "ALL";
       const hasSearch = this.search && this.search.length >= UI_CONFIG.SEARCH_MIN_LENGTH;
 
       let filtred_list = [];
@@ -150,9 +153,7 @@ export default {
       // Filter by group - cache toLowerCase results
       if (groupFilter) {
         const lowerGroup = this.item_group.toLowerCase();
-        filtred_group_list = this.items.filter((item) =>
-          item.item_group.toLowerCase().includes(lowerGroup),
-        );
+        filtred_group_list = this.items.filter((item) => item.item_group.toLowerCase().includes(lowerGroup));
       } else {
         filtred_group_list = this.items;
       }
@@ -163,15 +164,11 @@ export default {
       } else {
         // Search in item_code - cache toLowerCase result
         const lowerSearch = this.search.toLowerCase();
-        filtred_list = filtred_group_list.filter((item) =>
-          item.item_code.toLowerCase().includes(lowerSearch),
-        );
+        filtred_list = filtred_group_list.filter((item) => item.item_code.toLowerCase().includes(lowerSearch));
 
         // Search in item_name if no results
         if (filtred_list.length === 0) {
-          filtred_list = filtred_group_list.filter((item) =>
-            item.item_name.toLowerCase().includes(lowerSearch),
-          );
+          filtred_list = filtred_group_list.filter((item) => item.item_name.toLowerCase().includes(lowerSearch));
         }
       }
 
@@ -209,7 +206,7 @@ export default {
       const scrollRef = this.$refs.itemsScrollArea;
       const scrollEl = scrollRef ? scrollRef.$el || scrollRef : null;
 
-      if (!scrollEl || typeof scrollEl.getBoundingClientRect !== 'function') {
+      if (!scrollEl || typeof scrollEl.getBoundingClientRect !== "function") {
         return;
       }
 
@@ -233,18 +230,33 @@ export default {
       // Skip if scanner already processed this
       if (this._processingBarcode) {
         this._processingBarcode = false;
-        this.barcode_search = '';
+        this.barcode_search = "";
         return;
       }
 
       this.process_barcode(this.barcode_search.trim());
-      this.barcode_search = '';
+      this.barcode_search = "";
 
       const barcodeInput = document.querySelector('input[placeholder*="Barcode"]');
-      if (barcodeInput) barcodeInput.value = '';
+      if (barcodeInput) barcodeInput.value = "";
     },
 
     process_barcode(barcode_value) {
+      console.log("[ItemsSelector] process_barcode called:", {
+        barcode_value,
+        is_return_invoice: this.is_return_invoice,
+      });
+
+      // Prevent barcode scanning if this is a return invoice with return_against
+      if (this.is_return_invoice) {
+        console.log("[ItemsSelector] BLOCKED: Barcode scanning in return mode");
+        evntBus.emit("show_mesage", {
+          text: "Cannot scan items in return mode. Only items from the original invoice can be returned.",
+          color: "error",
+        });
+        return;
+      }
+
       // Single unified method - backend determines barcode type
       frappe.call({
         method: API_MAP.ITEM.GET_BARCODE_ITEM,
@@ -259,49 +271,64 @@ export default {
 
             // Show success message with quantity info
             const qty = response.message.qty || 1;
-            const qtyText = qty !== 1 ? ` (qty: ${qty})` : '';
+            const qtyText = qty !== 1 ? ` (qty: ${qty})` : "";
 
-            evntBus.emit('show_mesage', {
+            evntBus.emit("show_mesage", {
               text: `Added ${response.message.item_name}${qtyText} to cart`,
-              color: 'success',
+              color: "success",
             });
           } else {
-            evntBus.emit('show_mesage', {
-              text: 'Item not found with this barcode',
-              color: 'error',
+            evntBus.emit("show_mesage", {
+              text: "Item not found with this barcode",
+              color: "error",
             });
           }
         },
         error: (error) => {
-          evntBus.emit('show_mesage', {
-            text: 'Error processing barcode',
-            color: 'error',
+          evntBus.emit("show_mesage", {
+            text: "Error processing barcode",
+            color: "error",
           });
         },
       });
     },
 
     add_item_to_cart(item) {
+      console.log("[ItemsSelector] add_item_to_cart called:", {
+        item_code: item?.item_code,
+        is_return_invoice: this.is_return_invoice,
+      });
+
+      // Prevent adding items if this is a return invoice with return_against
+      if (this.is_return_invoice) {
+        console.log("[ItemsSelector] BLOCKED: Adding item in return mode");
+        evntBus.emit("show_mesage", {
+          text: "Cannot add new items to a return invoice. Only items from the original invoice can be returned.",
+          color: "error",
+        });
+        return;
+      }
+
       evntBus.emit(EVENT_NAMES.ADD_ITEM, item);
     },
 
     show_offers() {
-      evntBus.emit(EVENT_NAMES.SHOW_OFFERS, 'true');
+      evntBus.emit(EVENT_NAMES.SHOW_OFFERS, "true");
     },
 
     onItemGroupChange() {
       if (this.debounce_search) {
-        this.debounce_search = '';
-        this.first_search = '';
+        this.debounce_search = "";
+        this.first_search = "";
       }
       this.get_items();
     },
 
     get_items() {
       if (!this.pos_profile) {
-        evntBus.emit('show_mesage', {
-          text: 'POS Profile not specified',
-          color: 'error',
+        evntBus.emit("show_mesage", {
+          text: "POS Profile not specified",
+          color: "error",
         });
         return;
       }
@@ -309,13 +336,13 @@ export default {
       const vm = this;
       this.loading = true;
       let search = this.get_search(this.first_search);
-      let gr = '';
-      let sr = '';
+      let gr = "";
+      let sr = "";
 
       if (search) {
         sr = search;
       }
-      if (vm.item_group != 'ALL') {
+      if (vm.item_group != "ALL") {
         gr = vm.item_group.toLowerCase();
       }
 
@@ -348,7 +375,7 @@ export default {
               batch_no_data: [],
             }));
             vm._buildItemsMap();
-            evntBus.emit('set_all_items', vm.items);
+            evntBus.emit("set_all_items", vm.items);
             vm.loading = false;
             vm.search_loading = false;
             vm.scheduleScrollHeightUpdate();
@@ -376,7 +403,7 @@ export default {
 
       if (this.pos_profile.item_groups && this.pos_profile.item_groups.length > 0) {
         this.pos_profile.item_groups.forEach((element) => {
-          if (element.item_group !== 'ALL') {
+          if (element.item_group !== "ALL") {
             this.items_group.push(element.item_group);
           }
         });
@@ -399,36 +426,51 @@ export default {
     getItemsHeaders() {
       const items_headers = [
         {
-          title: __('Item Name'),
-          align: 'start',
+          title: __("Item Name"),
+          align: "start",
           sortable: true,
-          key: 'item_name',
-          width: '40%',
+          key: "item_name",
+          width: "40%",
         },
         {
-          title: __('Item Code'),
-          align: 'start',
+          title: __("Item Code"),
+          align: "start",
           sortable: true,
-          key: 'item_code',
-          width: '35%',
+          key: "item_code",
+          width: "35%",
         },
-        { title: __('Price'), key: 'rate', align: 'start', width: '5%' },
+        { title: __("Price"), key: "rate", align: "start", width: "5%" },
         {
-          title: __('Qty'),
-          value: 'actual_qty',
-          key: 'actual_qty',
-          align: 'center',
-          width: '15%',
+          title: __("Qty"),
+          value: "actual_qty",
+          key: "actual_qty",
+          align: "center",
+          width: "15%",
         },
-        { title: __('UOM'), key: 'stock_uom', align: 'center', width: '5%' },
+        { title: __("UOM"), key: "stock_uom", align: "center", width: "5%" },
       ];
 
       return items_headers;
     },
 
     add_item_table(item) {
+      console.log("[ItemsSelector] add_item_table called:", {
+        item_code: item?.item_code,
+        is_return_invoice: this.is_return_invoice,
+      });
+
+      // Prevent adding items if this is a return invoice with return_against
+      if (this.is_return_invoice) {
+        console.log("[ItemsSelector] BLOCKED: Adding item from table in return mode");
+        evntBus.emit("show_mesage", {
+          text: "Cannot add new items to a return invoice. Only items from the original invoice can be returned.",
+          color: "error",
+        });
+        return;
+      }
+
       // Add the item from the table - use the item object directly
-      evntBus.emit('add_item', {
+      evntBus.emit("add_item", {
         ...item,
         qty: this.qty || 1,
       });
@@ -440,8 +482,23 @@ export default {
     },
 
     add_item(item) {
+      console.log("[ItemsSelector] add_item called:", {
+        item_code: item?.item_code,
+        is_return_invoice: this.is_return_invoice,
+      });
+
+      // Prevent adding items if this is a return invoice with return_against
+      if (this.is_return_invoice) {
+        console.log("[ItemsSelector] BLOCKED: Adding item from card in return mode");
+        evntBus.emit("show_mesage", {
+          text: "Cannot add new items to a return invoice. Only items from the original invoice can be returned.",
+          color: "error",
+        });
+        return;
+      }
+
       // Add item from card view
-      evntBus.emit('add_item', {
+      evntBus.emit("add_item", {
         ...item,
         qty: this.qty || 1,
       });
@@ -453,12 +510,12 @@ export default {
     },
 
     get_search(val) {
-      return val || '';
+      return val || "";
     },
 
     esc_event() {
-      this.first_search = '';
-      this.debounce_search = '';
+      this.first_search = "";
+      this.debounce_search = "";
     },
 
     performLiveSearch(searchValue) {
@@ -468,7 +525,7 @@ export default {
       this.search_loading = true;
 
       // If search is empty, reload all items
-      if (!searchValue || searchValue.trim() === '') {
+      if (!searchValue || searchValue.trim() === "") {
         this.get_items();
         return;
       }
@@ -479,7 +536,7 @@ export default {
         args: {
           pos_profile: vm.pos_profile,
           price_list: vm.customer_price_list,
-          item_group: vm.item_group !== 'ALL' ? vm.item_group.toLowerCase() : '',
+          item_group: vm.item_group !== "ALL" ? vm.item_group.toLowerCase() : "",
           search_value: searchValue.trim(),
           customer: vm.customer,
         },
@@ -499,7 +556,7 @@ export default {
               batch_no_data: Array.isArray(it.batch_no_data) ? it.batch_no_data : [],
             }));
             vm._buildItemsMap();
-            evntBus.emit('set_all_items', vm.items);
+            evntBus.emit("set_all_items", vm.items);
           }
         },
         error: function (err) {
@@ -510,7 +567,7 @@ export default {
     },
 
     update_items_details(items) {
-      evntBus.emit('update_cur_items_details', items);
+      evntBus.emit("update_cur_items_details", items);
     },
 
     scan_barcode() {
@@ -536,7 +593,7 @@ export default {
           vm._processingBarcode = true;
 
           // Clear the input field (prevents @keyup.enter from triggering)
-          vm.barcode_search = '';
+          vm.barcode_search = "";
 
           // Process the scanned code
           vm.trigger_onscan(sCode);
@@ -551,35 +608,68 @@ export default {
 
   created: function () {
     this.$nextTick(function () {});
-    evntBus.on('register_pos_profile', (data) => {
+    evntBus.on("register_pos_profile", (data) => {
       this.pos_profile = data.pos_profile;
       // Set customer without triggering watcher for first time
       this._suppressCustomerWatcher = true;
-      this.customer =
-        this.pos_profile && this.pos_profile.customer ? this.pos_profile.customer : this.customer;
+      this.customer = this.pos_profile && this.pos_profile.customer ? this.pos_profile.customer : this.customer;
       this.get_items();
       this.get_items_groups();
-      this.items_view = this.pos_profile.posa_default_card_view ? 'card' : 'list';
+      this.items_view = this.pos_profile.posa_default_card_view ? "card" : "list";
     });
 
-    evntBus.on('update_offers_counters', (data) => {
+    evntBus.on("update_offers_counters", (data) => {
       this.offersCount = data.offersCount;
       this.appliedOffersCount = data.appliedOffersCount;
     });
-    evntBus.on('update_customer_price_list', (data) => {
+    evntBus.on("update_customer_price_list", (data) => {
       this.customer_price_list = data;
     });
-    evntBus.on('update_customer', (data) => {
+    evntBus.on("update_customer", (data) => {
       this.customer = data;
     });
-    evntBus.on('clear_search_fields', () => {
-      this.barcode_search = '';
-      this.debounce_search = '';
-      this.first_search = '';
-      if (this.item_group !== 'ALL') {
-        this.item_group = 'ALL';
+    evntBus.on("clear_search_fields", () => {
+      this.barcode_search = "";
+      this.debounce_search = "";
+      this.first_search = "";
+      if (this.item_group !== "ALL") {
+        this.item_group = "ALL";
         this.get_items();
       }
+    });
+
+    // Track return invoice mode - when loading a return invoice with return_against
+    evntBus.on("load_return_invoice", (data) => {
+      console.log("[ItemsSelector] load_return_invoice event received:", {
+        has_invoice_doc: !!data.invoice_doc,
+        return_against: data.invoice_doc?.return_against,
+        will_set_return_mode: !!(data.invoice_doc && data.invoice_doc.return_against),
+      });
+
+      // Only set is_return_invoice=true if return_against exists (prevents adding items to existing invoice returns)
+      this.is_return_invoice = !!(data.invoice_doc && data.invoice_doc.return_against);
+
+      console.log("[ItemsSelector] is_return_invoice set to:", this.is_return_invoice);
+    });
+
+    // Reset when creating a new invoice (but NOT if it's a return invoice)
+    evntBus.on("new_invoice", (data) => {
+      console.log("[ItemsSelector] new_invoice event received:", {
+        has_data: !!data,
+        is_return: data?.is_return,
+        return_against: data?.return_against,
+      });
+
+      // Only reset if it's NOT a return invoice
+      if (!data || (!data.is_return && !data.return_against)) {
+        console.log("[ItemsSelector] Resetting return mode (non-return invoice)");
+        this.is_return_invoice = false;
+      } else {
+        console.log("[ItemsSelector] Keeping return mode (this is a return invoice)");
+        this.is_return_invoice = !!data.return_against;
+      }
+
+      console.log("[ItemsSelector] is_return_invoice set to:", this.is_return_invoice);
     });
   },
 
@@ -594,7 +684,7 @@ export default {
 
     // Calculate scrollable area as soon as the card renders
     this.scheduleScrollHeightUpdate();
-    window.addEventListener('resize', this.scheduleScrollHeightUpdate);
+    window.addEventListener("resize", this.scheduleScrollHeightUpdate);
   },
 
   // Add beforeUnmount to clean up memory
@@ -612,14 +702,16 @@ export default {
     }
 
     // Clean up event listeners
-    evntBus.$off('register_pos_profile');
-    evntBus.$off('update_cur_items_details');
-    evntBus.$off('update_offers_counters');
-    evntBus.$off('update_customer_price_list');
-    evntBus.$off('update_customer');
-    evntBus.$off('clear_search_fields');
+    evntBus.$off("register_pos_profile");
+    evntBus.$off("update_cur_items_details");
+    evntBus.$off("update_offers_counters");
+    evntBus.$off("update_customer_price_list");
+    evntBus.$off("update_customer");
+    evntBus.$off("clear_search_fields");
+    evntBus.$off("load_return_invoice");
+    evntBus.$off("new_invoice");
 
     // Remove window listener
-    window.removeEventListener('resize', this.scheduleScrollHeightUpdate);
+    window.removeEventListener("resize", this.scheduleScrollHeightUpdate);
   },
 };
