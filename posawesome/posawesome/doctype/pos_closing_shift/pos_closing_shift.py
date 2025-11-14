@@ -302,35 +302,23 @@ def get_pos_invoices(pos_opening_shift):
 @frappe.whitelist()
 def get_payments_entries(pos_opening_shift):
     """
-    GET - Get payment entries for opening shift
+    GET - Get payment entries for opening shift.
+    Payment Entries link to Sales Invoices via the Payment Entry Reference child table.
     """
     try:
-        return frappe.get_all(
-            "Payment Entry",
-            filters={
-                "docstatus": 1,
-                "reference_no": pos_opening_shift,
-                "payment_type": "Receive",
-            },
-            fields=[
-                "name",
-                "mode_of_payment",
-                "paid_amount",
-                "reference_no",
-                "posting_date",
-                "party",
-            ],
-        )
+        # Use the helper function which properly queries via references
+        return _get_payments_entries_helper(pos_opening_shift)
 
     except Exception as e:
+        frappe.logger().error(f"Error in get_payments_entries: {str(e)}")
         return []
 
 
 @frappe.whitelist()
 def get_current_cash_total(pos_profile=None, user=None):
     """
-    Get the total amount of cash payments for the current shift
-    Uses the same logic as closing shift to calculate cash totals
+    Get the total amount of cash payments for the current shift.
+    Uses UNIFIED calculation logic from _calculate_payment_totals.
     """
     try:
         # Build filters for the open shift
@@ -353,53 +341,34 @@ def get_current_cash_total(pos_profile=None, user=None):
             return {"total": 0}
 
         pos_opening_shift_name = opening_shift[0].name
-        pos_profile = opening_shift[0].pos_profile
+        pos_profile_name = opening_shift[0].pos_profile
 
         # Get cash mode of payment from POS Profile
         cash_mode_of_payment = frappe.get_value(
             "POS Profile",
-            pos_profile,
+            pos_profile_name,
             "posa_cash_mode_of_payment"
         )
         if not cash_mode_of_payment:
             cash_mode_of_payment = "Cash"
 
-        # Get all submitted invoices for this shift
-        invoices = frappe.db.sql("""
-            SELECT name, change_amount
-            FROM `tabSales Invoice`
-            WHERE docstatus = 1
-            AND posa_pos_opening_shift = %s
-        """, (pos_opening_shift_name,), as_dict=1)
-
-        total_cash = 0
-
-        # Calculate cash payments for each invoice
-        for invoice in invoices:
-            # Get payments for this invoice
-            payments = frappe.db.sql("""
-                SELECT amount, mode_of_payment
-                FROM `tabSales Invoice Payment`
-                WHERE parent = %s
-                AND mode_of_payment = %s
-            """, (invoice.name, cash_mode_of_payment), as_dict=1)
-
-            for payment in payments:
-                # Subtract change amount from cash payment (same as closing shift logic)
-                amount = flt(payment.amount) - flt(invoice.change_amount)
-                total_cash += amount
-
+        # Use UNIFIED calculation logic
+        payment_totals = _calculate_payment_totals(pos_opening_shift_name, pos_profile_name)
+        
+        # Return cash total
+        total_cash = payment_totals.get(cash_mode_of_payment, 0)
         return {"total": total_cash}
 
     except Exception as e:
+        frappe.logger().error(f"Error in get_current_cash_total: {str(e)}")
         return {"total": 0, "error": str(e)}
 
 
 @frappe.whitelist()
 def get_current_non_cash_total(pos_profile=None, user=None):
     """
-    Get the total amount of non-cash (card, online, etc.) payments for the current shift
-    Uses the same logic as closing shift to calculate non-cash totals
+    Get the total amount of non-cash (card, online, etc.) payments for the current shift.
+    Uses UNIFIED calculation logic from _calculate_payment_totals.
     """
     try:
         # Build filters for the open shift
@@ -422,43 +391,30 @@ def get_current_non_cash_total(pos_profile=None, user=None):
             return {"total": 0}
 
         pos_opening_shift_name = opening_shift[0].name
-        pos_profile = opening_shift[0].pos_profile
+        pos_profile_name = opening_shift[0].pos_profile
 
         # Get cash mode of payment from POS Profile
         cash_mode_of_payment = frappe.get_value(
             "POS Profile",
-            pos_profile,
+            pos_profile_name,
             "posa_cash_mode_of_payment"
         )
         if not cash_mode_of_payment:
             cash_mode_of_payment = "Cash"
 
-        # Get all submitted invoices for this shift
-        invoices = frappe.db.sql("""
-            SELECT name
-            FROM `tabSales Invoice`
-            WHERE docstatus = 1
-            AND posa_pos_opening_shift = %s
-        """, (pos_opening_shift_name,), as_dict=1)
-
+        # Use UNIFIED calculation logic
+        payment_totals = _calculate_payment_totals(pos_opening_shift_name, pos_profile_name)
+        
+        # Sum all non-cash payment modes
         total_non_cash = 0
-
-        # Calculate non-cash payments for each invoice
-        for invoice in invoices:
-            # Get all non-cash payments for this invoice
-            payments = frappe.db.sql("""
-                SELECT amount, mode_of_payment
-                FROM `tabSales Invoice Payment`
-                WHERE parent = %s
-                AND mode_of_payment != %s
-            """, (invoice.name, cash_mode_of_payment), as_dict=1)
-
-            for payment in payments:
-                total_non_cash += flt(payment.amount)
-
+        for mode_of_payment, amount in payment_totals.items():
+            if mode_of_payment != cash_mode_of_payment:
+                total_non_cash += flt(amount)
+        
         return {"total": total_non_cash}
 
     except Exception as e:
+        frappe.logger().error(f"Error in get_current_non_cash_total: {str(e)}")
         return {"total": 0, "error": str(e)}
 
 
@@ -503,6 +459,7 @@ def make_closing_shift_from_opening(opening_shift):
                 )
             )
 
+        # Process invoices for transactions and taxes
         for d in invoices:
             pos_transactions.append(
                 frappe._dict(
@@ -534,35 +491,30 @@ def make_closing_shift_from_opening(opening_shift):
                         )
                     )
 
-            for p in d.payments:
-                existing_pay = [
-                    pay for pay in payments if pay.mode_of_payment == p.mode_of_payment]
-                if existing_pay:
-                    cash_mode_of_payment = frappe.get_value(
-                        "POS Profile",
-                        opening_shift.get("pos_profile"),
-                        "posa_cash_mode_of_payment",
+        # Use UNIFIED payment calculation logic
+        payment_totals = _calculate_payment_totals(
+            opening_shift.get("name"),
+            opening_shift.get("pos_profile")
+        )
+        
+        # Convert payment_totals dict to payments list for closing shift
+        for mode_of_payment, total_amount in payment_totals.items():
+            existing_pay = [pay for pay in payments if pay.mode_of_payment == mode_of_payment]
+            if existing_pay:
+                existing_pay[0].expected_amount += flt(total_amount)
+            else:
+                payments.append(
+                    frappe._dict(
+                        {
+                            "mode_of_payment": mode_of_payment,
+                            "opening_amount": 0,
+                            "expected_amount": total_amount,
+                        }
                     )
-                    if not cash_mode_of_payment:
-                        cash_mode_of_payment = "Cash"
-                    if existing_pay[0].mode_of_payment == cash_mode_of_payment:
-                        amount = p.amount - d.change_amount
-                    else:
-                        amount = p.amount
-                    existing_pay[0].expected_amount += flt(amount)
-                else:
-                    payments.append(
-                        frappe._dict(
-                            {
-                                "mode_of_payment": p.mode_of_payment,
-                                "opening_amount": 0,
-                                "expected_amount": p.amount,
-                            }
-                        )
-                    )
-
+                )
+        
+        # Get Payment Entries for display in pos_payments table
         pos_payments = _get_payments_entries_helper(opening_shift.get("name"))
-
         for py in pos_payments:
             pos_payments_table.append(
                 frappe._dict(
@@ -575,20 +527,6 @@ def make_closing_shift_from_opening(opening_shift):
                     }
                 )
             )
-            existing_pay = [
-                pay for pay in payments if pay.mode_of_payment == py.mode_of_payment]
-            if existing_pay:
-                existing_pay[0].expected_amount += flt(py.paid_amount)
-            else:
-                payments.append(
-                    frappe._dict(
-                        {
-                            "mode_of_payment": py.mode_of_payment,
-                            "opening_amount": 0,
-                            "expected_amount": py.paid_amount,
-                        }
-                    )
-                )
 
         closing_shift.set("pos_transactions", pos_transactions)
         closing_shift.set("payment_reconciliation", payments)
@@ -604,6 +542,63 @@ def make_closing_shift_from_opening(opening_shift):
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
+
+def _calculate_payment_totals(pos_opening_shift, pos_profile):
+    """
+    UNIFIED payment calculation logic used by both closing shift and navbar.
+    This is the SINGLE SOURCE OF TRUTH for payment totals.
+    
+    Returns: dict with payment_totals per mode_of_payment
+    Example: {
+        "Cash": 930.00,
+        "شبكة - فرع الخضراء": 3017.65
+    }
+    """
+    try:
+        invoices = _get_pos_invoices_helper(pos_opening_shift)
+        payments = {}
+        
+        # Get cash mode of payment
+        cash_mode_of_payment = frappe.get_value(
+            "POS Profile",
+            pos_profile,
+            "posa_cash_mode_of_payment",
+        )
+        if not cash_mode_of_payment:
+            cash_mode_of_payment = "Cash"
+        
+        # Process Sales Invoice Payments
+        for d in invoices:
+            # Track if change_amount has been subtracted for this invoice
+            change_already_applied = False
+            
+            for p in d.payments:
+                # Calculate amount - subtract change from first payment only
+                amount = p.amount
+                if not change_already_applied and d.change_amount:
+                    amount = p.amount - d.change_amount
+                    change_already_applied = True
+                
+                # Add to payments dict
+                if p.mode_of_payment in payments:
+                    payments[p.mode_of_payment] += flt(amount)
+                else:
+                    payments[p.mode_of_payment] = flt(amount)
+        
+        # Process Payment Entries
+        pos_payments = _get_payments_entries_helper(pos_opening_shift)
+        for py in pos_payments:
+            if py.mode_of_payment in payments:
+                payments[py.mode_of_payment] += flt(py.paid_amount)
+            else:
+                payments[py.mode_of_payment] = flt(py.paid_amount)
+        
+        return payments
+        
+    except Exception as e:
+        frappe.logger().error(f"Error in _calculate_payment_totals: {str(e)}")
+        return {}
+
 
 def _parse_time_helper(time_value):
     """Helper function to parse time value to datetime.time object"""
@@ -659,23 +654,31 @@ def _get_pos_invoices_helper(pos_opening_shift):
 
 
 def _get_payments_entries_helper(pos_opening_shift):
-    """Helper function to get payment entries"""
+    """
+    Helper function to get payment entries linked to invoices in this shift.
+    Payment Entries link to Sales Invoices via the Payment Entry Reference child table.
+    """
     try:
-        return frappe.get_all(
-            "Payment Entry",
-            filters={
-                "docstatus": 1,
-                "reference_no": pos_opening_shift,
-                "payment_type": "Receive",
-            },
-            fields=[
-                "name",
-                "mode_of_payment",
-                "paid_amount",
-                "reference_no",
-                "posting_date",
-                "party",
-            ],
-        )
+        # Query Payment Entries that reference Sales Invoices from this shift
+        payment_entries = frappe.db.sql("""
+            SELECT DISTINCT
+                pe.name,
+                pe.mode_of_payment,
+                per.allocated_amount as paid_amount,
+                pe.posting_date,
+                pe.party,
+                per.reference_name
+            FROM `tabPayment Entry` pe
+            INNER JOIN `tabPayment Entry Reference` per ON per.parent = pe.name
+            INNER JOIN `tabSales Invoice` si ON si.name = per.reference_name
+            WHERE pe.docstatus = 1
+            AND pe.payment_type = 'Receive'
+            AND per.reference_doctype = 'Sales Invoice'
+            AND si.posa_pos_opening_shift = %s
+            ORDER BY pe.posting_date
+        """, (pos_opening_shift,), as_dict=1)
+        
+        return payment_entries
     except Exception as e:
+        frappe.logger().error(f"Error in _get_payments_entries_helper: {str(e)}")
         return []
