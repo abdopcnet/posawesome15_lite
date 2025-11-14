@@ -57,6 +57,11 @@ export default {
       totalNonCash: 0,
       // Quick return mode
       quick_return_value: false,
+      // Error sound (preloaded after user interaction)
+      errorSound: null,
+      soundEnabled: false,
+      // Connection state tracking
+      wasConnectionLost: false,
     };
   },
   computed: {
@@ -425,27 +430,75 @@ export default {
         this.shift_invoice_count = 0;
       }
     },
+    // Enable sound after user interaction (required by browsers)
+    enableSound() {
+      if (this.soundEnabled) return;
+
+      try {
+        const soundUrl =
+          frappe.urllib.get_base_url() + "/assets/posawesome/sounds/error.mp3";
+        this.errorSound = new Audio(soundUrl);
+        this.errorSound.preload = "auto";
+        // Play and immediately pause to "unlock" audio for future use
+        this.errorSound
+          .play()
+          .then(() => {
+            this.errorSound.pause();
+            this.errorSound.currentTime = 0;
+            this.soundEnabled = true;
+            console.log("[Navbar] Sound enabled successfully");
+          })
+          .catch((err) => {
+            console.warn("[Navbar] Could not enable sound:", err);
+          });
+      } catch (err) {
+        console.warn("[Navbar] Error enabling sound:", err);
+      }
+    },
+    // Play error sound (only if enabled)
+    playErrorSound() {
+      if (this.errorSound && this.soundEnabled) {
+        this.errorSound.currentTime = 0;
+        this.errorSound.play().catch((err) => {
+          console.error("[Navbar] Failed to play error sound:", err);
+        });
+      } else {
+        // If sound not enabled yet, try to enable it and play
+        if (!this.soundEnabled) {
+          console.warn("[Navbar] Sound not enabled, attempting to enable...");
+          this.enableSound();
+          // Try to play after a short delay
+          setTimeout(() => {
+            if (this.errorSound && this.soundEnabled) {
+              this.errorSound.currentTime = 0;
+              this.errorSound.play().catch((err) => {
+                console.error(
+                  "[Navbar] Failed to play error sound after enable:",
+                  err
+                );
+              });
+            }
+          }, 100);
+        }
+      }
+    },
     // Ping methods
     async measurePing() {
-      // Skip if connection issues might cause a reload
-      if (navigator.onLine === false) {
-        this.pingTime = "999";
-        return;
-      }
-
       const startTime = performance.now();
       let responded = false;
+      let timeoutTriggered = false;
 
       // Set timeout for 2 seconds - play error sound if no response
       const timeoutId = setTimeout(() => {
         if (!responded) {
-          // Play error sound on timeout
-          const soundUrl =
-            frappe.urllib.get_base_url() +
-            "/assets/posawesome/sounds/error.mp3";
-          const audio = new Audio(soundUrl);
-          audio.play().catch(() => {});
+          timeoutTriggered = true;
+          console.warn(
+            "[Navbar] Ping timeout after 2 seconds - no response from server"
+          );
           this.pingTime = "999";
+          this.playErrorSound();
+          // Mark connection as lost
+          this.wasConnectionLost = true;
         }
       }, 2000); // 2 seconds timeout
 
@@ -454,25 +507,50 @@ export default {
           method: "frappe.ping",
           args: {},
           callback: () => {
-            responded = true;
-            clearTimeout(timeoutId);
-            const endTime = performance.now();
-            const ping = Math.round(endTime - startTime);
-            this.pingTime = ping.toString().padStart(3, "0");
+            if (!timeoutTriggered) {
+              responded = true;
+              clearTimeout(timeoutId);
+              const endTime = performance.now();
+              const ping = Math.round(endTime - startTime);
+              this.pingTime = ping.toString().padStart(3, "0");
+
+              // If connection was lost before and now it's back, reload page
+              if (this.wasConnectionLost) {
+                console.log("[Navbar] Connection restored! Reloading page...");
+                this.wasConnectionLost = false;
+                // Use clearCacheAndReload if available, otherwise just reload
+                if (window.clearCacheAndReload) {
+                  window.clearCacheAndReload();
+                } else {
+                  location.reload();
+                }
+              }
+            }
           },
-          error: () => {
-            responded = true;
-            clearTimeout(timeoutId);
-            this.pingTime = "999";
+          error: (err) => {
+            if (!timeoutTriggered) {
+              responded = true;
+              clearTimeout(timeoutId);
+              console.warn("[Navbar] Ping error:", err);
+              this.pingTime = "999";
+              // Mark connection as lost
+              this.wasConnectionLost = true;
+            }
           },
           freeze: false,
           show_spinner: false,
           async: true,
         });
       } catch (error) {
-        responded = true;
-        clearTimeout(timeoutId);
-        this.pingTime = "999";
+        // Exception happens immediately when connection is lost
+        if (!timeoutTriggered) {
+          console.error("[Navbar] Ping exception (connection lost):", error);
+          this.pingTime = "999";
+          // Play sound immediately on exception (connection lost)
+          this.playErrorSound();
+          // Mark connection as lost
+          this.wasConnectionLost = true;
+        }
       }
     },
     startPingMonitoring() {
@@ -548,6 +626,17 @@ export default {
   created: function () {
     this.$nextTick(function () {
       try {
+        // Enable sound on first user interaction
+        const enableSoundOnce = () => {
+          this.enableSound();
+          document.removeEventListener("click", enableSoundOnce);
+          document.removeEventListener("touchstart", enableSoundOnce);
+        };
+        document.addEventListener("click", enableSoundOnce, { once: true });
+        document.addEventListener("touchstart", enableSoundOnce, {
+          once: true,
+        });
+
         // Check if ping monitoring should be enabled
         // We can add a global setting to control this
         const enablePingMonitoring =
