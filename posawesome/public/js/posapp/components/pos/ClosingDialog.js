@@ -97,7 +97,11 @@ export default {
     const itemsPerPage = ref(20);
     const dialog_data = ref({ payment_reconciliation: [] });
     const pos_profile = ref(null);
-    const headers = ref([TABLE_HEADERS.PAYMENT_METHOD, TABLE_HEADERS.SYSTEM_TOTAL, TABLE_HEADERS.ACTUAL_COUNT]);
+    const headers = ref([
+      TABLE_HEADERS.PAYMENT_METHOD,
+      TABLE_HEADERS.SYSTEM_TOTAL,
+      TABLE_HEADERS.ACTUAL_COUNT,
+    ]);
 
     // Time control
     const isClosingAllowed = ref(true);
@@ -134,7 +138,9 @@ export default {
      * @returns {Object} Icon configuration with icon name and color
      */
     const getPaymentIcon = (paymentMethod) => {
-      const method = Object.keys(PAYMENT_ICONS).find((key) => paymentMethod.toLowerCase().includes(key.toLowerCase()));
+      const method = Object.keys(PAYMENT_ICONS).find((key) =>
+        paymentMethod.toLowerCase().includes(key.toLowerCase())
+      );
 
       return method ? PAYMENT_ICONS[method] : DEFAULT_PAYMENT_ICON;
     };
@@ -174,7 +180,8 @@ export default {
             }
           } else {
             isClosingAllowed.value = false;
-            closingTimeMessage.value = "Error checking closing time permissions";
+            // Error checking closing time permissions
+            closingTimeMessage.value = "خطأ في التحقق من أذونات وقت الإغلاق";
           }
         },
       });
@@ -190,10 +197,16 @@ export default {
       closingDialog.value = true;
 
       // Auto-fill closing_amount (Actual) with expected_amount (Expected)
-      if (data.payment_reconciliation && Array.isArray(data.payment_reconciliation)) {
+      if (
+        data.payment_reconciliation &&
+        Array.isArray(data.payment_reconciliation)
+      ) {
         data.payment_reconciliation.forEach((payment) => {
           // Only set if closing_amount is not already set
-          if (!payment.closing_amount && payment.expected_amount !== undefined) {
+          if (
+            !payment.closing_amount &&
+            payment.expected_amount !== undefined
+          ) {
             payment.closing_amount = payment.expected_amount;
           }
         });
