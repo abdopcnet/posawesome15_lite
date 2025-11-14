@@ -165,23 +165,24 @@
 
             <input
               type="text"
-              :placeholder="__('Scan Barcode')"
+              :placeholder="is_return_invoice ? __('Barcode disabled in return mode') : __('Scan Barcode')"
               v-model="barcode_search"
               @keyup.enter="handle_barcode_input"
               ref="barcode_search"
+              :disabled="is_return_invoice"
               autofocus
-              style="
-                flex: 1;
-                border: none;
-                outline: none;
-                background: transparent;
-                padding: 4px 6px;
-                font-size: 0.8rem;
-                /* stronger, darker placeholder + text */
-                color: #0f172a;
-                font-weight: 700;
-                height: 100%;
-              "
+              :style="{
+                flex: 1,
+                border: 'none',
+                outline: 'none',
+                background: 'transparent',
+                padding: '4px 6px',
+                fontSize: '0.8rem',
+                color: is_return_invoice ? '#999' : '#0f172a',
+                fontWeight: '700',
+                height: '100%',
+                cursor: is_return_invoice ? 'not-allowed' : 'text',
+              }"
             />
 
             <button
@@ -322,23 +323,25 @@
               v-for="(item, idx) in filtred_items"
               :key="idx"
               @click="add_item(item)"
-              :title="item.item_name"
-              style="
-                position: relative;
-                border-radius: 8px;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-                cursor: pointer;
-                user-select: none;
-                transition: transform 0.2s ease;
-                overflow: hidden;
-                background: white;
-                display: flex;
-                flex-direction: column;
-                height: 200px;
-                min-height: 200px;
-              "
-              @mouseenter="$event.currentTarget.style.transform = 'scale(1.02)'"
-              @mouseleave="$event.currentTarget.style.transform = 'scale(1)'"
+              :title="is_return_invoice ? 'Cannot add items in return mode' : item.item_name"
+              :style="{
+                position: 'relative',
+                borderRadius: '8px',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)',
+                cursor: is_return_invoice ? 'not-allowed' : 'pointer',
+                userSelect: 'none',
+                transition: 'transform 0.2s ease',
+                overflow: 'hidden',
+                background: 'white',
+                display: 'flex',
+                flexDirection: 'column',
+                height: '200px',
+                minHeight: '200px',
+                opacity: is_return_invoice ? 0.5 : 1,
+                filter: is_return_invoice ? 'grayscale(50%)' : 'none',
+              }"
+              @mouseenter="!is_return_invoice && ($event.currentTarget.style.transform = 'scale(1.02)')"
+              @mouseleave="!is_return_invoice && ($event.currentTarget.style.transform = 'scale(1)')"
             >
               <!-- Quantity Pill -->
               <div
@@ -500,19 +503,21 @@
                   v-for="item in filtred_items"
                   :key="item.item_code"
                   @click="add_item_table(item)"
+                  :title="is_return_invoice ? 'Cannot add items in return mode' : item.item_name"
                   @mouseenter="
-                    $event.currentTarget.style.background = 'rgba(16,24,40,0.09)';
+                    !is_return_invoice && ($event.currentTarget.style.background = 'rgba(16,24,40,0.09)');
                     $event.currentTarget.style.transition = 'background-color 160ms ease';
                   "
                   @mouseleave="
                     $event.currentTarget.style.background = '';
                     $event.currentTarget.style.transition = 'background-color 160ms ease';
                   "
-                  style="
-                    border-bottom: 1px solid #f0f0f0;
-                    cursor: pointer;
-                    transition: background-color 0.2s ease;
-                  "
+                  :style="{
+                    borderBottom: '1px solid #f0f0f0',
+                    cursor: is_return_invoice ? 'not-allowed' : 'pointer',
+                    transition: 'background-color 0.2s ease',
+                    opacity: is_return_invoice ? 0.5 : 1,
+                  }"
                 >
                   <td
                     v-for="header in getItemsHeaders()"
