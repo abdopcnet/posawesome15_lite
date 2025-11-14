@@ -140,8 +140,7 @@ export default {
           this.create_opening_voucher();
         }
       } catch (error) {
-        console.error("Pos.vue(check_opening_entry): Error", error);
-        // Failed to check opening entry
+        console.log("[Pos.js] check_opening_entry error:", error);
         this.show_message("فشل التحقق من إدخال الافتتاح", "error");
       }
     },
@@ -194,8 +193,7 @@ export default {
         // Profile loaded
         evntBus.emit(EVENTS.SET_POS_OPENING_SHIFT, pos_opening_shift);
       } catch (error) {
-        console.error("Pos.vue(get_full_profile_data): Error", error);
-        // Failed to load profile data
+        console.log("[Pos.js] get_full_profile_data error:", error);
         this.show_message("فشل تحميل بيانات الملف الشخصي", "error");
       }
     },
@@ -215,7 +213,7 @@ export default {
         const doc = await frappe.db.get_doc("POS Settings", undefined);
         evntBus.emit(EVENTS.SET_POS_SETTINGS, doc);
       } catch (error) {
-        console.error("Pos.vue(get_pos_setting): Error", error);
+        console.log("[Pos.js] get_pos_setting error:", error);
       }
     },
 
@@ -249,8 +247,7 @@ export default {
           this.show_message("فشل تحميل العروض", "error");
         }
       } catch (error) {
-        console.error("[ERROR] Pos.vue(get_offers): Error", error);
-        // Failed to load offers
+        console.log("[Pos.js] get_offers error:", error);
         this.show_message("فشل تحميل العروض", "error");
       }
     },
@@ -272,8 +269,7 @@ export default {
           this.show_message("فشل تحميل بيانات الإغلاق", "error");
         }
       } catch (error) {
-        console.error("Pos.vue(get_closing_data): Error", error);
-        // Failed to load closing data
+        console.log("[Pos.js] get_closing_data error:", error);
         this.show_message("فشل تحميل بيانات الإغلاق", "error");
       }
     },
@@ -296,8 +292,7 @@ export default {
           this.show_message("فشل إغلاق نوبة الصراف", "error");
         }
       } catch (error) {
-        console.error("Pos.vue(submit_closing_pos): Error", error);
-        // Failed to close cashier shift
+        console.log("[Pos.js] submit_closing_pos error:", error);
         this.show_message("فشل إغلاق نوبة الصراف", "error");
       }
     },
