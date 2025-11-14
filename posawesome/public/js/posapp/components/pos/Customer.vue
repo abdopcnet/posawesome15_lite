@@ -5,12 +5,7 @@
   <!-- =========================================== -->
   <div
     style="
-      font-family:
-        system-ui,
-        -apple-system,
-        Segoe UI,
-        Roboto,
-        Helvetica Neue,
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue,
         Arial;
     "
   >
@@ -26,11 +21,18 @@
       <!-- =========================================== -->
       <!-- Input Wrapper -->
       <!-- =========================================== -->
-      <div style="position: relative; display: flex; align-items: center; padding: 6px 0">
+      <div
+        style="
+          position: relative;
+          display: flex;
+          align-items: center;
+          padding: 6px 0;
+        "
+      >
         <!-- Customer Search Input -->
         <input
           type="text"
-          :placeholder="'Search customer...'"
+          :placeholder="'ابحث عن عميل...'"
           v-model="customer_search"
           :disabled="readonly"
           @focus="handleCustomerFocus"
@@ -50,13 +52,15 @@
             border-radius: 10px;
             font-size: 14px;
             background: #fff;
-            transition:
-              box-shadow 160ms ease,
-              border-color 160ms ease;
+            transition: box-shadow 160ms ease, border-color 160ms ease;
             box-sizing: border-box;
             outline: none;
           "
-          :style="readonly ? 'background: #f6f7f8; color: #8e8e93; cursor: not-allowed' : ''"
+          :style="
+            readonly
+              ? 'background: #f6f7f8; color: #8e8e93; cursor: not-allowed'
+              : ''
+          "
         />
 
         <!-- Action Buttons (Edit & New) -->
@@ -89,9 +93,7 @@
               display: inline-flex;
               align-items: center;
               justify-content: center;
-              transition:
-                background-color 120ms ease,
-                color 120ms ease,
+              transition: background-color 120ms ease, color 120ms ease,
                 box-shadow 120ms ease;
               height: 32px;
               width: 32px;
@@ -120,9 +122,7 @@
               display: inline-flex;
               align-items: center;
               justify-content: center;
-              transition:
-                background-color 120ms ease,
-                color 120ms ease,
+              transition: background-color 120ms ease, color 120ms ease,
                 box-shadow 120ms ease;
               height: 32px;
               width: 32px;
@@ -185,9 +185,16 @@
               :width="40"
               :height="40"
               viewBox="0 0 40 40"
-              style="flex-shrink: 0; display: block; border-radius: 8px; overflow: visible"
+              style="
+                flex-shrink: 0;
+                display: block;
+                border-radius: 8px;
+                overflow: visible;
+              "
               role="img"
-              :aria-label="(item.customer_name || '?').charAt(0).toUpperCase() + ' avatar'"
+              :aria-label="
+                (item.customer_name || '?').charAt(0).toUpperCase() + ' avatar'
+              "
             >
               <defs>
                 <linearGradient
@@ -197,8 +204,18 @@
                   y1="0"
                   y2="1"
                 >
-                  <stop offset="0" :stop-color="`hsl(${avatarHue(item.customer_name)} 72% 86%)`" />
-                  <stop offset="1" :stop-color="`hsl(${avatarHue(item.customer_name)} 66% 74%)`" />
+                  <stop
+                    offset="0"
+                    :stop-color="`hsl(${avatarHue(
+                      item.customer_name
+                    )} 72% 86%)`"
+                  />
+                  <stop
+                    offset="1"
+                    :stop-color="`hsl(${avatarHue(
+                      item.customer_name
+                    )} 66% 74%)`"
+                  />
                 </linearGradient>
               </defs>
 
@@ -241,11 +258,24 @@
             <!-- Mobile Number -->
             <div
               v-if="item.mobile_no"
-              style="font-size: 12px; color: #6b7280; margin-top: 4px; line-height: 1"
+              style="
+                font-size: 12px;
+                color: #6b7280;
+                margin-top: 4px;
+                line-height: 1;
+              "
             >
               {{ item.mobile_no }}
             </div>
-            <div v-else style="font-size: 12px; color: #9ca3af; margin-top: 4px; line-height: 1">
+            <div
+              v-else
+              style="
+                font-size: 12px;
+                color: #9ca3af;
+                margin-top: 4px;
+                line-height: 1;
+              "
+            >
               No number
             </div>
           </div>
@@ -284,7 +314,11 @@
           <div
             style="
               height: 100%;
-              background: linear-gradient(90deg, rgba(25, 118, 210, 1), rgba(33, 150, 243, 1));
+              background: linear-gradient(
+                90deg,
+                rgba(25, 118, 210, 1),
+                rgba(33, 150, 243, 1)
+              );
               border-radius: 6px;
               animation: progressIndeterminate 1.2s infinite linear;
             "
@@ -301,13 +335,13 @@
 </template>
 
 <script>
-import comp from './Customer.js';
+import comp from "./Customer.js";
 
 comp.methods = {
   ...comp.methods,
 
   avatarColor(name) {
-    const s = (name || '').toString();
+    const s = (name || "").toString();
     let h = 0;
     for (let i = 0; i < s.length; i++) {
       h = (h << 5) - h + s.charCodeAt(i);
@@ -319,7 +353,7 @@ comp.methods = {
 
   // return the hue (0..359) used to build per-name gradients (cheap, deterministic)
   avatarHue(name) {
-    const s = (name || '').toString();
+    const s = (name || "").toString();
     let h = 0;
     for (let i = 0; i < s.length; i++) {
       h = (h << 5) - h + s.charCodeAt(i);
@@ -329,7 +363,7 @@ comp.methods = {
   },
 
   avatarTextColor() {
-    return '#0f172a';
+    return "#0f172a";
   },
 
   // Inline hover handlers for the two action buttons.
@@ -339,15 +373,16 @@ comp.methods = {
       const el = e.currentTarget;
       if (el.disabled) return;
       // store originals for restore
-      el.dataset._origBg = el.style.background || '';
-      el.dataset._origColor = el.style.color || '';
-      el.dataset._origBox = el.style.boxShadow || '';
+      el.dataset._origBg = el.style.background || "";
+      el.dataset._origColor = el.style.color || "";
+      el.dataset._origBox = el.style.boxShadow || "";
       // modern visible hover
-      el.style.background = 'linear-gradient(90deg, rgba(25,118,210,0.12), rgba(30,136,229,0.06))';
-      el.style.color = '#0b66d1';
-      el.style.boxShadow = '0 8px 22px rgba(11,102,209,0.12)';
+      el.style.background =
+        "linear-gradient(90deg, rgba(25,118,210,0.12), rgba(30,136,229,0.06))";
+      el.style.color = "#0b66d1";
+      el.style.boxShadow = "0 8px 22px rgba(11,102,209,0.12)";
     } catch (err) {
-      console.warn('buttonHoverEnter', err);
+      console.warn("buttonHoverEnter", err);
     }
   },
 
@@ -355,14 +390,14 @@ comp.methods = {
     try {
       const el = e.currentTarget;
       if (el.disabled) return;
-      el.style.background = el.dataset._origBg || '';
-      el.style.color = el.dataset._origColor || '';
-      el.style.boxShadow = el.dataset._origBox || '';
+      el.style.background = el.dataset._origBg || "";
+      el.style.color = el.dataset._origColor || "";
+      el.style.boxShadow = el.dataset._origBox || "";
       delete el.dataset._origBg;
       delete el.dataset._origColor;
       delete el.dataset._origBox;
     } catch (err) {
-      console.warn('buttonHoverLeave', err);
+      console.warn("buttonHoverLeave", err);
     }
   },
 };
@@ -372,11 +407,11 @@ export default comp;
 
 <style>
 /* Zebra striping for customer list */
-.customer-item[data-even='true'] {
+.customer-item[data-even="true"] {
   background-color: rgba(249, 250, 251, 1) !important;
 }
 
-.customer-item[data-even='false'] {
+.customer-item[data-even="false"] {
   background-color: rgba(255, 255, 255, 1) !important;
 }
 
@@ -387,12 +422,12 @@ export default comp;
 }
 
 /* Selected item */
-.customer-item[data-selected='true'] {
+.customer-item[data-selected="true"] {
   background-color: rgba(25, 118, 210, 0.08) !important;
 }
 
 /* Selected + Hover */
-.customer-item[data-selected='true']:hover {
+.customer-item[data-selected="true"]:hover {
   background-color: rgba(25, 118, 210, 0.16) !important;
 }
 </style>
