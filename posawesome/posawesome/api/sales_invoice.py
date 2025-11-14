@@ -42,18 +42,9 @@ def delete_invoice(invoice_name):
             "message": "Invoice deleted successfully"
         }
 
-    except frappe.exceptions.DoesNotExistError:
-        frappe.throw(_("Invoice {0} does not exist").format(invoice_name))
-
-    except frappe.exceptions.PermissionError as pe:
-        frappe.throw(_("Permission denied: {0}").format(str(pe)))
-
-    except frappe.exceptions.ValidationError as ve:
-        frappe.throw(_("Validation error: {0}").format(str(ve)))
-
     except Exception as e:
-        frappe.logger().error(f"Error in delete_invoice: {str(e)}")
-        frappe.throw(_("Error deleting invoice: {0}").format(str(e)))
+        frappe.logger().error(f"[sales_invoice.py] delete_invoice: {str(e)}")
+        frappe.throw(_("Error deleting invoice"))
 
 
 # ===== RETURN HELPERS =====
@@ -127,7 +118,7 @@ def calculate_return_stats(invoice_name):
         }
         
     except Exception as e:
-        frappe.logger().error(f"Error in calculate_return_stats: {str(e)}")
+        frappe.logger().error(f"[sales_invoice.py] calculate_return_stats: {str(e)}")
         return {
             "remaining_returnable_amount": 0,
             "total_returned_amount": 0,
@@ -239,14 +230,8 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
         return returnable_invoices
 
     except Exception as e:
-        frappe.logger().error(f"Error in get_invoices_for_return: {str(e)}")
-        frappe.log_error(title="api.sales_invoice.get_invoices_for_return", message={
-            "fn": "get_invoices_for_return",
-            "error": str(e),
-            "invoice_name": invoice_name,
-            "company": company,
-            "pos_profile": pos_profile
-        })
+        frappe.logger().error(f"[sales_invoice.py] get_invoices_for_return: {str(e)}")
+        frappe.throw(_("Error fetching invoices for return"))
         return []
 
 
@@ -316,24 +301,9 @@ def create_and_submit_invoice(invoice_doc):
         # Return the submitted document
         return doc.as_dict()
 
-    except frappe.exceptions.ValidationError as ve:
-        error_msg = str(ve)
-        frappe.log_error(title="api.sales_invoice.create_and_submit_invoice", message={
-            "fn": "create_and_submit_invoice",
-            "error_type": "ValidationError",
-            "error": error_msg,
-        })
-        frappe.throw(_("Validation error: {0}").format(str(ve)))
-
     except Exception as e:
-        error_msg = str(e)
-        frappe.log_error(title="api.sales_invoice.create_and_submit_invoice", message={
-            "fn": "create_and_submit_invoice",
-            "error_type": "Exception",
-            "error": error_msg,
-        })
-        frappe.throw(
-            _("Error creating and submitting invoice: {0}").format(str(e)))
+        frappe.logger().error(f"[sales_invoice.py] create_and_submit_invoice: {str(e)}")
+        frappe.throw(_("Error creating and submitting invoice"))
 
 
 def validate_return_limits(return_doc):
@@ -384,11 +354,8 @@ def validate_return_limits(return_doc):
                         title=_("Return Quantity Exceeded")
                     )
     
-    except frappe.ValidationError:
-        # Re-raise validation errors
-        raise
     except Exception as e:
-        frappe.logger().error(f"Error in validate_return_limits: {str(e)}")
+        frappe.logger().error(f"[sales_invoice.py] validate_return_limits: {str(e)}")
         # Don't block submission if validation check fails
         pass
 
