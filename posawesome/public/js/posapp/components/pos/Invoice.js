@@ -638,7 +638,9 @@ export default {
               this.items = result.message.items;
             }
           }
-        } catch (error) {}
+        } catch (error) {
+          console.log("[Invoice.js] Error:", error);
+        }
       }
     },
 
@@ -1055,7 +1057,7 @@ export default {
               // Payment stays local until Print
             }
           } catch (error) {
-            // Payment get failed
+            console.log("[Invoice.js] Payment get failed:", error);
           }
         }
 
@@ -1071,8 +1073,8 @@ export default {
         evntBus.emit("invoice_session_reset");
         evntBus.emit("hide_loading");
       } catch (error) {
+        console.log("[Invoice.js] Error preparing invoice:", error);
         evntBus.emit("hide_loading");
-        // Error preparing invoice
         evntBus.emit("show_mesage", {
           text: "خطأ في إعداد الفاتورة: " + error.message,
           color: "error",
@@ -1470,6 +1472,7 @@ export default {
           }
         }
       } catch (error) {
+        console.log("[Invoice.js] Error:", error);
         return false;
       }
 
@@ -2526,7 +2529,7 @@ export default {
           item._detailSynced = true;
         }
       } catch (error) {
-        // Item detail update failed - continue with current data
+        console.log("[Invoice.js] Item detail update failed:", error);
       }
     },
   },
