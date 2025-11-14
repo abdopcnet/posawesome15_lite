@@ -30,10 +30,11 @@
         line-height: 1;
       "
       @click="back_to_invoice"
-      :title="__('Back to Invoice')"
+      title="رجوع إلى الفاتورة"
     >
       <i class="mdi mdi-arrow-left" style="color: white; font-size: 18px"></i>
-      <span>{{ __('Back') }}</span>
+      <!-- Back -->
+      <span>رجوع</span>
     </button>
 
     <div
@@ -71,18 +72,32 @@
         ></div>
       </div>
 
-      <div style="max-height: 75vh; overflow-y: auto; overflow-x: hidden; padding: 6px">
+      <div
+        style="
+          max-height: 75vh;
+          overflow-y: auto;
+          overflow-x: hidden;
+          padding: 6px;
+        "
+      >
         <!-- =========================================== -->
         <!-- PAYMENT SUMMARY SECTION -->
         <!-- =========================================== -->
         <div
           v-if="invoice_doc"
-          style="display: flex; flex-direction: column; gap: 3px; margin-bottom: 2px"
+          style="
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            margin-bottom: 2px;
+          "
         >
           <!-- Summary Row 1 -->
           <div style="display: flex; gap: 3px; align-items: flex-start">
             <!-- Total Paid -->
-            <div style="flex: 1.4; display: flex; flex-direction: column; gap: 2px">
+            <div
+              style="flex: 1.4; display: flex; flex-direction: column; gap: 2px"
+            >
               <label
                 style="
                   font-size: 0.6rem;
@@ -95,7 +110,8 @@
                   line-height: 1;
                 "
               >
-                {{ __('Total Paid') }}
+                <!-- Total Paid -->
+                إجمالي المدفوع
               </label>
               <div
                 style="
@@ -110,7 +126,14 @@
                   transition: all 0.2s ease;
                 "
               >
-                <span style="font-size: 0.6rem; font-weight: 600; color: #666; margin-right: 3px">
+                <span
+                  style="
+                    font-size: 0.6rem;
+                    font-weight: 600;
+                    color: #666;
+                    margin-right: 3px;
+                  "
+                >
                   {{ currencySymbol(invoice_doc.currency) }}
                 </span>
                 <span
@@ -128,7 +151,9 @@
             </div>
 
             <!-- Remaining -->
-            <div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+            <div
+              style="flex: 1; display: flex; flex-direction: column; gap: 2px"
+            >
               <label
                 style="
                   font-size: 0.6rem;
@@ -141,7 +166,8 @@
                   line-height: 1;
                 "
               >
-                {{ __('Remaining') }}
+                <!-- Remaining -->
+                المتبقي
               </label>
               <div
                 style="
@@ -156,7 +182,14 @@
                   transition: all 0.2s ease;
                 "
               >
-                <span style="font-size: 0.6rem; font-weight: 600; color: #666; margin-right: 3px">
+                <span
+                  style="
+                    font-size: 0.6rem;
+                    font-weight: 600;
+                    color: #666;
+                    margin-right: 3px;
+                  "
+                >
                   {{ currencySymbol(invoice_doc.currency) }}
                 </span>
                 <span
@@ -180,7 +213,9 @@
             style="display: flex; gap: 3px; align-items: flex-start"
           >
             <!-- Remaining Amount -->
-            <div style="flex: 1.4; display: flex; flex-direction: column; gap: 2px">
+            <div
+              style="flex: 1.4; display: flex; flex-direction: column; gap: 2px"
+            >
               <label
                 style="
                   font-size: 0.6rem;
@@ -193,7 +228,8 @@
                   line-height: 1;
                 "
               >
-                {{ __('Remaining Amount') }}
+                <!-- Remaining Amount -->
+                المبلغ المتبقي
               </label>
               <div
                 style="
@@ -242,7 +278,9 @@
             </div>
 
             <!-- Change Amount -->
-            <div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+            <div
+              style="flex: 1; display: flex; flex-direction: column; gap: 2px"
+            >
               <label
                 style="
                   font-size: 0.6rem;
@@ -255,7 +293,8 @@
                   line-height: 1;
                 "
               >
-                {{ __('Change Amount') }}
+                <!-- Change Amount -->
+                مبلغ الباقي
               </label>
               <div
                 style="
@@ -270,7 +309,14 @@
                   transition: all 0.2s ease;
                 "
               >
-                <span style="font-size: 0.6rem; font-weight: 600; color: #666; margin-right: 3px">
+                <span
+                  style="
+                    font-size: 0.6rem;
+                    font-weight: 600;
+                    color: #666;
+                    margin-right: 3px;
+                  "
+                >
                   {{ currencySymbol(invoice_doc.currency) }}
                 </span>
                 <span
@@ -293,7 +339,12 @@
         <div
           style="
             height: 1px;
-            background: linear-gradient(90deg, transparent 0%, #e0e0e0 50%, transparent 100%);
+            background: linear-gradient(
+              90deg,
+              transparent 0%,
+              #e0e0e0 50%,
+              transparent 100%
+            );
             margin: 4px 0;
           "
         ></div>
@@ -311,7 +362,9 @@
             style="display: flex; gap: 3px; align-items: flex-end"
           >
             <!-- Amount Input -->
-            <div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+            <div
+              style="flex: 1; display: flex; flex-direction: column; gap: 2px"
+            >
               <label
                 style="
                   font-size: 0.6rem;
@@ -324,7 +377,8 @@
                   line-height: 1;
                 "
               >
-                {{ __('Amount') }}
+                <!-- Amount -->
+                المبلغ
               </label>
               <div
                 style="
@@ -352,7 +406,9 @@
                 <input
                   type="text"
                   :value="formatCurrency(payment.amount)"
-                  @change="setFormatedCurrency(payment, 'amount', null, true, $event)"
+                  @change="
+                    setFormatedCurrency(payment, 'amount', null, true, $event)
+                  "
                   @focus="set_rest_amount(payment.idx)"
                   :readonly="invoice_doc.is_return ? true : false"
                   placeholder="0.00"
@@ -376,7 +432,9 @@
             <!-- Payment Method Button -->
             <button
               :style="
-                payment.type == 'Phone' && payment.amount > 0 && request_payment_field
+                payment.type == 'Phone' &&
+                payment.amount > 0 &&
+                request_payment_field
                   ? 'flex: 0.7;'
                   : 'flex: 1;'
               "
@@ -403,9 +461,15 @@
 
             <!-- Request Button (for Phone) -->
             <button
-              v-if="payment.type == 'Phone' && payment.amount > 0 && request_payment_field"
+              v-if="
+                payment.type == 'Phone' &&
+                payment.amount > 0 &&
+                request_payment_field
+              "
               :disabled="payment.amount == 0"
-              @click="((phone_dialog = true), (payment.amount = flt(payment.amount, 0)))"
+              @click="
+                (phone_dialog = true), (payment.amount = flt(payment.amount, 0))
+              "
               style="
                 flex: 0.4;
                 height: 22px;
@@ -425,7 +489,8 @@
                   : ''
               "
             >
-              {{ __('Request') }}
+              <!-- Request -->
+              طلب
             </button>
           </div>
         </div>
@@ -434,12 +499,18 @@
         <!-- LOYALTY POINTS SECTION -->
         <!-- =========================================== -->
         <div
-          v-if="invoice_doc && available_pioints_amount > 0 && !invoice_doc.is_return"
+          v-if="
+            invoice_doc &&
+            available_pioints_amount > 0 &&
+            !invoice_doc.is_return
+          "
           style="margin: 3px 0"
         >
           <div style="display: flex; gap: 3px; align-items: flex-start">
             <!-- Pay from Customer Points -->
-            <div style="flex: 1.4; display: flex; flex-direction: column; gap: 2px">
+            <div
+              style="flex: 1.4; display: flex; flex-direction: column; gap: 2px"
+            >
               <label
                 style="
                   font-size: 0.6rem;
@@ -452,7 +523,8 @@
                   line-height: 1;
                 "
               >
-                {{ __('Pay from Customer Points') }}
+                <!-- Pay from Customer Points -->
+                الدفع من نقاط العميل
               </label>
               <div
                 style="
@@ -499,7 +571,9 @@
             </div>
 
             <!-- Customer Points Balance -->
-            <div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+            <div
+              style="flex: 1; display: flex; flex-direction: column; gap: 2px"
+            >
               <label
                 style="
                   font-size: 0.6rem;
@@ -512,7 +586,8 @@
                   line-height: 1;
                 "
               >
-                {{ __('Customer Points Balance') }}
+                <!-- Customer Points Balance -->
+                رصيد نقاط العميل
               </label>
               <div
                 style="
@@ -528,7 +603,14 @@
                   opacity: 0.8;
                 "
               >
-                <span style="font-size: 0.6rem; font-weight: 600; color: #666; margin-right: 3px">
+                <span
+                  style="
+                    font-size: 0.6rem;
+                    font-weight: 600;
+                    color: #666;
+                    margin-right: 3px;
+                  "
+                >
                   {{ currencySymbol(invoice_doc.currency) }}
                 </span>
                 <span
@@ -561,7 +643,9 @@
         >
           <div style="display: flex; gap: 3px; align-items: flex-start">
             <!-- Customer Credit Redeemed -->
-            <div style="flex: 1.4; display: flex; flex-direction: column; gap: 2px">
+            <div
+              style="flex: 1.4; display: flex; flex-direction: column; gap: 2px"
+            >
               <label
                 style="
                   font-size: 0.6rem;
@@ -574,7 +658,8 @@
                   line-height: 1;
                 "
               >
-                {{ __('Customer Credit Redeemed') }}
+                <!-- Customer Credit Redeemed -->
+                الرصيد المسترد
               </label>
               <div
                 style="
@@ -590,7 +675,14 @@
                   opacity: 0.8;
                 "
               >
-                <span style="font-size: 0.6rem; font-weight: 600; color: #666; margin-right: 3px">
+                <span
+                  style="
+                    font-size: 0.6rem;
+                    font-weight: 600;
+                    color: #666;
+                    margin-right: 3px;
+                  "
+                >
                   {{ currencySymbol(invoice_doc.currency) }}
                 </span>
                 <span
@@ -608,7 +700,9 @@
             </div>
 
             <!-- Cash Credit Balance -->
-            <div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+            <div
+              style="flex: 1; display: flex; flex-direction: column; gap: 2px"
+            >
               <label
                 style="
                   font-size: 0.6rem;
@@ -621,7 +715,8 @@
                   line-height: 1;
                 "
               >
-                {{ __('Cash Credit Balance') }}
+                <!-- Cash Credit Balance -->
+                رصيد الائتمان النقدي
               </label>
               <div
                 style="
@@ -637,7 +732,14 @@
                   opacity: 0.8;
                 "
               >
-                <span style="font-size: 0.6rem; font-weight: 600; color: #666; margin-right: 3px">
+                <span
+                  style="
+                    font-size: 0.6rem;
+                    font-weight: 600;
+                    color: #666;
+                    margin-right: 3px;
+                  "
+                >
                   {{ currencySymbol(invoice_doc.currency) }}
                 </span>
                 <span
@@ -660,7 +762,12 @@
         <div
           style="
             height: 1px;
-            background: linear-gradient(90deg, transparent 0%, #e0e0e0 50%, transparent 100%);
+            background: linear-gradient(
+              90deg,
+              transparent 0%,
+              #e0e0e0 50%,
+              transparent 100%
+            );
             margin: 4px 0;
           "
         ></div>
@@ -682,7 +789,9 @@
           <!-- Write Off Amount Switch -->
           <div
             v-if="
-              pos_profile.posa_allow_write_off_change && diff_payment > 0 && !invoice_doc.is_return
+              pos_profile.posa_allow_write_off_change &&
+              diff_payment > 0 &&
+              !invoice_doc.is_return
             "
             style="flex: 1 1 calc(50% - 2px); min-width: 130px"
           >
@@ -726,7 +835,9 @@
                     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
                   "
                   :style="
-                    is_write_off_change ? 'transform: translateX(20px); background: white' : ''
+                    is_write_off_change
+                      ? 'transform: translateX(20px); background: white'
+                      : ''
                   "
                 ></span>
                 <span
@@ -744,7 +855,8 @@
                 ></span>
               </span>
               <span style="font-size: 0.85rem; color: #333; font-weight: 500">
-                {{ __('Is Write Off Amount?') }}
+                <!-- Is Write Off Amount? -->
+                هل المبلغ معدوم؟
               </span>
             </label>
           </div>
@@ -793,7 +905,11 @@
                     transition: all 0.3s ease;
                     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
                   "
-                  :style="is_credit_sale ? 'transform: translateX(20px); background: white' : ''"
+                  :style="
+                    is_credit_sale
+                      ? 'transform: translateX(20px); background: white'
+                      : ''
+                  "
                 ></span>
                 <span
                   v-if="is_credit_sale"
@@ -810,14 +926,17 @@
                 ></span>
               </span>
               <span style="font-size: 0.85rem; color: #333; font-weight: 500">
-                {{ __('Is Credit Sale?') }}
+                <!-- Is Credit Sale? -->
+                هل هو بيع آجل؟
               </span>
             </label>
           </div>
 
           <!-- Use Customer Credit Switch -->
           <div
-            v-if="!invoice_doc.is_return && pos_profile.posa_use_customer_credit"
+            v-if="
+              !invoice_doc.is_return && pos_profile.posa_use_customer_credit
+            "
             style="flex: 1 1 calc(50% - 2px); min-width: 130px"
           >
             <label
@@ -861,7 +980,9 @@
                     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
                   "
                   :style="
-                    redeem_customer_credit ? 'transform: translateX(20px); background: white' : ''
+                    redeem_customer_credit
+                      ? 'transform: translateX(20px); background: white'
+                      : ''
                   "
                 ></span>
                 <span
@@ -879,7 +1000,8 @@
                 ></span>
               </span>
               <span style="font-size: 0.85rem; color: #333; font-weight: 500">
-                {{ __('Use Customer Credit') }}
+                <!-- Use Customer Credit -->
+                استخدام رصيد العميل
               </span>
             </label>
           </div>
@@ -928,7 +1050,11 @@
                     transition: all 0.3s ease;
                     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
                   "
-                  :style="is_cashback ? 'transform: translateX(20px); background: white' : ''"
+                  :style="
+                    is_cashback
+                      ? 'transform: translateX(20px); background: white'
+                      : ''
+                  "
                 ></span>
                 <span
                   v-if="is_cashback"
@@ -945,7 +1071,8 @@
                 ></span>
               </span>
               <span style="font-size: 0.85rem; color: #333; font-weight: 500">
-                {{ __('Is Cash Return?') }}
+                <!-- Is Cash Return? -->
+                هل هو مرتجع نقدي؟
               </span>
             </label>
           </div>
@@ -973,9 +1100,17 @@
                 line-height: 1;
               "
             >
-              {{ __('Due Date') }}
+              <!-- Due Date -->
+              تاريخ الاستحقاق
             </label>
-            <div style="display: flex; flex-direction: column; gap: 4px; width: 100%">
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                width: 100%;
+              "
+            >
               <input
                 type="date"
                 v-model="invoice_doc.due_date"
@@ -1044,7 +1179,9 @@
             </div>
 
             <!-- Available Credit -->
-            <div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+            <div
+              style="flex: 1; display: flex; flex-direction: column; gap: 2px"
+            >
               <label
                 style="
                   font-size: 0.6rem;
@@ -1056,7 +1193,8 @@
                   line-height: 1;
                 "
               >
-                {{ __('Available Credit') }}
+                <!-- Available Credit -->
+                الرصيد المتاح
               </label>
               <div
                 style="
@@ -1072,7 +1210,14 @@
                   opacity: 0.8;
                 "
               >
-                <span style="font-size: 0.6rem; font-weight: 600; color: #666; margin-right: 3px">
+                <span
+                  style="
+                    font-size: 0.6rem;
+                    font-weight: 600;
+                    color: #666;
+                    margin-right: 3px;
+                  "
+                >
                   {{ currencySymbol(invoice_doc.currency) }}
                 </span>
                 <span
@@ -1090,7 +1235,9 @@
             </div>
 
             <!-- Credit to Redeem -->
-            <div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+            <div
+              style="flex: 1; display: flex; flex-direction: column; gap: 2px"
+            >
               <label
                 style="
                   font-size: 0.6rem;
@@ -1154,7 +1301,12 @@
         <div
           style="
             height: 1px;
-            background: linear-gradient(90deg, transparent 0%, #e0e0e0 50%, transparent 100%);
+            background: linear-gradient(
+              90deg,
+              transparent 0%,
+              #e0e0e0 50%,
+              transparent 100%
+            );
             margin: 4px 0;
           "
         ></div>
@@ -1210,7 +1362,8 @@
             "
           >
             <span style="font-size: 1.5rem; font-weight: 700; color: #1976d2">
-              Confirm Phone Number
+              <!-- Confirm Phone Number -->
+              تأكيد رقم الهاتف
             </span>
             <button
               @click="phone_dialog = false"
@@ -1239,16 +1392,29 @@
           <!-- Card Body -->
           <div style="padding: 16px">
             <div style="padding: 0">
-              <div style="display: flex; flex-direction: column; gap: 4px; width: 100%">
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 4px;
+                  width: 100%;
+                "
+              >
                 <label
-                  style="font-size: 0.75rem; font-weight: 600; color: #555; margin-bottom: 2px"
+                  style="
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    color: #555;
+                    margin-bottom: 2px;
+                  "
                 >
-                  Phone Number
+                  <!-- Phone Number -->
+                  رقم الهاتف
                 </label>
                 <input
                   type="number"
                   v-model="invoice_doc.contact_mobile"
-                  placeholder="Enter phone number"
+                  placeholder="أدخل رقم الهاتف"
                   style="
                     width: 100%;
                     padding: 8px 12px;
@@ -1296,7 +1462,8 @@
                 color: white;
               "
             >
-              Close
+              <!-- Close -->
+              إغلاق
             </button>
             <button
               @click="request_payment"
@@ -1317,7 +1484,8 @@
                 color: white;
               "
             >
-              Request
+              <!-- Request -->
+              طلب
             </button>
           </div>
         </div>
