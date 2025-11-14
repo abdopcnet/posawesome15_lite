@@ -35,11 +35,8 @@ export default {
       items: [{ text: "POS", icon: "mdi-network-pos" }],
       page: "",
       fav: true,
-      menu: false,
-      showMenu: false,
       message: false,
       hints: true,
-      menu_item: 0,
       snack: false,
       snackColor: "",
       snackText: "",
@@ -179,11 +176,7 @@ export default {
     },
   },
   // ===== SECTION 3.5: WATCHERS =====
-  watch: {
-    showMenu(newVal, oldVal) {
-      // Menu visibility watcher - cleaned up debug logs
-    },
-  },
+  watch: {},
   // ===== SECTION 4: METHODS =====
   methods: {
     // Format currency values
@@ -265,102 +258,20 @@ export default {
       // Fetch initial totals
       this.fetchPaymentTotals();
 
-      // Set up interval to update totals (every 5 minutes)
+      // Set up interval to update totals (every 30 seconds for real-time accuracy)
       this.cashUpdateInterval = setInterval(() => {
         this.fetchPaymentTotals();
-      }, 300000); // 5 minutes in milliseconds
+      }, 30000); // 30 seconds in milliseconds
     },
 
     changePage(key) {
       this.$emit("changePage", key);
     },
-    toggleMenu() {
-      this.showMenu = !this.showMenu;
-
-      // Add click outside handler when menu opens
-      if (this.showMenu) {
-        // Use setTimeout to avoid catching the same click that opened the menu
-        setTimeout(() => {
-          document.addEventListener("click", this.handleClickOutside);
-        }, 50);
-
-        // Position menu to stay within viewport
-        this.$nextTick(() => {
-          // Safely get the root element
-          const root =
-            this.$el instanceof HTMLElement
-              ? this.$el
-              : this.$el && this.$el.$el instanceof HTMLElement
-              ? this.$el.$el
-              : null;
-
-          if (!root) return;
-
-          const menuElement = root.querySelector(".dropdown-menu");
-          const menuButton = root.querySelector(".menu-btn");
-
-          if (menuElement && menuButton) {
-            const buttonRect = menuButton.getBoundingClientRect();
-            const menuWidth = 200; // min-width from CSS
-            const viewportWidth = window.innerWidth;
-
-            // Check if menu would overflow on the right
-            if (buttonRect.right < menuWidth) {
-              // Not enough space on right, align to left edge of button
-              menuElement.style.right = "auto";
-              menuElement.style.left = "0";
-            } else {
-              // Enough space, keep right alignment
-              menuElement.style.right = "0";
-              menuElement.style.left = "auto";
-            }
-          }
-        });
-      } else {
-        document.removeEventListener("click", this.handleClickOutside);
-      }
-    },
-    handleClickOutside(event) {
-      try {
-        // Safely get the root element
-        const root =
-          this.$el instanceof HTMLElement
-            ? this.$el
-            : this.$el && this.$el.$el instanceof HTMLElement
-            ? this.$el.$el
-            : null;
-
-        if (!root) return;
-
-        // Check if click is outside the menu wrapper
-        const menuWrapper = root.querySelector(".menu-wrapper");
-        if (menuWrapper && !menuWrapper.contains(event.target)) {
-          this.showMenu = false;
-          document.removeEventListener("click", this.handleClickOutside);
-        }
-      } catch (err) {
-        // Non-fatal error, just close the menu
-        this.showMenu = false;
-        document.removeEventListener("click", this.handleClickOutside);
-        console.warn("handleClickOutside error:", err);
-      }
-    },
     go_desk() {
       frappe.set_route("/");
       location.reload();
     },
-    go_about() {
-      // this.showMenu = false; // Close menu after action
-      // const win = window.open("https://github.com/abdopcnet", "_blank");
-      // win.focus();
-
-      this.show_mesage({
-        color: "info",
-        text: "POSAwesome Lite v15 - Local System",
-      });
-    },
     close_shift_dialog() {
-      this.showMenu = false; // Close menu after action
       evntBus.emit("open_closing_dialog");
     },
     show_mesage(data) {
@@ -374,7 +285,6 @@ export default {
       }, 4000);
     },
     logOut() {
-      this.showMenu = false; // Close menu after action
       var me = this;
       me.logged_out = true;
       return frappe.call({
@@ -634,7 +544,7 @@ export default {
           this.pos_opening_shift = data.pos_opening_shift;
           this.fetch_company_info();
           this.fetchShiftInvoiceCount();
-          this.fetchPaymentTotals(); // Fetch payment totals when POS profile is registered
+          this.setupCashUpdateInterval(); // Start auto-refresh interval when POS loads
           // External payments screen disabled - removed payments option
         });
         evntBus.on("set_last_invoice", (data) => {
@@ -649,19 +559,22 @@ export default {
         evntBus.on("set_pos_opening_shift", (data) => {
           this.pos_opening_shift = data;
           this.fetchShiftInvoiceCount();
-          this.fetchPaymentTotals(); // Fetch payment totals when shift is opened
+          this.setupCashUpdateInterval(); // Restart auto-refresh when shift changes
         });
         evntBus.on("register_pos_data", (data) => {
           this.pos_opening_shift = data.pos_opening_shift;
-          this.fetchPaymentTotals(); // Fetch payment totals when POS data is registered
+          this.setupCashUpdateInterval(); // Start auto-refresh when POS data registered
         });
         evntBus.on("invoice_submitted", () => {
           // Refresh invoice count when a new invoice is submitted
-          // Add delay to wait for background job to complete
+          // Immediate refresh for payment totals (backend queries are fast)
+          this.fetchPaymentTotals(); // Immediate update
+
+          // Also schedule a delayed refresh to catch any async updates
           setTimeout(() => {
             this.fetchShiftInvoiceCount();
             this.fetchPaymentTotals(); // Update payment totals after invoice submission
-          }, 2000); // Wait 2 seconds for background job
+          }, 1000); // Wait 1 second for any background processing
         });
         evntBus.on("freeze", (data) => {
           this.freeze = true;
