@@ -126,13 +126,6 @@ export default {
             "لم يتم العثور على فواتير مطابقة للبحث"
           : // No submitted invoices available for return in company
             `لا توجد فواتير متاحة للإرجاع في الشركة: ${this.company}`;
-        this.showMessage(message, "info");
-      } else {
-        // Found X invoices available for return
-        this.showMessage(
-          `تم العثور على ${this.dialog_data.length} فاتورة متاحة للإرجاع`,
-          "success"
-        );
       }
     },
 
