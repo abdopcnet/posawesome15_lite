@@ -92,6 +92,45 @@ def get_opening_dialog_data():
 
 
 @frappe.whitelist()
+def get_pos_profile_language(pos_profile):
+    """
+    GET - Get language from POS Profile
+    Returns the language code (e.g., 'ar', 'en') from POS Profile.posa_language
+    """
+    try:
+        if not pos_profile:
+            frappe.log_error(
+                title="[pos_profile.py] get_pos_profile_language",
+                message="No POS Profile provided, returning 'en'"
+            )
+            return "en"
+
+        language = frappe.db.get_value(
+            "POS Profile", pos_profile, "posa_language")
+
+        if not language:
+            language = "en"
+            frappe.log_error(
+                title="[pos_profile.py] get_pos_profile_language",
+                message=f"No language set for {pos_profile}, defaulting to 'en'"
+            )
+        else:
+            frappe.log_error(
+                title="[pos_profile.py] get_pos_profile_language",
+                message=f"POS Profile: {pos_profile}, Language: {language}"
+            )
+
+        return language
+
+    except Exception as e:
+        frappe.log_error(
+            title="[pos_profile.py] get_pos_profile_language Error",
+            message=f"Error: {str(e)}"
+        )
+        return "en"
+
+
+@frappe.whitelist()
 def get_profile_users(profile_name):
     """
     GET - Get POS Profile users
