@@ -61,7 +61,10 @@
                 justify-content: center;
               "
             >
-              <i class="mdi mdi-cash-register" style="color: white; font-size: 18px"></i>
+              <i
+                class="mdi mdi-cash-register"
+                style="color: white; font-size: 18px"
+              ></i>
             </div>
 
             <h3
@@ -75,7 +78,8 @@
                 z-index: 2;
               "
             >
-              POS Opening
+              <!-- POS Opening -->
+              فتح نقطة البيع
             </h3>
           </div>
 
@@ -115,7 +119,8 @@
                 letter-spacing: 0.5px;
               "
             >
-              Company
+              <!-- Company -->
+              الشركة
             </label>
             <select
               v-model="company"
@@ -132,7 +137,9 @@
                 transition: all 0.2s ease;
               "
             >
-              <option v-for="comp in companies" :key="comp" :value="comp">{{ comp }}</option>
+              <option v-for="comp in companies" :key="comp" :value="comp">
+                {{ comp }}
+              </option>
             </select>
           </div>
 
@@ -149,7 +156,8 @@
                 letter-spacing: 0.5px;
               "
             >
-              POS Profile
+              <!-- POS Profile -->
+              ملف نقطة البيع
             </label>
             <select
               v-model="pos_profile"
@@ -166,7 +174,11 @@
                 transition: all 0.2s ease;
               "
             >
-              <option v-for="profile in pos_profiles" :key="profile" :value="profile">
+              <option
+                v-for="profile in pos_profiles"
+                :key="profile"
+                :value="profile"
+              >
                 {{ profile }}
               </option>
             </select>
@@ -185,7 +197,8 @@
                 letter-spacing: 0.5px;
               "
             >
-              Payment Methods
+              <!-- Payment Methods -->
+              طرق الدفع
             </label>
             <div
               style="
@@ -218,7 +231,8 @@
                     justify-content: flex-start;
                   "
                 >
-                  Payment Method
+                  <!-- Payment Method -->
+                  طريقة الدفع
                 </div>
 
                 <div
@@ -233,7 +247,8 @@
                     justify-content: flex-end;
                   "
                 >
-                  Opening Amount
+                  <!-- Opening Amount -->
+                  مبلغ الافتتاح
                 </div>
               </div>
 
@@ -248,7 +263,11 @@
                     border-bottom: 1px solid #f1f5f9;
                     transition: background-color 0.1s ease;
                   "
-                  :style="index === payments_methods.length - 1 ? 'border-bottom: none' : ''"
+                  :style="
+                    index === payments_methods.length - 1
+                      ? 'border-bottom: none'
+                      : ''
+                  "
                 >
                   <!-- Method Column -->
                   <div
@@ -270,7 +289,13 @@
                           fontSize: '14px',
                         }"
                       ></i>
-                      <span style="font-weight: 500; color: #334155; font-size: 11px">
+                      <span
+                        style="
+                          font-weight: 500;
+                          color: #334155;
+                          font-size: 11px;
+                        "
+                      >
                         {{ item.mode_of_payment }}
                       </span>
                     </div>
@@ -299,7 +324,13 @@
                         transition: all 0.2s ease;
                       "
                     >
-                      <span style="font-size: 10px; color: #64748b; font-weight: 500">
+                      <span
+                        style="
+                          font-size: 10px;
+                          color: #64748b;
+                          font-weight: 500;
+                        "
+                      >
                         {{ currencySymbol(item.currency) }}
                       </span>
                       <input
@@ -321,13 +352,16 @@
                         "
                         @focus="
                           (event) => {
-                            event.target.parentElement.style.borderColor = '#6366f1';
-                            event.target.parentElement.style.boxShadow = '0 0 0 2px rgba(99, 102, 241, 0.1)';
+                            event.target.parentElement.style.borderColor =
+                              '#6366f1';
+                            event.target.parentElement.style.boxShadow =
+                              '0 0 0 2px rgba(99, 102, 241, 0.1)';
                           }
                         "
                         @blur="
                           (event) => {
-                            event.target.parentElement.style.borderColor = '#d1d5db';
+                            event.target.parentElement.style.borderColor =
+                              '#d1d5db';
                             event.target.parentElement.style.boxShadow = 'none';
                           }
                         "
@@ -371,7 +405,8 @@
             @click="go_desk"
           >
             <i class="mdi mdi-close" style="font-size: 14px"></i>
-            Cancel
+            <!-- Cancel -->
+            إلغاء
           </button>
 
           <button
@@ -394,9 +429,18 @@
             :disabled="is_loading"
             @click="submit_dialog"
           >
-            <i class="mdi mdi-check" v-if="!is_loading" style="font-size: 14px"></i>
-            <i class="mdi mdi-loading" v-else style="font-size: 14px; animation: rotate 1s linear infinite"></i>
-            {{ is_loading ? "Creating..." : "Confirm" }}
+            <i
+              class="mdi mdi-check"
+              v-if="!is_loading"
+              style="font-size: 14px"
+            ></i>
+            <i
+              class="mdi mdi-loading"
+              v-else
+              style="font-size: 14px; animation: rotate 1s linear infinite"
+            ></i>
+            <!-- Creating... / Confirm -->
+            {{ is_loading ? "جاري الإنشاء..." : "تأكيد" }}
           </button>
 
           <div
