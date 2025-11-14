@@ -304,10 +304,10 @@
       <!-- ACTION BUTTONS -->
       <!-- =========================================== -->
       <div style="display: flex; align-items: center; gap: 3px">
-        <!-- Print Button -->
+        <!-- Print Button: Print Last Receipt or No last receipt -->
         <button
           :disabled="!last_invoice"
-          :title="last_invoice ? __('Print Last Receipt') : __('No last receipt')"
+          :title="last_invoice ? 'طباعة آخر إيصال' : 'لا يوجد إيصال'"
           @click="print_last_invoice"
           :style="{
             cursor: last_invoice ? 'pointer' : 'not-allowed',
@@ -351,10 +351,10 @@
           ></i>
         </button>
 
-        <!-- Cache Button -->
+        <!-- Cache Button: Clear Cache -->
         <button
           @click="clearCache"
-          :title="__('Clear Cache')"
+          title="مسح الذاكرة المؤقتة"
           style="
             display: inline-flex;
             align-items: center;
@@ -390,11 +390,11 @@
           ></i>
         </button>
 
-        <!-- Close Shift Button -->
+        <!-- Close Shift Button: Close Shift -->
         <button
           v-if="!pos_profile.posa_hide_closing_shift"
           @click="close_shift_dialog"
-          :title="__('Close Shift')"
+          title="إغلاق الوردية"
           style="
             display: inline-flex;
             align-items: center;
