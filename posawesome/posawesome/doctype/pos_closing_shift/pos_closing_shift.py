@@ -327,16 +327,23 @@ def get_payments_entries(pos_opening_shift):
 
 
 @frappe.whitelist()
-def get_current_cash_total():
+def get_current_cash_total(pos_profile=None, user=None):
     """
     Get the total amount of cash payments for the current shift
     Uses the same logic as closing shift to calculate cash totals
     """
     try:
+        # Build filters for the open shift
+        filters = {"status": "Open"}
+        if pos_profile:
+            filters["pos_profile"] = pos_profile
+        if user:
+            filters["user"] = user
+        
         # Get the current open shift
         opening_shift = frappe.get_all(
             "POS Opening Shift",
-            filters={"status": "Open"},
+            filters=filters,
             fields=["name", "pos_profile"],
             order_by="period_start_date desc",
             limit=1
@@ -389,16 +396,23 @@ def get_current_cash_total():
 
 
 @frappe.whitelist()
-def get_current_non_cash_total():
+def get_current_non_cash_total(pos_profile=None, user=None):
     """
     Get the total amount of non-cash (card, online, etc.) payments for the current shift
     Uses the same logic as closing shift to calculate non-cash totals
     """
     try:
+        # Build filters for the open shift
+        filters = {"status": "Open"}
+        if pos_profile:
+            filters["pos_profile"] = pos_profile
+        if user:
+            filters["user"] = user
+        
         # Get the current open shift
         opening_shift = frappe.get_all(
             "POS Opening Shift",
-            filters={"status": "Open"},
+            filters=filters,
             fields=["name", "pos_profile"],
             order_by="period_start_date desc",
             limit=1
