@@ -682,7 +682,7 @@ const posaTranslations = {
     'You are not allowed to print pending invoices': 'لا يُسمح لك بطباعة الفواتير المعلقة',
     'Loyalty points offer applied': 'تم تطبيق عرض نقاط الولاء',
     items_discount: 'خصم الأصناف',
-    list_price_amounts: 'السعر الأصلي',
+    list_price_total: 'السعر الأصلي',
     net_total: 'الصافي',
     grand_total: 'الإجمالي الكلي',
     Print: 'طباعة',
@@ -716,7 +716,7 @@ const posaTranslations = {
 // =============================================================================
 // LANGUAGE SELECTION - Change this value to switch languages
 // =============================================================================
-const posa_language = 'ar'; // Options: 'ar' (Arabic) or 'en' (English)
+const posa_language = 'en'; // Options: 'ar' (Arabic) or 'en' (English)
 
 // =============================================================================
 // TRANSLATION FUNCTION
