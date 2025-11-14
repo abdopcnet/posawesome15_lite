@@ -51,7 +51,7 @@
           <!-- =========================================== -->
           <div
             style="
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              background: linear-gradient(135deg, #ff6f00 0%, #ff9800 100%);
               color: white;
               padding: 12px 16px;
               border-bottom: 1px solid #e0e0e0;
