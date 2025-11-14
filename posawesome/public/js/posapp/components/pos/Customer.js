@@ -110,8 +110,8 @@ export default {
                 this.defaultLoaded = true;
                 console.log("Default customer loaded successfully:", selected);
               } else {
-                console.warn(
-                  "Default customer not found in loaded customers list:",
+                console.log(
+                  "[Customer.js] Default customer not found in loaded customers list:",
                   this.customer
                 );
               }
@@ -235,7 +235,7 @@ export default {
       } catch (err) {
         console.log("[Customer.js] Error:", err);
         this.showDropdown = false;
-        console.warn("handleClickOutside error", err);
+        console.log("[Customer.js] handleClickOutside error:", err);
       }
     },
 
