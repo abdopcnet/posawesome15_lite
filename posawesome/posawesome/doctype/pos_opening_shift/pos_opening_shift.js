@@ -4,21 +4,6 @@
 frappe.ui.form.on("POS Opening Shift", {
   setup(frm) {
     try {
-      // Force white background on form sections (override custom themes)
-      $("head").append(`
-				<style>
-					/* Override any custom backgrounds on ERP doctype forms */
-					.form-section, .form-layout, .layout-section,
-					.form-section .form-column, .form-layout .form-column,
-					.layout-section .form-column, .form-section .form-column .form-column,
-					.form-layout .form-column .form-column, .layout-section .form-column .form-column {
-						background: #ffffff !important;
-						background-image: none !important;
-						background-color: #ffffff !important;
-					}
-				</style>
-			`);
-
       // Auto-fill fields on new document
       if (frm.doc.docstatus == 0) {
         frm.trigger("set_posting_date_read_only");
