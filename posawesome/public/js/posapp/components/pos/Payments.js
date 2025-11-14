@@ -73,6 +73,7 @@ export default {
     },
 
     diff_payment() {
+      // Apply flt() for consistent precision with set_full_amount and set_rest_amount
       const target_amount =
         flt(this.invoice_doc.rounded_total) || flt(this.invoice_doc.grand_total);
       const diff_payment = this.flt(target_amount - this.total_payments, this.currency_precision);
@@ -388,7 +389,17 @@ export default {
 
     set_full_amount(idx) {
       const isReturn = !!this.invoice_doc.is_return;
-      const total = this.invoice_doc.rounded_total || this.invoice_doc.grand_total;
+      // Apply flt() to ensure consistent precision with diff_payment calculation
+      const total = flt(this.invoice_doc.rounded_total) || flt(this.invoice_doc.grand_total);
+      
+      // DEBUG: Log values when setting payment amount
+      console.log("set_full_amount called:", {
+        idx: idx,
+        rounded_total: this.invoice_doc.rounded_total,
+        grand_total: this.invoice_doc.grand_total,
+        total: total,
+        precision: this.currency_precision
+      });
 
       this.invoice_doc.payments.forEach((p) => {
         p.amount = 0;
@@ -397,7 +408,10 @@ export default {
 
       const payment = this.invoice_doc.payments.find((p) => p.idx == idx);
       if (payment) {
-        payment.amount = isReturn ? -Math.abs(total) : total;
+        // Apply currency precision to match diff_payment calculation
+        const amount = this.flt(total, this.currency_precision);
+        console.log("Setting payment amount to:", amount);
+        payment.amount = isReturn ? -Math.abs(amount) : amount;
         if (payment.base_amount !== undefined) payment.base_amount = payment.amount;
       }
 
@@ -420,7 +434,8 @@ export default {
       }
 
       if (actual_remaining > 0) {
-        let amount = actual_remaining;
+        // Apply currency precision to match diff_payment calculation
+        let amount = this.flt(actual_remaining, this.currency_precision);
         if (isReturn) amount = -Math.abs(amount);
 
         payment.amount = amount;
@@ -432,7 +447,8 @@ export default {
           JSON.parse(JSON.stringify(this.invoice_doc.payments)),
         );
       } else if (actual_remaining < 0) {
-        let excess_amount = Math.abs(actual_remaining);
+        // Apply currency precision to match diff_payment calculation
+        let excess_amount = this.flt(Math.abs(actual_remaining), this.currency_precision);
         if (isReturn) excess_amount = -Math.abs(excess_amount);
 
         payment.amount = excess_amount;
@@ -606,6 +622,14 @@ export default {
       });
 
       evntBus.on(EVENT_NAMES.SEND_INVOICE_DOC_PAYMENT, (invoice_doc) => {
+        // DEBUG: Log received invoice totals
+        console.log("SEND_INVOICE_DOC_PAYMENT received:", {
+          total: invoice_doc.total,
+          net_total: invoice_doc.net_total,
+          grand_total: invoice_doc.grand_total,
+          rounded_total: invoice_doc.rounded_total
+        });
+        
         this.invoice_doc = invoice_doc;
 
         if (!Array.isArray(this.invoice_doc.payments)) {
