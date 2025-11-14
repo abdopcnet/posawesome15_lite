@@ -39,12 +39,7 @@
       >
         <!-- Card -->
         <div
-          style="
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-          "
+          style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1)"
         >
           <!-- =========================================== -->
           <!-- CARD HEADER -->
@@ -99,22 +94,12 @@
           <!-- =========================================== -->
           <!-- CARD BODY -->
           <!-- =========================================== -->
-          <div
-            style="
-              max-height: 60vh;
-              overflow-y: auto;
-              display: flex;
-              flex-direction: column;
-              padding: 16px;
-            "
-          >
+          <div style="max-height: 60vh; overflow-y: auto; display: flex; flex-direction: column; padding: 16px">
             <!-- Search Row -->
             <div style="display: flex; gap: 8px; margin-bottom: 12px">
               <!-- Invoice Number Input -->
               <div style="display: flex; flex-direction: column; gap: 4px; width: 100%; flex: 1">
-                <label
-                  style="font-size: 0.75rem; font-weight: 600; color: #555; margin-bottom: 2px"
-                >
+                <label style="font-size: 0.75rem; font-weight: 600; color: #555; margin-bottom: 2px">
                   Invoice Number
                 </label>
                 <input
@@ -257,10 +242,7 @@
                     <tr
                       v-for="item in dialog_data"
                       :key="item.name"
-                      style="
-                        border-bottom: 1px solid #f0f0f0;
-                        transition: background-color 0.15s ease;
-                      "
+                      style="border-bottom: 1px solid #f0f0f0; transition: background-color 0.15s ease"
                       :style="`background: ${item.checked ? '#f0f7ff' : 'white'}`"
                     >
                       <!-- Radio Select -->
@@ -291,13 +273,7 @@
 
                       <!-- Grand Total -->
                       <td
-                        style="
-                          padding: 10px;
-                          text-align: right;
-                          font-weight: 600;
-                          color: #1976d2;
-                          white-space: nowrap;
-                        "
+                        style="padding: 10px; text-align: right; font-weight: 600; color: #1976d2; white-space: nowrap"
                       >
                         {{ currencySymbol(item.currency) }} {{ formatCurrency(item.grand_total) }}
                       </td>
