@@ -1,9 +1,9 @@
-import { createApp } from 'vue';
-import Home from './Home.vue';
+import { createApp } from "vue";
+import Home from "./Home.vue";
 
 // Define Vue 3 feature flags for better tree-shaking and performance
 // See: https://link.vuejs.org/feature-flags
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.__VUE_OPTIONS_API__ = true;
   window.__VUE_PROD_DEVTOOLS__ = false;
   window.__VUE_PROD_HYDRATION_MISMATCH_DETAILS__ = false;
@@ -11,28 +11,21 @@ if (typeof window !== 'undefined') {
 
 // Define SetVueGlobals function to set up Vue global properties
 function SetVueGlobals(app) {
+  console.log("[posapp.js Vue] Setting up Vue global properties...");
+
   // Set up global properties that components might need
   app.config.globalProperties.$frappe = frappe;
 
-  // =============================================================================
-  // Make __() function available for translation in Vue components
-  // =============================================================================
-  // This allows Vue components to use translation like: {{ __("Hello") }}
-  // Check if __() exists in global scope (defined in posapp.js page file)
-  if (typeof window.__ !== 'undefined') {
-    // Make translation function available to all Vue components
-    app.config.globalProperties.__ = window.__;
-  }
-
   // Make common Frappe utilities available globally
-  if (typeof frappe !== 'undefined') {
+  if (typeof frappe !== "undefined") {
     app.config.globalProperties.$call = frappe.call;
     app.config.globalProperties.$format = frappe.format;
     app.config.globalProperties.$db = frappe.db;
+    console.log("[posapp.js Vue] ✓ Frappe utilities added");
   }
 }
 
-frappe.provide('frappe.PosApp');
+frappe.provide("frappe.PosApp");
 
 frappe.PosApp.posapp = class {
   constructor({ parent }) {
@@ -42,7 +35,7 @@ frappe.PosApp.posapp = class {
   }
 
   make_body() {
-    this.$el = this.$parent.find('.main-section');
+    this.$el = this.$parent.find(".main-section");
 
     const app = createApp(Home);
 
