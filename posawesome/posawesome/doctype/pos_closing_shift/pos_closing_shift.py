@@ -567,17 +567,12 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
         if not cash_mode_of_payment:
             cash_mode_of_payment = "Cash"
         
-        # Process Sales Invoice Payments
+        # Process Sales Invoice Payments - display as is
         for d in invoices:
-            # Track if change_amount has been subtracted for this invoice
-            change_already_applied = False
-            
             for p in d.payments:
-                # Calculate amount - subtract change from first payment only
+                # Add payment amounts as-is (no change_amount subtraction)
+                # The actual_paid calculation is: (paid_amount - change_amount) + payment_entries
                 amount = p.amount
-                if not change_already_applied and d.change_amount:
-                    amount = p.amount - d.change_amount
-                    change_already_applied = True
                 
                 # Add to payments dict
                 if p.mode_of_payment in payments:
