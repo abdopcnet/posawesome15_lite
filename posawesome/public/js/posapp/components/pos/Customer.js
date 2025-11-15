@@ -11,6 +11,7 @@ const EVENT_NAMES = {
   PAYMENTS_REGISTER_POS_PROFILE: "payments_register_pos_profile",
   SET_CUSTOMER: "set_customer",
   ADD_CUSTOMER_TO_LIST: "add_customer_to_list",
+  UPDATE_CUSTOMER_IN_LIST: "update_customer_in_list",
   SET_CUSTOMER_READONLY: "set_customer_readonly",
   SET_CUSTOMER_INFO_TO_EDIT: "set_customer_info_to_edit",
   FETCH_CUSTOMER_DETAILS: "fetch_customer_details",
@@ -67,7 +68,7 @@ export default {
           evntBus.emit(EVENT_NAMES.UPDATE_CUSTOMER, this.customer);
         }
       } catch (error) {
-        console.log("[Customer.js] Error:", error);
+        console.log("[Customer.js] get_many_customers error:", error);
         this.showMessage(ERROR_MESSAGES.UNEXPECTED_ERROR, "error");
       }
     },
@@ -108,10 +109,14 @@ export default {
                 this.customer_search = selected.customer_name;
                 this.customer_info = selected;
                 this.defaultLoaded = true;
-                console.log("Default customer loaded successfully:", selected);
+                console.log(
+                  "[Customer.js] Default customer loaded:",
+                  selected.name,
+                  selected.customer_name
+                );
               } else {
                 console.log(
-                  "[Customer.js] Default customer not found in loaded customers list:",
+                  "[Customer.js] Default customer not found:",
                   this.customer
                 );
               }
@@ -119,7 +124,8 @@ export default {
           }
           this.loading = false;
         },
-        error: () => {
+        error: (err) => {
+          console.log("[Customer.js] load_all_customers error:", err);
           this.showMessage(ERROR_MESSAGES.FAILED_TO_FETCH, "error");
           this.loading = false;
         },
@@ -171,7 +177,8 @@ export default {
     new_customer() {
       try {
         evntBus.emit(EVENT_NAMES.OPEN_UPDATE_CUSTOMER, null);
-      } catch {
+      } catch (err) {
+        console.log("[Customer.js] new_customer error:", err);
         this.showMessage(ERROR_MESSAGES.NEW_CUSTOMER_ERROR, "error");
       }
     },
@@ -179,7 +186,8 @@ export default {
     edit_customer() {
       try {
         evntBus.emit(EVENT_NAMES.OPEN_UPDATE_CUSTOMER, this.customer_info);
-      } catch {
+      } catch (err) {
+        console.log("[Customer.js] edit_customer error:", err);
         this.showMessage(ERROR_MESSAGES.EDIT_CUSTOMER_ERROR, "error");
       }
     },
@@ -233,9 +241,8 @@ export default {
           this.showDropdown = false;
         }
       } catch (err) {
-        console.log("[Customer.js] Error:", err);
-        this.showDropdown = false;
         console.log("[Customer.js] handleClickOutside error:", err);
+        this.showDropdown = false;
       }
     },
 
@@ -259,6 +266,10 @@ export default {
           this.handleAddCustomerToList
         );
         evntBus.on(
+          EVENT_NAMES.UPDATE_CUSTOMER_IN_LIST,
+          this.handleUpdateCustomerInList
+        );
+        evntBus.on(
           EVENT_NAMES.SET_CUSTOMER_READONLY,
           this.handleSetCustomerReadonly
         );
@@ -274,7 +285,8 @@ export default {
           EVENT_NAMES.CUSTOMER_DROPDOWN_OPENED,
           this.handleCustomerDropdownOpened
         );
-      } catch {
+      } catch (err) {
+        console.log("[Customer.js] registerEventListeners error:", err);
         this.showMessage(ERROR_MESSAGES.INITIALIZATION_ERROR, "error");
       }
     },
@@ -295,6 +307,17 @@ export default {
     },
     handleAddCustomerToList(customer) {
       this.customers.push(customer);
+    },
+    handleUpdateCustomerInList(updatedCustomer) {
+      const index = this.customers.findIndex(
+        (c) => c.name === updatedCustomer.name
+      );
+      if (index !== -1) {
+        this.customers[index] = {
+          ...this.customers[index],
+          ...updatedCustomer,
+        };
+      }
     },
     handleSetCustomerReadonly(value) {
       this.readonly = value;
