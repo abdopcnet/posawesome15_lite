@@ -1093,9 +1093,8 @@
         "
       >
         <!-- Print Button -->
-        <!-- Print Button -->
         <button
-          :disabled="!hasItems || isPrinting"
+          :disabled="!hasItems || isPrinting || !hasValidPayments()"
           @click="printInvoice"
           title="طباعة الفاتورة"
           style="
@@ -1115,7 +1114,7 @@
             transition: all 0.2s;
           "
           :style="
-            !hasItems || isPrinting
+            !hasItems || isPrinting || !hasValidPayments()
               ? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6'
               : ''
           "
