@@ -428,13 +428,7 @@ export default {
         flt(this.invoice_doc.grand_total);
 
       // DEBUG: Log values when setting payment amount
-      console.log("set_full_amount called:", {
-        idx: idx,
-        rounded_total: this.invoice_doc.rounded_total,
-        grand_total: this.invoice_doc.grand_total,
-        total: total,
-        precision: this.currency_precision,
-      });
+      console.log("[Payments.js] set_full_amount: idx:", idx, "total:", total);
 
       this.invoice_doc.payments.forEach((p) => {
         p.amount = 0;
@@ -674,12 +668,12 @@ export default {
 
       evntBus.on(EVENT_NAMES.SEND_INVOICE_DOC_PAYMENT, (invoice_doc) => {
         // DEBUG: Log received invoice totals
-        console.log("SEND_INVOICE_DOC_PAYMENT received:", {
-          total: invoice_doc.total,
-          net_total: invoice_doc.net_total,
-          grand_total: invoice_doc.grand_total,
-          rounded_total: invoice_doc.rounded_total,
-        });
+        console.log(
+          "[Payments.js] SEND_INVOICE_DOC_PAYMENT: rounded_total:",
+          invoice_doc.rounded_total,
+          "grand_total:",
+          invoice_doc.grand_total
+        );
 
         this.invoice_doc = invoice_doc;
 
