@@ -1020,12 +1020,12 @@ export default {
         const invoice_doc = await this.process_invoice();
 
         // DEBUG: Log to verify rounded_total is correct
-        console.log("show_payment - invoice totals:", {
-          total: invoice_doc.total,
-          net_total: invoice_doc.net_total,
-          grand_total: invoice_doc.grand_total,
-          rounded_total: invoice_doc.rounded_total,
-        });
+        console.log(
+          "[Invoice.js] show_payment: rounded_total:",
+          invoice_doc.rounded_total,
+          "grand_total:",
+          invoice_doc.grand_total
+        );
 
         // Add default payment method if no payments exist
         if (!invoice_doc?.payments || invoice_doc?.payments.length === 0) {
@@ -1740,19 +1740,14 @@ export default {
 
           if (Math.abs(item.discount_amount - expectedDiscountAmount) > 0.01) {
             console.log(
-              `[Invoice.js] Item ${item.item_code}: discount_amount mismatch`,
-              {
-                expected: expectedDiscountAmount,
-                actual: item.discount_amount,
-              }
+              `[Invoice.js] Item ${item.item_code}: discount mismatch - expected: ${expectedDiscountAmount}, actual: ${item.discount_amount}`
             );
           }
 
           if (Math.abs(item.rate - expectedRate) > 0.01) {
-            console.log(`[Invoice.js] Item ${item.item_code}: rate mismatch`, {
-              expected: expectedRate,
-              actual: item.rate,
-            });
+            console.log(
+              `[Invoice.js] Item ${item.item_code}: rate mismatch - expected: ${expectedRate}, actual: ${item.rate}`
+            );
           }
         }
       });
@@ -1769,10 +1764,12 @@ export default {
         );
 
         if (Math.abs(doc.discount_amount - expectedDiscount) > 0.01) {
-          console.log("[Invoice.js] Invoice discount_amount mismatch", {
-            expected: expectedDiscount,
-            actual: doc.discount_amount,
-          });
+          console.log(
+            "[Invoice.js] Invoice discount mismatch - expected:",
+            expectedDiscount,
+            "actual:",
+            doc.discount_amount
+          );
         }
       }
 
