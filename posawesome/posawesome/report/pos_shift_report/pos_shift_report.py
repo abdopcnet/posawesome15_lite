@@ -73,6 +73,16 @@ def get_payment_modes(filters):
     # Add condition to ensure we only get payment modes if conditions exist
     # This prevents getting all payment modes when no filter is applied
     where_clause = conditions if conditions else "WHERE 1=0"
+
+    # Apply user permissions for POS Profile
+    user_pos_profiles = get_user_allowed_pos_profiles()
+    if user_pos_profiles:
+        profile_list = "(" + ",".join(["'" + profile.replace("'", "''") + "'" for profile in user_pos_profiles]) + ")"
+        if "WHERE" in where_clause:
+            where_clause += f" AND pos_open.pos_profile IN {profile_list}"
+        else:
+            where_clause = f"WHERE pos_open.pos_profile IN {profile_list}"
+
     query = """
 		SELECT DISTINCT pcd.mode_of_payment
 		FROM `tabPOS Opening Shift` pos_open
@@ -82,13 +92,45 @@ def get_payment_modes(filters):
 		AND pcd.mode_of_payment IS NOT NULL
 		ORDER BY pcd.mode_of_payment
 	""".format(conditions=where_clause)
+
     modes = frappe.db.sql(query, filters, as_dict=0)
     return [mode[0] for mode in modes if mode[0]]
+
+
+def get_user_allowed_pos_profiles():
+    """Get POS Profiles that the current user has permission to access."""
+    # Skip for Administrator
+    if frappe.session.user == "Administrator":
+        return None
+
+    # Get user permissions for POS Profile
+    user_permissions = frappe.get_all(
+        "User Permission",
+        filters={
+            "user": frappe.session.user,
+            "allow": "POS Profile"
+        },
+        fields=["for_value"]
+    )
+
+    if user_permissions:
+        return [perm.for_value for perm in user_permissions]
+
+    return None
 
 
 def get_data(filters, payment_modes):
     """Fetch and return report data based on filters."""
     conditions = get_conditions(filters)
+
+    # Apply user permissions for POS Profile
+    user_pos_profiles = get_user_allowed_pos_profiles()
+    if user_pos_profiles:
+        profile_list = "(" + ",".join(["'" + profile.replace("'", "''") + "'" for profile in user_pos_profiles]) + ")"
+        if conditions:
+            conditions += f" AND pos_open.pos_profile IN {profile_list}"
+        else:
+            conditions = f"WHERE pos_open.pos_profile IN {profile_list}"
 
     payment_mode_cases = []
     for mode in payment_modes:
@@ -126,8 +168,8 @@ def get_data(filters, payment_modes):
 		FROM `tabPOS Opening Shift` pos_open
 		LEFT JOIN `tabSales Invoice` si
 			ON si.posa_pos_opening_shift = pos_open.name
-			AND si.owner = pos_open.user
-			AND si.status IN ('Submitted', 'Paid', 'Partly Paid', 'Unpaid', 'Unpaid and Discounted', 'Partly Paid and Discounted', 'Overdue and Discounted', 'Overdue')
+			AND si.docstatus = 1
+			AND si.status NOT IN ('Draft', 'Cancelled')
 		LEFT JOIN `tabPOS Closing Shift` pos_close ON pos_close.name = pos_open.pos_closing_shift
 		{conditions}
 		GROUP BY pos_open.name
@@ -148,4 +190,8 @@ def get_conditions(filters):
             "pos_open.period_start_date BETWEEN %(from_date)s AND %(to_date)s")
     if filters.get("pos_profile"):
         conditions.append("pos_open.pos_profile = %(pos_profile)s")
+    if filters.get("pos_opening_shift"):
+        conditions.append("pos_open.name = %(pos_opening_shift)s")
+    if filters.get("pos_closing_shift"):
+        conditions.append("pos_open.pos_closing_shift = %(pos_closing_shift)s")
     return "WHERE " + " AND ".join(conditions) if conditions else ""
