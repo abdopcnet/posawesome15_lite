@@ -55,6 +55,11 @@ export default {
 
   // ===== METHODS =====
   methods: {
+    getInvoiceUrl(invoiceName) {
+      // Build URL to open Sales Invoice document in new tab
+      return `/app/sales-invoice/${encodeURIComponent(invoiceName)}`;
+    },
+
     showMessage(text, color) {
       evntBus.emit(EVENT_NAMES.SHOW_MESSAGE, { text, color });
     },
