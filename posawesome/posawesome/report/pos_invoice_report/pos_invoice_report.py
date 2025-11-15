@@ -27,31 +27,31 @@ def get_columns(payment_modes):
     """Return columns for the report."""
     columns = [
         {"fieldname": "user", "label": _(
-            "المستخدم"), "fieldtype": "Link", "options": "User", "width": 130},
+            "المستخدم"), "fieldtype": "Link", "options": "User"},
         {"fieldname": "posting_date", "label": _(
-            "التاريخ"), "fieldtype": "Date", "width": 120},
+            "التاريخ"), "fieldtype": "Date"},
         {"fieldname": "name", "label": _(
-            "رقم الفاتورة"), "fieldtype": "Link", "options": "Sales Invoice", "width": 180},
+            "رقم الفاتورة"), "fieldtype": "Link", "options": "Sales Invoice"},
         {"fieldname": "pos_profile", "label": _(
-            "الفرع"), "fieldtype": "Link", "options": "POS Profile", "width": 120},
+            "الفرع"), "fieldtype": "Link", "options": "POS Profile"},
         {"fieldname": "posa_pos_opening_shift", "label": _(
-            "مستند الفتح"), "fieldtype": "Link", "options": "POS Opening Shift", "width": 180},
+            "مستند الفتح"), "fieldtype": "Link", "options": "POS Opening Shift"},
         {"fieldname": "posting_time", "label": _(
-            "الوقت"), "fieldtype": "Time", "width": 100},
+            "الوقت"), "fieldtype": "Time"},
         {"fieldname": "grand_total", "label": _(
-            "الإجمالي"), "fieldtype": "Currency", "width": 120},
+            "الإجمالي"), "fieldtype": "Currency"},
         {"fieldname": "paid_amount", "label": _(
-            "المدفوع"), "fieldtype": "Currency", "width": 120},
+            "المدفوع"), "fieldtype": "Currency"},
         {"fieldname": "change_amount", "label": _(
-            "الباقي"), "fieldtype": "Currency", "width": 120},
+            "الباقي"), "fieldtype": "Currency"},
         {"fieldname": "actual_amount", "label": _(
-            "المبلغ الفعلي"), "fieldtype": "Currency", "width": 120},
+            "المبلغ الفعلي"), "fieldtype": "Currency"},
         {"fieldname": "outstanding_amount", "label": _(
-            "المتبقي"), "fieldtype": "Currency", "width": 120},
+            "المتبقي"), "fieldtype": "Currency"},
         {"fieldname": "discount_amount", "label": _(
-            "الخصم"), "fieldtype": "Currency", "width": 120},
+            "خصم الفاتورة"), "fieldtype": "Currency"},
         {"fieldname": "posa_item_discount_total", "label": _(
-            "خصم الأصناف"), "fieldtype": "Currency", "width": 120},
+            "خصم الأصناف"), "fieldtype": "Currency"},
     ]
 
     # Add payment mode columns
@@ -59,24 +59,64 @@ def get_columns(payment_modes):
         columns.append({
             "fieldname": sanitize_fieldname(mode),
             "label": _(mode),
-            "fieldtype": "Currency",
-            "width": 120
+            "fieldtype": "Currency"
         })
+
+    # Add payment entries column
+    columns.append({
+        "fieldname": "payment_entries",
+        "label": _("إذن المدفوعات"),
+        "fieldtype": "Data"
+    })
 
     return columns
 
 
 def get_payment_modes(filters):
-    """Get all unique payment modes used in the filtered period."""
+    """Get all unique payment modes used in the filtered invoices from both sources."""
     conditions = get_conditions(filters)
-    query = """
-        SELECT DISTINCT pe.mode_of_payment
-        FROM `tabSales Invoice` si
-        LEFT JOIN `tabSales Invoice Payment` pe ON pe.parent = si.name
+
+    # Get payment modes from Sales Invoice Payment
+    query1 = """
+        SELECT DISTINCT sip.mode_of_payment
+        FROM `tabSales Invoice Payment` sip
+        INNER JOIN `tabSales Invoice` si ON sip.parent = si.name
         {conditions}
+        {and_or_where} si.is_pos = 1
+        AND si.docstatus = 1
+        AND sip.mode_of_payment IS NOT NULL
+        AND sip.mode_of_payment != ''
+    """.format(
+        conditions=conditions,
+        and_or_where="AND" if conditions else "WHERE"
+    )
+
+    # Get payment modes from Payment Entry
+    query2 = """
+        SELECT DISTINCT pe.mode_of_payment
+        FROM `tabPayment Entry` pe
+        INNER JOIN `tabPayment Entry Reference` per ON per.parent = pe.name
+        INNER JOIN `tabSales Invoice` si ON per.reference_name = si.name
+        {conditions}
+        {and_or_where} si.is_pos = 1
+        AND si.docstatus = 1
+        AND pe.docstatus = 1
+        AND per.reference_doctype = 'Sales Invoice'
         AND pe.mode_of_payment IS NOT NULL
-        ORDER BY pe.mode_of_payment
-    """.format(conditions=conditions)
+        AND pe.mode_of_payment != ''
+    """.format(
+        conditions=conditions,
+        and_or_where="AND" if conditions else "WHERE"
+    )
+
+    # Combine both queries with UNION
+    query = """
+        {query1}
+        UNION
+        {query2}
+        ORDER BY mode_of_payment
+    """.format(query1=query1, query2=query2)
+
     modes = frappe.db.sql(query, filters, as_dict=0)
     return [mode[0] for mode in modes if mode[0]]
 
@@ -85,13 +125,13 @@ def get_data(filters, payment_modes):
     """Fetch and return report data based on filters."""
     conditions = get_conditions(filters)
 
-    # Build payment mode columns
+    # Build payment mode columns - from Sales Invoice Payment
     payment_mode_cases = []
     for mode in payment_modes:
         field_name = sanitize_fieldname(mode)
         safe_mode = mode.replace("'", "''")
         case_sql = f"""
-            (SELECT SUM(allocated_amount)
+            (SELECT SUM(amount)
              FROM `tabSales Invoice Payment`
              WHERE parent = si.name AND mode_of_payment = '{safe_mode}'
             ) AS {field_name}
@@ -120,11 +160,59 @@ def get_data(filters, payment_modes):
             si.posa_item_discount_total AS posa_item_discount_total{payment_mode_sql}
         FROM `tabSales Invoice` si
         {conditions}
-        AND si.status IN ('Submitted', 'Paid', 'Partly Paid', 'Unpaid', 'Unpaid and Discounted', 'Partly Paid and Discounted', 'Overdue and Discounted', 'Overdue')
+        {and_or_where} si.is_pos = 1
+        AND si.docstatus = 1
+        AND si.status NOT IN ('Draft', 'Cancelled')
         ORDER BY si.posting_date DESC, si.posting_time DESC
-    """.format(conditions=conditions, payment_mode_sql=payment_mode_sql)
+    """.format(
+        conditions=conditions,
+        payment_mode_sql=payment_mode_sql,
+        and_or_where="AND" if conditions else "WHERE"
+    )
 
     data = frappe.db.sql(query, filters, as_dict=1)
+
+    # Add payment entries and additional payments from Payment Entry
+    for row in data:
+        # Get Payment Entries linked to this invoice
+        payment_entries = frappe.db.sql("""
+            SELECT DISTINCT pe.name
+            FROM `tabPayment Entry` pe
+            INNER JOIN `tabPayment Entry Reference` per ON per.parent = pe.name
+            WHERE per.reference_name = %(invoice)s
+            AND per.reference_doctype = 'Sales Invoice'
+            AND pe.docstatus = 1
+            ORDER BY pe.name
+        """, {"invoice": row.name}, as_dict=1)
+
+        # Add payment entry names to the row
+        if payment_entries:
+            row.payment_entries = ", ".join(
+                [pe.name for pe in payment_entries])
+
+            # Add amounts from Payment Entry to respective payment modes
+            for mode in payment_modes:
+                field_name = sanitize_fieldname(mode)
+                safe_mode = mode.replace("'", "''")
+
+                # Get amount from Payment Entry for this mode
+                pe_amount = frappe.db.sql("""
+                    SELECT SUM(per.allocated_amount) as total
+                    FROM `tabPayment Entry` pe
+                    INNER JOIN `tabPayment Entry Reference` per ON per.parent = pe.name
+                    WHERE per.reference_name = %(invoice)s
+                    AND per.reference_doctype = 'Sales Invoice'
+                    AND pe.docstatus = 1
+                    AND pe.mode_of_payment = %(mode)s
+                """, {"invoice": row.name, "mode": mode}, as_dict=1)
+
+                if pe_amount and pe_amount[0].total:
+                    # Add to existing amount from Sales Invoice Payment
+                    current_amount = row.get(field_name) or 0
+                    row[field_name] = current_amount + pe_amount[0].total
+        else:
+            row.payment_entries = ""
+
     return data
 
 
@@ -141,4 +229,7 @@ def get_conditions(filters):
     if filters.get("posa_pos_opening_shift"):
         conditions.append(
             "si.posa_pos_opening_shift = %(posa_pos_opening_shift)s")
+    if filters.get("posa_pos_closing_shift"):
+        conditions.append(
+            "si.posa_pos_opening_shift IN (SELECT name FROM `tabPOS Opening Shift` WHERE pos_closing_shift = %(posa_pos_closing_shift)s)")
     return "WHERE " + " AND ".join(conditions) if conditions else ""
