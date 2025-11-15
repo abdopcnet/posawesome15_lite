@@ -98,15 +98,13 @@ export default {
           method: API_MAP.POS_OPENING_SHIFT.GET_ALL_OPEN_SHIFTS,
         });
 
-        console.log("[Pos.js] All open shifts response:", allShiftsResponse);
-
         if (
           allShiftsResponse.message.success &&
           allShiftsResponse.message.count > 1
         ) {
           // User has MULTIPLE open shifts - show warning component
           console.log(
-            "[Pos.js] Multiple open shifts found:",
+            "[Pos.js] check_opening_entry: multiple shifts found:",
             allShiftsResponse.message.count
           );
           this.openShifts = allShiftsResponse.message.shifts;
@@ -119,24 +117,18 @@ export default {
           method: API_MAP.POS_OPENING_SHIFT.GET_CURRENT_SHIFT_NAME,
         });
 
-        console.log("[Pos.js] check_opening_entry response:", response);
-        console.log("[Pos.js] response.message:", response.message);
-        console.log(
-          "[Pos.js] response.message.success:",
-          response.message?.success
-        );
-        console.log("[Pos.js] response.message.data:", response.message?.data);
-
         if (response.message.success && response.message.data) {
           // Active shift exists - load full profile data
           console.log(
-            "[Pos.js] Active shift found, loading profile:",
+            "[Pos.js] check_opening_entry: shift found:",
+            response.message.data.name,
+            "profile:",
             response.message.data.pos_profile
           );
           await this.get_full_profile_data(response.message.data.pos_profile);
         } else {
           // No active shift - show opening dialog
-          console.log("[Pos.js] No active shift, showing opening dialog");
+          console.log("[Pos.js] check_opening_entry: no active shift");
           this.create_opening_voucher();
         }
       } catch (error) {
