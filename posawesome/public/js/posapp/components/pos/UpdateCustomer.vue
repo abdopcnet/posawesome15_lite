@@ -7,7 +7,7 @@
     <!-- Modal Overlay -->
     <div
       v-if="customerDialog"
-      @click="clear_customer"
+      @click="close_dialog"
       style="
         position: fixed;
         top: 0;
