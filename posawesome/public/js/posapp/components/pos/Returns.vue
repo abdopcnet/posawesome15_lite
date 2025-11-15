@@ -332,7 +332,32 @@
                           white-space: nowrap;
                         "
                       >
-                        {{ item.name }}
+                        <a
+                          :href="getInvoiceUrl(item.name)"
+                          target="_blank"
+                          style="
+                            color: #3b82f6;
+                            font-weight: 600;
+                            font-size: 12px;
+                            font-family: 'Courier New', monospace;
+                            text-decoration: none;
+                            transition: all 0.2s;
+                          "
+                          @mouseenter="
+                            $event.target.style.color = '#2563eb';
+                            $event.target.style.textDecoration = 'underline';
+                          "
+                          @mouseleave="
+                            $event.target.style.color = '#3b82f6';
+                            $event.target.style.textDecoration = 'none';
+                          "
+                        >
+                          {{ item.name }}
+                          <i
+                            class="mdi mdi-open-in-new"
+                            style="font-size: 10px; margin-left: 4px"
+                          ></i>
+                        </a>
                       </td>
 
                       <!-- Grand Total -->
