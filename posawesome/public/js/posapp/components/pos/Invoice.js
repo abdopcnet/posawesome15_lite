@@ -211,7 +211,8 @@ export default {
     },
     canPrintInvoice() {
       if (this.readonly || !this.items?.length) return false;
-      return this.hasValidPayments() || !!this.defaultPaymentMode;
+      // يتطلب مدفوعات صالحة فقط - لا يكفي وجود defaultPaymentMode
+      return this.hasValidPayments();
     },
     hasItems() {
       return this.items && this.items.length > 0;
@@ -2398,24 +2399,25 @@ export default {
     printInvoice() {
       if (!this.invoice_doc || this.isPrinting) return;
 
+      // التحقق من وجود مدفوعات صالحة - إذا لم توجد، لا تفعل شيء
+      const doc = this.get_invoice_doc("print");
+      this.calculateTotalsLocally(doc);
+
+      if (!this.hasValidPayments(doc)) {
+        // لا تفتح نافذة الدفع - فقط أظهر رسالة تحذير
+        evntBus.emit("show_mesage", {
+          text: "يجب اختيار طريقة دفع أولاً عن طريق الضغط على زر 'دفع'",
+          color: "warning",
+        });
+        return;
+      }
+
       this.isPrinting = true; // Disable print button
       // Processing...
       evntBus.emit("show_loading", { text: "جاري المعالجة...", color: "info" });
 
       // Build invoice_doc locally as __islocal (ERPNext native approach)
-      const doc = this.get_invoice_doc("print");
       doc.__islocal = 1; // Mark as local document (matches ERPNext behavior)
-
-      // Calculate totals locally (like ERPNext does)
-      // This ensures totals are updated without saving to server
-      this.calculateTotalsLocally(doc);
-
-      if (!this.hasValidPayments(doc)) {
-        evntBus.emit("show_payment", "true");
-        evntBus.emit("hide_loading");
-        this.isPrinting = false; // Re-enable print button
-        return;
-      }
 
       // Send to server for insert + submit (ERPNext native workflow)
       frappe.call({
