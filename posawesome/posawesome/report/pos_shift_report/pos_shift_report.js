@@ -27,5 +27,17 @@ frappe.query_reports['POS_Shift_Report'] = {
       fieldtype: 'Link',
       options: 'POS Profile',
     },
+    {
+      fieldname: 'pos_opening_shift',
+      label: __('مستند الفتح'),
+      fieldtype: 'Link',
+      options: 'POS Opening Shift',
+    },
+    {
+      fieldname: 'pos_closing_shift',
+      label: __('مستند الإغلاق'),
+      fieldtype: 'Link',
+      options: 'POS Closing Shift',
+    },
   ],
 };
