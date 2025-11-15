@@ -4,8 +4,10 @@ import { API_MAP } from "../../api_mapper.js";
 const EVENT_NAMES = {
   SHOW_MESSAGE: "show_mesage",
   ADD_CUSTOMER_TO_LIST: "add_customer_to_list",
+  UPDATE_CUSTOMER_IN_LIST: "update_customer_in_list",
   SET_CUSTOMER: "set_customer",
   FETCH_CUSTOMER_DETAILS: "fetch_customer_details",
+  SET_CUSTOMER_INFO_TO_EDIT: "set_customer_info_to_edit",
 
   OPEN_UPDATE_CUSTOMER: "open_update_customer",
   REGISTER_POS_PROFILE: "register_pos_profile",
@@ -56,9 +58,8 @@ export default {
       tax_id: "",
       mobile_no: "",
       email_id: "",
-      referral_code: "",
-      birthday: null,
-      birthday_menu: false,
+      posa_referral_code: "",
+      posa_discount: 0,
       customer_type: CUSTOMER_TYPE.INDIVIDUAL,
       gender: "",
       loyalty_points: null,
@@ -81,8 +82,8 @@ export default {
       this.tax_id = "";
       this.mobile_no = "";
       this.email_id = "";
-      this.referral_code = "";
-      this.birthday = "";
+      this.posa_referral_code = "";
+      this.posa_discount = 0;
       this.group = frappe.defaults.get_user_default("Customer Group");
       this.territory = frappe.defaults.get_user_default("Territory");
       this.customer_id = "";
@@ -108,7 +109,7 @@ export default {
           }
         })
         .catch((err) => {
-          console.log("[UpdateCustomer.js] loadGroups error:", err);
+          console.log("[UpdateCustomer.js] getCustomerGroups error:", err);
           this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_GROUPS, "error");
         });
     },
@@ -129,7 +130,7 @@ export default {
           }
         })
         .catch((err) => {
-          console.log("[UpdateCustomer.js] loadTerritories error:", err);
+          console.log("[UpdateCustomer.js] getCustomerTerritorys error:", err);
           this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_TERRITORIES, "error");
         });
     },
@@ -146,7 +147,7 @@ export default {
           }
         })
         .catch((err) => {
-          console.log("[UpdateCustomer.js] loadGenders error:", err);
+          console.log("[UpdateCustomer.js] getGenders error:", err);
           this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_GENDERS, "error");
         });
     },
@@ -179,8 +180,8 @@ export default {
         tax_id: this.tax_id,
         mobile_no: this.mobile_no,
         email_id: this.email_id,
-        referral_code: this.referral_code,
-        birthday: this.birthday,
+        posa_referral_code: this.posa_referral_code,
+        posa_discount: this.posa_discount,
         customer_group: this.group,
         territory: this.territory,
         customer_type: this.customer_type,
@@ -201,6 +202,10 @@ export default {
             this.handleCustomerError();
           }
         },
+        error: (err) => {
+          console.log("[UpdateCustomer.js] submit_dialog error:", err);
+          this.handleCustomerError();
+        },
       });
 
       this.customerDialog = false;
@@ -218,6 +223,26 @@ export default {
         evntBus.emit(EVENT_NAMES.ADD_CUSTOMER_TO_LIST, args);
         evntBus.emit(EVENT_NAMES.SET_CUSTOMER, customerName);
         evntBus.emit(EVENT_NAMES.FETCH_CUSTOMER_DETAILS);
+      } else {
+        // Fetch updated customer data from server and update customer_info
+        frappe.call({
+          method: API_MAP.CUSTOMER.GET_CUSTOMER,
+          args: { customer_id: customerName },
+          callback: (r) => {
+            if (!r.exc && r.message) {
+              // Update customer_info with fresh data from server
+              evntBus.emit(EVENT_NAMES.SET_CUSTOMER_INFO_TO_EDIT, r.message);
+              // Also update the customer in the customers list
+              evntBus.emit(EVENT_NAMES.UPDATE_CUSTOMER_IN_LIST, r.message);
+            }
+          },
+          error: (err) => {
+            console.log(
+              "[UpdateCustomer.js] handleCustomerSuccess error:",
+              err
+            );
+          },
+        });
       }
 
       this.close_dialog();
@@ -236,16 +261,17 @@ export default {
 
       this.customer_name = data.customer_name;
       this.customer_id = data.name;
-      this.tax_id = data.tax_id;
-      this.mobile_no = data.mobile_no;
-      this.email_id = data.email_id;
-      this.referral_code = data.referral_code;
-      this.birthday = data.birthday;
+      this.tax_id = data.tax_id || "";
+      this.mobile_no = data.mobile_no || "";
+      this.email_id = data.email_id || "";
+      this.posa_referral_code = data.posa_referral_code || "";
+      this.posa_discount = data.posa_discount || 0;
       this.group = data.customer_group;
       this.territory = data.territory;
+      this.customer_type = data.customer_type || "Individual";
       this.loyalty_points = data.loyalty_points;
       this.loyalty_program = data.loyalty_program;
-      this.gender = data.gender;
+      this.gender = data.gender || "";
     },
 
     registerEventListeners() {
