@@ -70,6 +70,9 @@ def get_columns(payment_modes):
 def get_payment_modes(filters):
     """Get all unique payment modes used in the filtered period."""
     conditions = get_conditions(filters)
+    # Add condition to ensure we only get payment modes if conditions exist
+    # This prevents getting all payment modes when no filter is applied
+    where_clause = conditions if conditions else "WHERE 1=0"
     query = """
 		SELECT DISTINCT pcd.mode_of_payment
 		FROM `tabPOS Opening Shift` pos_open
@@ -78,7 +81,7 @@ def get_payment_modes(filters):
 		{conditions}
 		AND pcd.mode_of_payment IS NOT NULL
 		ORDER BY pcd.mode_of_payment
-	""".format(conditions=conditions)
+	""".format(conditions=where_clause)
     modes = frappe.db.sql(query, filters, as_dict=0)
     return [mode[0] for mode in modes if mode[0]]
 
