@@ -22,6 +22,7 @@ def validate_status(status, options):
             frappe.throw(
                 _("Status must be one of {0}").format(comma_or(options)))
     except Exception as e:
+        frappe.logger().error(f"[[pos_opening_shift.py]] validate_status: {str(e)}")
         raise
 
 
@@ -68,6 +69,7 @@ class StatusUpdater(Document):
                                 self.status = s[0]
                                 break
                         except Exception as e:
+                            frappe.logger().error(f"[[pos_opening_shift.py]] set_status: {str(e)}")
                             raise
                     elif getattr(self, s[1])():
                         self.status = s[0]
@@ -83,6 +85,7 @@ class StatusUpdater(Document):
                     self.db_set('status', self.status,
                                 update_modified=update_modified)
         except Exception as e:
+            frappe.logger().error(f"[[pos_opening_shift.py]] set_status: {str(e)}")
             raise
 
 
@@ -95,6 +98,7 @@ class POSOpeningShift(StatusUpdater):
             self.validate_pos_shift()
             self.set_status()
         except Exception as e:
+            frappe.logger().error(f"[[pos_opening_shift.py]] validate: {str(e)}")
             raise
 
     # Validate POS Profile, Company, and User
@@ -121,6 +125,7 @@ class POSOpeningShift(StatusUpdater):
                     frappe.throw(_("User {} is not registered in POS Profile {}. Please select a user registered in the profile".format(
                         self.user, self.pos_profile)))
         except Exception as e:
+            frappe.logger().error(f"[[pos_opening_shift.py]] validate_pos_profile_and_cashier: {str(e)}")
             raise
 
     # Validate shift-specific rules (prevent duplicate open shifts)
@@ -185,6 +190,7 @@ class POSOpeningShift(StatusUpdater):
                 frappe.throw(_("Opening cash amount cannot be negative"))
 
         except Exception as e:
+            frappe.logger().error(f"[[pos_opening_shift.py]] validate_pos_shift: {str(e)}")
             raise
 
     # Helper: Parse time string to datetime.time object
@@ -208,6 +214,7 @@ class POSOpeningShift(StatusUpdater):
         try:
             self.set_status(update=True)
         except Exception as e:
+            frappe.logger().error(f"[[pos_opening_shift.py]] on_submit: {str(e)}")
             raise
 
 
@@ -275,6 +282,7 @@ def check_opening_time_allowed(pos_profile):
             }
 
     except Exception as e:
+        frappe.logger().error(f"[[pos_opening_shift.py]] check_opening_time_allowed: {str(e)}")
         return {"allowed": False, "message": f"Error: {str(e)}"}
 
 
@@ -336,7 +344,8 @@ def create_opening_voucher(pos_profile, company, balance_details):
         return data
 
     except Exception as e:
-        frappe.throw(f"Error creating opening voucher: {str(e)}")
+        frappe.logger().error(f"[[pos_opening_shift.py]] create_opening_voucher: {str(e)}")
+        frappe.throw(_("Error creating opening voucher"))
 
 
 # Get current user's open shift info
@@ -374,9 +383,6 @@ def get_current_shift_name():
         if row.get("period_start_date"):
             row["period_start_date"] = str(row["period_start_date"])
 
-        # Log POS Profile for language debugging
-        frappe.logger().error(f"[pos_opening_shift.py] get_current_shift_name: User: {user}, POS Profile: {row.get('pos_profile')}")
-
         result = {
             "success": True,
             "data": row,
@@ -384,6 +390,7 @@ def get_current_shift_name():
         return result
 
     except Exception as e:
+        frappe.logger().error(f"[[pos_opening_shift.py]] get_current_shift_name: {str(e)}")
         return {
             "success": False,
             "message": f"Error getting current shift: {str(e)}",
@@ -425,6 +432,7 @@ def get_all_open_shifts():
         }
 
     except Exception as e:
+        frappe.logger().error(f"[[pos_opening_shift.py]] get_all_open_shifts: {str(e)}")
         return {
             "success": False,
             "message": f"Error getting open shifts: {str(e)}",
@@ -461,7 +469,8 @@ def get_profile_users(doctype, txt, searchfield, start, page_len, filters):
         return result
 
     except Exception as e:
-        frappe.throw(f"Error retrieving profile users: {str(e)}")
+        frappe.logger().error(f"[[pos_opening_shift.py]] get_profile_users: {str(e)}")
+        frappe.throw(_("Error retrieving profile users"))
 
 
 # Get invoice count for specific shift
@@ -478,6 +487,7 @@ def get_user_shift_invoice_count(pos_profile, pos_opening_shift):
         return count
 
     except Exception as e:
+        frappe.logger().error(f"[[pos_opening_shift.py]] get_user_shift_invoice_count: {str(e)}")
         return 0
 
 
@@ -511,6 +521,7 @@ def get_user_shift_stats(pos_profile, pos_opening_shift):
         return result
 
     except Exception as e:
+        frappe.logger().error(f"[[pos_opening_shift.py]] get_user_shift_stats: {str(e)}")
         return {
             "total_sales": 0,
             "invoice_count": 0,
@@ -538,6 +549,7 @@ def update_opening_shift_data(data, pos_profile):
         data["stock_settings"].update(
             {"allow_negative_stock": allow_negative_stock})
     except Exception as e:
+        frappe.logger().error(f"[[pos_opening_shift.py]] update_opening_shift_data: {str(e)}")
         pass
 
 
