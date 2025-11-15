@@ -228,7 +228,7 @@
                 </label>
                 <input
                   type="text"
-                  v-model="referral_code"
+                  v-model="posa_referral_code"
                   placeholder="الكود"
                   style="
                     width: 100%;
@@ -245,16 +245,17 @@
                 />
               </div>
               <div style="flex: 1; min-width: 0; margin-bottom: 6px">
-                <!-- Date of Birth -->
+                <!-- Discount -->
                 <label style="display: block; font-size: 11px; color: #555; margin-bottom: 2px; font-weight: 500">
-                  تاريخ الميلاد
+                  نسبة الخصم المسموحه
                 </label>
                 <input
-                  type="text"
-                  v-model="birthday"
-                  readonly
-                  @click="birthday_menu = true"
-                  placeholder="تاريخ الميلاد"
+                  type="number"
+                  v-model="posa_discount"
+                  placeholder="نسبة الخصم المسموحه"
+                  min="0"
+                  max="100"
+                  step="0.01"
                   style="
                     width: 100%;
                     padding: 5px 8px;
@@ -262,62 +263,12 @@
                     border-radius: 4px;
                     font-size: 12px;
                     color: #1f2937;
-                    background: #f9fafb;
+                    background: #fff;
                     transition: all 0.2s;
                     outline: none;
                     height: 28px;
-                    cursor: not-allowed;
                   "
                 />
-
-                <!-- Date Picker -->
-                <div
-                  v-if="birthday_menu"
-                  style="
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0, 0, 0, 0.5);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 1000;
-                  "
-                  @click="birthday_menu = false"
-                >
-                  <div
-                    @click.stop
-                    style="
-                      background: white;
-                      border-radius: 8px;
-                      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-                      max-width: 290px;
-                      width: 90%;
-                      max-height: 90vh;
-                      overflow: hidden;
-                      padding: 16px;
-                    "
-                  >
-                    <div style="display: flex; justify-content: center; align-items: center">
-                      <input
-                        type="date"
-                        v-model="birthday"
-                        :max="frappe.datetime.now_date()"
-                        @change="birthday_menu = false"
-                        style="
-                          width: 100%;
-                          padding: 8px 12px;
-                          border: 1px solid #d0d0d0;
-                          border-radius: 6px;
-                          font-size: 0.9rem;
-                          outline: none;
-                        "
-                      />
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
 
