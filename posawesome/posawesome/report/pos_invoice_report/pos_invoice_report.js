@@ -33,5 +33,11 @@ frappe.query_reports["POS_invoice_Report"] = {
       fieldtype: "Link",
       options: "POS Opening Shift",
     },
+    {
+      fieldname: "posa_pos_closing_shift",
+      label: __("مستند الإغلاق"),
+      fieldtype: "Link",
+      options: "POS Closing Shift",
+    },
   ],
 };
