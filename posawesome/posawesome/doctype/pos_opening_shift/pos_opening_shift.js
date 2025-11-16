@@ -6,7 +6,6 @@ frappe.ui.form.on("POS Opening Shift", {
     try {
       // Auto-fill fields on new document
       if (frm.doc.docstatus == 0) {
-        frm.trigger("set_posting_date_read_only");
         frm.set_value("period_start_date", frappe.datetime.now_datetime());
         frm.set_value("user", frappe.session.user); // Auto-fill current user
       }
@@ -38,7 +37,6 @@ frappe.ui.form.on("POS Opening Shift", {
         if (!frm.doc.posting_date) {
           frm.set_value("posting_date", frappe.datetime.nowdate());
         }
-        frm.trigger("set_posting_date_read_only");
 
         // Lock user field until POS Profile is selected
         if (!frm.doc.pos_profile) {
@@ -100,31 +98,6 @@ frappe.ui.form.on("POS Opening Shift", {
       }
     } catch (error) {
       console.log("[pos_opening_shift.js] refresh error:", error);
-    }
-  },
-
-  // Control posting_date field read-only state
-  set_posting_date_read_only(frm) {
-    try {
-      if (frm.doc.docstatus == 0 && frm.doc.set_posting_date) {
-        frm.set_df_property("posting_date", "read_only", 0); // Editable
-      } else {
-        frm.set_df_property("posting_date", "read_only", 1); // Read-only
-      }
-    } catch (error) {
-      console.log(
-        "[pos_opening_shift.js] set_posting_date_read_only error:",
-        error
-      );
-    }
-  },
-
-  // Trigger when "Set Posting Date" checkbox changes
-  set_posting_date(frm) {
-    try {
-      frm.trigger("set_posting_date_read_only");
-    } catch (error) {
-      console.log("[pos_opening_shift.js] set_posting_date error:", error);
     }
   },
 
