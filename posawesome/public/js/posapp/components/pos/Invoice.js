@@ -646,6 +646,9 @@ export default {
     },
 
     cancel_invoice() {
+      // Emit event to clear return invoice highlighting
+      evntBus.emit("invoice_submitted");
+      
       this.reset_invoice_session();
       evntBus.emit("show_payment", "false");
     },
@@ -2438,6 +2441,9 @@ export default {
             window.open(print_url);
 
             evntBus.emit("set_last_invoice", r.message.name);
+
+            // Emit event to clear return invoice highlighting
+            evntBus.emit("invoice_submitted");
 
             // Reset session after successful print (all cases: normal, return, quick return)
             this.reset_invoice_session();
