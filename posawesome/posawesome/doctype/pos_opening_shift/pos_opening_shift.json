@@ -12,7 +12,6 @@
   "column_break_3",
   "posting_date",
   "pos_closing_shift",
-  "set_posting_date",
   "section_break_5",
   "company",
   "pos_profile",
@@ -57,12 +56,6 @@
    "in_list_view": 1,
    "label": "Posting Date",
    "reqd": 1
-  },
-  {
-   "default": "0",
-   "fieldname": "set_posting_date",
-   "fieldtype": "Check",
-   "label": "Set Posting Date"
   },
   {
    "fieldname": "section_break_5",
@@ -129,7 +122,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2025-11-14 14:52:42.141211",
+ "modified": "2025-11-16 10:01:17.872490",
  "modified_by": "Administrator",
  "module": "POSAwesome",
  "name": "POS Opening Shift",
