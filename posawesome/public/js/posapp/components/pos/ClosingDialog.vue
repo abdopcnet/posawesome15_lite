@@ -339,7 +339,9 @@
                         item.expected_amount > 0 &&
                         (!item.closing_amount ||
                           item.closing_amount === null ||
-                          item.closing_amount === '')
+                          item.closing_amount === undefined ||
+                          item.closing_amount === '' ||
+                          item.closing_amount === 0)
                           ? 'color: #dc2626'
                           : 'color: #1e293b'
                       "
@@ -347,7 +349,8 @@
                       {{
                         item.closing_amount !== null &&
                         item.closing_amount !== undefined &&
-                        item.closing_amount !== ""
+                        item.closing_amount !== "" &&
+                        item.closing_amount !== 0
                           ? formatCurrency(item.closing_amount)
                           : "---"
                       }}
@@ -406,7 +409,8 @@
                     v-if="
                       item.closing_amount !== null &&
                       item.closing_amount !== undefined &&
-                      item.closing_amount !== ''
+                      item.closing_amount !== '' &&
+                      item.closing_amount !== 0
                     "
                   >
                     <!-- الفعلي > المتوقع: أخضر + سهم لأعلى -->
