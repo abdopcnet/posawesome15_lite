@@ -285,7 +285,6 @@
         <!-- PAYMENT METHODS SECTION -->
         <!-- =========================================== -->
         <div
-          v-if="is_cashback"
           style="display: flex; flex-direction: column; gap: 3px; margin: 2px 0"
         >
           <div
@@ -341,12 +340,12 @@
                   type="text"
                   :value="formatCurrency(payment.amount)"
                   @change="
-                    setFormatedCurrency(payment, 'amount', null, true, $event);
+                    handlePaymentAmountChange(payment, $event);
                     validate_payment_amount(payment);
                   "
                   @focus="set_rest_amount(payment.idx)"
                   @click="set_rest_amount(payment.idx)"
-                  :readonly="invoice_doc.is_return"
+                  :readonly="invoice_doc.is_return && !quick_return"
                   placeholder="0.00"
                   style="
                     flex: 1;
@@ -940,77 +939,6 @@
               <span style="font-size: 0.85rem; color: #333; font-weight: 500">
                 <!-- Use Customer Credit -->
                 استخدام رصيد العميل
-              </span>
-            </label>
-          </div>
-
-          <!-- Cash Return Switch -->
-          <div
-            v-if="invoice_doc.is_return && pos_profile.posa_use_cashback"
-            style="flex: 1 1 calc(50% - 2px); min-width: 130px"
-          >
-            <label
-              style="
-                display: flex;
-                align-items: center;
-                cursor: pointer;
-                user-select: none;
-                gap: 12px;
-              "
-            >
-              <input
-                type="checkbox"
-                v-model="is_cashback"
-                style="position: absolute; opacity: 0; width: 0; height: 0"
-              />
-              <span
-                style="
-                  position: relative;
-                  display: inline-block;
-                  width: 44px;
-                  height: 24px;
-                  background: #ccc;
-                  border-radius: 24px;
-                  transition: all 0.3s ease;
-                  flex-shrink: 0;
-                "
-              >
-                <span
-                  style="
-                    content: '';
-                    position: absolute;
-                    height: 18px;
-                    width: 18px;
-                    left: 3px;
-                    bottom: 3px;
-                    background: white;
-                    border-radius: 50%;
-                    transition: all 0.3s ease;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-                  "
-                  :style="
-                    is_cashback
-                      ? 'transform: translateX(20px); background: white'
-                      : ''
-                  "
-                ></span>
-                <span
-                  v-if="is_cashback"
-                  style="
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: #1976d2;
-                    border-radius: 24px;
-                    pointer-events: none;
-                  "
-                ></span>
-              </span>
-              <span style="font-size: 0.85rem; color: #333; font-weight: 500">
-                <!-- Is Cash Return? -->
-                هل هو مرتجع نقدي؟
               </span>
             </label>
           </div>
