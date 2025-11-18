@@ -7,6 +7,7 @@ import json
 import frappe
 from frappe import _
 from frappe.utils import flt
+from posawesome import backend_logger
 
 
 @frappe.whitelist()
@@ -14,35 +15,59 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
     """
     Search items by name, code, or barcode.
     Uses LIKE search for flexibility.
-    
+
     Item Group filtering logic:
     - If item_group specified (not "ALL"): Shows items from that specific group
     - If item_group = "ALL" and POS Profile has item_groups configured: Shows items from allowed groups only
     - If item_group = "ALL" and NO item_groups in POS Profile: Shows all items
-    
+
     Stock filtering logic:
     - If POS Profile.posa_fetch_zero_qty = 1: Shows items with zero stock
     - If POS Profile.posa_fetch_zero_qty = 0: Only shows items with stock > 0
     - include_zero_stock: Override for barcode lookups to always allow zero stock items
-    
+
     Price filtering logic:
     - If POS Profile.posa_hide_zero_price_items = 1: Only shows items with price > 0
     - If POS Profile.posa_hide_zero_price_items = 0 or NULL: Shows all items regardless of price
     """
     try:
+        backend_logger.info(
+            f"[item.py] get_items START - item_group: {item_group}, search_value: {search_value}")
+
+        # Parse pos_profile if it's a JSON string
         if isinstance(pos_profile, str):
-            pos_profile = json.loads(pos_profile)
+            try:
+                pos_profile = json.loads(pos_profile)
+            except (json.JSONDecodeError, ValueError):
+                # If JSON parsing fails, treat it as POS Profile name and fetch the document
+                backend_logger.info(
+                    f"[item.py] get_items: Fetching POS Profile from DB: {pos_profile}")
+                pos_profile = frappe.get_cached_doc(
+                    "POS Profile", pos_profile).as_dict()
+
+        # Ensure pos_profile is a dictionary
+        if not isinstance(pos_profile, dict):
+            backend_logger.error(
+                f"[item.py] get_items: pos_profile is not a dict, type: {type(pos_profile)}")
+            frappe.throw(_("Invalid POS Profile data"))
+
+        backend_logger.info(
+            f"[item.py] get_items: pos_profile loaded - name: {pos_profile.get('name')}, warehouse: {pos_profile.get('warehouse')}")
 
         if not price_list:
             price_list = pos_profile.get("selling_price_list")
 
         warehouse = pos_profile.get("warehouse", "")
-        
+
+        backend_logger.info(
+            f"[item.py] get_items: price_list: {price_list}, warehouse: {warehouse}")
+
         # Check POS Profile setting for fetching zero qty items
         posa_fetch_zero_qty = pos_profile.get("posa_fetch_zero_qty", 0)
-        
+
         # Check POS Profile setting for hiding zero price items
-        posa_hide_zero_price_items = pos_profile.get("posa_hide_zero_price_items", 0)
+        posa_hide_zero_price_items = pos_profile.get(
+            "posa_hide_zero_price_items", 0)
 
         # Build WHERE conditions
         where_conditions = [
@@ -59,11 +84,25 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
         # Get allowed item groups from POS Profile
         allowed_item_groups = []
         if pos_profile.get("item_groups"):
+            backend_logger.info(
+                f"[item.py] get_items: item_groups found in profile: {pos_profile.get('item_groups')}")
             # POS Profile has item_groups child table
+            # Handle both formats: list of strings or list of dicts (for backward compatibility)
             for ig in pos_profile.get("item_groups"):
-                if ig.get("item_group"):
-                    allowed_item_groups.append(ig.get("item_group"))
-        
+                if isinstance(ig, dict):
+                    # Old format: list of dictionaries with 'item_group' key
+                    if ig.get("item_group"):
+                        allowed_item_groups.append(ig.get("item_group"))
+                elif isinstance(ig, str):
+                    # New format: list of strings (item_group names directly)
+                    allowed_item_groups.append(ig)
+        else:
+            backend_logger.warning(
+                f"[item.py] get_items: NO item_groups in POS Profile - will show ALL items")
+
+        backend_logger.info(
+            f"[item.py] get_items: allowed_item_groups: {allowed_item_groups}")
+
         # Add item_group filter based on selection and allowed groups
         if item_group and item_group.strip() and item_group != "ALL":
             # User selected specific group - filter by it
@@ -72,8 +111,10 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
         elif allowed_item_groups:
             # item_group = "ALL" but we have allowed groups in POS Profile
             # Show only items from allowed groups
-            placeholders = ", ".join([f"%(item_group_{i})s" for i in range(len(allowed_item_groups))])
-            where_conditions.append(f"`tabItem`.item_group IN ({placeholders})")
+            placeholders = ", ".join(
+                [f"%(item_group_{i})s" for i in range(len(allowed_item_groups))])
+            where_conditions.append(
+                f"`tabItem`.item_group IN ({placeholders})")
             for i, group in enumerate(allowed_item_groups):
                 params[f"item_group_{i}"] = group
         # else: No allowed groups configured - show all items (no filter)
@@ -90,13 +131,18 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
         # If posa_fetch_zero_qty = 0, only show items with stock (unless include_zero_stock is True for barcode scans)
         if not posa_fetch_zero_qty and not include_zero_stock:
             where_conditions.append("COALESCE(`tabBin`.actual_qty, 0) > 0")
-        
+
         # Filter items with zero price based on POS Profile setting
         # If posa_hide_zero_price_items = 1, only show items with price > 0
         if posa_hide_zero_price_items:
-            where_conditions.append("`tabItem Price`.price_list_rate IS NOT NULL AND `tabItem Price`.price_list_rate > 0")
+            where_conditions.append(
+                "`tabItem Price`.price_list_rate IS NOT NULL AND `tabItem Price`.price_list_rate > 0")
 
         where_clause = " AND ".join(where_conditions)
+
+        backend_logger.info(
+            f"[item.py] get_items: SQL WHERE clause: {where_clause}")
+        backend_logger.info(f"[item.py] get_items: SQL params: {params}")
 
         # Single optimized query
         items = frappe.db.sql(
@@ -131,10 +177,15 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
             as_dict=True
         )
 
+        backend_logger.info(f"[item.py] get_items: Found {len(items)} items")
+        if len(items) > 0:
+            backend_logger.info(
+                f"[item.py] get_items: First item: {items[0].get('item_name')}")
+
         return items
 
     except Exception as e:
-        frappe.logger().error(f"[item.py] get_items: {str(e)}")
+        backend_logger.error(f"[item.py] get_items: {str(e)}")
         frappe.throw(_("Error fetching items"))
         return []
 
@@ -150,7 +201,7 @@ def get_items_groups():
             order_by="name"
         )
     except Exception as e:
-        frappe.logger().error(f"[item.py] get_items_groups: {str(e)}")
+        backend_logger.error(f"[item.py] get_items_groups: {str(e)}")
         frappe.throw(_("Error fetching item groups"))
         return []
 
@@ -162,8 +213,20 @@ def get_barcode_item(pos_profile, barcode_value):
     Tries each barcode type in order.
     """
     try:
+        # Parse pos_profile if it's a JSON string
         if isinstance(pos_profile, str):
-            pos_profile = json.loads(pos_profile)
+            try:
+                pos_profile = json.loads(pos_profile)
+            except (json.JSONDecodeError, ValueError):
+                # If JSON parsing fails, treat it as POS Profile name and fetch the document
+                pos_profile = frappe.get_cached_doc(
+                    "POS Profile", pos_profile).as_dict()
+
+        # Ensure pos_profile is a dictionary
+        if not isinstance(pos_profile, dict):
+            backend_logger.error(
+                f"[item.py] get_barcode_item: pos_profile is not a dict, type: {type(pos_profile)}")
+            frappe.throw(_("Invalid POS Profile data"))
 
         # Try each barcode type
         result = (_check_scale_barcode(pos_profile, barcode_value)
@@ -173,7 +236,7 @@ def get_barcode_item(pos_profile, barcode_value):
         return result or {}
 
     except Exception as e:
-        frappe.logger().error(f"[item.py] get_barcode_item: {str(e)}")
+        backend_logger.error(f"[item.py] get_barcode_item: {str(e)}")
         frappe.throw(_("Error processing barcode"))
         return {}
 
@@ -273,7 +336,7 @@ def process_batch_selection(item_code, current_item_row_id, existing_items_data,
             "data": {}
         }
     except Exception as e:
-        frappe.logger().error(f"[item.py] process_batch_selection: {str(e)}")
+        backend_logger.error(f"[item.py] process_batch_selection: {str(e)}")
         return {
             "success": False,
             "message": str(e),
