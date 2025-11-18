@@ -253,6 +253,10 @@ export default {
           return;
         }
 
+        console.log(
+          `[Pos.js] get_closing_data: Fetching closing shift data for opening shift: ${opening_shift_name}`
+        );
+
         const response = await frappe.call({
           method: API_MAP.POS_CLOSING_SHIFT.MAKE_CLOSING_SHIFT,
           args: {
@@ -261,13 +265,28 @@ export default {
         });
 
         if (response.message) {
+          console.log(
+            `[Pos.js] get_closing_data: Received closing shift data:`,
+            response.message.name
+          );
+          console.log(
+            `[Pos.js] get_closing_data: Payment reconciliation:`,
+            response.message.payment_reconciliation?.map((p) => ({
+              mode: p.mode_of_payment,
+              opening: p.opening_amount,
+              expected: p.expected_amount,
+            }))
+          );
           evntBus.emit(EVENTS.OPEN_CLOSING_DIALOG_EMIT, response.message);
         } else {
           // Failed to load closing data
+          console.error(
+            `[Pos.js] get_closing_data: No data received from backend`
+          );
           this.show_message("فشل تحميل بيانات الإغلاق", "error");
         }
       } catch (error) {
-        console.error("Pos.js", "get_closing_data error", error);
+        console.error("[Pos.js] get_closing_data error:", error);
         this.show_message("فشل تحميل بيانات الإغلاق", "error");
       }
     },
