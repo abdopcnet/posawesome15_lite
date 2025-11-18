@@ -13,7 +13,7 @@ FRAPPE API PATTERN:
 
 from __future__ import unicode_literals
 import frappe
-from posawesome import info_logger, error_logger
+from posawesome import posawesome_logger
 
 
 @frappe.whitelist()
@@ -57,7 +57,7 @@ def get_default_payment_from_pos_profile(pos_profile, company):
         return None
 
     except Exception as e:
-        error_logger.error(
+        posawesome_logger.error(
             f"[pos_profile.py] get_default_payment_from_pos_profile: {str(e)}")
         return None
 
@@ -97,7 +97,7 @@ def get_opening_dialog_data():
         return data
 
     except Exception as e:
-        error_logger.error(
+        posawesome_logger.error(
             f"[pos_profile.py] get_opening_dialog_data: {str(e)}")
         return {}
 
@@ -117,7 +117,7 @@ def get_payment_methods(pos_profile_name=None, pos_profile_list=None):
     try:
         if pos_profile_name:
             # Single profile - used by pos_opening_shift
-            info_logger.info(
+            posawesome_logger.info(
                 f"[pos_profile.py] get_payment_methods: Fetching for single profile: {pos_profile_name}")
 
             payments = frappe.db.sql("""
@@ -132,13 +132,13 @@ def get_payment_methods(pos_profile_name=None, pos_profile_list=None):
                 ORDER BY idx
             """, (pos_profile_name,), as_dict=True)
 
-            info_logger.info(
+            posawesome_logger.info(
                 f"[pos_profile.py] get_payment_methods: Found {len(payments)} payment methods")
             return payments
 
         elif pos_profile_list:
             # Multiple profiles - used by get_opening_dialog_data
-            info_logger.info(
+            posawesome_logger.info(
                 f"[pos_profile.py] get_payment_methods: Fetching for {len(pos_profile_list)} profiles")
 
             payments = frappe.get_list(
@@ -151,16 +151,16 @@ def get_payment_methods(pos_profile_name=None, pos_profile_list=None):
                 ignore_permissions=True,
             )
 
-            info_logger.info(
+            posawesome_logger.info(
                 f"[pos_profile.py] get_payment_methods: Found {len(payments)} payment methods")
             return payments
 
-        error_logger.warning(
+        posawesome_logger.warning(
             "[pos_profile.py] get_payment_methods: No profile name or list provided")
         return []
 
     except Exception as e:
-        error_logger.error(f"[pos_profile.py] get_payment_methods: {str(e)}")
+        posawesome_logger.error(f"[pos_profile.py] get_payment_methods: {str(e)}")
         return []
 
 
@@ -181,7 +181,7 @@ def get_profile_users(profile_name):
         return result
 
     except Exception as e:
-        error_logger.error(f"[pos_profile.py] get_profile_users: {str(e)}")
+        posawesome_logger.error(f"[pos_profile.py] get_profile_users: {str(e)}")
         return []
 
 
@@ -202,7 +202,7 @@ def get_profile_warehouses(profile_name):
         return result
 
     except Exception as e:
-        error_logger.error(
+        posawesome_logger.error(
             f"[pos_profile.py] get_profile_warehouses: {str(e)}")
         return []
 
@@ -282,5 +282,5 @@ def get_payment_account(mode_of_payment, company):
         return result
 
     except Exception as e:
-        error_logger.error(f"[pos_profile.py] get_payment_account: {str(e)}")
+        posawesome_logger.error(f"[pos_profile.py] get_payment_account: {str(e)}")
         return {"account": ""}
