@@ -40,8 +40,7 @@ export default {
       is_credit_sale: 0,
       is_write_off_change: 0,
       addresses: [],
-      paid_change: 0,
-      paid_change_rules: [],
+      change_amount_rules: [],
       is_return: false,
       is_cashback: true,
       redeem_customer_credit: false,
@@ -51,12 +50,14 @@ export default {
       customer_info: "",
       quick_return: false,
       selected_return_payment_idx: null,
+      set_full_amount_timeouts: {},
     };
   },
 
   // ===== COMPUTED =====
   computed: {
-    total_payments() {
+    // paid_amount: إجمالي المدفوعات (من جميع طرق الدفع)
+    paid_amount() {
       let total = parseFloat(this.invoice_doc.loyalty_amount || 0);
 
       if (this.invoice_doc?.payments) {
@@ -72,23 +73,142 @@ export default {
       return this.flt(total, this.currency_precision);
     },
 
-    diff_payment() {
-      // Apply flt() for consistent precision with set_full_amount and set_rest_amount
+    // outstanding_amount: المبلغ المتأخر على الفاتورة (ما لم يُدفع بعد)
+    outstanding_amount() {
       const target_amount =
         flt(this.invoice_doc.rounded_total) ||
         flt(this.invoice_doc.grand_total);
-      const diff_payment = this.flt(
-        target_amount - this.total_payments,
+      const write_off_amount = flt(this.invoice_doc.write_off_amount || 0);
+
+      // Following ERPNext logic: outstanding_amount = grand_total - paid_amount - write_off_amount
+      const outstanding = this.flt(
+        target_amount - this.paid_amount - write_off_amount,
         this.currency_precision
       );
-      this.paid_change = -diff_payment;
-      return diff_payment >= 0 ? diff_payment : 0;
+
+      // Return only positive values (what's still owed)
+      return outstanding > 0 ? outstanding : 0;
     },
 
-    credit_change() {
-      const change = -this.diff_payment;
-      if (this.paid_change > change) return 0;
-      return this.flt(this.paid_change - change, this.currency_precision);
+    // change_amount: المبلغ المتبقي للعميل (الباقي إذا دفع أكثر من المطلوب)
+    change_amount() {
+      // Calculate paid_amount directly (not using computed property to avoid dependency issues)
+      let paid_total = parseFloat(this.invoice_doc.loyalty_amount || 0);
+      if (this.invoice_doc?.payments) {
+        this.invoice_doc.payments.forEach((payment) => {
+          paid_total += this.flt(payment.amount || 0);
+        });
+      }
+      paid_total += this.flt(this.redeemed_customer_credit || 0);
+      if (!this.is_cashback) paid_total = 0;
+      paid_total = this.flt(paid_total, this.currency_precision);
+
+      const target_amount =
+        flt(this.invoice_doc.rounded_total) ||
+        flt(this.invoice_doc.grand_total);
+      const cash_mode = this.pos_profile?.posa_cash_mode_of_payment;
+
+      console.log(
+        "[Payments.js] change_amount computed - paid_total:",
+        paid_total,
+        "target_amount:",
+        target_amount,
+        "cash_mode:",
+        cash_mode
+      );
+
+      // Only calculate change_amount if paid_total > grand_total
+      if (paid_total > target_amount) {
+        // If cash_mode is defined, verify that excess is from cash payment
+        if (cash_mode) {
+          const cash_payment = this.invoice_doc?.payments?.find(
+            (p) => p.mode_of_payment === cash_mode
+          );
+          const other_payments_total =
+            this.invoice_doc?.payments
+              ?.filter((p) => p.mode_of_payment !== cash_mode)
+              .reduce((sum, p) => sum + this.flt(p.amount || 0), 0) || 0;
+
+          const other_totals = this.flt(
+            (this.invoice_doc.loyalty_amount || 0) +
+              (this.redeemed_customer_credit || 0) +
+              other_payments_total,
+            this.currency_precision
+          );
+
+          // Only allow excess if:
+          // 1. Cash payment exists and has amount > 0
+          // 2. Other payments (non-cash) don't exceed invoice total
+          if (
+            cash_payment &&
+            this.flt(cash_payment.amount || 0) > 0 &&
+            other_totals <= target_amount
+          ) {
+            // Following ERPNext: change_amount = paid_amount - grand_total (when paid_amount > grand_total)
+            const change = this.flt(
+              paid_total - target_amount,
+              this.currency_precision
+            );
+            console.log(
+              "[Payments.js] change_amount calculated:",
+              change,
+              "cash_payment:",
+              cash_payment?.mode_of_payment,
+              "cash_amount:",
+              cash_payment?.amount,
+              "other_totals:",
+              other_totals,
+              "target_amount:",
+              target_amount
+            );
+            return change;
+          } else {
+            console.log(
+              "[Payments.js] change_amount blocked - cash_payment:",
+              cash_payment,
+              "cash_amount:",
+              cash_payment?.amount,
+              "other_totals:",
+              other_totals,
+              "target_amount:",
+              target_amount
+            );
+            return 0;
+          }
+        } else {
+          // No cash_mode defined, but paid_total > grand_total
+          // Allow change_amount calculation (for backward compatibility)
+          const change = this.flt(
+            paid_total - target_amount,
+            this.currency_precision
+          );
+          console.log(
+            "[Payments.js] change_amount calculated (no cash_mode):",
+            change
+          );
+          return change;
+        }
+      }
+
+      // No change amount (paid_total <= grand_total)
+      console.log(
+        "[Payments.js] change_amount = 0 (paid_total <= target_amount)"
+      );
+      return 0;
+    },
+
+    // Keep total_payments for backward compatibility
+    total_payments() {
+      return this.paid_amount;
+    },
+
+    // Keep diff_payment for backward compatibility (deprecated, use outstanding_amount and change_amount)
+    diff_payment() {
+      // Return outstanding_amount (positive) or negative change_amount
+      if (this.change_amount > 0) {
+        return -this.change_amount; // Negative to indicate excess
+      }
+      return this.outstanding_amount; // Positive to indicate remaining
     },
 
     available_pioints_amount() {
@@ -171,7 +291,7 @@ export default {
       try {
         await this.refreshInvoiceDoc();
       } catch (error) {
-        console.log("[Payments.js] refreshInvoiceDoc error:", error);
+        console.log("[Payments.js] submit error:", error);
       }
 
       if (this.invoice_doc?.docstatus === 1) {
@@ -243,14 +363,65 @@ export default {
       const targetAmount =
         flt(this.invoice_doc.rounded_total) ||
         flt(this.invoice_doc.grand_total);
-      const difference = Math.abs(totalPayedAmount - targetAmount);
 
-      if (difference > 0.05) {
-        this.showMessage(
-          `Payment mismatch: Total ${totalPayedAmount} vs Target ${targetAmount}`,
-          "error"
+      // Include loyalty and customer credit in total
+      const allPaymentsTotal = this.flt(
+        totalPayedAmount +
+          (this.invoice_doc.loyalty_amount || 0) +
+          (this.redeemed_customer_credit || 0),
+        this.currency_precision
+      );
+
+      // Allow excess payment only if it's from cash mode
+      const cash_mode = this.pos_profile?.posa_cash_mode_of_payment;
+      const cash_payment = this.invoice_doc.payments?.find(
+        (p) => p.mode_of_payment === cash_mode
+      );
+
+      // If payment exceeds invoice total, check if excess is from cash
+      if (allPaymentsTotal > targetAmount) {
+        if (
+          !cash_mode ||
+          !cash_payment ||
+          this.flt(cash_payment.amount || 0) <= 0
+        ) {
+          this.showMessage(
+            "المبلغ الزائد مسموح فقط لطريقة الدفع النقدي",
+            "error"
+          );
+          return;
+        }
+
+        // Check if excess is only from cash payment
+        const other_payments =
+          this.invoice_doc.payments
+            ?.filter((p) => p.mode_of_payment !== cash_mode)
+            .reduce((sum, p) => sum + this.flt(p.amount || 0), 0) || 0;
+
+        const other_totals = this.flt(
+          (this.invoice_doc.loyalty_amount || 0) +
+            (this.redeemed_customer_credit || 0) +
+            other_payments,
+          this.currency_precision
         );
-        return;
+
+        if (other_totals > targetAmount) {
+          this.showMessage(
+            "المبلغ الزائد مسموح فقط لطريقة الدفع النقدي",
+            "error"
+          );
+          return;
+        }
+      } else {
+        // Normal case: payment is less than or equal to invoice total
+        const difference = Math.abs(allPaymentsTotal - targetAmount);
+        if (difference > 0.05) {
+          this.showMessage(
+            `Payment mismatch: Total ${allPaymentsTotal} vs Target ${targetAmount}`,
+            "error"
+          );
+          return;
+        }
       }
 
       if (this.invoice_doc.is_return && totalPayedAmount == 0) {
@@ -263,10 +434,41 @@ export default {
         });
       }
 
+      // Calculate paid_amount following ERPNext's set_paid_amount() logic
+      // This matches ERPNext's calculation: sum of all payments.amount
+      let paid_amount = 0.0;
+      if (this.invoice_doc?.payments) {
+        this.invoice_doc.payments.forEach((payment) => {
+          paid_amount += flt(payment.amount || 0);
+        });
+      }
+      paid_amount += flt(this.invoice_doc.loyalty_amount || 0);
+      paid_amount += flt(this.redeemed_customer_credit || 0);
+
+      // Set paid_amount in invoice_doc (ERPNext field name)
+      this.invoice_doc.paid_amount = flt(paid_amount, this.currency_precision);
+
+      // Calculate change_amount following ERPNext's calculate_change_amount() logic
+      // change_amount = paid_amount - grand_total (when paid_amount > grand_total and has Cash payment)
+      const grand_total =
+        flt(this.invoice_doc.rounded_total) ||
+        flt(this.invoice_doc.grand_total);
+
+      // Check if there's a Cash payment (following ERPNext logic)
+      const has_cash_payment =
+        this.invoice_doc?.payments?.some((p) => p.type === "Cash") || false;
+
+      const calculated_change_amount =
+        !this.invoice_doc.is_return &&
+        paid_amount > grand_total &&
+        has_cash_payment
+          ? flt(paid_amount - grand_total, this.currency_precision)
+          : 0.0;
+
+      // Set change_amount in invoice_doc (ERPNext field name)
+      this.invoice_doc.change_amount = calculated_change_amount;
+
       const data = {
-        total_change: !this.invoice_doc.is_return ? -this.diff_payment : 0,
-        paid_change: !this.invoice_doc.is_return ? this.paid_change : 0,
-        credit_change: -this.credit_change,
         redeemed_customer_credit: this.redeemed_customer_credit,
         customer_credit_dict: this.customer_credit_dict,
         is_cashback: this.is_cashback,
@@ -332,7 +534,11 @@ export default {
               .then(() => {
                 this.submit_invoice(print, autoMode, true);
               })
-              .catch(() => {
+              .catch((err) => {
+                console.log(
+                  "[Payments.js] refreshInvoiceDoc catch error:",
+                  err
+                );
                 this.showMessage(
                   "Invoice was modified elsewhere, please try again",
                   "warning"
@@ -421,83 +627,174 @@ export default {
     },
 
     set_full_amount(idx) {
-      const isReturn = !!this.invoice_doc.is_return;
-      // Apply flt() to ensure consistent precision with diff_payment calculation
-      const total =
-        flt(this.invoice_doc.rounded_total) ||
-        flt(this.invoice_doc.grand_total);
+      try {
+        // Clear any pending timeout for this specific payment
+        if (this.set_full_amount_timeouts[idx]) {
+          clearTimeout(this.set_full_amount_timeouts[idx]);
+          delete this.set_full_amount_timeouts[idx];
+        }
 
-      // DEBUG: Log values when setting payment amount
-      console.log("[Payments.js] set_full_amount: idx:", idx, "total:", total);
+        // Debounce to prevent multiple rapid calls for the same payment
+        this.set_full_amount_timeouts[idx] = setTimeout(() => {
+          const isReturn = !!this.invoice_doc.is_return;
 
-      this.invoice_doc.payments.forEach((p) => {
-        p.amount = 0;
-        if (p.base_amount !== undefined) p.base_amount = 0;
-      });
+          const payment = this.invoice_doc.payments.find((p) => p.idx == idx);
+          if (!payment) {
+            delete this.set_full_amount_timeouts[idx];
+            return;
+          }
 
-      const payment = this.invoice_doc.payments.find((p) => p.idx == idx);
-      if (payment) {
-        // Apply currency precision to match diff_payment calculation
-        const amount = this.flt(total, this.currency_precision);
-        console.log("Setting payment amount to:", amount);
-        payment.amount = isReturn ? -Math.abs(amount) : amount;
-        if (payment.base_amount !== undefined)
-          payment.base_amount = payment.amount;
+          // Clear all other payment methods first
+          this.invoice_doc.payments.forEach((p) => {
+            if (p.idx !== idx) {
+              p.amount = 0;
+              if (p.base_amount !== undefined) {
+                p.base_amount = 0;
+              }
+            }
+          });
+
+          // Calculate invoice total
+          const invoice_total =
+            flt(this.invoice_doc.rounded_total) ||
+            flt(this.invoice_doc.grand_total);
+
+          // Fill with full invoice amount when clicking the payment method button
+          const amount = this.flt(invoice_total, this.currency_precision);
+          const target_amount = isReturn ? -Math.abs(amount) : amount;
+
+          payment.amount = target_amount;
+          if (payment.base_amount !== undefined) {
+            payment.base_amount = payment.amount;
+          }
+
+          // Trigger validation after setting amount
+          this.$nextTick(() => {
+            this.validate_payment_amount(payment);
+          });
+
+          evntBus.emit(
+            EVENT_NAMES.PAYMENTS_UPDATED,
+            JSON.parse(JSON.stringify(this.invoice_doc.payments))
+          );
+
+          // Force update to recalculate computed properties
+          this.$nextTick(() => {
+            this.$forceUpdate();
+          });
+
+          console.log(
+            "[Payments.js] set_full_amount: idx:",
+            idx,
+            "mode_of_payment:",
+            payment.mode_of_payment,
+            "amount:",
+            amount
+          );
+
+          // Log payment summary
+          console.log(
+            "[Payments.js] Payment Summary - paid_amount (إجمالي المدفوعات):",
+            this.paid_amount,
+            "outstanding_amount (المبلغ المتأخر):",
+            this.outstanding_amount,
+            "change_amount (المتبقي للعميل):",
+            this.change_amount,
+            "إجمالي الفاتورة:",
+            invoice_total
+          );
+
+          delete this.set_full_amount_timeouts[idx];
+        }, 150); // 150ms debounce per payment
+      } catch (error) {
+        console.log("[Payments.js] set_full_amount error:", error);
+        if (this.set_full_amount_timeouts[idx]) {
+          delete this.set_full_amount_timeouts[idx];
+        }
       }
-
-      evntBus.emit(
-        EVENT_NAMES.PAYMENTS_UPDATED,
-        JSON.parse(JSON.stringify(this.invoice_doc.payments))
-      );
     },
 
     set_rest_amount(idx) {
-      const isReturn = !!this.invoice_doc.is_return;
-      const invoice_total =
-        flt(this.invoice_doc.rounded_total) ||
-        flt(this.invoice_doc.grand_total);
-      const total_payments = this.total_payments;
-      const actual_remaining = this.flt(
-        invoice_total - total_payments,
-        this.currency_precision
-      );
+      try {
+        const isReturn = !!this.invoice_doc.is_return;
+        const invoice_total =
+          flt(this.invoice_doc.rounded_total) ||
+          flt(this.invoice_doc.grand_total);
 
-      const payment = this.invoice_doc.payments.find((p) => p.idx === idx);
-      if (!payment || this.flt(payment.amount) !== 0) {
-        return;
-      }
+        const payment = this.invoice_doc.payments.find((p) => p.idx === idx);
+        if (!payment) return;
 
-      if (actual_remaining > 0) {
-        // Apply currency precision to match diff_payment calculation
-        let amount = this.flt(actual_remaining, this.currency_precision);
-        if (isReturn) amount = -Math.abs(amount);
+        // Calculate current total payments excluding this payment
+        const other_payments =
+          this.invoice_doc.payments
+            ?.filter((p) => p.idx !== idx)
+            .reduce((sum, p) => sum + this.flt(p.amount || 0), 0) || 0;
 
-        payment.amount = amount;
-        if (payment.base_amount !== undefined) {
-          payment.base_amount = isReturn ? -Math.abs(amount) : amount;
-        }
-        evntBus.emit(
-          EVENT_NAMES.PAYMENTS_UPDATED,
-          JSON.parse(JSON.stringify(this.invoice_doc.payments))
-        );
-      } else if (actual_remaining < 0) {
-        // Apply currency precision to match diff_payment calculation
-        let excess_amount = this.flt(
-          Math.abs(actual_remaining),
+        const other_totals = this.flt(
+          (this.invoice_doc.loyalty_amount || 0) +
+            (this.redeemed_customer_credit || 0) +
+            other_payments,
           this.currency_precision
         );
-        if (isReturn) excess_amount = -Math.abs(excess_amount);
 
-        payment.amount = excess_amount;
-        if (payment.base_amount !== undefined) {
-          payment.base_amount = isReturn
-            ? -Math.abs(excess_amount)
-            : excess_amount;
+        // Calculate remaining amount
+        const remaining = this.flt(
+          invoice_total - other_totals,
+          this.currency_precision
+        );
+
+        // Fill with remaining amount (cannot exceed invoice total for non-cash)
+        const cash_mode = this.pos_profile?.posa_cash_mode_of_payment;
+        let amount = remaining;
+
+        // For non-cash payments, limit to remaining amount (cannot exceed invoice total)
+        if (cash_mode && payment.mode_of_payment !== cash_mode) {
+          // Non-cash: fill with remaining amount, but not more than invoice total
+          amount = remaining > 0 ? remaining : 0;
+        } else {
+          // Cash payment: can fill with remaining amount (can exceed later if needed)
+          amount = remaining;
         }
+
+        payment.amount = isReturn ? -Math.abs(amount) : amount;
+        if (payment.base_amount !== undefined) {
+          payment.base_amount = payment.amount;
+        }
+
         evntBus.emit(
           EVENT_NAMES.PAYMENTS_UPDATED,
           JSON.parse(JSON.stringify(this.invoice_doc.payments))
         );
+
+        console.log(
+          "[Payments.js] set_rest_amount: idx:",
+          idx,
+          "mode_of_payment:",
+          payment.mode_of_payment,
+          "remaining:",
+          remaining,
+          "amount:",
+          amount
+        );
+
+        // Force update to recalculate computed properties
+        this.$nextTick(() => {
+          this.$forceUpdate();
+        });
+
+        // Log payment summary
+        console.log(
+          "[Payments.js] Payment Summary - paid_amount (إجمالي المدفوعات):",
+          this.paid_amount,
+          "outstanding_amount (المبلغ المتأخر):",
+          this.outstanding_amount,
+          "change_amount (المتبقي للعميل):",
+          this.change_amount,
+          "إجمالي الفاتورة:",
+          invoice_total
+        );
+      } catch (error) {
+        console.log("[Payments.js] set_rest_amount error:", error);
       }
     },
 
@@ -546,18 +843,80 @@ export default {
       }
     },
 
-    set_paid_change() {
-      if (!this.paid_change) this.paid_change = 0;
+    set_change_amount() {
+      // Following ERPNext logic: change_amount is calculated automatically
+      // change_amount = paid_amount - grand_total (when paid_amount > grand_total)
+      // This method is kept for compatibility but change_amount is now a computed property
+      this.change_amount_rules = [];
+    },
 
-      this.paid_change_rules = [];
-      const change = -this.diff_payment;
+    validate_payment_amount(payment) {
+      // Check if payment amount exceeds invoice total for non-cash payments
+      const target_amount =
+        flt(this.invoice_doc.rounded_total) ||
+        flt(this.invoice_doc.grand_total);
+      const payment_amount = this.flt(payment.amount || 0);
+      const cash_mode = this.pos_profile?.posa_cash_mode_of_payment;
 
-      if (this.paid_change > change) {
-        this.paid_change_rules = [
-          "Paid change cannot be greater than total change!",
-        ];
-        this.credit_change = 0;
+      // Log payment change
+      console.log(
+        "[Payments.js] Payment Input Changed - idx:",
+        payment.idx,
+        "mode_of_payment:",
+        payment.mode_of_payment,
+        "amount:",
+        payment_amount
+      );
+
+      // Calculate change_amount manually to ensure it's calculated
+      const paid_total = this.paid_amount;
+      const change_amt =
+        paid_total > target_amount ? paid_total - target_amount : 0;
+
+      // Force update to recalculate computed properties
+      this.$nextTick(() => {
+        this.$forceUpdate();
+      });
+
+      // Log payment summary
+      console.log(
+        "[Payments.js] Payment Summary - paid_amount (إجمالي المدفوعات):",
+        this.paid_amount,
+        "outstanding_amount (المبلغ المتأخر):",
+        this.outstanding_amount,
+        "change_amount (المتبقي للعميل):",
+        this.change_amount,
+        "change_amount (manual):",
+        change_amt,
+        "إجمالي الفاتورة:",
+        target_amount
+      );
+
+      // For non-cash payments, check if amount exceeds invoice total
+      if (cash_mode && payment.mode_of_payment !== cash_mode) {
+        // Non-cash payment: cannot exceed invoice total
+        if (payment_amount > target_amount) {
+          // Reset to invoice total
+          payment.amount = target_amount;
+          if (payment.base_amount !== undefined) {
+            payment.base_amount = payment.amount;
+          }
+          this.showMessage(
+            `لا يمكن إدخال مبلغ أعلى من إجمالي الفاتورة (${this.formatCurrency(
+              target_amount
+            )})`,
+            "error"
+          );
+          evntBus.emit(
+            EVENT_NAMES.PAYMENTS_UPDATED,
+            JSON.parse(JSON.stringify(this.invoice_doc.payments))
+          );
+          return false;
+        }
       }
+
+      // For cash payment, allow excess (no validation needed)
+      return true;
     },
 
     get_available_credit(e) {
@@ -762,6 +1121,14 @@ export default {
   },
 
   beforeUnmount() {
+    // Clean up all timeouts
+    Object.keys(this.set_full_amount_timeouts || {}).forEach((idx) => {
+      if (this.set_full_amount_timeouts[idx]) {
+        clearTimeout(this.set_full_amount_timeouts[idx]);
+      }
+    });
+    this.set_full_amount_timeouts = {};
+
     // Clean up all event listeners
     const events = [
       EVENT_NAMES.TOGGLE_QUICK_RETURN,
@@ -811,12 +1178,23 @@ export default {
 
     is_write_off_change(value) {
       if (value == 1) {
-        this.invoice_doc.write_off_amount = this.diff_payment;
+        this.invoice_doc.write_off_amount = this.outstanding_amount;
         this.invoice_doc.write_off_outstanding_amount_automatically = 1;
       } else {
         this.invoice_doc.write_off_amount = 0;
         this.invoice_doc.write_off_outstanding_amount_automatically = 0;
       }
+    },
+
+    // Watch payments array to force recalculation of change_amount
+    "invoice_doc.payments": {
+      handler() {
+        // Force update to recalculate computed properties
+        this.$nextTick(() => {
+          this.$forceUpdate();
+        });
+      },
+      deep: true,
     },
 
     redeemed_customer_credit(value) {
