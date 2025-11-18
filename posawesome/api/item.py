@@ -213,12 +213,17 @@ def get_barcode_item(pos_profile, barcode_value):
     Tries each barcode type in order.
     """
     try:
+        info_logger.info(
+            f"[item.py] get_barcode_item: START - barcode: {barcode_value}")
+
         # Parse pos_profile if it's a JSON string
         if isinstance(pos_profile, str):
             try:
                 pos_profile = json.loads(pos_profile)
             except (json.JSONDecodeError, ValueError):
                 # If JSON parsing fails, treat it as POS Profile name and fetch the document
+                info_logger.info(
+                    f"[item.py] get_barcode_item: Fetching POS Profile from DB: {pos_profile}")
                 pos_profile = frappe.get_cached_doc(
                     "POS Profile", pos_profile).as_dict()
 
@@ -228,12 +233,59 @@ def get_barcode_item(pos_profile, barcode_value):
                 f"[item.py] get_barcode_item: pos_profile is not a dict, type: {type(pos_profile)}")
             frappe.throw(_("Invalid POS Profile data"))
 
-        # Try each barcode type
-        result = (_check_scale_barcode(pos_profile, barcode_value)
-                  or _check_private_barcode(pos_profile, barcode_value)
-                  or _check_normal_barcode(pos_profile, barcode_value))
+        # CRITICAL FIX: Frontend doesn't send all barcode fields, so we must fetch from DB
+        # Always fetch the complete POS Profile from database to get barcode configuration
+        profile_name = pos_profile.get('name')
+        if profile_name:
+            info_logger.info(
+                f"[item.py] get_barcode_item: Fetching complete POS Profile from DB: {profile_name}")
+            pos_profile = frappe.get_cached_doc(
+                "POS Profile", profile_name).as_dict()
+            
+            # Normalize item_groups to list of strings (for consistency with get_items)
+            if pos_profile.get("item_groups"):
+                item_groups_list = []
+                for ig in pos_profile.get("item_groups"):
+                    if isinstance(ig, dict):
+                        if ig.get("item_group"):
+                            item_groups_list.append(ig.get("item_group"))
+                    elif isinstance(ig, str):
+                        item_groups_list.append(ig)
+                pos_profile["item_groups"] = item_groups_list
+            
+            info_logger.info(
+                f"[item.py] get_barcode_item: POS Profile fetched - barcode fields - scale_enabled: {pos_profile.get('posa_enable_scale_barcode')}, private_enabled: {pos_profile.get('posa_enable_private_barcode')}")
 
-        return result or {}
+        info_logger.info(
+            f"[item.py] get_barcode_item: Trying scale barcode...")
+        result = _check_scale_barcode(pos_profile, barcode_value)
+
+        if result:
+            info_logger.info(
+                f"[item.py] get_barcode_item: Found via scale barcode - item: {result.get('item_code')}")
+            return result
+
+        info_logger.info(
+            f"[item.py] get_barcode_item: Trying private barcode...")
+        result = _check_private_barcode(pos_profile, barcode_value)
+
+        if result:
+            info_logger.info(
+                f"[item.py] get_barcode_item: Found via private barcode - item: {result.get('item_code')}")
+            return result
+
+        info_logger.info(
+            f"[item.py] get_barcode_item: Trying normal barcode...")
+        result = _check_normal_barcode(pos_profile, barcode_value)
+
+        if result:
+            info_logger.info(
+                f"[item.py] get_barcode_item: Found via normal barcode - item: {result.get('item_code')}")
+            return result
+
+        info_logger.warning(
+            f"[item.py] get_barcode_item: No item found for barcode: {barcode_value}")
+        return {}
 
     except Exception as e:
         error_logger.error(f"[item.py] get_barcode_item: {str(e)}")
@@ -243,7 +295,12 @@ def get_barcode_item(pos_profile, barcode_value):
 
 def _check_scale_barcode(profile, barcode):
     """Check if barcode matches scale format and extract item."""
+    info_logger.info(
+        f"[item.py] _check_scale_barcode: Checking barcode: {barcode}")
+
     if not profile.get("posa_enable_scale_barcode"):
+        info_logger.info(
+            f"[item.py] _check_scale_barcode: Scale barcode disabled in profile")
         return None
 
     prefix = str(profile.get("posa_scale_barcode_start", ""))
@@ -251,10 +308,20 @@ def _check_scale_barcode(profile, barcode):
     item_len = profile.get("posa_scale_item_code_length")
     weight_len = profile.get("posa_weight_length")
 
+    info_logger.info(
+        f"[item.py] _check_scale_barcode: Config - prefix: {prefix}, total_len: {total_len}, item_len: {item_len}, weight_len: {weight_len}")
+
     if not all([prefix, total_len, item_len, weight_len]):
+        info_logger.warning(
+            f"[item.py] _check_scale_barcode: Missing configuration values")
         return None
 
+    info_logger.info(
+        f"[item.py] _check_scale_barcode: Barcode length: {len(barcode)}, starts with prefix: {barcode.startswith(prefix)}")
+
     if not barcode.startswith(prefix) or len(barcode) != total_len:
+        info_logger.info(
+            f"[item.py] _check_scale_barcode: Barcode doesn't match format (prefix or length)")
         return None
 
     # Extract item_code and weight
@@ -263,64 +330,124 @@ def _check_scale_barcode(profile, barcode):
     weight_part = barcode[prefix_len +
                           item_len:prefix_len + item_len + weight_len]
 
+    info_logger.info(
+        f"[item.py] _check_scale_barcode: Extracted - item_code: {item_code}, weight_part: {weight_part}")
+
     # Get item using get_items with include_zero_stock=True
     items = get_items(profile, profile.get("selling_price_list"),
                       search_value=item_code, include_zero_stock=True)
     if not items:
+        info_logger.warning(
+            f"[item.py] _check_scale_barcode: No item found for item_code: {item_code}")
         return None
 
     item = items[0]
+    info_logger.info(
+        f"[item.py] _check_scale_barcode: Found item: {item.get('item_code')}")
+
     try:
         weight_value = flt(weight_part) / 1000  # Convert grams to kg
         item["qty"] = flt(weight_value, 3)
+        info_logger.info(
+            f"[item.py] _check_scale_barcode: Weight calculated: {item['qty']} kg")
     except:
         item["qty"] = 1
+        info_logger.warning(
+            f"[item.py] _check_scale_barcode: Failed to parse weight, defaulting to 1")
 
     return item
 
 
 def _check_private_barcode(profile, barcode):
     """Check if barcode matches private format and extract item."""
+    info_logger.info(
+        f"[item.py] _check_private_barcode: Checking barcode: {barcode}")
+
     if not profile.get("posa_enable_private_barcode"):
+        info_logger.info(
+            f"[item.py] _check_private_barcode: Private barcode disabled in profile")
         return None
 
     prefixes_str = str(profile.get("posa_private_barcode_prefixes", ""))
     total_len = profile.get("posa_private_barcode_lenth")
     item_len = profile.get("posa_private_item_code_length")
 
+    info_logger.info(
+        f"[item.py] _check_private_barcode: Config - prefixes: {prefixes_str}, total_len: {total_len}, item_len: {item_len}")
+    info_logger.info(
+        f"[item.py] _check_private_barcode: Barcode length: {len(barcode)}")
+
     if not all([prefixes_str, total_len, item_len]) or len(barcode) != total_len:
+        info_logger.info(
+            f"[item.py] _check_private_barcode: Missing config or barcode length mismatch")
         return None
 
     # Check prefix match
     prefixes = [p.strip() for p in prefixes_str.split(",")]
+    info_logger.info(
+        f"[item.py] _check_private_barcode: Parsed prefixes: {prefixes}")
+
     matched_prefix = next((p for p in prefixes if barcode.startswith(p)), None)
 
     if not matched_prefix:
+        info_logger.info(
+            f"[item.py] _check_private_barcode: No matching prefix found")
         return None
+
+    info_logger.info(
+        f"[item.py] _check_private_barcode: Matched prefix: {matched_prefix}")
 
     # Extract item_code
     item_code = barcode[len(matched_prefix):len(matched_prefix) + item_len]
+    info_logger.info(
+        f"[item.py] _check_private_barcode: Extracted item_code: {item_code}")
 
     # Get item using get_items with include_zero_stock=True
     items = get_items(profile, profile.get("selling_price_list"),
                       search_value=item_code, include_zero_stock=True)
     if not items:
+        info_logger.warning(
+            f"[item.py] _check_private_barcode: No item found for item_code: {item_code}")
         return None
 
     item = items[0]
+    info_logger.info(
+        f"[item.py] _check_private_barcode: Found item: {item.get('item_code')}")
     item["qty"] = 1
     return item
 
 
 def _check_normal_barcode(profile, barcode):
     """Check normal barcode in Item Barcode table."""
+    info_logger.info(
+        f"[item.py] _check_normal_barcode: Checking barcode: {barcode}")
+
+    # First, check if barcode exists in Item Barcode table
+    barcode_record = frappe.db.sql("""
+        SELECT parent, barcode, barcode_type
+        FROM `tabItem Barcode`
+        WHERE barcode = %s
+        LIMIT 1
+    """, (barcode,), as_dict=True)
+
+    if barcode_record:
+        info_logger.info(
+            f"[item.py] _check_normal_barcode: Barcode found in DB - parent: {barcode_record[0].get('parent')}")
+    else:
+        info_logger.warning(
+            f"[item.py] _check_normal_barcode: Barcode NOT found in tabItem Barcode table")
+
     # Simply use get_items with the barcode value and include_zero_stock=True
     items = get_items(profile, profile.get("selling_price_list"),
                       search_value=barcode, include_zero_stock=True)
 
     if not items:
+        info_logger.warning(
+            f"[item.py] _check_normal_barcode: get_items returned 0 items for barcode: {barcode}")
         return None
 
+    info_logger.info(
+        f"[item.py] _check_normal_barcode: Found item via get_items - item_code: {items[0].get('item_code')}")
     item = items[0]
     item["qty"] = 1
     return item
