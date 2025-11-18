@@ -609,6 +609,68 @@ export default {
         return;
       }
 
+      const trimmedSearch = searchValue.trim();
+
+      // Check if search value looks like a barcode (all digits, length >= 8)
+      const isBarcode =
+        /^\d+$/.test(trimmedSearch) && trimmedSearch.length >= 8;
+
+      // If it looks like a barcode, try get_barcode_item first
+      if (isBarcode) {
+        posawesome_logger.info(
+          "ItemsSelector.js",
+          `performLiveSearch: Detected barcode format, calling get_barcode_item: ${trimmedSearch}`
+        );
+
+        frappe.call({
+          method: API_MAP.ITEM.GET_BARCODE_ITEM,
+          args: {
+            pos_profile: vm.pos_profile,
+            barcode_value: trimmedSearch,
+          },
+          callback: function (r) {
+            vm.search_loading = false;
+
+            if (r?.message?.item_code) {
+              // Barcode found - add item directly to cart
+              posawesome_logger.info(
+                "ItemsSelector.js",
+                `performLiveSearch: Barcode item found - adding to cart: ${r.message.item_code}`
+              );
+              vm.add_item_to_cart(r.message);
+              // Clear search field after successful barcode scan
+              vm.debounce_search = "";
+              vm.first_search = "";
+            } else {
+              // Barcode not found - fall back to normal search
+              posawesome_logger.info(
+                "ItemsSelector.js",
+                `performLiveSearch: Barcode not found, falling back to get_items: ${trimmedSearch}`
+              );
+              vm._performNormalSearch(trimmedSearch);
+            }
+          },
+          error: function (err) {
+            vm.search_loading = false;
+            posawesome_logger.error(
+              "ItemsSelector.js",
+              "performLiveSearch: get_barcode_item error",
+              err
+            );
+            // Fall back to normal search on error
+            vm._performNormalSearch(trimmedSearch);
+          },
+        });
+        return;
+      }
+
+      // Not a barcode - perform normal search
+      this._performNormalSearch(trimmedSearch);
+    },
+
+    _performNormalSearch(searchValue) {
+      const vm = this;
+
       // Perform live search using get_items
       frappe.call({
         method: API_MAP.ITEM.GET_ITEMS,
@@ -617,7 +679,7 @@ export default {
           price_list: vm.customer_price_list,
           item_group:
             vm.item_group !== "ALL" ? vm.item_group.toLowerCase() : "",
-          search_value: searchValue.trim(),
+          search_value: searchValue,
           customer: vm.customer,
         },
         callback: function (r) {
@@ -648,6 +710,11 @@ export default {
         error: function (err) {
           // Stop search progress bar
           vm.search_loading = false;
+          posawesome_logger.error(
+            "ItemsSelector.js",
+            "_performNormalSearch error",
+            err
+          );
         },
       });
     },
