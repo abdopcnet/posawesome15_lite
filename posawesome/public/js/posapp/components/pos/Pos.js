@@ -99,10 +99,7 @@ export default {
           method: API_MAP.POS_OPENING_SHIFT.GET_ALL_OPEN_SHIFTS,
         });
 
-        if (
-          allShiftsResponse.message.success &&
-          allShiftsResponse.message.count > 1
-        ) {
+        if (allShiftsResponse.message.success && allShiftsResponse.message.count > 1) {
           // User has MULTIPLE open shifts - show warning component
           posawesome_logger.info(
             "Pos.js",
@@ -131,11 +128,7 @@ export default {
 
           if (!pos_profile) {
             // Profile data not available - show error
-            posawesome_logger.error(
-              "Pos.js",
-              "check_opening_entry: pos_profile_data is null/undefined",
-              shift_data
-            );
+            posawesome_logger.error("Pos.js", "check_opening_entry: pos_profile_data is null/undefined", shift_data);
             this.show_message("فشل تحميل بيانات الملف الشخصي", "error");
             return;
           }
@@ -149,6 +142,15 @@ export default {
             pos_profile: shift_data.pos_profile,
             user: shift_data.user,
           };
+
+          // Log important fields for debugging
+          posawesome_logger.info(
+            "Pos.js",
+            `POS Profile loaded: posa_allow_return=${pos_profile.posa_allow_return}, payments=${
+              pos_profile.payments?.length || 0
+            }`,
+            { warehouse: pos_profile.warehouse, price_list: pos_profile.selling_price_list }
+          );
 
           // Prepare data for event bus
           const event_data = {
@@ -166,10 +168,7 @@ export default {
           evntBus.emit(EVENTS.SET_POS_OPENING_SHIFT, this.pos_opening_shift);
         } else {
           // No active shift - show opening dialog
-          posawesome_logger.info(
-            "Pos.js",
-            "check_opening_entry: no active shift"
-          );
+          posawesome_logger.info("Pos.js", "check_opening_entry: no active shift");
           this.create_opening_voucher();
         }
       } catch (error) {
