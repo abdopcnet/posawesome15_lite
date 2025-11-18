@@ -1,6 +1,6 @@
 import { createApp } from "vue";
 import Home from "./Home.vue";
-import { posawesome_logger } from "./logger.js";
+// Frontend logging: Use console.log/error/warn directly
 
 // Define Vue 3 feature flags for better tree-shaking and performance
 // See: https://link.vuejs.org/feature-flags
