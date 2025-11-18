@@ -100,14 +100,14 @@
             >
               <label
                 style="
-                  font-size: 0.6rem;
-                  font-weight: 600;
-                  color: #666;
+                  font-size: 0.75rem;
+                  font-weight: 700;
+                  color: #555;
                   text-transform: uppercase;
-                  letter-spacing: 0.3px;
+                  letter-spacing: 0.5px;
                   margin: 0;
-                  padding: 0 2px;
-                  line-height: 1;
+                  padding: 2px 4px;
+                  line-height: 1.2;
                   text-align: center;
                   display: block;
                 "
@@ -119,22 +119,24 @@
                   display: flex;
                   align-items: center;
                   justify-content: center;
-                  padding: 8px 6px;
-                  border-radius: 3px;
-                  border: 1px solid #4caf50;
+                  padding: 12px 8px;
+                  border-radius: 4px;
+                  border: 1.5px solid #4caf50;
                   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-                  min-height: 38px;
+                  min-height: 45px;
                   transition: all 0.2s ease;
+                  box-shadow: 0 1px 3px rgba(76, 175, 80, 0.2);
                 "
               >
                 <span
                   style="
-                    font-size: 0.8rem;
-                    font-weight: 700;
+                    font-size: 1.1rem;
+                    font-weight: 800;
                     color: #2e7d32;
                     text-align: center;
                     width: 100%;
                     display: block;
+                    letter-spacing: 0.3px;
                   "
                 >
                   {{ currencySymbol(invoice_doc.currency)
@@ -149,14 +151,14 @@
             >
               <label
                 style="
-                  font-size: 0.6rem;
-                  font-weight: 600;
-                  color: #666;
+                  font-size: 0.75rem;
+                  font-weight: 700;
+                  color: #555;
                   text-transform: uppercase;
-                  letter-spacing: 0.3px;
+                  letter-spacing: 0.5px;
                   margin: 0;
-                  padding: 0 2px;
-                  line-height: 1;
+                  padding: 2px 4px;
+                  line-height: 1.2;
                   text-align: center;
                   display: block;
                 "
@@ -168,28 +170,33 @@
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '8px 6px',
-                  borderRadius: '3px',
+                  padding: '12px 8px',
+                  borderRadius: '4px',
                   border:
                     change_amount > 0
-                      ? '1px solid #4caf50'
-                      : '1px solid #e0e0e0',
+                      ? '1.5px solid #4caf50'
+                      : '1.5px solid #e0e0e0',
                   background:
                     change_amount > 0
                       ? 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)'
                       : 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)',
-                  minHeight: '38px',
+                  minHeight: '45px',
                   transition: 'all 0.2s ease',
+                  boxShadow:
+                    change_amount > 0
+                      ? '0 1px 3px rgba(76, 175, 80, 0.2)'
+                      : '0 1px 3px rgba(0, 0, 0, 0.1)',
                 }"
               >
                 <span
                   :style="{
-                    fontSize: '0.8rem',
-                    fontWeight: '700',
+                    fontSize: '1.1rem',
+                    fontWeight: '800',
                     color: change_amount > 0 ? '#2e7d32' : '#9e9e9e',
                     textAlign: 'center',
                     width: '100%',
                     display: 'block',
+                    letterSpacing: '0.3px',
                   }"
                 >
                   {{ currencySymbol(invoice_doc.currency)
@@ -204,47 +211,52 @@
             >
               <label
                 style="
-                  font-size: 0.6rem;
-                  font-weight: 600;
-                  color: #666;
+                  font-size: 0.75rem;
+                  font-weight: 700;
+                  color: #555;
                   text-transform: uppercase;
-                  letter-spacing: 0.3px;
+                  letter-spacing: 0.5px;
                   margin: 0;
-                  padding: 0 2px;
-                  line-height: 1;
+                  padding: 2px 4px;
+                  line-height: 1.2;
                   text-align: center;
                   display: block;
                 "
               >
-                المبلغ المتأخر
+                المتبقي للدفع لاحقا
               </label>
               <div
                 :style="{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '8px 6px',
-                  borderRadius: '3px',
+                  padding: '12px 8px',
+                  borderRadius: '4px',
                   border:
                     outstanding_amount > 0
-                      ? '1px solid #ff9800'
-                      : '1px solid #e0e0e0',
+                      ? '1.5px solid #ff9800'
+                      : '1.5px solid #e0e0e0',
                   background:
                     outstanding_amount > 0
                       ? 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)'
                       : 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)',
-                  minHeight: '38px',
+                  minHeight: '45px',
                   transition: 'all 0.2s ease',
+                  boxShadow:
+                    outstanding_amount > 0
+                      ? '0 1px 3px rgba(255, 152, 0, 0.3)'
+                      : '0 1px 3px rgba(0, 0, 0, 0.1)',
                 }"
               >
                 <span
                   :style="{
-                    fontSize: '0.8rem',
-                    fontWeight: '700',
+                    fontSize: '1.1rem',
+                    fontWeight: '800',
                     color: outstanding_amount > 0 ? '#e65100' : '#9e9e9e',
                     textAlign: 'center',
                     width: '100%',
                     display: 'block',
+                    letterSpacing: '0.3px',
                   }"
                 >
                   {{ currencySymbol(invoice_doc.currency)
