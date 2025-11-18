@@ -241,7 +241,8 @@ export default {
         },
         error: (err) => {
           posawesome_logger.error(
-            "[Navbar.js] Error fetching cash total:",
+            "Navbar.js",
+            "Error fetching cash total:",
             err
           );
           this.totalCash = 0;
@@ -268,7 +269,8 @@ export default {
         },
         error: (err) => {
           posawesome_logger.error(
-            "[Navbar.js] Error fetching non-cash total:",
+            "Navbar.js",
+            "Error fetching non-cash total:",
             err
           );
           this.totalNonCash = 0;
@@ -371,7 +373,8 @@ export default {
           })
           .catch((err) => {
             posawesome_logger.error(
-              "[Navbar.js] fetchShiftInvoiceCount catch error:",
+              "Navbar.js",
+              "fetchShiftInvoiceCount catch error:",
               err
             );
             // Error fetching company info
@@ -415,7 +418,8 @@ export default {
         }
       } catch (error) {
         posawesome_logger.error(
-          "[Navbar.js] clearCacheAndReload error:",
+          "Navbar.js",
+          "clearCacheAndReload error:",
           error
         );
         this.show_mesage({
@@ -443,7 +447,8 @@ export default {
         }
       } catch (error) {
         posawesome_logger.error(
-          "[Navbar.js] getShiftInvoiceCount error:",
+          "Navbar.js",
+          "getShiftInvoiceCount error:",
           error
         );
         this.shift_invoice_count = 0;
@@ -468,10 +473,14 @@ export default {
             // Sound enabled successfully (logged to backend only)
           })
           .catch((err) => {
-            posawesome_logger.error("[Navbar.js] enableSound play error:", err);
+            posawesome_logger.error(
+              "Navbar.js",
+              "enableSound play error:",
+              err
+            );
           });
       } catch (err) {
-        posawesome_logger.error("[Navbar.js] enableSound error:", err);
+        posawesome_logger.error("Navbar.js", "enableSound error:", err);
       }
     },
     // Play error sound (only if enabled)
@@ -480,7 +489,8 @@ export default {
         this.errorSound.currentTime = 0;
         this.errorSound.play().catch((err) => {
           posawesome_logger.error(
-            "[Navbar.js] Failed to play error sound:",
+            "Navbar.js",
+            "Failed to play error sound:",
             err
           );
         });
@@ -488,7 +498,8 @@ export default {
         // If sound not enabled yet, try to enable it and play
         if (!this.soundEnabled) {
           posawesome_logger.error(
-            "[Navbar.js] Sound not enabled, attempting to enable..."
+            "Navbar.js",
+            "Sound not enabled, attempting to enable..."
           );
           this.enableSound();
           // Try to play after a short delay
@@ -497,7 +508,8 @@ export default {
               this.errorSound.currentTime = 0;
               this.errorSound.play().catch((err) => {
                 posawesome_logger.error(
-                  "[Navbar.js] Failed to play error sound after enable:",
+                  "Navbar.js",
+                  "Failed to play error sound after enable:",
                   err
                 );
               });
@@ -517,7 +529,8 @@ export default {
         if (!responded) {
           timeoutTriggered = true;
           posawesome_logger.error(
-            "[Navbar.js] Ping timeout after 2 seconds - no response from server"
+            "Navbar.js",
+            "Ping timeout after 2 seconds - no response from server"
           );
           this.pingTime = "999";
           this.playErrorSound();
@@ -555,7 +568,7 @@ export default {
             if (!timeoutTriggered) {
               responded = true;
               clearTimeout(timeoutId);
-              posawesome_logger.error("[Navbar.js] Ping error:", err);
+              posawesome_logger.error("Navbar.js", "Ping error:", err);
               this.pingTime = "999";
               // Mark connection as lost
               this.wasConnectionLost = true;
@@ -566,7 +579,7 @@ export default {
           async: true,
         });
       } catch (error) {
-        posawesome_logger.error("[Navbar.js] measurePing error:", error);
+        posawesome_logger.error("Navbar.js", "measurePing error:", error);
         // Exception happens immediately when connection is lost
         if (!timeoutTriggered) {
           posawesome_logger.error(
@@ -631,7 +644,7 @@ export default {
         el.style.filter = "brightness(1.03)";
         el.style.borderColor = "rgba(0,0,0,0.08)";
       } catch (err) {
-        posawesome_logger.error("[Navbar.js] badgeMouseEnter error:", err);
+        posawesome_logger.error("Navbar.js", "badgeMouseEnter error:", err);
       }
     },
 
@@ -648,7 +661,7 @@ export default {
           el.style.borderColor = "";
         }
       } catch (err) {
-        posawesome_logger.error("[Navbar.js] badgeMouseLeave error:", err);
+        posawesome_logger.error("Navbar.js", "badgeMouseLeave error:", err);
       }
     },
   },
@@ -754,7 +767,7 @@ export default {
           this.togglePingMonitoring(enable);
         });
       } catch (error) {
-        posawesome_logger.error("[Navbar.js] created error:", error);
+        posawesome_logger.error("Navbar.js", "created error:", error);
         this.show_mesage({
           color: "error",
           text: "An error occurred while loading the menu.",
