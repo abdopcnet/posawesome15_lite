@@ -49,8 +49,8 @@ export const posawesome_logger = {
    * @private
    */
   _sendToBackend(level, file, message, data) {
-    // Only send errors and important warnings to backend
-    if (level === "error" || (level === "warn" && data)) {
+    // Only send errors and warnings to backend (not info to reduce load)
+    if (level === "error" || level === "warn") {
       frappe.call({
         method: "posawesome.api.logger.log_frontend",
         args: {
