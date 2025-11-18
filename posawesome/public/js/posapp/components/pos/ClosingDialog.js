@@ -225,6 +225,17 @@ export default {
      * @param {Object} data - Payment reconciliation data
      */
     const openClosingDialogHandler = (data) => {
+      console.log(`[ClosingDialog.js] Opening closing dialog with data:`, data);
+      console.log(
+        `[ClosingDialog.js] Payment reconciliation:`,
+        data.payment_reconciliation?.map((p) => ({
+          mode: p.mode_of_payment,
+          opening: p.opening_amount,
+          expected: p.expected_amount,
+          closing: p.closing_amount,
+        }))
+      );
+
       closingDialog.value = true;
 
       // ✅ لا تعبئة تلقائية - الحقول تبقى فارغة
@@ -246,6 +257,15 @@ export default {
 
       dialog_data.value = data;
       checkClosingTimeAllowed();
+
+      console.log(
+        `[ClosingDialog.js] Dialog opened. Final payment reconciliation:`,
+        dialog_data.value.payment_reconciliation?.map((p) => ({
+          mode: p.mode_of_payment,
+          opening: p.opening_amount,
+          expected: p.expected_amount,
+        }))
+      );
     };
 
     /**
