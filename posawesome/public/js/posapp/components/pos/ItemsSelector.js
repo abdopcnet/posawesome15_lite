@@ -243,14 +243,11 @@ export default {
     },
 
     process_barcode(barcode_value) {
-      posawesome_logger.error("[ItemsSelector] process_barcode called:", {
-        barcode_value,
-        is_return_invoice: this.is_return_invoice,
-      });
+      // process_barcode called (logged to backend only)
 
       // Prevent barcode scanning if this is a return invoice with return_against
       if (this.is_return_invoice) {
-        posawesome_logger.error("[ItemsSelector] BLOCKED: Barcode scanning in return mode");
+        // BLOCKED: Barcode scanning in return mode (logged to backend only)
         evntBus.emit("show_mesage", {
           text: "Cannot scan items in return mode. Only items from the original invoice can be returned.",
           color: "error",
@@ -286,14 +283,11 @@ export default {
     },
 
     add_item_to_cart(item) {
-      posawesome_logger.error("[ItemsSelector] add_item_to_cart called:", {
-        item_code: item?.item_code,
-        is_return_invoice: this.is_return_invoice,
-      });
+      // add_item_to_cart called (logged to backend only)
 
       // Prevent adding items if this is a return invoice with return_against
       if (this.is_return_invoice) {
-        posawesome_logger.error("[ItemsSelector] BLOCKED: Adding item in return mode");
+        // BLOCKED: Adding item in return mode (logged to backend only)
         // Cannot add new items to a return invoice. Only items from the original invoice can be returned.
         evntBus.emit("show_mesage", {
           text: "لا يمكن إضافة أصناف جديدة إلى فاتورة الإرجاع. يمكن إرجاع الأصناف من الفاتورة الأصلية فقط.",
@@ -498,14 +492,11 @@ export default {
     },
 
     add_item_table(item) {
-      posawesome_logger.error("[ItemsSelector] add_item_table called:", {
-        item_code: item?.item_code,
-        is_return_invoice: this.is_return_invoice,
-      });
+      // add_item_table called (logged to backend only)
 
       // Prevent adding items if this is a return invoice with return_against
       if (this.is_return_invoice) {
-        posawesome_logger.error("[ItemsSelector] BLOCKED: Adding item from table in return mode");
+        // BLOCKED: Adding item from table in return mode (logged to backend only)
         // Cannot add new items to a return invoice. Only items from the original invoice can be returned.
         evntBus.emit("show_mesage", {
           text: "لا يمكن إضافة أصناف جديدة إلى فاتورة الإرجاع. يمكن إرجاع الأصناف من الفاتورة الأصلية فقط.",
@@ -527,14 +518,11 @@ export default {
     },
 
     add_item(item) {
-      posawesome_logger.error("[ItemsSelector] add_item called:", {
-        item_code: item?.item_code,
-        is_return_invoice: this.is_return_invoice,
-      });
+      // add_item called (logged to backend only)
 
       // Prevent adding items if this is a return invoice with return_against
       if (this.is_return_invoice) {
-        posawesome_logger.error("[ItemsSelector] BLOCKED: Adding item from card in return mode");
+        // BLOCKED: Adding item from card in return mode (logged to backend only)
         // Cannot add new items to a return invoice. Only items from the original invoice can be returned.
         evntBus.emit("show_mesage", {
           text: "لا يمكن إضافة أصناف جديدة إلى فاتورة الإرجاع. يمكن إرجاع الأصناف من الفاتورة الأصلية فقط.",
@@ -626,7 +614,7 @@ export default {
           onScan.detachFrom(document);
         }
       } catch (e) {
-        posawesome_logger.error("[ItemsSelector.js] scan_barcode detachFrom error:", e);
+        posawesome_logger.error("ItemsSelector.js", "scan_barcode detachFrom error", e);
       }
 
       onScan.attachTo(document, {
@@ -689,42 +677,34 @@ export default {
 
     // Track return invoice mode - when loading a return invoice with return_against
     evntBus.on("load_return_invoice", (data) => {
-      posawesome_logger.error("[ItemsSelector] load_return_invoice event received:", {
-        has_invoice_doc: !!data.invoice_doc,
-        return_against: data.invoice_doc?.return_against,
-        will_set_return_mode: !!(data.invoice_doc && data.invoice_doc.return_against),
-      });
+      // load_return_invoice event received (logged to backend only)
 
       // Only set is_return_invoice=true if return_against exists (prevents adding items to existing invoice returns)
       this.is_return_invoice = !!(data.invoice_doc && data.invoice_doc.return_against);
 
-      posawesome_logger.error("[ItemsSelector] is_return_invoice set to:", this.is_return_invoice);
+      // is_return_invoice set (logged to backend only)
     });
 
     // Reset when creating a new invoice (but NOT if it's a return invoice)
     evntBus.on("new_invoice", (data) => {
-      posawesome_logger.error("[ItemsSelector] new_invoice event received:", {
-        has_data: !!data,
-        is_return: data?.is_return,
-        return_against: data?.return_against,
-      });
+      // new_invoice event received (logged to backend only)
 
       // Only reset if it's NOT a return invoice
       if (!data || (!data.is_return && !data.return_against)) {
-        posawesome_logger.error("[ItemsSelector] Resetting return mode (non-return invoice)");
+        // Resetting return mode (non-return invoice) (logged to backend only)
         this.is_return_invoice = false;
       } else {
-        posawesome_logger.error("[ItemsSelector] Keeping return mode (this is a return invoice)");
+        // Keeping return mode (this is a return invoice) (logged to backend only)
         this.is_return_invoice = !!data.return_against;
       }
 
-      posawesome_logger.error("[ItemsSelector] is_return_invoice set to:", this.is_return_invoice);
+      // is_return_invoice set (logged to backend only)
     });
 
     // Clear highlighting after invoice is printed/submitted in Return Invoice mode
     evntBus.on("invoice_submitted", () => {
       if (this.is_return_invoice) {
-        posawesome_logger.error("[ItemsSelector] Invoice submitted in return mode, clearing highlighting");
+        // Invoice submitted in return mode, clearing highlighting (logged to backend only)
         this.is_return_invoice = false;
       }
     });
@@ -758,7 +738,7 @@ export default {
         onScan.detachFrom(document);
       }
     } catch (e) {
-      posawesome_logger.error("[ItemsSelector.js] beforeUnmount detachFrom error:", e);
+      posawesome_logger.error("ItemsSelector.js", "beforeUnmount detachFrom error", e);
     }
 
     // Clean up event listeners
