@@ -359,7 +359,7 @@ def make_closing_shift_from_opening(opening_shift):
                     "mode_of_payment": mode_of_payment,
                     "opening_amount": opening_amount,
                     "expected_amount": expected,  # Recalculated with correct logic
-                    "closing_amount": expected,  # Auto-fill with expected_amount (as it was before)
+                    "closing_amount": 0.0,  # User needs to fill manually
                     "difference": 0.0,  # Initially no difference
                 })
                 posawesome_logger.debug(
@@ -408,7 +408,7 @@ def make_closing_shift_from_opening(opening_shift):
                 "mode_of_payment": mode_of_payment,
                 "opening_amount": opening_amount,
                 "expected_amount": expected,  # This already has change_amount subtracted
-                "closing_amount": expected,  # Auto-fill with expected_amount (as it was before)
+                "closing_amount": 0.0,  # User needs to fill manually
                 "difference": 0.0,  # Initially no difference
             })
             posawesome_logger.debug(
