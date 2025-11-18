@@ -2,6 +2,16 @@
 # Copyright (c) 2021, Youssef Restom and contributors
 # For license information, please see license.txt
 
+"""
+POS Offer API Module
+
+FRAPPE API PATTERN:
+- All @frappe.whitelist() methods handle both dict and string parameters
+- invoice_data can be dict or JSON string - use json.loads() if needed
+- profile can be dict {name: 'Profile1'} or string 'Profile1'
+- Use isinstance() checks to normalize parameters before processing
+"""
+
 from __future__ import unicode_literals
 import frappe
 from frappe import _
