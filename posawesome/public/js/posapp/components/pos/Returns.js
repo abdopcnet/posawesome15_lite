@@ -2,6 +2,7 @@
 import { evntBus } from "../../bus";
 import format from "../../format";
 import { API_MAP } from "../../api_mapper.js";
+import { posawesome_logger } from "../../logger.js";
 
 const EVENT_NAMES = {
   OPEN_RETURNS: "open_returns",
@@ -145,7 +146,7 @@ export default {
         });
         return response.message;
       } catch (e) {
-        console.log("[Returns.js] fetchOriginalInvoice error:", e);
+        posawesome_logger.error("[Returns.js] fetchOriginalInvoice error:", e);
         this.showMessage("فشل جلب الفاتورة الأصلية", "error");
         return null;
       }
