@@ -5,7 +5,7 @@
     <h2>POS Awesome Lite</h2>
     <p><em>Point of Sale for ERPNext v15</em></p>
 
-![Version](https://img.shields.io/badge/version-16.11.2025-blue)
+![Version](https://img.shields.io/badge/version-18.11.2025-blue)
 ![License](https://img.shields.io/badge/license-GPLv3-green)
 ![ERPNext](https://img.shields.io/badge/ERPNext-v15-orange)
 ![Frappe](https://img.shields.io/badge/Frappe-v15-red)
