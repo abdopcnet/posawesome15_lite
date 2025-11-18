@@ -2,6 +2,7 @@
 import { evntBus } from "../../bus";
 import format from "../../format";
 import { API_MAP } from "../../api_mapper.js";
+import { posawesome_logger } from "../../logger.js";
 
 const EVENT_NAMES = {
   SHOW_PAYMENT: "show_payment",
@@ -108,13 +109,9 @@ export default {
         flt(this.invoice_doc.grand_total);
       const cash_mode = this.pos_profile?.posa_cash_mode_of_payment;
 
-      console.log(
-        "[Payments.js] change_amount computed - paid_total:",
-        paid_total,
-        "target_amount:",
-        target_amount,
-        "cash_mode:",
-        cash_mode
+      posawesome_logger.info(
+        "Payments.js",
+        `change_amount computed - paid_total: ${paid_total}, target_amount: ${target_amount}, cash_mode: ${cash_mode}`
       );
 
       // Only calculate change_amount if paid_total > grand_total
@@ -149,29 +146,15 @@ export default {
               paid_total - target_amount,
               this.currency_precision
             );
-            console.log(
-              "[Payments.js] change_amount calculated:",
-              change,
-              "cash_payment:",
-              cash_payment?.mode_of_payment,
-              "cash_amount:",
-              cash_payment?.amount,
-              "other_totals:",
-              other_totals,
-              "target_amount:",
-              target_amount
+            posawesome_logger.info(
+              "Payments.js",
+              `change_amount calculated: ${change}, cash_payment: ${cash_payment?.mode_of_payment}, cash_amount: ${cash_payment?.amount}, other_totals: ${other_totals}, target_amount: ${target_amount}`
             );
             return change;
           } else {
-            console.log(
-              "[Payments.js] change_amount blocked - cash_payment:",
-              cash_payment,
-              "cash_amount:",
-              cash_payment?.amount,
-              "other_totals:",
-              other_totals,
-              "target_amount:",
-              target_amount
+            posawesome_logger.info(
+              "Payments.js",
+              `change_amount blocked - cash_payment: ${cash_payment?.mode_of_payment}, cash_amount: ${cash_payment?.amount}, other_totals: ${other_totals}, target_amount: ${target_amount}`
             );
             return 0;
           }
@@ -182,17 +165,18 @@ export default {
             paid_total - target_amount,
             this.currency_precision
           );
-          console.log(
-            "[Payments.js] change_amount calculated (no cash_mode):",
-            change
+          posawesome_logger.info(
+            "Payments.js",
+            `change_amount calculated (no cash_mode): ${change}`
           );
           return change;
         }
       }
 
       // No change amount (paid_total <= grand_total)
-      console.log(
-        "[Payments.js] change_amount = 0 (paid_total <= target_amount)"
+      posawesome_logger.info(
+        "Payments.js",
+        "change_amount = 0 (paid_total <= target_amount)"
       );
       return 0;
     },
@@ -291,7 +275,7 @@ export default {
       try {
         await this.refreshInvoiceDoc();
       } catch (error) {
-        console.log("[Payments.js] submit error:", error);
+        posawesome_logger.error("Payments.js", "submit error", error);
       }
 
       if (this.invoice_doc?.docstatus === 1) {
@@ -535,8 +519,9 @@ export default {
                 this.submit_invoice(print, autoMode, true);
               })
               .catch((err) => {
-                console.log(
-                  "[Payments.js] refreshInvoiceDoc catch error:",
+                posawesome_logger.error(
+                  "Payments.js",
+                  "refreshInvoiceDoc error",
                   err
                 );
                 this.showMessage(
@@ -683,31 +668,21 @@ export default {
             this.$forceUpdate();
           });
 
-          console.log(
-            "[Payments.js] set_full_amount: idx:",
-            idx,
-            "mode_of_payment:",
-            payment.mode_of_payment,
-            "amount:",
-            amount
+          posawesome_logger.info(
+            "Payments.js",
+            `set_full_amount: idx: ${idx}, mode_of_payment: ${payment.mode_of_payment}, amount: ${amount}`
           );
 
           // Log payment summary
-          console.log(
-            "[Payments.js] Payment Summary - paid_amount (إجمالي المدفوعات):",
-            this.paid_amount,
-            "outstanding_amount (المبلغ المتأخر):",
-            this.outstanding_amount,
-            "change_amount (المتبقي للعميل):",
-            this.change_amount,
-            "إجمالي الفاتورة:",
-            invoice_total
+          posawesome_logger.info(
+            "Payments.js",
+            `Payment Summary - paid_amount (إجمالي المدفوعات): ${this.paid_amount}, outstanding_amount (المبلغ المتأخر): ${this.outstanding_amount}, change_amount (المتبقي للعميل): ${this.change_amount}, إجمالي الفاتورة: ${invoice_total}`
           );
 
           delete this.set_full_amount_timeouts[idx];
         }, 150); // 150ms debounce per payment
       } catch (error) {
-        console.log("[Payments.js] set_full_amount error:", error);
+        posawesome_logger.error("Payments.js", "set_full_amount error", error);
         if (this.set_full_amount_timeouts[idx]) {
           delete this.set_full_amount_timeouts[idx];
         }
@@ -766,15 +741,9 @@ export default {
           JSON.parse(JSON.stringify(this.invoice_doc.payments))
         );
 
-        console.log(
-          "[Payments.js] set_rest_amount: idx:",
-          idx,
-          "mode_of_payment:",
-          payment.mode_of_payment,
-          "remaining:",
-          remaining,
-          "amount:",
-          amount
+        posawesome_logger.info(
+          "Payments.js",
+          `set_rest_amount: idx: ${idx}, mode_of_payment: ${payment.mode_of_payment}, remaining: ${remaining}, amount: ${amount}`
         );
 
         // Force update to recalculate computed properties
@@ -783,18 +752,12 @@ export default {
         });
 
         // Log payment summary
-        console.log(
-          "[Payments.js] Payment Summary - paid_amount (إجمالي المدفوعات):",
-          this.paid_amount,
-          "outstanding_amount (المبلغ المتأخر):",
-          this.outstanding_amount,
-          "change_amount (المتبقي للعميل):",
-          this.change_amount,
-          "إجمالي الفاتورة:",
-          invoice_total
+        posawesome_logger.info(
+          "Payments.js",
+          `Payment Summary - paid_amount (إجمالي المدفوعات): ${this.paid_amount}, outstanding_amount (المبلغ المتأخر): ${this.outstanding_amount}, change_amount (المتبقي للعميل): ${this.change_amount}, إجمالي الفاتورة: ${invoice_total}`
         );
       } catch (error) {
-        console.log("[Payments.js] set_rest_amount error:", error);
+        posawesome_logger.error("Payments.js", "set_rest_amount error", error);
       }
     },
 
@@ -859,13 +822,9 @@ export default {
       const cash_mode = this.pos_profile?.posa_cash_mode_of_payment;
 
       // Log payment change
-      console.log(
-        "[Payments.js] Payment Input Changed - idx:",
-        payment.idx,
-        "mode_of_payment:",
-        payment.mode_of_payment,
-        "amount:",
-        payment_amount
+      posawesome_logger.info(
+        "Payments.js",
+        `Payment Input Changed - idx: ${payment.idx}, mode_of_payment: ${payment.mode_of_payment}, amount: ${payment_amount}`
       );
 
       // Calculate change_amount manually to ensure it's calculated
@@ -879,17 +838,9 @@ export default {
       });
 
       // Log payment summary
-      console.log(
-        "[Payments.js] Payment Summary - paid_amount (إجمالي المدفوعات):",
-        this.paid_amount,
-        "outstanding_amount (المبلغ المتأخر):",
-        this.outstanding_amount,
-        "change_amount (المتبقي للعميل):",
-        this.change_amount,
-        "change_amount (manual):",
-        change_amt,
-        "إجمالي الفاتورة:",
-        target_amount
+      posawesome_logger.info(
+        "Payments.js",
+        `Payment Summary - paid_amount (إجمالي المدفوعات): ${this.paid_amount}, outstanding_amount (المبلغ المتأخر): ${this.outstanding_amount}, change_amount (المتبقي للعميل): ${this.change_amount}, change_amount (manual): ${change_amt}, إجمالي الفاتورة: ${target_amount}`
       );
 
       // For non-cash payments, check if amount exceeds invoice total
@@ -1027,11 +978,9 @@ export default {
 
       evntBus.on(EVENT_NAMES.SEND_INVOICE_DOC_PAYMENT, (invoice_doc) => {
         // DEBUG: Log received invoice totals
-        console.log(
-          "[Payments.js] SEND_INVOICE_DOC_PAYMENT: rounded_total:",
-          invoice_doc.rounded_total,
-          "grand_total:",
-          invoice_doc.grand_total
+        posawesome_logger.info(
+          "Payments.js",
+          `SEND_INVOICE_DOC_PAYMENT: rounded_total: ${invoice_doc.rounded_total}, grand_total: ${invoice_doc.grand_total}`
         );
 
         this.invoice_doc = invoice_doc;
