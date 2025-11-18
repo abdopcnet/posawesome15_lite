@@ -8,7 +8,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt
 from datetime import datetime, time as dtime, timedelta
-from posawesome import info_logger, error_logger
+from posawesome import posawesome_logger
 
 
 class POSClosingShift(Document):
@@ -119,7 +119,7 @@ class POSClosingShift(Document):
 
     def on_submit(self):
         try:
-            backend_logger.info(
+            posawesome_logger.info(
                 f'POS Closing Shift {self.name} submitted by {self.user}')
             opening_entry = frappe.get_doc(
                 "POS Opening Shift", self.pos_opening_shift)
@@ -127,16 +127,16 @@ class POSClosingShift(Document):
             opening_entry.set_status()
             self.delete_draft_invoices()
             opening_entry.save()
-            backend_logger.info(
+            posawesome_logger.info(
                 f'POS Closing Shift {self.name} submitted successfully')
         except Exception as e:
-            error_logger.error(
+            posawesome_logger.error(
                 f'Error submitting POS Closing Shift {self.name}: {str(e)}', exc_info=True)
             raise
 
     def on_cancel(self):
         try:
-            backend_logger.info(
+            posawesome_logger.info(
                 f'POS Closing Shift {self.name} cancelled by {frappe.session.user}')
             if frappe.db.exists("POS Opening Shift", self.pos_opening_shift):
                 opening_entry = frappe.get_doc(
@@ -145,10 +145,10 @@ class POSClosingShift(Document):
                     opening_entry.pos_closing_shift = ""
                     opening_entry.set_status()
                 opening_entry.save()
-            backend_logger.info(
+            posawesome_logger.info(
                 f'POS Closing Shift {self.name} cancelled successfully')
         except Exception as e:
-            error_logger.error(
+            posawesome_logger.error(
                 f'Error cancelling POS Closing Shift {self.name}: {str(e)}', exc_info=True)
             raise
 
@@ -166,7 +166,7 @@ class POSClosingShift(Document):
         if not frappe.get_value("POS Profile", self.pos_profile, "posa_auto_delete_draft_invoices"):
             return
 
-        backend_logger.info(
+        posawesome_logger.info(
             f'Deleting draft invoices for POS Closing Shift {self.name}')
 
         # Find draft invoices for this shift
@@ -236,7 +236,7 @@ def get_current_cash_total(pos_profile=None, user=None):
         return {"total": cash_total}
 
     except Exception as e:
-        error_logger.error(
+        posawesome_logger.error(
             f"[pos_closing_shift.py] get_current_cash_total: {str(e)}", exc_info=True)
         return {"total": 0.0}
 
@@ -292,7 +292,7 @@ def get_current_non_cash_total(pos_profile=None, user=None):
         return {"total": non_cash_total}
 
     except Exception as e:
-        error_logger.error(
+        posawesome_logger.error(
             f"[pos_closing_shift.py] get_current_non_cash_total: {str(e)}", exc_info=True)
         return {"total": 0.0}
 
@@ -353,7 +353,7 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
         return payments
 
     except Exception as e:
-        error_logger.error(f"Error in _calculate_payment_totals: {str(e)}")
+        posawesome_logger.error(f"Error in _calculate_payment_totals: {str(e)}")
         return {}
 
 
@@ -437,6 +437,6 @@ def _get_payments_entries_helper(pos_opening_shift):
 
         return payment_entries
     except Exception as e:
-        error_logger.error(
+        posawesome_logger.error(
             f"Error in _get_payments_entries_helper: {str(e)}")
         return []
