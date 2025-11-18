@@ -69,8 +69,7 @@ export default {
 
       total += this.flt(this.redeemed_customer_credit || 0);
 
-      if (!this.is_cashback) total = 0;
-
+      // ✅ تم إزالة سويتش is_cashback - المرتجع دائماً نقدي
       return this.flt(total, this.currency_precision);
     },
 
@@ -101,7 +100,7 @@ export default {
         });
       }
       paid_total += this.flt(this.redeemed_customer_credit || 0);
-      if (!this.is_cashback) paid_total = 0;
+      // ✅ تم إزالة سويتش is_cashback - المرتجع دائماً نقدي
       paid_total = this.flt(paid_total, this.currency_precision);
 
       const target_amount =
@@ -455,7 +454,7 @@ export default {
       const data = {
         redeemed_customer_credit: this.redeemed_customer_credit,
         customer_credit_dict: this.customer_credit_dict,
-        is_cashback: this.is_cashback,
+        // ✅ تم إزالة is_cashback - الـ backend لا يستخدمه ولا حاجة لإرساله
       };
 
       if (autoMode) {
@@ -617,7 +616,7 @@ export default {
 
         // Debounce to prevent multiple rapid calls for the same payment
         this.set_full_amount_timeouts[idx] = setTimeout(() => {
-          const isReturn = !!this.invoice_doc.is_return;
+          const isQuickReturn = !!this.quick_return;
 
           const payment = this.invoice_doc.payments.find((p) => p.idx == idx);
           if (!payment) {
@@ -641,10 +640,11 @@ export default {
             flt(this.invoice_doc.grand_total);
 
           // Fill with full invoice amount when clicking the payment method button
+          // ✅ في حالة المرتجع السريع (quick_return)، نفس منطق sales_mode ولكن بالقيم السالبة
           const amount = this.flt(invoice_total, this.currency_precision);
-          const target_amount = isReturn ? -Math.abs(amount) : amount;
+          const target_amount = isQuickReturn ? -Math.abs(amount) : amount;
 
-          payment.amount = target_amount;
+          payment.amount = this.flt(target_amount, this.currency_precision);
           if (payment.base_amount !== undefined) {
             payment.base_amount = payment.amount;
           }
@@ -666,7 +666,7 @@ export default {
 
           console.info(
             "Payments.js",
-            `set_full_amount: idx: ${idx}, mode_of_payment: ${payment.mode_of_payment}, amount: ${amount}`
+            `set_full_amount: idx: ${idx}, mode_of_payment: ${payment.mode_of_payment}, amount: ${target_amount}, quick_return: ${isQuickReturn}`
           );
 
           // Log payment summary
@@ -687,7 +687,7 @@ export default {
 
     set_rest_amount(idx) {
       try {
-        const isReturn = !!this.invoice_doc.is_return;
+        const isQuickReturn = !!this.quick_return;
         const invoice_total =
           flt(this.invoice_doc.rounded_total) ||
           flt(this.invoice_doc.grand_total);
@@ -708,7 +708,7 @@ export default {
           this.currency_precision
         );
 
-        // Calculate remaining amount
+        // Calculate remaining amount (works for both positive and negative values)
         const remaining = this.flt(
           invoice_total - other_totals,
           this.currency_precision
@@ -721,16 +721,39 @@ export default {
         // For non-cash payments, limit to remaining amount (cannot exceed invoice total)
         if (cash_mode && payment.mode_of_payment !== cash_mode) {
           // Non-cash: fill with remaining amount, but not more than invoice total
-          amount = remaining > 0 ? remaining : 0;
+          // ✅ في حالة المرتجع السريع (quick_return)، نستخدم القيمة المطلقة للمقارنة
+          if (isQuickReturn) {
+            // Quick return mode: use absolute values for comparison
+            const abs_remaining = Math.abs(remaining);
+            const abs_target = Math.abs(invoice_total);
+            amount =
+              abs_remaining <= abs_target
+                ? remaining
+                : -Math.abs(invoice_total);
+          } else {
+            // Normal mode: compare directly
+            amount = remaining > 0 ? remaining : 0;
+          }
         } else {
           // Cash payment: can fill with remaining amount (can exceed later if needed)
           amount = remaining;
         }
 
-        payment.amount = isReturn ? -Math.abs(amount) : amount;
+        // ✅ في حالة المرتجع السريع (quick_return)، التأكد من أن القيمة سالبة
+        // إذا كانت القيمة موجبة، نحولها إلى سالبة (مثل sales_mode ولكن بالسالب)
+        if (isQuickReturn && amount > 0) {
+          amount = -Math.abs(amount);
+        }
+
+        payment.amount = this.flt(amount, this.currency_precision);
         if (payment.base_amount !== undefined) {
           payment.base_amount = payment.amount;
         }
+
+        // Trigger validation after setting amount
+        this.$nextTick(() => {
+          this.validate_payment_amount(payment);
+        });
 
         evntBus.emit(
           EVENT_NAMES.PAYMENTS_UPDATED,
@@ -739,7 +762,7 @@ export default {
 
         console.info(
           "Payments.js",
-          `set_rest_amount: idx: ${idx}, mode_of_payment: ${payment.mode_of_payment}, remaining: ${remaining}, amount: ${amount}`
+          `set_rest_amount: idx: ${idx}, mode_of_payment: ${payment.mode_of_payment}, remaining: ${remaining}, amount: ${amount}, quick_return: ${isQuickReturn}`
         );
 
         // Force update to recalculate computed properties
@@ -809,6 +832,52 @@ export default {
       this.change_amount_rules = [];
     },
 
+    handlePaymentAmountChange(payment, $event) {
+      // Handle payment amount change - make negative automatically for quick_return mode
+      let value = 0;
+      try {
+        let _value = parseFloat($event.target.value);
+        if (!isNaN(_value)) {
+          value = _value;
+        }
+
+        // ✅ في حالة المرتجع السريع (quick_return)، جعل القيمة سالبة تلقائياً
+        // إذا كانت القيمة المدخلة موجبة، نحولها إلى سالبة
+        if (this.quick_return && value > 0) {
+          value = -Math.abs(value);
+          console.log(
+            `[Payments.js] Quick return mode: converted ${_value} to ${value}`
+          );
+        }
+        // إذا كانت القيمة المدخلة سالبة بالفعل، نتركها كما هي
+        // إذا كانت القيمة صفر، نتركها كما هي
+
+        // Set the payment amount (use flt directly, don't format as currency string)
+        payment.amount = this.flt(value);
+        if (payment.base_amount !== undefined) {
+          payment.base_amount = payment.amount;
+        }
+
+        console.log(
+          `[Payments.js] Payment amount changed: idx=${payment.idx}, mode=${payment.mode_of_payment}, amount=${payment.amount}, quick_return=${this.quick_return}`
+        );
+
+        // Emit payment update event
+        evntBus.emit(
+          EVENT_NAMES.PAYMENTS_UPDATED,
+          JSON.parse(JSON.stringify(this.invoice_doc.payments))
+        );
+
+        // Force update to recalculate computed properties
+        this.$nextTick(() => {
+          this.$forceUpdate();
+        });
+      } catch (e) {
+        console.error("[Payments.js] handlePaymentAmountChange error:", e);
+        payment.amount = 0;
+      }
+    },
+
     validate_payment_amount(payment) {
       // Check if payment amount exceeds invoice total for non-cash payments
       const target_amount =
@@ -816,11 +885,12 @@ export default {
         flt(this.invoice_doc.grand_total);
       const payment_amount = this.flt(payment.amount || 0);
       const cash_mode = this.pos_profile?.posa_cash_mode_of_payment;
+      const isQuickReturn = !!this.quick_return;
 
       // Log payment change
       console.info(
         "Payments.js",
-        `Payment Input Changed - idx: ${payment.idx}, mode_of_payment: ${payment.mode_of_payment}, amount: ${payment_amount}`
+        `Payment Input Changed - idx: ${payment.idx}, mode_of_payment: ${payment.mode_of_payment}, amount: ${payment_amount}, quick_return: ${isQuickReturn}`
       );
 
       // Calculate change_amount manually to ensure it's calculated
@@ -842,23 +912,51 @@ export default {
       // For non-cash payments, check if amount exceeds invoice total
       if (cash_mode && payment.mode_of_payment !== cash_mode) {
         // Non-cash payment: cannot exceed invoice total
-        if (payment_amount > target_amount) {
-          // Reset to invoice total
-          payment.amount = target_amount;
-          if (payment.base_amount !== undefined) {
-            payment.base_amount = payment.amount;
+        // ✅ في حالة المرتجع السريع (quick_return)، نستخدم القيمة المطلقة للمقارنة
+        if (isQuickReturn) {
+          // Quick return mode: compare absolute values
+          const abs_payment = Math.abs(payment_amount);
+          const abs_target = Math.abs(target_amount);
+
+          if (abs_payment > abs_target) {
+            // Reset to invoice total (negative)
+            const max_amount = -Math.abs(target_amount);
+            payment.amount = max_amount;
+            if (payment.base_amount !== undefined) {
+              payment.base_amount = payment.amount;
+            }
+            this.showMessage(
+              `لا يمكن إدخال مبلغ أعلى من إجمالي الفاتورة (${this.formatCurrency(
+                target_amount
+              )})`,
+              "error"
+            );
+            evntBus.emit(
+              EVENT_NAMES.PAYMENTS_UPDATED,
+              JSON.parse(JSON.stringify(this.invoice_doc.payments))
+            );
+            return false;
           }
-          this.showMessage(
-            `لا يمكن إدخال مبلغ أعلى من إجمالي الفاتورة (${this.formatCurrency(
-              target_amount
-            )})`,
-            "error"
-          );
-          evntBus.emit(
-            EVENT_NAMES.PAYMENTS_UPDATED,
-            JSON.parse(JSON.stringify(this.invoice_doc.payments))
-          );
-          return false;
+        } else {
+          // Normal mode: compare directly
+          if (payment_amount > target_amount) {
+            // Reset to invoice total
+            payment.amount = target_amount;
+            if (payment.base_amount !== undefined) {
+              payment.base_amount = payment.amount;
+            }
+            this.showMessage(
+              `لا يمكن إدخال مبلغ أعلى من إجمالي الفاتورة (${this.formatCurrency(
+                target_amount
+              )})`,
+              "error"
+            );
+            evntBus.emit(
+              EVENT_NAMES.PAYMENTS_UPDATED,
+              JSON.parse(JSON.stringify(this.invoice_doc.payments))
+            );
+            return false;
+          }
         }
       }
 
@@ -1005,6 +1103,14 @@ export default {
 
         if (invoice_doc.is_return) {
           this.is_return = true;
+          // ✅ في حالة المرتجع (سواء quick return أو عادي)، تفعيل quick_return لتمكين الإدخال
+          // الفرق: في quick return لا يوجد return_against، في المرتجع العادي يوجد return_against
+          // لكن في كلا الحالتين نريد تمكين الإدخال والقيم السالبة
+          this.quick_return = true;
+          console.log(
+            "[Payments.js] Return invoice loaded, quick_return enabled for input"
+          );
+
           const total = invoice_doc.rounded_total || invoice_doc.grand_total;
 
           invoice_doc.payments.forEach((payment) => {
@@ -1012,12 +1118,16 @@ export default {
             if (payment.base_amount !== undefined) payment.base_amount = 0;
           });
 
+          // ✅ في حالة المرتجع، تعبئة المبلغ الافتراضي بقيمة سالبة (مثل sales_mode)
           if (default_payment) {
             const neg = -Math.abs(total);
             default_payment.amount = neg;
             if (default_payment.base_amount !== undefined)
               default_payment.base_amount = neg;
           }
+        } else {
+          // ✅ إعادة تعيين quick_return إذا لم تكن فاتورة مرتجع
+          this.quick_return = false;
         }
 
         this.loyalty_amount = 0;
