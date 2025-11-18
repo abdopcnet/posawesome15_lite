@@ -234,13 +234,18 @@ export default {
             r.message.total !== undefined &&
             r.message.total !== null
           ) {
-            this.totalCash = parseFloat(r.message.total) || 0;
+            const cashTotal = parseFloat(r.message.total) || 0;
+            this.totalCash = cashTotal;
+            console.log(`[Navbar.js] Cash total received: ${cashTotal}`);
           } else {
+            console.warn(
+              "[Navbar.js] Cash total is null/undefined, setting to 0"
+            );
             this.totalCash = 0;
           }
         },
         error: (err) => {
-          console.error("Navbar.js", "Error fetching cash total:", err);
+          console.error("[Navbar.js] Error fetching cash total:", err);
           this.totalCash = 0;
         },
       });
@@ -258,13 +263,18 @@ export default {
             r.message.total !== undefined &&
             r.message.total !== null
           ) {
-            this.totalNonCash = parseFloat(r.message.total) || 0;
+            const nonCashTotal = parseFloat(r.message.total) || 0;
+            this.totalNonCash = nonCashTotal;
+            console.log(`[Navbar.js] Non-cash total received: ${nonCashTotal}`);
           } else {
+            console.warn(
+              "[Navbar.js] Non-cash total is null/undefined, setting to 0"
+            );
             this.totalNonCash = 0;
           }
         },
         error: (err) => {
-          console.error("Navbar.js", "Error fetching non-cash total:", err);
+          console.error("[Navbar.js] Error fetching non-cash total:", err);
           this.totalNonCash = 0;
         },
       });
