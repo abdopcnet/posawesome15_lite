@@ -15,6 +15,67 @@ def execute(filters=None):
     return columns, data
 
 
+@frappe.whitelist()
+def get_pos_profiles_for_user(doctype, txt, searchfield, start, page_len, filters):
+    """Get POS Profiles that the user has permission to access."""
+    user = frappe.session.user
+
+    # Administrator can see all
+    if user == "Administrator" or "System Manager" in frappe.get_roles(user):
+        return frappe.db.sql("""
+            SELECT name
+            FROM `tabPOS Profile`
+            WHERE disabled = 0
+            AND (name LIKE %(txt)s OR company LIKE %(txt)s)
+            ORDER BY name
+            LIMIT %(start)s, %(page_len)s
+        """, {
+            'txt': "%%%s%%" % txt,
+            'start': start,
+            'page_len': page_len
+        })
+
+    # Check if user has specific permissions
+    user_permissions = frappe.db.sql("""
+        SELECT for_value
+        FROM `tabUser Permission`
+        WHERE user = %(user)s
+        AND allow = 'POS Profile'
+        AND (applicable_for IS NULL OR applicable_for = '')
+    """, {'user': user}, as_dict=1)
+
+    if user_permissions:
+        allowed_profiles = [up.for_value for up in user_permissions]
+        return frappe.db.sql("""
+            SELECT name
+            FROM `tabPOS Profile`
+            WHERE disabled = 0
+            AND name IN %(allowed_profiles)s
+            AND (name LIKE %(txt)s OR company LIKE %(txt)s)
+            ORDER BY name
+            LIMIT %(start)s, %(page_len)s
+        """, {
+            'allowed_profiles': allowed_profiles,
+            'txt': "%%%s%%" % txt,
+            'start': start,
+            'page_len': page_len
+        })
+
+    # If no specific permissions, show all
+    return frappe.db.sql("""
+        SELECT name
+        FROM `tabPOS Profile`
+        WHERE disabled = 0
+        AND (name LIKE %(txt)s OR company LIKE %(txt)s)
+        ORDER BY name
+        LIMIT %(start)s, %(page_len)s
+    """, {
+        'txt': "%%%s%%" % txt,
+        'start': start,
+        'page_len': page_len
+    })
+
+
 def sanitize_fieldname(name):
     """Convert payment mode name to safe SQL field name."""
     safe_name = re.sub(r'[^\w\s]', '', name)
