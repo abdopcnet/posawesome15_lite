@@ -26,6 +26,11 @@ frappe.query_reports["POS_invoice_Report"] = {
       label: __("الفرع"),
       fieldtype: "Link",
       options: "POS Profile",
+      get_query: function () {
+        return {
+          query: "posawesome.posawesome.report.pos_invoice_report.pos_invoice_report.get_pos_profiles_for_user",
+        };
+      },
     },
     {
       fieldname: "posa_pos_opening_shift",
