@@ -2,6 +2,15 @@
 # Copyright (c) 2024, Youssef Restom and contributors
 # For license information, please see license.txt
 
+"""
+POS Opening Shift API Module
+
+FRAPPE API PATTERN:
+- All @frappe.whitelist() methods handle both dict and string parameters
+- pos_profile can be dict {name: 'Profile1'} or string 'Profile1'
+- Use isinstance() checks to normalize parameters before processing
+"""
+
 from __future__ import unicode_literals
 import frappe
 from frappe import _
@@ -19,6 +28,10 @@ def check_opening_time_allowed(pos_profile):
     try:
         if not pos_profile:
             return {"allowed": True, "message": "No profile specified"}
+
+        # FRAPPE STANDARD: Handle string or dict
+        if isinstance(pos_profile, dict):
+            pos_profile = pos_profile.get('name')
 
         profile = frappe.get_doc("POS Profile", pos_profile)
 
@@ -81,7 +94,14 @@ def create_opening_voucher(pos_profile, company, balance_details):
     """
     try:
         import json
-        balance_details = json.loads(balance_details)
+
+        # FRAPPE STANDARD: Parse JSON parameters
+        if isinstance(balance_details, str):
+            balance_details = json.loads(balance_details)
+
+        # FRAPPE STANDARD: Handle dict or string for pos_profile
+        if isinstance(pos_profile, dict):
+            pos_profile = pos_profile.get('name')
 
         user = frappe.session.user
 
@@ -227,7 +247,8 @@ def get_current_shift_name():
 
                     # Get payments child table using central function
                     try:
-                        pos_profile_data["payments"] = get_payment_methods(pos_profile_name=pos_profile_name)
+                        pos_profile_data["payments"] = get_payment_methods(
+                            pos_profile_name=pos_profile_name)
                     except Exception as payments_error:
                         error_logger.warning(
                             f"[pos_opening_shift.py] Could not load payments for POS Profile {pos_profile_name}: {str(payments_error)}")
