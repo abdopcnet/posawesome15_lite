@@ -2,6 +2,15 @@
 # Copyright (c) 2024, Youssef Restom and contributors
 # For license information, please see license.txt
 
+"""
+POS Profile API Module
+
+FRAPPE API PATTERN:
+- All @frappe.whitelist() methods handle both dict and string parameters
+- pos_profile can be dict {name: 'Profile1'} or string 'Profile1'
+- Use isinstance() checks to normalize parameters before processing
+"""
+
 from __future__ import unicode_literals
 import frappe
 from posawesome import info_logger, error_logger
@@ -15,6 +24,10 @@ def get_default_payment_from_pos_profile(pos_profile, company):
     try:
         if not pos_profile:
             return None
+
+        # FRAPPE STANDARD: Handle dict or string for pos_profile
+        if isinstance(pos_profile, dict):
+            pos_profile = pos_profile.get('name')
 
         # Get POS Profile document
         pos_profile_doc = frappe.get_doc("POS Profile", pos_profile)
@@ -44,7 +57,8 @@ def get_default_payment_from_pos_profile(pos_profile, company):
         return None
 
     except Exception as e:
-        error_logger.error(f"[pos_profile.py] get_default_payment_from_pos_profile: {str(e)}")
+        error_logger.error(
+            f"[pos_profile.py] get_default_payment_from_pos_profile: {str(e)}")
         return None
 
 
@@ -71,7 +85,8 @@ def get_opening_dialog_data():
             pos_profiles_list.append(i.name)
 
         # Use central payment methods function
-        data["payments_method"] = get_payment_methods(pos_profile_list=pos_profiles_list)
+        data["payments_method"] = get_payment_methods(
+            pos_profile_list=pos_profiles_list)
 
         # Set currency from pos profile
         for mode in data["payments_method"]:
@@ -82,7 +97,8 @@ def get_opening_dialog_data():
         return data
 
     except Exception as e:
-        error_logger.error(f"[pos_profile.py] get_opening_dialog_data: {str(e)}")
+        error_logger.error(
+            f"[pos_profile.py] get_opening_dialog_data: {str(e)}")
         return {}
 
 
@@ -90,19 +106,20 @@ def get_payment_methods(pos_profile_name=None, pos_profile_list=None):
     """
     CENTRAL FUNCTION - Get payment methods for POS Profile(s)
     This is the single source of truth for payment methods queries
-    
+
     Args:
         pos_profile_name (str): Single POS Profile name
         pos_profile_list (list): List of POS Profile names
-        
+
     Returns:
         list: Payment methods with fields: mode_of_payment, default, allow_in_returns, parent
     """
     try:
         if pos_profile_name:
             # Single profile - used by pos_opening_shift
-            info_logger.info(f"[pos_profile.py] get_payment_methods: Fetching for single profile: {pos_profile_name}")
-            
+            info_logger.info(
+                f"[pos_profile.py] get_payment_methods: Fetching for single profile: {pos_profile_name}")
+
             payments = frappe.db.sql("""
                 SELECT 
                     mode_of_payment,
@@ -114,29 +131,34 @@ def get_payment_methods(pos_profile_name=None, pos_profile_list=None):
                 AND parenttype = 'POS Profile'
                 ORDER BY idx
             """, (pos_profile_name,), as_dict=True)
-            
-            info_logger.info(f"[pos_profile.py] get_payment_methods: Found {len(payments)} payment methods")
+
+            info_logger.info(
+                f"[pos_profile.py] get_payment_methods: Found {len(payments)} payment methods")
             return payments
-        
+
         elif pos_profile_list:
             # Multiple profiles - used by get_opening_dialog_data
-            info_logger.info(f"[pos_profile.py] get_payment_methods: Fetching for {len(pos_profile_list)} profiles")
-            
+            info_logger.info(
+                f"[pos_profile.py] get_payment_methods: Fetching for {len(pos_profile_list)} profiles")
+
             payments = frappe.get_list(
                 "POS Payment Method",
                 filters={"parent": ["in", pos_profile_list]},
-                fields=["default", "mode_of_payment", "allow_in_returns", "parent"],
+                fields=["default", "mode_of_payment",
+                        "allow_in_returns", "parent"],
                 limit_page_length=0,
                 order_by="parent, idx",
                 ignore_permissions=True,
             )
-            
-            info_logger.info(f"[pos_profile.py] get_payment_methods: Found {len(payments)} payment methods")
+
+            info_logger.info(
+                f"[pos_profile.py] get_payment_methods: Found {len(payments)} payment methods")
             return payments
-        
-        error_logger.warning("[pos_profile.py] get_payment_methods: No profile name or list provided")
+
+        error_logger.warning(
+            "[pos_profile.py] get_payment_methods: No profile name or list provided")
         return []
-    
+
     except Exception as e:
         error_logger.error(f"[pos_profile.py] get_payment_methods: {str(e)}")
         return []
@@ -180,7 +202,8 @@ def get_profile_warehouses(profile_name):
         return result
 
     except Exception as e:
-        error_logger.error(f"[pos_profile.py] get_profile_warehouses: {str(e)}")
+        error_logger.error(
+            f"[pos_profile.py] get_profile_warehouses: {str(e)}")
         return []
 
 
