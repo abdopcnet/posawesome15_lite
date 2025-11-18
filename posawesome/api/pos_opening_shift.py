@@ -15,7 +15,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 from datetime import datetime, timedelta
-from posawesome import info_logger, error_logger
+from posawesome import posawesome_logger
 from posawesome.api.pos_profile import get_payment_methods
 
 
@@ -82,7 +82,7 @@ def check_opening_time_allowed(pos_profile):
             }
 
     except Exception as e:
-        error_logger.error(
+        posawesome_logger.error(
             f"[pos_opening_shift.py] check_opening_time_allowed: {str(e)}")
         return {"allowed": False, "message": f"Error: {str(e)}"}
 
@@ -144,13 +144,13 @@ def create_opening_voucher(pos_profile, company, balance_details):
         opening_voucher.insert(ignore_permissions=True)
         opening_voucher.submit()
 
-        info_logger.info(
+        posawesome_logger.info(
             f"[pos_opening_shift.py] Created opening shift: {opening_voucher.name} for user {user}")
 
         return opening_voucher
 
     except Exception as e:
-        error_logger.error(
+        posawesome_logger.error(
             f"[pos_opening_shift.py] create_opening_voucher: {str(e)}")
         frappe.throw(_("Error creating opening voucher: {0}").format(str(e)))
 
@@ -260,7 +260,7 @@ def get_current_shift_name():
                         pos_profile_data["item_groups"] = [
                             ig.item_group for ig in item_groups_result]
                     except Exception as item_groups_error:
-                        error_logger.warning(
+                        posawesome_logger.warning(
                             f"[pos_opening_shift.py] Could not load item_groups for POS Profile {pos_profile_name}: {str(item_groups_error)}")
                         pos_profile_data["item_groups"] = []
 
@@ -269,19 +269,19 @@ def get_current_shift_name():
                         pos_profile_data["payments"] = get_payment_methods(
                             pos_profile_name=pos_profile_name)
                     except Exception as payments_error:
-                        error_logger.warning(
+                        posawesome_logger.warning(
                             f"[pos_opening_shift.py] Could not load payments for POS Profile {pos_profile_name}: {str(payments_error)}")
                         pos_profile_data["payments"] = []
                 else:
                     pos_profile_data = None
-                    error_logger.error(
+                    posawesome_logger.error(
                         f"[pos_opening_shift.py] get_current_shift_name: POS Profile {pos_profile_name} not found")
 
                 row["pos_profile_data"] = pos_profile_data
 
                 # Log the result for debugging - including all important fields
                 if pos_profile_data:
-                    info_logger.info(
+                    posawesome_logger.info(
                         f"[pos_opening_shift.py] get_current_shift_name: Loaded POS Profile '{pos_profile_name}' with {len(pos_profile_data.keys())} fields. "
                         f"Tax: apply={pos_profile_data.get('posa_apply_tax')}, type={pos_profile_data.get('posa_tax_type')}, percent={pos_profile_data.get('posa_tax_percent')}. "
                         f"Discount: item_edit={pos_profile_data.get('posa_allow_user_to_edit_item_discount')}, invoice_edit={pos_profile_data.get('posa_allow_user_to_edit_additional_discount')}, "
@@ -290,10 +290,10 @@ def get_current_shift_name():
                         f"Settings: allow_return={pos_profile_data.get('posa_allow_return')}, fetch_zero_qty={pos_profile_data.get('posa_fetch_zero_qty')}, "
                         f"payments={len(pos_profile_data.get('payments', []))}, item_groups={len(pos_profile_data.get('item_groups', []))}")
                 else:
-                    error_logger.error(
+                    posawesome_logger.error(
                         f"[pos_opening_shift.py] get_current_shift_name: pos_profile_data is None for '{pos_profile_name}'")
             except Exception as e:
-                error_logger.error(
+                posawesome_logger.error(
                     f"[pos_opening_shift.py] get_current_shift_name: Error loading POS Profile {pos_profile_name}: {str(e)}")
                 row["pos_profile_data"] = None
 
@@ -304,7 +304,7 @@ def get_current_shift_name():
         return result
 
     except Exception as e:
-        error_logger.error(
+        posawesome_logger.error(
             f"[pos_opening_shift.py] get_current_shift_name: {str(e)}")
         return {
             "success": False,
@@ -346,7 +346,7 @@ def get_all_open_shifts():
         }
 
     except Exception as e:
-        error_logger.error(
+        posawesome_logger.error(
             f"[pos_opening_shift.py] get_all_open_shifts: {str(e)}")
         return {
             "success": False,
@@ -383,7 +383,7 @@ def get_profile_users(doctype, txt, searchfield, start, page_len, filters):
         return result
 
     except Exception as e:
-        error_logger.error(
+        posawesome_logger.error(
             f"[pos_opening_shift.py] get_profile_users: {str(e)}")
         frappe.throw(_("Error retrieving profile users"))
 
@@ -401,7 +401,7 @@ def get_user_shift_invoice_count(pos_profile, pos_opening_shift):
         return count
 
     except Exception as e:
-        error_logger.error(
+        posawesome_logger.error(
             f"[pos_opening_shift.py] get_user_shift_invoice_count: {str(e)}")
         return 0
 
@@ -437,6 +437,6 @@ def _parse_time_helper(time_value):
             return None
 
     except Exception as e:
-        error_logger.error(
+        posawesome_logger.error(
             f"[pos_opening_shift.py] _parse_time_helper: {str(e)}")
         return None
