@@ -8,7 +8,7 @@ import format from "../../format";
 
 // Import API mapper
 import { API_MAP } from "../../api_mapper.js";
-import { posawesome_logger } from "../../logger.js";
+// Frontend logging: Use console.log/error/warn directly
 
 /**
  * Event names for bus communication
@@ -215,8 +215,8 @@ export default {
           is_loading.value = false;
         })
         .catch((error) => {
-          posawesome_logger.error("[OpeningDialog.js] submitOpeningShift error:", error);
-          posawesome_logger.error(
+          console.error("[OpeningDialog.js] submitOpeningShift error:", error);
+          console.error(
             "[OpeningDialog.js] Error creating opening voucher:",
             error
           );
