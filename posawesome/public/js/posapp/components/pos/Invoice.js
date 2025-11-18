@@ -2604,6 +2604,15 @@ export default {
     evntBus.on("load_return_invoice", (data) => {
       this.new_invoice(data.invoice_doc);
 
+      // ✅ في حالة المرتجع (سواء quick return أو عادي)، تفعيل quick_return لتمكين الإدخال
+      if (data.invoice_doc?.is_return) {
+        this.quick_return_value = true;
+        evntBus.emit("toggle_quick_return", true);
+        console.log(
+          "[Invoice.js] Return invoice loaded, quick_return enabled for input"
+        );
+      }
+
       // Handle return_doc data only if it exists (for returns against specific invoices)
       if (data.return_doc) {
         this.additional_discount_percentage =
