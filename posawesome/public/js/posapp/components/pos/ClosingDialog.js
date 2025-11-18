@@ -1,4 +1,4 @@
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { evntBus } from "../../bus";
 import format from "../../format";
 import { API_MAP } from "../../api_mapper.js";
@@ -107,6 +107,37 @@ export default {
     const isClosingAllowed = ref(true);
     const closingTimeMessage = ref("");
 
+    /**
+     * Check if all required closing_amount fields are filled
+     * Required: All rows with expected_amount > 0 must have closing_amount filled
+     * Using computed for reactivity
+     */
+    const isAllRequiredFieldsFilled = computed(() => {
+      if (
+        !dialog_data.value.payment_reconciliation ||
+        !Array.isArray(dialog_data.value.payment_reconciliation)
+      ) {
+        return false;
+      }
+
+      // Check if all rows with expected_amount have closing_amount filled
+      const requiredRows = dialog_data.value.payment_reconciliation.filter(
+        (payment) => payment.expected_amount && flt(payment.expected_amount) > 0
+      );
+
+      if (requiredRows.length === 0) {
+        return false; // No expected amounts, can't submit
+      }
+
+      // All required rows must have closing_amount filled
+      return requiredRows.every(
+        (payment) =>
+          payment.closing_amount !== null &&
+          payment.closing_amount !== undefined &&
+          payment.closing_amount !== ""
+      );
+    });
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // DIALOG ACTIONS
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -196,18 +227,19 @@ export default {
     const openClosingDialogHandler = (data) => {
       closingDialog.value = true;
 
-      // Auto-fill closing_amount (Actual) with expected_amount (Expected)
+      // ✅ لا تعبئة تلقائية - الحقول تبقى فارغة
+      // Ensure closing_amount is null/undefined if not set
       if (
         data.payment_reconciliation &&
         Array.isArray(data.payment_reconciliation)
       ) {
         data.payment_reconciliation.forEach((payment) => {
-          // Only set if closing_amount is not already set
+          // Reset closing_amount to null/0 if it was auto-filled
           if (
-            !payment.closing_amount &&
-            payment.expected_amount !== undefined
+            !payment.closing_amount ||
+            payment.closing_amount === payment.expected_amount
           ) {
-            payment.closing_amount = payment.expected_amount;
+            payment.closing_amount = null;
           }
         });
       }
@@ -262,6 +294,7 @@ export default {
 
       // Validation
       max25chars: VALIDATION_RULES.MAX_CHARS,
+      isAllRequiredFieldsFilled,
 
       // Actions
       close_dialog,
