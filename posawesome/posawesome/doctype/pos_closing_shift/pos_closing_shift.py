@@ -567,12 +567,16 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
         if not cash_mode_of_payment:
             cash_mode_of_payment = "Cash"
         
-        # Process Sales Invoice Payments - display as is
+        # Process Sales Invoice Payments
         for d in invoices:
             for p in d.payments:
-                # Add payment amounts as-is (no change_amount subtraction)
-                # The actual_paid calculation is: (paid_amount - change_amount) + payment_entries
                 amount = p.amount
+                
+                # ✅ طرح change_amount من المبلغ النقدي فقط
+                # change_amount هو المبلغ الذي يُرجع للعميل كباقي
+                # يجب طرحه من المبلغ المتوقع في المصالحة النقدية
+                if p.mode_of_payment == cash_mode_of_payment:
+                    amount = p.amount - flt(d.change_amount or 0)
                 
                 # Add to payments dict
                 if p.mode_of_payment in payments:
