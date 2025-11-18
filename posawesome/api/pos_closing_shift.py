@@ -484,21 +484,39 @@ def _submit_printed_invoices(pos_opening_shift):
 
 
 def _get_pos_invoices_helper(pos_opening_shift):
-    """Helper function to get POS invoices"""
+    """Helper function to get POS invoices with full document data including payments and taxes"""
     try:
-        return frappe.get_all(
+        posawesome_logger.info(
+            f"[pos_closing_shift.py] _get_pos_invoices_helper: Fetching invoices for shift {pos_opening_shift}")
+        
+        # Get invoice names first
+        invoice_names = frappe.get_all(
             "Sales Invoice",
             filters={
                 "posa_pos_opening_shift": pos_opening_shift,
                 "docstatus": 1
             },
-            fields=["name", "posting_date",
-                    "posting_time", "grand_total", "customer"],
+            fields=["name"],
             order_by="posting_date, posting_time"
         )
+        
+        # Return full documents with all child tables (payments, taxes, etc.)
+        invoices = []
+        for inv in invoice_names:
+            try:
+                doc = frappe.get_doc("Sales Invoice", inv.name)
+                invoices.append(doc.as_dict())
+            except Exception as e:
+                posawesome_logger.error(
+                    f"[pos_closing_shift.py] _get_pos_invoices_helper: Error loading invoice {inv.name}: {str(e)}")
+                continue
+        
+        posawesome_logger.info(
+            f"[pos_closing_shift.py] _get_pos_invoices_helper: Found {len(invoices)} invoices")
+        return invoices
     except Exception as e:
         posawesome_logger.error(
-            f"[pos_closing_shift.py] _get_pos_invoices_helper: {str(e)}")
+            f"[pos_closing_shift.py] _get_pos_invoices_helper: {str(e)}", exc_info=True)
         return []
 
 
