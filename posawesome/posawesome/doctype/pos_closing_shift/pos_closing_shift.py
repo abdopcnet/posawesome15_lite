@@ -8,7 +8,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt
 from datetime import datetime, time as dtime, timedelta
-from posawesome import backend_logger
+from posawesome import info_logger, error_logger
 
 
 class POSClosingShift(Document):
@@ -130,7 +130,7 @@ class POSClosingShift(Document):
             backend_logger.info(
                 f'POS Closing Shift {self.name} submitted successfully')
         except Exception as e:
-            backend_logger.error(
+            error_logger.error(
                 f'Error submitting POS Closing Shift {self.name}: {str(e)}', exc_info=True)
             raise
 
@@ -148,7 +148,7 @@ class POSClosingShift(Document):
             backend_logger.info(
                 f'POS Closing Shift {self.name} cancelled successfully')
         except Exception as e:
-            backend_logger.error(
+            error_logger.error(
                 f'Error cancelling POS Closing Shift {self.name}: {str(e)}', exc_info=True)
             raise
 
@@ -332,7 +332,7 @@ def get_payments_entries(pos_opening_shift):
         return _get_payments_entries_helper(pos_opening_shift)
 
     except Exception as e:
-        backend_logger.error(f"Error in get_payments_entries: {str(e)}")
+        error_logger.error(f"Error in get_payments_entries: {str(e)}")
         return []
 
 
@@ -383,7 +383,7 @@ def get_current_cash_total(pos_profile=None, user=None):
         return {"total": total_cash}
 
     except Exception as e:
-        backend_logger.error(f"Error in get_current_cash_total: {str(e)}")
+        error_logger.error(f"Error in get_current_cash_total: {str(e)}")
         return {"total": 0, "error": str(e)}
 
 
@@ -438,7 +438,7 @@ def get_current_non_cash_total(pos_profile=None, user=None):
         return {"total": total_non_cash}
 
     except Exception as e:
-        backend_logger.error(f"Error in get_current_non_cash_total: {str(e)}")
+        error_logger.error(f"Error in get_current_non_cash_total: {str(e)}")
         return {"total": 0, "error": str(e)}
 
 
@@ -620,7 +620,7 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
         return payments
 
     except Exception as e:
-        backend_logger.error(f"Error in _calculate_payment_totals: {str(e)}")
+        error_logger.error(f"Error in _calculate_payment_totals: {str(e)}")
         return {}
 
 
@@ -704,6 +704,6 @@ def _get_payments_entries_helper(pos_opening_shift):
 
         return payment_entries
     except Exception as e:
-        backend_logger.error(
+        error_logger.error(
             f"Error in _get_payments_entries_helper: {str(e)}")
         return []
