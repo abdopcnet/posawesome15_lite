@@ -10,7 +10,7 @@ import ClosingDialog from "./ClosingDialog.vue";
 import NewAddress from "./NewAddress.vue";
 import Returns from "./Returns.vue";
 import { API_MAP } from "../../api_mapper.js";
-import { posawesome_logger } from "../../logger.js";
+// Frontend logging: Use console.log/error/warn directly
 
 // ===== EVENT BUS EVENTS =====
 const EVENTS = {
@@ -104,7 +104,7 @@ export default {
           allShiftsResponse.message.count > 1
         ) {
           // User has MULTIPLE open shifts - show warning component
-          posawesome_logger.info(
+          console.info(
             "Pos.js",
             `check_opening_entry: multiple shifts found: ${allShiftsResponse.message.count}`
           );
@@ -120,7 +120,7 @@ export default {
 
         if (response.message.success && response.message.data) {
           // Active shift exists - use profile data from shift response
-          posawesome_logger.info(
+          console.info(
             "Pos.js",
             `check_opening_entry: shift found: ${response.message.data.name}, profile: ${response.message.data.pos_profile}`
           );
@@ -131,7 +131,7 @@ export default {
 
           if (!pos_profile) {
             // Profile data not available - show error
-            posawesome_logger.error(
+            console.error(
               "Pos.js",
               "check_opening_entry: pos_profile_data is null/undefined",
               shift_data
@@ -151,7 +151,7 @@ export default {
           };
 
           // Log important fields for debugging
-          posawesome_logger.info(
+          console.info(
             "Pos.js",
             `POS Profile loaded: posa_allow_return=${
               pos_profile.posa_allow_return
@@ -178,14 +178,11 @@ export default {
           evntBus.emit(EVENTS.SET_POS_OPENING_SHIFT, this.pos_opening_shift);
         } else {
           // No active shift - show opening dialog
-          posawesome_logger.info(
-            "Pos.js",
-            "check_opening_entry: no active shift"
-          );
+          console.info("Pos.js", "check_opening_entry: no active shift");
           this.create_opening_voucher();
         }
       } catch (error) {
-        posawesome_logger.error("Pos.js", "check_opening_entry error", error);
+        console.error("Pos.js", "check_opening_entry error", error);
         this.show_message("فشل التحقق من إدخال الافتتاح", "error");
       }
     },
@@ -205,7 +202,7 @@ export default {
         const doc = await frappe.db.get_doc("POS Settings", undefined);
         evntBus.emit(EVENTS.SET_POS_SETTINGS, doc);
       } catch (error) {
-        posawesome_logger.error("Pos.js", "get_pos_setting error", error);
+        console.error("Pos.js", "get_pos_setting error", error);
       }
     },
 
@@ -239,7 +236,7 @@ export default {
           this.show_message("فشل تحميل العروض", "error");
         }
       } catch (error) {
-        posawesome_logger.error("Pos.js", "get_offers error", error);
+        console.error("Pos.js", "get_offers error", error);
         this.show_message("فشل تحميل العروض", "error");
       }
     },
@@ -270,7 +267,7 @@ export default {
           this.show_message("فشل تحميل بيانات الإغلاق", "error");
         }
       } catch (error) {
-        posawesome_logger.error("Pos.js", "get_closing_data error", error);
+        console.error("Pos.js", "get_closing_data error", error);
         this.show_message("فشل تحميل بيانات الإغلاق", "error");
       }
     },
@@ -293,7 +290,7 @@ export default {
           this.show_message("فشل إغلاق نوبة الصراف", "error");
         }
       } catch (error) {
-        posawesome_logger.error("Pos.js", "submit_closing_pos error", error);
+        console.error("Pos.js", "submit_closing_pos error", error);
         this.show_message("فشل إغلاق نوبة الصراف", "error");
       }
     },
