@@ -129,13 +129,22 @@ export default {
         return false; // No expected amounts, can't submit
       }
 
-      // All required rows must have closing_amount filled
-      return requiredRows.every(
-        (payment) =>
-          payment.closing_amount !== null &&
-          payment.closing_amount !== undefined &&
-          payment.closing_amount !== ""
-      );
+      // All required rows must have closing_amount filled (not null, not undefined, not empty, not 0)
+      return requiredRows.every((payment) => {
+        const closing = payment.closing_amount;
+        // Check if closing_amount is valid (not null, not undefined, not empty string, not 0)
+        if (
+          closing === null ||
+          closing === undefined ||
+          closing === "" ||
+          closing === 0
+        ) {
+          return false;
+        }
+        // Convert to number and check if > 0
+        const closingNum = parseFloat(closing);
+        return !isNaN(closingNum) && closingNum > 0;
+      });
     });
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -239,13 +248,13 @@ export default {
       closingDialog.value = true;
 
       // ✅ لا تعبئة تلقائية - الحقول تبقى فارغة للمستخدم
-      // Ensure closing_amount is null/0 if not set (user needs to fill manually)
+      // Ensure closing_amount is 0 (which means empty in UI) if not set (user needs to fill manually)
       if (
         data.payment_reconciliation &&
         Array.isArray(data.payment_reconciliation)
       ) {
         data.payment_reconciliation.forEach((payment) => {
-          // Reset closing_amount to 0/null if not set (user needs to fill manually)
+          // Reset closing_amount to 0 if not set (0 means empty in UI, user needs to fill manually)
           if (
             !payment.closing_amount ||
             payment.closing_amount === null ||
