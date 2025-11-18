@@ -329,10 +329,48 @@ def make_closing_shift_from_opening(opening_shift):
         )
 
         if existing_closing:
-            # Return existing closing shift
+            # Update existing closing shift with recalculated payment totals
             posawesome_logger.info(
-                f"[pos_closing_shift.py] Returning existing closing shift: {existing_closing}")
-            return frappe.get_doc("POS Closing Shift", existing_closing).as_dict()
+                f"[pos_closing_shift.py] Updating existing closing shift: {existing_closing}")
+            closing = frappe.get_doc("POS Closing Shift", existing_closing)
+            
+            # Recalculate payment totals using unified helper (ensures consistency)
+            payment_totals = _calculate_payment_totals(
+                opening.name, opening.pos_profile)
+            
+            posawesome_logger.info(
+                f"[pos_closing_shift.py] Recalculated payment totals for existing closing shift: {payment_totals}")
+            
+            # Get opening amounts from opening shift balance_details
+            opening_amounts = {}
+            if hasattr(opening, 'balance_details') and opening.balance_details:
+                for detail in opening.balance_details:
+                    mode = detail.get("mode_of_payment")
+                    amount = flt(detail.get("amount") or 0)
+                    opening_amounts[mode] = amount
+            
+            # Update payment_reconciliation with recalculated expected_amount
+            # Clear existing rows and add new ones with correct calculations
+            closing.set("payment_reconciliation", [])
+            for mode_of_payment, expected_amount in payment_totals.items():
+                opening_amount = opening_amounts.get(mode_of_payment, 0.0)
+                closing.append("payment_reconciliation", {
+                    "mode_of_payment": mode_of_payment,
+                    "opening_amount": opening_amount,
+                    "expected_amount": flt(expected_amount),  # Recalculated with correct logic
+                    "closing_amount": 0.0,  # Reset to 0, user needs to fill
+                })
+                posawesome_logger.debug(
+                    f"[pos_closing_shift.py] Updated payment reconciliation: {mode_of_payment}, "
+                    f"opening={opening_amount}, expected={expected_amount}")
+            
+            # Save the updated closing shift
+            closing.save(ignore_permissions=True)
+            frappe.db.commit()
+            
+            posawesome_logger.info(
+                f"[pos_closing_shift.py] Updated existing closing shift with recalculated amounts")
+            return closing.as_dict()
 
         # Create new closing shift
         closing = frappe.new_doc("POS Closing Shift")
