@@ -298,13 +298,20 @@
                     "
                   >
                     <input
-                      v-model="item.closing_amount"
+                      v-model.number="item.closing_amount"
                       type="number"
                       :required="
                         item.expected_amount && item.expected_amount > 0
                       "
-                      @blur="item.editing = false"
-                      @keyup.enter="item.editing = false"
+                      @input="updateDifference(item)"
+                      @blur="
+                        item.editing = false;
+                        updateDifference(item);
+                      "
+                      @keyup.enter="
+                        item.editing = false;
+                        updateDifference(item);
+                      "
                       style="
                         width: 100%;
                         border: none;
