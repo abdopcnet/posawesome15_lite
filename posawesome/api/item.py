@@ -2,6 +2,38 @@
 # Copyright (c) 2024, Youssef Restom and contributors
 # For license information, please see license.txt
 
+"""
+Item API Module for POS Awesome
+
+FRAPPE API PATTERN - How Data Flows:
+=====================================
+1. FRONTEND (JavaScript):
+   - Sends data as JavaScript objects: {key: value}
+   - frappe.call() automatically serializes to JSON
+   - Example: frappe.call({method: "...", args: {pos_profile: this.pos_profile}})
+
+2. HTTP LAYER:
+   - Data sent as JSON string in POST/PUT request body
+   - Frappe framework (app.py) receives and parses with json.loads()
+
+3. BACKEND (Python @frappe.whitelist()):
+   - Receives parameters as Python dict (auto-parsed by Frappe)
+   - OR receives as string if explicitly sent as string
+   - MUST handle both cases: isinstance(param, str) and isinstance(param, dict)
+
+4. CRITICAL LIMITATION:
+   - Frontend only sends fields that are loaded in memory
+   - If you need ALL document fields (like custom barcode settings),
+     you MUST re-fetch from database: frappe.get_cached_doc()
+   
+   Example:
+   Frontend sends:  {'name': 'Profile1', 'warehouse': 'Store'} (only 23 fields)
+   Database has:    All fields including posa_enable_scale_barcode, etc.
+   
+   Solution: Always fetch complete doc when you need custom fields:
+   pos_profile = frappe.get_cached_doc("POS Profile", pos_profile.get('name')).as_dict()
+"""
+
 from __future__ import unicode_literals
 import json
 import frappe
@@ -34,23 +66,31 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
         info_logger.info(
             f"[item.py] get_items START - item_group: {item_group}, search_value: {search_value}")
 
-        # Parse pos_profile if it's a JSON string
+        # FRAPPE STANDARD: Handle string (JSON) or dict parameter
+        # Frontend sends dict, Frappe auto-parses JSON, but we handle both cases
         if isinstance(pos_profile, str):
             try:
                 pos_profile = json.loads(pos_profile)
             except (json.JSONDecodeError, ValueError):
-                # If JSON parsing fails, treat it as POS Profile name and fetch the document
+                # If JSON parsing fails, treat it as POS Profile name
                 info_logger.info(
                     f"[item.py] get_items: Fetching POS Profile from DB: {pos_profile}")
                 pos_profile = frappe.get_cached_doc(
                     "POS Profile", pos_profile).as_dict()
 
-        # Ensure pos_profile is a dictionary
+        # If pos_profile is dict, we already have the data from frontend
+        # Frontend sends 23 fields which is enough for get_items()
+        # We DON'T re-fetch here because we only need basic fields
+
+        # Validate parameter type
         if not isinstance(pos_profile, dict):
             error_logger.error(
                 f"[item.py] get_items: pos_profile is not a dict, type: {type(pos_profile)}")
             frappe.throw(_("Invalid POS Profile data"))
 
+        # CRITICAL: Frontend only sends loaded fields (23 fields), not all DB fields
+        # We use the minimal data sent from frontend for this method since we only need:
+        # name, warehouse, selling_price_list, posa_fetch_zero_qty, posa_hide_zero_price_items, item_groups
         info_logger.info(
             f"[item.py] get_items: pos_profile loaded - name: {pos_profile.get('name')}, warehouse: {pos_profile.get('warehouse')}")
 
@@ -241,7 +281,7 @@ def get_barcode_item(pos_profile, barcode_value):
                 f"[item.py] get_barcode_item: Fetching complete POS Profile from DB: {profile_name}")
             pos_profile = frappe.get_cached_doc(
                 "POS Profile", profile_name).as_dict()
-            
+
             # Normalize item_groups to list of strings (for consistency with get_items)
             if pos_profile.get("item_groups"):
                 item_groups_list = []
@@ -252,7 +292,7 @@ def get_barcode_item(pos_profile, barcode_value):
                     elif isinstance(ig, str):
                         item_groups_list.append(ig)
                 pos_profile["item_groups"] = item_groups_list
-            
+
             info_logger.info(
                 f"[item.py] get_barcode_item: POS Profile fetched - barcode fields - scale_enabled: {pos_profile.get('posa_enable_scale_barcode')}, private_enabled: {pos_profile.get('posa_enable_private_barcode')}")
 
