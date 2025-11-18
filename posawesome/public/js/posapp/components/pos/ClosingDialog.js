@@ -238,20 +238,27 @@ export default {
 
       closingDialog.value = true;
 
-      // ✅ لا تعبئة تلقائية - الحقول تبقى فارغة
-      // Ensure closing_amount is null/undefined if not set
+      // ✅ Auto-fill closing_amount with expected_amount if not set (matches previous behavior)
       if (
         data.payment_reconciliation &&
         Array.isArray(data.payment_reconciliation)
       ) {
         data.payment_reconciliation.forEach((payment) => {
-          // Reset closing_amount to null/0 if it was auto-filled
+          // Auto-fill closing_amount with expected_amount if empty/null/0
           if (
             !payment.closing_amount ||
-            payment.closing_amount === payment.expected_amount
+            payment.closing_amount === 0 ||
+            payment.closing_amount === null ||
+            payment.closing_amount === undefined
           ) {
-            payment.closing_amount = null;
+            payment.closing_amount = payment.expected_amount || 0;
+            console.log(
+              `[ClosingDialog.js] Auto-filled closing_amount for ${payment.mode_of_payment}: ${payment.closing_amount}`
+            );
           }
+          // Update difference
+          payment.difference =
+            (payment.closing_amount || 0) - (payment.expected_amount || 0);
         });
       }
 
@@ -264,6 +271,8 @@ export default {
           mode: p.mode_of_payment,
           opening: p.opening_amount,
           expected: p.expected_amount,
+          closing: p.closing_amount,
+          difference: p.difference,
         }))
       );
     };
