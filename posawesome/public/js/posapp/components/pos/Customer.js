@@ -185,7 +185,7 @@ export default {
       try {
         evntBus.emit(EVENT_NAMES.OPEN_UPDATE_CUSTOMER, null);
       } catch (err) {
-        posawesome_logger.error("[Customer.js] new_customer error:", err);
+        posawesome_logger.error("Customer.js", "new_customer error", err);
         this.showMessage(ERROR_MESSAGES.NEW_CUSTOMER_ERROR, "error");
       }
     },
@@ -194,7 +194,7 @@ export default {
       try {
         evntBus.emit(EVENT_NAMES.OPEN_UPDATE_CUSTOMER, this.customer_info);
       } catch (err) {
-        posawesome_logger.error("[Customer.js] edit_customer error:", err);
+        posawesome_logger.error("Customer.js", "edit_customer error", err);
         this.showMessage(ERROR_MESSAGES.EDIT_CUSTOMER_ERROR, "error");
       }
     },
@@ -248,7 +248,7 @@ export default {
           this.showDropdown = false;
         }
       } catch (err) {
-        posawesome_logger.error("[Customer.js] handleClickOutside error:", err);
+        posawesome_logger.error("Customer.js", "handleClickOutside error", err);
         this.showDropdown = false;
       }
     },
