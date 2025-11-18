@@ -347,6 +347,20 @@ export default {
 
       item.amount = this.calculateItemAmount(item);
       this.updateInvoiceDocLocally();
+
+      // Log item field change
+      console.log(
+        "[Invoice.js] Item Field Changed - اسم الصنف:",
+        item.item_name,
+        "الكمية:",
+        item.qty,
+        "الوحدة:",
+        item.uom,
+        "سعر القائمة:",
+        item.price_list_rate,
+        "الإجمالي:",
+        item.amount
+      );
     },
 
     onQtyInput(item, event) {
@@ -410,6 +424,7 @@ export default {
     },
 
     quick_return() {
+      console.log("[Invoice.js] Button Clicked: مرتجع سريع (Quick Return)");
       // Enable Quick Return Mode - creates return invoice without linking to previous invoice
       evntBus.emit("set_customer_readonly", true);
       this.invoiceType = "Return";
@@ -640,15 +655,16 @@ export default {
             }
           }
         } catch (error) {
-          console.log("[Invoice.js] Error:", error);
+          console.log("[Invoice.js] loadInvoiceDoc error:", error);
         }
       }
     },
 
     cancel_invoice() {
+      console.log("[Invoice.js] Button Clicked: ألغاء (Cancel Invoice)");
       // Emit event to clear return invoice highlighting
       evntBus.emit("invoice_submitted");
-      
+
       this.reset_invoice_session();
       evntBus.emit("show_payment", "false");
     },
@@ -978,7 +994,13 @@ export default {
             ) {
               vm.reload_invoice()
                 .then(() => resolve(vm.invoice_doc))
-                .catch((reloadError) => reject(reloadError));
+                .catch((reloadError) => {
+                  console.log(
+                    "[Invoice.js] reload_invoice catch error:",
+                    reloadError
+                  );
+                  reject(reloadError);
+                });
             } else {
               reject(err);
             }
@@ -1012,6 +1034,7 @@ export default {
     },
 
     async show_payment() {
+      console.log("[Invoice.js] Button Clicked: دفع (Pay)");
       // Loading...
       evntBus.emit("show_loading", { text: "جاري التحميل...", color: "info" });
 
@@ -1028,6 +1051,24 @@ export default {
           invoice_doc.rounded_total,
           "grand_total:",
           invoice_doc.grand_total
+        );
+
+        // Log invoice totals
+        console.log(
+          "[Invoice.js] Invoice Totals - الإجمالي الكلي:",
+          invoice_doc.grand_total,
+          "الصافي:",
+          invoice_doc.net_total,
+          "الضريبة:",
+          invoice_doc.total_taxes_and_charges,
+          "الإجمالي قبل الخصم:",
+          invoice_doc.total,
+          "خصم الأصناف:",
+          invoice_doc.total_discount_amount,
+          "خصم الفاتورة:",
+          invoice_doc.discount_amount,
+          "إجمالي الكمية:",
+          invoice_doc.total_qty
         );
 
         // Add default payment method if no payments exist
@@ -1061,7 +1102,7 @@ export default {
               // Payment stays local until Print
             }
           } catch (error) {
-            console.log("[Invoice.js] Payment get failed:", error);
+            console.log("[Invoice.js] getDefaultPayment error:", error);
           }
         }
 
@@ -1077,7 +1118,7 @@ export default {
         evntBus.emit("invoice_session_reset");
         evntBus.emit("hide_loading");
       } catch (error) {
-        console.log("[Invoice.js] Error preparing invoice:", error);
+        console.log("[Invoice.js] prepareInvoice error:", error);
         evntBus.emit("hide_loading");
         evntBus.emit("show_mesage", {
           text: "خطأ في إعداد الفاتورة: " + error.message,
@@ -1087,6 +1128,7 @@ export default {
     },
 
     open_returns() {
+      console.log("[Invoice.js] Button Clicked: مرتجع (Return)");
       if (!this.pos_profile?.posa_allow_return) return;
 
       evntBus.emit("open_returns", {
@@ -1258,6 +1300,20 @@ export default {
       item.rate = newRate;
       item.amount = this.calculateItemAmount(item);
       this.updateInvoiceDocLocally();
+
+      // Log item field change
+      console.log(
+        "[Invoice.js] Item Field Changed - اسم الصنف:",
+        item.item_name,
+        "الكمية:",
+        item.qty,
+        "الوحدة:",
+        item.uom,
+        "سعر القائمة:",
+        item.price_list_rate,
+        "الإجمالي:",
+        item.amount
+      );
     },
 
     update_price_list() {
@@ -1463,7 +1519,7 @@ export default {
           }
         }
       } catch (error) {
-        console.log("[Invoice.js] Error:", error);
+        console.log("[Invoice.js] checkOfferApplied error:", error);
         return false;
       }
 
@@ -2397,11 +2453,30 @@ export default {
     },
 
     printInvoice() {
+      console.log("[Invoice.js] Button Clicked: طباعة (Print)");
       if (!this.invoice_doc || this.isPrinting) return;
 
       // التحقق من وجود مدفوعات صالحة - إذا لم توجد، لا تفعل شيء
       const doc = this.get_invoice_doc("print");
       this.calculateTotalsLocally(doc);
+
+      // Log invoice totals
+      console.log(
+        "[Invoice.js] Invoice Totals - الإجمالي الكلي:",
+        doc.grand_total,
+        "الصافي:",
+        doc.net_total,
+        "الضريبة:",
+        doc.total_taxes_and_charges,
+        "الإجمالي قبل الخصم:",
+        doc.total,
+        "خصم الأصناف:",
+        doc.total_discount_amount,
+        "خصم الفاتورة:",
+        doc.discount_amount,
+        "إجمالي الكمية:",
+        doc.total_qty
+      );
 
       if (!this.hasValidPayments(doc)) {
         // لا تفتح نافذة الدفع - فقط أظهر رسالة تحذير
@@ -2707,6 +2782,26 @@ export default {
   },
   // ===== SECTION 6: WATCH =====
   watch: {
+    "invoice_doc.grand_total"(newVal, oldVal) {
+      if (newVal !== oldVal && this.invoice_doc) {
+        console.log(
+          "[Invoice.js] Invoice Totals Changed - الإجمالي الكلي:",
+          this.invoice_doc.grand_total,
+          "الصافي:",
+          this.invoice_doc.net_total,
+          "الضريبة:",
+          this.invoice_doc.total_taxes_and_charges,
+          "الإجمالي قبل الخصم:",
+          this.invoice_doc.total,
+          "خصم الأصناف:",
+          this.invoice_doc.total_discount_amount,
+          "خصم الفاتورة:",
+          this.invoice_doc.discount_amount,
+          "إجمالي الكمية:",
+          this.invoice_doc.total_qty
+        );
+      }
+    },
     discount_amount() {
       // No auto-saving - everything stays local
     },
