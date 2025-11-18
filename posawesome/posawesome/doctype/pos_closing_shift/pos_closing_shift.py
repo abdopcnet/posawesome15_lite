@@ -13,35 +13,51 @@ from posawesome import posawesome_logger
 
 class POSClosingShift(Document):
     def validate(self):
-        # Validate shift closing allowed time window based on POS Profile settings
-        self._validate_shift_closing_window()
+        try:
+            posawesome_logger.info(
+                f'[pos_closing_shift.py] Validating POS Closing Shift {self.name}')
+            
+            # Validate shift closing allowed time window based on POS Profile settings
+            self._validate_shift_closing_window()
 
-        user = frappe.get_all(
-            "POS Closing Shift",
-            filters={
-                "user": self.user,
-                "docstatus": 1,
-                "pos_opening_shift": self.pos_opening_shift,
-                "name": ["!=", self.name],
-            },
-        )
-
-        if user:
-            frappe.throw(
-                _(
-                    "POS Closing Shift {} against {} between selected period".format(
-                        frappe.bold("already exists"), frappe.bold(self.user)
-                    )
-                ),
-                title=_("Invalid Period"),
+            user = frappe.get_all(
+                "POS Closing Shift",
+                filters={
+                    "user": self.user,
+                    "docstatus": 1,
+                    "pos_opening_shift": self.pos_opening_shift,
+                    "name": ["!=", self.name],
+                },
             )
 
-        if frappe.db.get_value("POS Opening Shift", self.pos_opening_shift, "status") != "Open":
-            frappe.throw(
-                _("Selected POS Opening Shift should be open."),
-                title=_("Invalid Opening Entry"),
-            )
-        self.update_payment_reconciliation()
+            if user:
+                posawesome_logger.warning(
+                    f'[pos_closing_shift.py] Duplicate closing shift detected for user {self.user}')
+                frappe.throw(
+                    _(
+                        "POS Closing Shift {} against {} between selected period".format(
+                            frappe.bold("already exists"), frappe.bold(self.user)
+                        )
+                    ),
+                    title=_("Invalid Period"),
+                )
+
+            opening_shift_status = frappe.db.get_value("POS Opening Shift", self.pos_opening_shift, "status")
+            if opening_shift_status != "Open":
+                posawesome_logger.warning(
+                    f'[pos_closing_shift.py] Opening shift {self.pos_opening_shift} status is {opening_shift_status}, expected Open')
+                frappe.throw(
+                    _("Selected POS Opening Shift should be open."),
+                    title=_("Invalid Opening Entry"),
+                )
+            
+            self.update_payment_reconciliation()
+            posawesome_logger.info(
+                f'[pos_closing_shift.py] Validation completed for POS Closing Shift {self.name}')
+        except Exception as e:
+            posawesome_logger.error(
+                f'[pos_closing_shift.py] Error validating POS Closing Shift {self.name}: {str(e)}', exc_info=True)
+            raise
 
     def _parse_time(self, value):
         """Parse a value to datetime.time supporting str and time inputs."""
@@ -59,63 +75,83 @@ class POSClosingShift(Document):
 
     def _validate_shift_closing_window(self):
         """Validate if period_end_date is within allowed closing window for POS Profile."""
-        if not self.pos_profile or not self.period_end_date:
-            return
+        try:
+            if not self.pos_profile or not self.period_end_date:
+                return
 
-        profile = frappe.get_doc("POS Profile", self.pos_profile)
+            profile = frappe.get_doc("POS Profile", self.pos_profile)
 
-        # Check if closing time control is enabled
-        if not profile.get("posa_closing_time_control"):
-            return  # Skip validation if time control is not enabled
+            # Check if closing time control is enabled
+            if not profile.get("posa_closing_time_control"):
+                posawesome_logger.debug(
+                    f'[pos_closing_shift.py] Closing time control disabled for POS Profile {self.pos_profile}')
+                return  # Skip validation if time control is not enabled
 
-        shift_opening_time = profile.get("posa_closing_time_start")
-        shift_closing_time = profile.get("posa_closing_time_end")
+            shift_opening_time = profile.get("posa_closing_time_start")
+            shift_closing_time = profile.get("posa_closing_time_end")
 
-        if not shift_opening_time or not shift_closing_time:
-            return  # No restriction if not configured
+            if not shift_opening_time or not shift_closing_time:
+                posawesome_logger.debug(
+                    f'[pos_closing_shift.py] Closing time not configured for POS Profile {self.pos_profile}')
+                return  # No restriction if not configured
 
-        # Parse times
-        start_time = self._parse_time(shift_opening_time)
-        end_time = self._parse_time(shift_closing_time)
+            # Parse times
+            start_time = self._parse_time(shift_opening_time)
+            end_time = self._parse_time(shift_closing_time)
 
-        if not start_time or not end_time:
-            return
+            if not start_time or not end_time:
+                posawesome_logger.warning(
+                    f'[pos_closing_shift.py] Could not parse closing times for POS Profile {self.pos_profile}')
+                return
 
-        # Get period_end_date as datetime
-        period_end_dt = frappe.utils.get_datetime(self.period_end_date)
+            # Get period_end_date as datetime
+            period_end_dt = frappe.utils.get_datetime(self.period_end_date)
 
-        # Create datetime objects for comparison
-        start_dt = period_end_dt.replace(
-            hour=start_time.hour, minute=start_time.minute, second=start_time.second, microsecond=start_time.microsecond)
-        end_dt = period_end_dt.replace(
-            hour=end_time.hour, minute=end_time.minute, second=end_time.second, microsecond=end_time.microsecond)
+            # Create datetime objects for comparison
+            start_dt = period_end_dt.replace(
+                hour=start_time.hour, minute=start_time.minute, second=start_time.second, microsecond=start_time.microsecond)
+            end_dt = period_end_dt.replace(
+                hour=end_time.hour, minute=end_time.minute, second=end_time.second, microsecond=end_time.microsecond)
 
-        # If start_time > end_time, assume end_time is next day
-        if start_time > end_time:
-            end_dt = end_dt + timedelta(days=1)
-
-        # Check if period_end_dt is within [start_dt, end_dt]
-        allowed = start_dt <= period_end_dt <= end_dt
-
-        if not allowed:
-            start_str = start_time.strftime("%H:%M")
-            end_str = end_time.strftime("%H:%M")
+            # If start_time > end_time, assume end_time is next day
             if start_time > end_time:
-                end_str += " (next day)"
-            frappe.throw(
-                _("Closing shift is not allowed at this time. Closing is allowed only between {0} and {1}").format(
-                    start_str, end_str),
-                title=_("Closing Time Not Allowed")
-            )
+                end_dt = end_dt + timedelta(days=1)
+
+            # Check if period_end_dt is within [start_dt, end_dt]
+            allowed = start_dt <= period_end_dt <= end_dt
+
+            if not allowed:
+                start_str = start_time.strftime("%H:%M")
+                end_str = end_time.strftime("%H:%M")
+                if start_time > end_time:
+                    end_str += " (next day)"
+                posawesome_logger.warning(
+                    f'[pos_closing_shift.py] Closing time {period_end_dt} not allowed. Allowed window: {start_str} - {end_str}')
+                frappe.throw(
+                    _("Closing shift is not allowed at this time. Closing is allowed only between {0} and {1}").format(
+                        start_str, end_str),
+                    title=_("Closing Time Not Allowed")
+                )
+        except Exception as e:
+            posawesome_logger.error(
+                f'[pos_closing_shift.py] Error validating shift closing window: {str(e)}', exc_info=True)
+            raise
 
     def update_payment_reconciliation(self):
-        # update the difference values in Payment Reconciliation child table
-        # get default precision for site
-        precision = frappe.get_cached_value(
-            "System Settings", None, "currency_precision") or 3
-        for d in self.payment_reconciliation:
-            d.difference = +flt(d.closing_amount, precision) - \
-                flt(d.expected_amount, precision)
+        try:
+            posawesome_logger.debug(
+                f'[pos_closing_shift.py] Updating payment reconciliation for {self.name}')
+            # update the difference values in Payment Reconciliation child table
+            # get default precision for site
+            precision = frappe.get_cached_value(
+                "System Settings", None, "currency_precision") or 3
+            for d in self.payment_reconciliation:
+                d.difference = +flt(d.closing_amount, precision) - \
+                    flt(d.expected_amount, precision)
+        except Exception as e:
+            posawesome_logger.error(
+                f'[pos_closing_shift.py] Error updating payment reconciliation: {str(e)}', exc_info=True)
+            raise
 
     def on_submit(self):
         try:
@@ -163,29 +199,48 @@ class POSClosingShift(Document):
 
     def delete_draft_invoices(self):
         """Delete draft invoices for this shift if auto-delete is enabled in POS Profile."""
-        if not frappe.get_value("POS Profile", self.pos_profile, "posa_auto_delete_draft_invoices"):
-            return
+        try:
+            if not frappe.get_value("POS Profile", self.pos_profile, "posa_auto_delete_draft_invoices"):
+                posawesome_logger.debug(
+                    f'[pos_closing_shift.py] Auto-delete draft invoices disabled for POS Profile {self.pos_profile}')
+                return
 
-        posawesome_logger.info(
-            f'Deleting draft invoices for POS Closing Shift {self.name}')
+            posawesome_logger.info(
+                f'[pos_closing_shift.py] Deleting draft invoices for POS Closing Shift {self.name}')
 
-        # Find draft invoices for this shift
-        draft_invoices = frappe.get_all(
-            "Sales Invoice",
-            filters={
-                "posa_pos_opening_shift": self.pos_opening_shift,
-                "docstatus": 0  # Draft only
-            },
-            fields=["name"]
-        )
+            # Find draft invoices for this shift
+            draft_invoices = frappe.get_all(
+                "Sales Invoice",
+                filters={
+                    "posa_pos_opening_shift": self.pos_opening_shift,
+                    "docstatus": 0  # Draft only
+                },
+                fields=["name"]
+            )
 
-        # Delete each draft invoice
-        for invoice in draft_invoices:
-            try:
-                frappe.delete_doc("Sales Invoice", invoice.name,
-                                  force=1, ignore_permissions=True)
-            except Exception as e:
-                pass
+            posawesome_logger.info(
+                f'[pos_closing_shift.py] Found {len(draft_invoices)} draft invoices to delete')
+
+            # Delete each draft invoice
+            deleted_count = 0
+            for invoice in draft_invoices:
+                try:
+                    frappe.delete_doc("Sales Invoice", invoice.name,
+                                      force=1, ignore_permissions=True)
+                    deleted_count += 1
+                    posawesome_logger.debug(
+                        f'[pos_closing_shift.py] Deleted draft invoice {invoice.name}')
+                except Exception as e:
+                    posawesome_logger.error(
+                        f'[pos_closing_shift.py] Error deleting draft invoice {invoice.name}: {str(e)}')
+                    continue
+            
+            posawesome_logger.info(
+                f'[pos_closing_shift.py] Successfully deleted {deleted_count} draft invoices')
+        except Exception as e:
+            posawesome_logger.error(
+                f'[pos_closing_shift.py] Error in delete_draft_invoices: {str(e)}', exc_info=True)
+            # Don't raise - allow closing shift to complete even if draft deletion fails
 
 
 @frappe.whitelist()
