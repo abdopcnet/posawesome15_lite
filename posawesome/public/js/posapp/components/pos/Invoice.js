@@ -168,7 +168,9 @@ export default {
       let headers = [...this.items_headers];
 
       if (!this.pos_profile?.posa_display_discount_percentage) {
-        headers = headers.filter((header) => header.key !== "discount_percentage");
+        headers = headers.filter(
+          (header) => header.key !== "discount_percentage"
+        );
       }
 
       if (!this.pos_profile?.posa_display_discount_amount) {
@@ -187,10 +189,16 @@ export default {
     },
     defaultPaymentMode() {
       const invoicePayments =
-        this.invoice_doc && Array.isArray(this.invoice_doc?.payments) ? this.invoice_doc?.payments : [];
+        this.invoice_doc && Array.isArray(this.invoice_doc?.payments)
+          ? this.invoice_doc?.payments
+          : [];
       const profilePayments =
-        this.pos_profile && Array.isArray(this.pos_profile?.payments) ? this.pos_profile?.payments : [];
-      const payments = invoicePayments.length ? invoicePayments : profilePayments;
+        this.pos_profile && Array.isArray(this.pos_profile?.payments)
+          ? this.pos_profile?.payments
+          : [];
+      const payments = invoicePayments.length
+        ? invoicePayments
+        : profilePayments;
 
       // First try to find a payment marked as default
       let defaultRow = payments.find((payment) => payment.default == 1);
@@ -217,7 +225,10 @@ export default {
 
     // Computed property for real-time tax amount display
     computedTaxAmount() {
-      return flt(this.invoice_doc?.total_taxes_and_charges || 0, this.currency_precision);
+      return flt(
+        this.invoice_doc?.total_taxes_and_charges || 0,
+        this.currency_precision
+      );
     },
 
     // Computed property for net total (before tax)
@@ -252,7 +263,8 @@ export default {
         return;
       }
 
-      const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+      const viewportHeight =
+        window.innerHeight || document.documentElement?.clientHeight || 0;
 
       if (!viewportHeight) {
         return;
@@ -262,7 +274,10 @@ export default {
       const available = viewportHeight - rect.top - UI_CONFIG.BOTTOM_PADDING;
 
       if (Number.isFinite(available)) {
-        this.itemsScrollHeight = Math.max(UI_CONFIG.MIN_PANEL_HEIGHT, Math.floor(available));
+        this.itemsScrollHeight = Math.max(
+          UI_CONFIG.MIN_PANEL_HEIGHT,
+          Math.floor(available)
+        );
       }
     },
 
@@ -309,7 +324,10 @@ export default {
 
     onQtyChange(item, event) {
       // Get the value from the input (always positive in display)
-      let displayValue = event?.target?.value !== undefined ? Number(event.target.value) : Number(item.qty);
+      let displayValue =
+        event?.target?.value !== undefined
+          ? Number(event.target.value)
+          : Number(item.qty);
 
       // Convert to absolute value in case user types negative
       const absQty = Math.abs(displayValue) || 0;
@@ -389,7 +407,9 @@ export default {
 
       const basePrice = flt(item.price_list_rate) || flt(item.rate) || 0;
       const discountPercentage = flt(item.discount_percentage) || 0;
-      return discountPercentage > 0 && basePrice > 0 ? flt((basePrice * discountPercentage) / 100) || 0 : 0;
+      return discountPercentage > 0 && basePrice > 0
+        ? flt((basePrice * discountPercentage) / 100) || 0
+        : 0;
     },
 
     quick_return() {
@@ -417,7 +437,9 @@ export default {
     },
 
     remove_item(item) {
-      const index = this.items.findIndex((el) => el.posa_row_id == item.posa_row_id);
+      const index = this.items.findIndex(
+        (el) => el.posa_row_id == item.posa_row_id
+      );
       if (index >= 0) {
         this.items.splice(index, 1);
         this.updateInvoiceDocLocally();
@@ -437,7 +459,9 @@ export default {
       new_item.uom = new_item.uom || new_item.stock_uom || "Nos";
 
       const existing_item = this.items.find(
-        (existing) => existing.item_code === new_item.item_code && existing.uom === new_item.uom
+        (existing) =>
+          existing.item_code === new_item.item_code &&
+          existing.uom === new_item.uom
       );
 
       if (existing_item) {
@@ -511,7 +535,10 @@ export default {
           );
 
           // Calculate rate from price_list_rate - discount_amount
-          item.rate = flt(priceListRate - item.discount_amount, this.getPrecision("rate", item));
+          item.rate = flt(
+            priceListRate - item.discount_amount,
+            this.getPrecision("rate", item)
+          );
         } else {
           // No discount
           item.discount_amount = 0;
@@ -535,8 +562,14 @@ export default {
       if (priceListRate <= 0 || discountPercent <= 0) return priceListRate;
 
       // Use ERPNext logic
-      const discountAmount = flt((priceListRate * discountPercent) / 100, this.getPrecision("discount_amount", item));
-      return flt(priceListRate - discountAmount, this.getPrecision("rate", item));
+      const discountAmount = flt(
+        (priceListRate * discountPercent) / 100,
+        this.getPrecision("discount_amount", item)
+      );
+      return flt(
+        priceListRate - discountAmount,
+        this.getPrecision("rate", item)
+      );
     },
 
     resetInvoiceState() {
@@ -556,7 +589,8 @@ export default {
 
     hasValidPayments(invoice_doc = null) {
       const doc = invoice_doc || this.invoice_doc;
-      const hasValid = doc?.payments?.some((p) => Math.abs(this.flt(p.amount)) > 0) || false;
+      const hasValid =
+        doc?.payments?.some((p) => Math.abs(this.flt(p.amount)) > 0) || false;
       return hasValid;
     },
 
@@ -702,7 +736,8 @@ export default {
         this.setCustomer(data.customer);
         this.posting_date = data.posting_date || frappe.datetime.nowdate();
 
-        this.additional_discount_percentage = data.additional_discount_percentage;
+        this.additional_discount_percentage =
+          data.additional_discount_percentage;
         this.items.forEach((item) => {
           if (item.serial_no) {
             item.serial_no_selected = [];
@@ -723,7 +758,11 @@ export default {
       const doc = {};
 
       // Always create a new invoice if no invoice exists or if we have items but no invoice name
-      if (this.invoice_doc && this.invoice_doc?.name && !this.invoice_doc?.submitted_for_payment) {
+      if (
+        this.invoice_doc &&
+        this.invoice_doc?.name &&
+        !this.invoice_doc?.submitted_for_payment
+      ) {
         doc.name = this.invoice_doc?.name;
       }
       doc.doctype = "Sales Invoice";
@@ -735,14 +774,19 @@ export default {
       doc.naming_series = this.pos_profile?.naming_series;
       doc.customer = this.customer;
       doc.posting_date = this.posting_date;
-      doc.posa_pos_opening_shift = this.pos_opening_shift ? this.pos_opening_shift.name : null;
+      doc.posa_pos_opening_shift = this.pos_opening_shift
+        ? this.pos_opening_shift.name
+        : null;
 
       doc.items = this.get_invoice_items_minimal();
 
       // Discount fields (ERPNext standard)
-      doc.additional_discount_percentage = flt(this.additional_discount_percentage);
+      doc.additional_discount_percentage = flt(
+        this.additional_discount_percentage
+      );
       // Read apply_discount_on from POS Profile
-      doc.apply_discount_on = this.pos_profile?.apply_discount_on || "Net Total";
+      doc.apply_discount_on =
+        this.pos_profile?.apply_discount_on || "Net Total";
 
       // Let backend calculate discount_amount (or send calculated value)
       if (this.discount_amount) {
@@ -782,9 +826,18 @@ export default {
           item_code: item.item_code,
           qty,
           rate: flt(item.rate, this.getPrecision("rate", item)),
-          price_list_rate: flt(item.price_list_rate, this.getPrecision("price_list_rate", item)),
-          discount_percentage: flt(item.discount_percentage || 0, this.getPrecision("discount_percentage", item)),
-          discount_amount: flt(item.discount_amount || 0, this.getPrecision("discount_amount", item)),
+          price_list_rate: flt(
+            item.price_list_rate,
+            this.getPrecision("price_list_rate", item)
+          ),
+          discount_percentage: flt(
+            item.discount_percentage || 0,
+            this.getPrecision("discount_percentage", item)
+          ),
+          discount_amount: flt(
+            item.discount_amount || 0,
+            this.getPrecision("discount_amount", item)
+          ),
           uom: item.uom || item.stock_uom,
           serial_no: item.serial_no,
           batch_no: item.batch_no,
@@ -803,7 +856,11 @@ export default {
       let payments = [];
 
       // إذا كانت هناك مدفوعات موجودة في الفاتورة الحالية
-      if (this.invoice_doc && Array.isArray(this.invoice_doc?.payments) && this.invoice_doc?.payments.length) {
+      if (
+        this.invoice_doc &&
+        Array.isArray(this.invoice_doc?.payments) &&
+        this.invoice_doc?.payments.length
+      ) {
         payments = this.invoice_doc.payments.map((p) => ({
           amount: this.flt(p.amount),
           mode_of_payment: p.mode_of_payment,
@@ -811,7 +868,10 @@ export default {
           account: p.account || "",
           idx: p.idx,
         }));
-      } else if (this.pos_profile && Array.isArray(this.pos_profile?.payments)) {
+      } else if (
+        this.pos_profile &&
+        Array.isArray(this.pos_profile?.payments)
+      ) {
         let hasDefault = false;
 
         this.pos_profile?.payments.forEach((payment, index) => {
@@ -829,12 +889,17 @@ export default {
       }
 
       // --- Rounding adjustment for payments ---
-      const totalTarget = this.invoice_doc?.rounded_total || this.invoice_doc?.grand_total;
+      const totalTarget =
+        this.invoice_doc?.rounded_total || this.invoice_doc?.grand_total;
       let totalPayments = payments.reduce((sum, p) => sum + p.amount, 0);
       let diff = totalPayments - totalTarget;
 
       // Adjust first payment to match rounded total (within reasonable tolerance)
-      if (Math.abs(diff) >= 0.01 && Math.abs(diff) <= 1.0 && payments.length > 0) {
+      if (
+        Math.abs(diff) >= 0.01 &&
+        Math.abs(diff) <= 1.0 &&
+        payments.length > 0
+      ) {
         payments[0].amount = this.flt(payments[0].amount - diff);
       }
 
@@ -875,10 +940,14 @@ export default {
 
                   // Handle Transaction-level Percentage Discount Offers
                   let transactionDiscount = 0;
-                  const appliedTransactionOffer = vm.posa_offers.find((offer) => offer.offer_applied);
+                  const appliedTransactionOffer = vm.posa_offers.find(
+                    (offer) => offer.offer_applied
+                  );
 
                   if (appliedTransactionOffer) {
-                    transactionDiscount = flt(appliedTransactionOffer.discount_percentage);
+                    transactionDiscount = flt(
+                      appliedTransactionOffer.discount_percentage
+                    );
                     vm.additional_discount_percentage = transactionDiscount;
                     // Store the origin of the discount
                     vm.offer_discount_percentage = transactionDiscount;
@@ -890,7 +959,9 @@ export default {
                   // Emit event for navbar to update invoice display
                   evntBus.emit("update_invoice_doc", vm.invoice_doc);
 
-                  const appliedOffers = vm.posa_offers.filter((offer) => offer.offer_applied);
+                  const appliedOffers = vm.posa_offers.filter(
+                    (offer) => offer.offer_applied
+                  );
 
                   if (appliedOffers.length > 0) {
                     evntBus.emit("update_pos_offers", appliedOffers);
@@ -904,11 +975,18 @@ export default {
             }
           },
           error: function (err) {
-            if (err.message && err.message.includes("Document has been modified")) {
+            if (
+              err.message &&
+              err.message.includes("Document has been modified")
+            ) {
               vm.reload_invoice()
                 .then(() => resolve(vm.invoice_doc))
                 .catch((reloadError) => {
-                  posawesome_logger.error("Invoice.js", "reload_invoice catch error", reloadError);
+                  posawesome_logger.error(
+                    "Invoice.js",
+                    "reload_invoice catch error",
+                    reloadError
+                  );
                   reject(reloadError);
                 });
             } else {
@@ -965,7 +1043,9 @@ export default {
               method: API_MAP.POS_PROFILE.GET_DEFAULT_PAYMENT,
               args: {
                 pos_profile: this.pos_profile?.name,
-                company: this.pos_profile?.company || frappe.defaults.get_user_default("Company"),
+                company:
+                  this.pos_profile?.company ||
+                  frappe.defaults.get_user_default("Company"),
               },
             });
 
@@ -973,7 +1053,9 @@ export default {
               invoice_doc.payments = [
                 {
                   mode_of_payment: defaultPayment.message.mode_of_payment,
-                  amount: flt(invoice_doc?.rounded_total || invoice_doc?.grand_total),
+                  amount: flt(
+                    invoice_doc?.rounded_total || invoice_doc?.grand_total
+                  ),
                   account: defaultPayment.message.account,
                   default: 1,
                 },
@@ -984,7 +1066,11 @@ export default {
               // Payment stays local until Print
             }
           } catch (error) {
-            posawesome_logger.error("Invoice.js", "getDefaultPayment error", error);
+            posawesome_logger.error(
+              "Invoice.js",
+              "getDefaultPayment error",
+              error
+            );
           }
         }
 
@@ -1064,11 +1150,15 @@ export default {
     get_price_list() {
       let price_list = this.pos_profile?.selling_price_list;
       if (this.customer_info && this.pos_profile) {
-        const { customer_price_list, customer_group_price_list } = this.customer_info;
+        const { customer_price_list, customer_group_price_list } =
+          this.customer_info;
         const pos_price_list = this.pos_profile?.selling_price_list;
         if (customer_price_list && customer_price_list != pos_price_list) {
           price_list = customer_price_list;
-        } else if (customer_group_price_list && customer_group_price_list != pos_price_list) {
+        } else if (
+          customer_group_price_list &&
+          customer_group_price_list != pos_price_list
+        ) {
           price_list = customer_group_price_list;
         }
       }
@@ -1087,7 +1177,8 @@ export default {
       }
 
       let dis_percent = parseFloat(event.target.value) || 0;
-      const maxDiscount = this.pos_profile?.posa_item_max_discount_allowed || 100;
+      const maxDiscount =
+        this.pos_profile?.posa_item_max_discount_allowed || 100;
 
       if (dis_percent < 0) dis_percent = 0;
       if (dis_percent > maxDiscount) {
@@ -1101,8 +1192,14 @@ export default {
       const priceListRate = flt(item.price_list_rate) || 0;
       if (priceListRate > 0) {
         if (dis_percent > 0) {
-          item.discount_amount = flt((priceListRate * dis_percent) / 100, this.getPrecision("discount_amount", item));
-          item.rate = flt(priceListRate - item.discount_amount, this.getPrecision("rate", item));
+          item.discount_amount = flt(
+            (priceListRate * dis_percent) / 100,
+            this.getPrecision("discount_amount", item)
+          );
+          item.rate = flt(
+            priceListRate - item.discount_amount,
+            this.getPrecision("rate", item)
+          );
         } else {
           item.discount_amount = 0;
           item.rate = priceListRate;
@@ -1139,7 +1236,10 @@ export default {
 
       // ERPNext reverse logic: rate → discount_amount → percentage
       if (priceListRate > 0) {
-        item.discount_amount = flt(priceListRate - newRate, this.getPrecision("discount_amount", item));
+        item.discount_amount = flt(
+          priceListRate - newRate,
+          this.getPrecision("discount_amount", item)
+        );
         item.discount_percentage = flt(
           (100 * item.discount_amount) / priceListRate,
           this.getPrecision("discount_percentage", item)
@@ -1150,11 +1250,18 @@ export default {
       }
 
       // Validate max discount
-      const maxDiscount = this.pos_profile?.posa_item_max_discount_allowed || 100;
+      const maxDiscount =
+        this.pos_profile?.posa_item_max_discount_allowed || 100;
       if (item.discount_percentage > maxDiscount) {
         item.discount_percentage = maxDiscount;
-        item.discount_amount = flt((priceListRate * maxDiscount) / 100, this.getPrecision("discount_amount", item));
-        newRate = flt(priceListRate - item.discount_amount, this.getPrecision("rate", item));
+        item.discount_amount = flt(
+          (priceListRate * maxDiscount) / 100,
+          this.getPrecision("discount_amount", item)
+        );
+        newRate = flt(
+          priceListRate - item.discount_amount,
+          this.getPrecision("rate", item)
+        );
         // Maximum discount applied
       }
 
@@ -1195,17 +1302,22 @@ export default {
       // If user is not allowed to edit, but we have an offer discount, use it
       if (!this.pos_profile?.posa_allow_user_to_edit_additional_discount) {
         // Allow automatic offers to set discount even if manual edit is disabled
-        if (this.offer_discount_percentage > 0 && this.additional_discount_percentage > 0) {
+        if (
+          this.offer_discount_percentage > 0 &&
+          this.additional_discount_percentage > 0
+        ) {
           // Keep discount
         } else {
           // No active offer - reset to invoice default
-          this.additional_discount_percentage = this.invoice_doc?.additional_discount_percentage || 0;
+          this.additional_discount_percentage =
+            this.invoice_doc?.additional_discount_percentage || 0;
           return;
         }
       }
 
       const value = flt(this.additional_discount_percentage) || 0;
-      const maxDiscount = this.pos_profile?.posa_invoice_max_discount_allowed || 100;
+      const maxDiscount =
+        this.pos_profile?.posa_invoice_max_discount_allowed || 100;
 
       if (value < 0) {
         this.additional_discount_percentage = 0;
@@ -1354,7 +1466,9 @@ export default {
         }
 
         for (const row_id of item_offers) {
-          const exist_offer = this.posa_offers.find((el) => row_id == el.row_id);
+          const exist_offer = this.posa_offers.find(
+            (el) => row_id == el.row_id
+          );
           if (exist_offer && exist_offer.offer_name == offer.name) {
             applied = true;
             break;
@@ -1431,7 +1545,10 @@ export default {
             (priceListRate * discountPercent) / 100,
             this.getPrecision("discount_amount", item)
           );
-          item.rate = flt(priceListRate - item.discount_amount, this.getPrecision("rate", item));
+          item.rate = flt(
+            priceListRate - item.discount_amount,
+            this.getPrecision("rate", item)
+          );
         } else {
           item.rate = priceListRate;
           item.discount_amount = 0;
@@ -1447,7 +1564,10 @@ export default {
 
       doc.total = flt(total, this.getPrecision("total"));
       doc.total_qty = total_qty;
-      doc.posa_item_discount_total = flt(item_discount_total, this.getPrecision("posa_item_discount_total"));
+      doc.posa_item_discount_total = flt(
+        item_discount_total,
+        this.getPrecision("posa_item_discount_total")
+      );
 
       // Step 2: Set net_total (before tax, after item discounts)
       doc.net_total = doc.total;
@@ -1458,11 +1578,22 @@ export default {
       const taxPercent = flt(this.pos_profile?.posa_tax_percent) || 0;
       const normalizedTaxType = taxType?.replace(/^Tax\s*/i, "").trim();
 
+      // Debug logging for tax calculation
+      if (applyTax) {
+        posawesome_logger.info(
+          "Invoice.js",
+          `Tax calculation: applyTax=${applyTax}, taxType=${taxType}, normalizedTaxType=${normalizedTaxType}, taxPercent=${taxPercent}, net_total=${doc.net_total}`
+        );
+      }
+
       if (applyTax && normalizedTaxType && taxPercent > 0) {
         if (normalizedTaxType === "Inclusive") {
           // Tax included: extract tax from net_total
           doc.grand_total = doc.net_total;
-          doc.net_total = flt(doc.net_total / (1 + taxPercent / 100), this.getPrecision("net_total"));
+          doc.net_total = flt(
+            doc.net_total / (1 + taxPercent / 100),
+            this.getPrecision("net_total")
+          );
           doc.total_taxes_and_charges = flt(
             doc.grand_total - doc.net_total,
             this.getPrecision("total_taxes_and_charges")
@@ -1473,7 +1604,10 @@ export default {
             doc.net_total * (taxPercent / 100),
             this.getPrecision("total_taxes_and_charges")
           );
-          doc.grand_total = flt(doc.net_total + doc.total_taxes_and_charges, this.getPrecision("grand_total"));
+          doc.grand_total = flt(
+            doc.net_total + doc.total_taxes_and_charges,
+            this.getPrecision("grand_total")
+          );
         }
       } else {
         doc.total_taxes_and_charges = 0;
@@ -1488,17 +1622,27 @@ export default {
       // Step 5: Recalculate tax if discount applied to net_total
       // This is required when apply_discount_on = 'Net Total' and tax is Exclusive
       const applyDiscountOn = doc.apply_discount_on || "Net Total";
-      if (applyTax && doc.discount_amount > 0 && applyDiscountOn === "Net Total") {
+      if (
+        applyTax &&
+        doc.discount_amount > 0 &&
+        applyDiscountOn === "Net Total"
+      ) {
         // Tax must be recalculated on discounted net_total
         if (normalizedTaxType === "Exclusive") {
           doc.total_taxes_and_charges = flt(
             doc.net_total * (taxPercent / 100),
             this.getPrecision("total_taxes_and_charges")
           );
-          doc.grand_total = flt(doc.net_total + doc.total_taxes_and_charges, this.getPrecision("grand_total"));
+          doc.grand_total = flt(
+            doc.net_total + doc.total_taxes_and_charges,
+            this.getPrecision("grand_total")
+          );
         } else if (normalizedTaxType === "Inclusive") {
           // For Inclusive tax, add tax back to discounted net_total
-          doc.grand_total = flt(doc.net_total * (1 + taxPercent / 100), this.getPrecision("grand_total"));
+          doc.grand_total = flt(
+            doc.net_total * (1 + taxPercent / 100),
+            this.getPrecision("grand_total")
+          );
           doc.total_taxes_and_charges = flt(
             doc.grand_total - doc.net_total,
             this.getPrecision("total_taxes_and_charges")
@@ -1519,7 +1663,10 @@ export default {
       }
 
       // Calculate rounding adjustment
-      doc.rounding_adjustment = flt(doc.rounded_total - doc.grand_total, this.getPrecision("rounding_adjustment"));
+      doc.rounding_adjustment = flt(
+        doc.rounded_total - doc.grand_total,
+        this.getPrecision("rounding_adjustment")
+      );
 
       // Final precision formatting
       doc.grand_total = flt(doc.grand_total, this.getPrecision("grand_total"));
@@ -1529,7 +1676,10 @@ export default {
     // ERPNext-compliant invoice discount calculation methods
     setDiscountAmount(doc) {
       // Only calculate if additional_discount_percentage is set
-      if (!doc.additional_discount_percentage || doc.additional_discount_percentage <= 0) {
+      if (
+        !doc.additional_discount_percentage ||
+        doc.additional_discount_percentage <= 0
+      ) {
         doc.discount_amount = 0;
         doc.base_discount_amount = 0;
         return;
@@ -1566,13 +1716,22 @@ export default {
       // For POS: Simple subtraction from grand_total
       // (ERPNext distributes across items, but for POS we keep it simple)
       if (applyDiscountOn === "Grand Total") {
-        doc.grand_total = flt(doc.grand_total - doc.discount_amount, this.getPrecision("grand_total"));
+        doc.grand_total = flt(
+          doc.grand_total - doc.discount_amount,
+          this.getPrecision("grand_total")
+        );
       } else if (applyDiscountOn === "Net Total") {
         // Apply before final grand_total calculation
-        doc.net_total = flt(doc.net_total - doc.discount_amount, this.getPrecision("net_total"));
+        doc.net_total = flt(
+          doc.net_total - doc.discount_amount,
+          this.getPrecision("net_total")
+        );
         // Recalculate grand_total with tax
         if (doc.total_taxes_and_charges > 0) {
-          doc.grand_total = flt(doc.net_total + doc.total_taxes_and_charges, this.getPrecision("grand_total"));
+          doc.grand_total = flt(
+            doc.net_total + doc.total_taxes_and_charges,
+            this.getPrecision("grand_total")
+          );
         } else {
           doc.grand_total = doc.net_total;
         }
@@ -1597,7 +1756,10 @@ export default {
             (priceListRate * item.discount_percentage) / 100,
             this.getPrecision("discount_amount", item)
           );
-          const expectedRate = flt(priceListRate - expectedDiscountAmount, this.getPrecision("rate", item));
+          const expectedRate = flt(
+            priceListRate - expectedDiscountAmount,
+            this.getPrecision("rate", item)
+          );
 
           if (Math.abs(item.discount_amount - expectedDiscountAmount) > 0.01) {
             // Discount mismatch detected (logged to backend only)
@@ -1668,7 +1830,11 @@ export default {
       const cacheKey = `${this.invoice_doc?.name}_${this.items.length}`;
       const now = Date.now();
 
-      if (this._offersCache && this._offersCache.key === cacheKey && now - this._offersCache.timestamp < 30000) {
+      if (
+        this._offersCache &&
+        this._offersCache.key === cacheKey &&
+        now - this._offersCache.timestamp < 30000
+      ) {
         // Using cached offers
         this.updatePosOffers(this._offersCache.data);
         return;
@@ -1728,7 +1894,10 @@ export default {
       // If offers array is empty, force clear all offer discounts
       if (arr.length === 0) {
         // Clear transaction-level offer discounts
-        if (this.additional_discount_percentage > 0 || this.offer_discount_percentage > 0) {
+        if (
+          this.additional_discount_percentage > 0 ||
+          this.offer_discount_percentage > 0
+        ) {
           this.additional_discount_percentage = 0;
           this.offer_discount_percentage = 0;
         }
@@ -1765,20 +1934,29 @@ export default {
 
       // Separate transaction and item offers
       const transactionOffers = offers.filter(
-        (o) => ["grand_total", "customer", "customer_group", ""].includes(o.offer_type || "") && o.discount_percentage
+        (o) =>
+          ["grand_total", "customer", "customer_group", ""].includes(
+            o.offer_type || ""
+          ) && o.discount_percentage
       );
 
       const itemOffers = offers.filter(
-        (o) => ["item_code", "item_group", "brand"].includes(o.offer_type) && o.discount_percentage
+        (o) =>
+          ["item_code", "item_group", "brand"].includes(o.offer_type) &&
+          o.discount_percentage
       );
 
       // Apply ONLY ONE type (POSAwesome constraint)
       if (transactionOffers.length > 0) {
         // Transaction-level wins (typical in POS)
-        transactionOffers.sort((a, b) => flt(b.discount_percentage) - flt(a.discount_percentage));
+        transactionOffers.sort(
+          (a, b) => flt(b.discount_percentage) - flt(a.discount_percentage)
+        );
         const bestOffer = transactionOffers[0];
 
-        this.additional_discount_percentage = flt(bestOffer.discount_percentage);
+        this.additional_discount_percentage = flt(
+          bestOffer.discount_percentage
+        );
         this.offer_discount_percentage = flt(bestOffer.discount_percentage);
 
         // Clear any item-level discounts
@@ -1805,11 +1983,20 @@ export default {
           this.items.forEach((item) => {
             let shouldApply = false;
 
-            if (offer.offer_type === "item_code" && item.item_code === offer.item_code) {
+            if (
+              offer.offer_type === "item_code" &&
+              item.item_code === offer.item_code
+            ) {
               shouldApply = true;
-            } else if (offer.offer_type === "item_group" && item.item_group === offer.item_group) {
+            } else if (
+              offer.offer_type === "item_group" &&
+              item.item_group === offer.item_group
+            ) {
               shouldApply = true;
-            } else if (offer.offer_type === "brand" && item.brand === offer.brand) {
+            } else if (
+              offer.offer_type === "brand" &&
+              item.brand === offer.brand
+            ) {
               shouldApply = true;
             }
 
@@ -1820,7 +2007,10 @@ export default {
                 (priceListRate * discountPercent) / 100,
                 this.getPrecision("discount_amount", item)
               );
-              item.rate = flt(priceListRate - item.discount_amount, this.getPrecision("rate", item));
+              item.rate = flt(
+                priceListRate - item.discount_amount,
+                this.getPrecision("rate", item)
+              );
               item._offer_discount_applied = true;
               item._offer_name = offerName;
             }
@@ -1848,19 +2038,26 @@ export default {
 
         if (offerType === "item_code" && item.item_code === offer.item_code) {
           shouldApply = true;
-        } else if (offerType === "item_group" && item.item_group === offer.item_group) {
+        } else if (
+          offerType === "item_group" &&
+          item.item_group === offer.item_group
+        ) {
           shouldApply = true;
         } else if (offerType === "brand" && item.brand === offer.brand) {
           shouldApply = true;
         }
 
         // Allow reapplication if no offer applied OR if it's a different offer
-        const canApply = shouldApply && (!item._offer_discount_applied || item._offer_name !== offerName);
+        const canApply =
+          shouldApply &&
+          (!item._offer_discount_applied || item._offer_name !== offerName);
 
         if (canApply) {
           // Store original discount before applying offer (for restoration when offer is removed)
           if (!item._original_discount_percentage) {
-            item._original_discount_percentage = flt(item.discount_percentage || 0);
+            item._original_discount_percentage = flt(
+              item.discount_percentage || 0
+            );
           }
 
           // Mark that this discount came from an offer
@@ -1880,7 +2077,9 @@ export default {
             }
 
             // Check if this offer is already in posa_offers
-            const offerExists = this.posa_offers.some((o) => o.offer_name === offerName && o.offer_type === offerType);
+            const offerExists = this.posa_offers.some(
+              (o) => o.offer_name === offerName && o.offer_type === offerType
+            );
 
             if (!offerExists) {
               this.posa_offers.push({
@@ -1901,7 +2100,9 @@ export default {
     },
 
     removeApplyOffer(invoiceOffer) {
-      const index = this.posa_offers.findIndex((el) => el.row_id === invoiceOffer.row_id);
+      const index = this.posa_offers.findIndex(
+        (el) => el.row_id === invoiceOffer.row_id
+      );
       if (index > -1) {
         this.posa_offers.splice(index, 1);
       }
@@ -1943,8 +2144,14 @@ export default {
       }
 
       // Calculate totals
-      const totalQty = this.items.reduce((sum, item) => sum + flt(item.qty || 0), 0);
-      const totalAmount = this.items.reduce((sum, item) => sum + flt(item.qty || 0) * flt(item.rate || 0), 0);
+      const totalQty = this.items.reduce(
+        (sum, item) => sum + flt(item.qty || 0),
+        0
+      );
+      const totalAmount = this.items.reduce(
+        (sum, item) => sum + flt(item.qty || 0) * flt(item.rate || 0),
+        0
+      );
 
       // Filter applicable offers
       const applicableOffers = this._sessionOffers.filter((offer) => {
@@ -1962,13 +2169,19 @@ export default {
         if (offer.max_amt && totalAmount > flt(offer.max_amt)) return false;
 
         // Check customer match
-        if (offer.offer_type === "customer" && offer.customer !== this.customer) {
+        if (
+          offer.offer_type === "customer" &&
+          offer.customer !== this.customer
+        ) {
           return false;
         }
 
         // Check customer group match
         if (offer.offer_type === "customer_group") {
-          if (!this.customer_info?.customer_group || this.customer_info.customer_group !== offer.customer_group) {
+          if (
+            !this.customer_info?.customer_group ||
+            this.customer_info.customer_group !== offer.customer_group
+          ) {
             return false;
           }
         }
@@ -1979,7 +2192,9 @@ export default {
         }
 
         if (offer.offer_type === "item_group") {
-          return this.items.some((item) => item.item_group === offer.item_group);
+          return this.items.some(
+            (item) => item.item_group === offer.item_group
+          );
         }
 
         if (offer.offer_type === "brand") {
@@ -2014,12 +2229,18 @@ export default {
         (offer) =>
           offer.auto &&
           offer.discount_percentage &&
-          ["grand_total", "customer", "customer_group", ""].includes(offer.offer_type || "")
+          ["grand_total", "customer", "customer_group", ""].includes(
+            offer.offer_type || ""
+          )
       );
 
       if (transactionOffer) {
-        this.additional_discount_percentage = flt(transactionOffer.discount_percentage);
-        this.offer_discount_percentage = flt(transactionOffer.discount_percentage);
+        this.additional_discount_percentage = flt(
+          transactionOffer.discount_percentage
+        );
+        this.offer_discount_percentage = flt(
+          transactionOffer.discount_percentage
+        );
 
         // Initialize posa_offers array
         this.posa_offers = [
@@ -2046,16 +2267,27 @@ export default {
         this.items.forEach((item) => {
           let shouldApply = false;
 
-          if (offer.offer_type === "item_code" && item.item_code === offer.item_code) {
+          if (
+            offer.offer_type === "item_code" &&
+            item.item_code === offer.item_code
+          ) {
             shouldApply = true;
-          } else if (offer.offer_type === "item_group" && item.item_group === offer.item_group) {
+          } else if (
+            offer.offer_type === "item_group" &&
+            item.item_group === offer.item_group
+          ) {
             shouldApply = true;
-          } else if (offer.offer_type === "brand" && item.brand === offer.brand) {
+          } else if (
+            offer.offer_type === "brand" &&
+            item.brand === offer.brand
+          ) {
             shouldApply = true;
           }
 
           // Allow reapplication if no offer applied OR if it's a different offer
-          const canApply = shouldApply && (!item._offer_discount_applied || item._offer_name !== offerName);
+          const canApply =
+            shouldApply &&
+            (!item._offer_discount_applied || item._offer_name !== offerName);
 
           if (canApply) {
             // Track this offer in posa_offers array
@@ -2079,7 +2311,9 @@ export default {
 
             // Store original discount before applying offer (for restoration when offer is removed)
             if (!item._original_discount_percentage) {
-              item._original_discount_percentage = flt(item.discount_percentage || 0);
+              item._original_discount_percentage = flt(
+                item.discount_percentage || 0
+              );
             }
 
             // Mark that this discount came from an offer
@@ -2089,7 +2323,10 @@ export default {
             item.discount_percentage = flt(offer.discount_percentage); // Apply as-is
 
             // Recalculate item price using centralized helper
-            item.rate = this.calculateDiscountedPrice(item, flt(offer.discount_percentage));
+            item.rate = this.calculateDiscountedPrice(
+              item,
+              flt(offer.discount_percentage)
+            );
             item.amount = this.calculateItemAmount(item);
           }
         });
@@ -2104,7 +2341,10 @@ export default {
      */
     clearOfferDiscounts() {
       // Always clear both if either has a value - check BOTH fields
-      if (this.additional_discount_percentage > 0 || this.offer_discount_percentage > 0) {
+      if (
+        this.additional_discount_percentage > 0 ||
+        this.offer_discount_percentage > 0
+      ) {
         this.additional_discount_percentage = 0;
         this.offer_discount_percentage = 0;
       }
@@ -2137,7 +2377,10 @@ export default {
           if (list_price > 0) {
             if (originalDiscount > 0) {
               const discount_amount = (list_price * originalDiscount) / 100;
-              item.rate = flt(list_price - discount_amount, this.currency_precision);
+              item.rate = flt(
+                list_price - discount_amount,
+                this.currency_precision
+              );
             } else {
               // No discount - restore to list price
               item.rate = list_price;
@@ -2224,7 +2467,11 @@ export default {
             // Clear search fields in ItemsSelector
             evntBus.emit("clear_search_fields");
           } else {
-            posawesome_logger.error("Invoice.js", "Submit failed", "No invoice name returned");
+            posawesome_logger.error(
+              "Invoice.js",
+              "Submit failed",
+              "No invoice name returned"
+            );
             evntBus.emit("show_mesage", {
               // Submit failed
               text: "فشل الإرسال",
@@ -2233,7 +2480,11 @@ export default {
           }
         },
         error: (err) => {
-          posawesome_logger.error("Invoice.js", "Server error", err?.message || "Unknown error");
+          posawesome_logger.error(
+            "Invoice.js",
+            "Server error",
+            err?.message || "Unknown error"
+          );
           evntBus.emit("hide_loading");
           this.isPrinting = false; // Re-enable print button on error
           evntBus.emit("show_mesage", {
@@ -2252,7 +2503,9 @@ export default {
 
       try {
         // Find updated item data from allItems
-        const updatedItem = this.allItems.find((allItem) => allItem.item_code === item.item_code);
+        const updatedItem = this.allItems.find(
+          (allItem) => allItem.item_code === item.item_code
+        );
 
         if (updatedItem) {
           // Update relevant fields while preserving POS-specific data
@@ -2280,7 +2533,11 @@ export default {
           item._detailSynced = true;
         }
       } catch (error) {
-        posawesome_logger.error("Invoice.js", "Item detail update failed", error);
+        posawesome_logger.error(
+          "Invoice.js",
+          "Item detail update failed",
+          error
+        );
       }
     },
   },
@@ -2292,17 +2549,19 @@ export default {
       this.pos_profile = data.pos_profile;
       this.setCustomer(data.pos_profile?.customer);
       this.pos_opening_shift = data.pos_opening_shift;
-      this.float_precision = frappe.defaults.get_default("float_precision") || 2;
-      this.currency_precision = frappe.defaults.get_default("currency_precision") || 2;
+      this.float_precision =
+        frappe.defaults.get_default("float_precision") || 2;
+      this.currency_precision =
+        frappe.defaults.get_default("currency_precision") || 2;
       this.invoiceType = "Invoice";
       evntBus.emit("update_invoice_type", this.invoiceType);
 
       // Log POS Profile data for debugging
       posawesome_logger.info(
         "Invoice.js",
-        `POS Profile registered: posa_allow_return=${data.pos_profile?.posa_allow_return}, payments=${
-          data.pos_profile?.payments?.length || 0
-        }`,
+        `POS Profile registered: posa_allow_return=${
+          data.pos_profile?.posa_allow_return
+        }, payments=${data.pos_profile?.payments?.length || 0}`,
         data.pos_profile
       );
     });
@@ -2329,7 +2588,8 @@ export default {
       this.new_invoice(data);
 
       if (this.invoice_doc?.is_return) {
-        this.additional_discount_percentage = -data.additional_discount_percentage;
+        this.additional_discount_percentage =
+          -data.additional_discount_percentage;
         this.return_doc = data;
       } else {
         // Additional processing if needed
@@ -2359,7 +2619,8 @@ export default {
 
       // Handle return_doc data only if it exists (for returns against specific invoices)
       if (data.return_doc) {
-        this.additional_discount_percentage = -data.return_doc.additional_discount_percentage || 0;
+        this.additional_discount_percentage =
+          -data.return_doc.additional_discount_percentage || 0;
         this.return_doc = data.return_doc;
       } else {
         // Free return without reference invoice
@@ -2492,7 +2753,9 @@ export default {
         // Transaction-level offer (grand_total, customer, customer_group)
         if (
           offer.discount_percentage &&
-          ["grand_total", "customer", "customer_group", ""].includes(offer.offer_type || "")
+          ["grand_total", "customer", "customer_group", ""].includes(
+            offer.offer_type || ""
+          )
         ) {
           // Update both discount fields
           this.additional_discount_percentage = flt(offer.discount_percentage);
@@ -2531,7 +2794,10 @@ export default {
         // If boolean true (all offers removed), clear everything
         if (removedOffer === true) {
           // Clear transaction-level discounts
-          if (this.additional_discount_percentage > 0 || this.offer_discount_percentage > 0) {
+          if (
+            this.additional_discount_percentage > 0 ||
+            this.offer_discount_percentage > 0
+          ) {
             this.additional_discount_percentage = 0;
             this.offer_discount_percentage = 0;
           }
@@ -2550,15 +2816,25 @@ export default {
         const offerName = removedOffer.name || removedOffer.offer_name;
 
         // Check if it's a transaction-level offer
-        const isTransactionOffer = ["grand_total", "customer", "customer_group", ""].includes(offerType);
+        const isTransactionOffer = [
+          "grand_total",
+          "customer",
+          "customer_group",
+          "",
+        ].includes(offerType);
 
         // Check if it's an item-level offer
-        const isItemOffer = ["item_code", "item_group", "brand"].includes(offerType);
+        const isItemOffer = ["item_code", "item_group", "brand"].includes(
+          offerType
+        );
 
         // Clear transaction-level discounts if it's a transaction offer
         if (isTransactionOffer) {
           // Always clear both if either has a value - check BOTH fields
-          if (this.additional_discount_percentage > 0 || this.offer_discount_percentage > 0) {
+          if (
+            this.additional_discount_percentage > 0 ||
+            this.offer_discount_percentage > 0
+          ) {
             this.additional_discount_percentage = 0;
             this.offer_discount_percentage = 0;
           }
