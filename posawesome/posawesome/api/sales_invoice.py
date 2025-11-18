@@ -8,6 +8,7 @@ import json
 import frappe
 from frappe import _
 from frappe.utils import flt
+from posawesome import backend_logger
 
 
 # ===== DELETE OPERATIONS =====
@@ -43,7 +44,8 @@ def delete_invoice(invoice_name):
         }
 
     except Exception as e:
-        frappe.logger().error(f"[sales_invoice.py] delete_invoice: {str(e)}")
+        backend_logger.error(
+            f"Error deleting invoice {invoice_name}: {str(e)}", exc_info=True)
         frappe.throw(_("Error deleting invoice"))
 
 
@@ -52,7 +54,7 @@ def delete_invoice(invoice_name):
 def calculate_return_stats(invoice_name):
     """
     Calculate remaining returnable amounts for an invoice.
-    
+
     Returns dict with:
     - remaining_returnable_amount: Total amount still available for return
     - items: List of items with per-item return stats
@@ -60,7 +62,7 @@ def calculate_return_stats(invoice_name):
     try:
         # Get original invoice
         invoice = frappe.get_doc("Sales Invoice", invoice_name)
-        
+
         # Get all return invoices against this invoice
         return_invoices = frappe.get_all(
             "Sales Invoice",
@@ -71,16 +73,18 @@ def calculate_return_stats(invoice_name):
             },
             fields=["name", "grand_total"]
         )
-        
+
         # Calculate total already returned amount
-        total_returned_amount = sum([flt(r.grand_total) for r in return_invoices])
-        
+        total_returned_amount = sum([flt(r.grand_total)
+                                    for r in return_invoices])
+
         # Calculate remaining amount (note: return amounts are negative)
-        remaining_amount = flt(invoice.grand_total) + flt(total_returned_amount)
-        
+        remaining_amount = flt(invoice.grand_total) + \
+            flt(total_returned_amount)
+
         # Calculate per-item return stats
         items_stats = []
-        
+
         for item in invoice.items:
             # Get all returned quantities for this item
             returned_items = frappe.db.sql("""
@@ -94,31 +98,34 @@ def calculate_return_stats(invoice_name):
                 )
                 AND item_code = %s
             """, (invoice_name, item.item_code), as_dict=1)
-            
+
             # Note: returned qty is negative, so we need to negate it
-            total_returned_qty = -1 * flt(returned_items[0].total_returned_qty) if returned_items and returned_items[0].total_returned_qty else 0
-            
+            total_returned_qty = -1 * \
+                flt(returned_items[0].total_returned_qty) if returned_items and returned_items[0].total_returned_qty else 0
+
             # Calculate remaining returnable quantity
             remaining_qty = flt(item.qty) - flt(total_returned_qty)
-            
+
             items_stats.append({
                 "item_code": item.item_code,
                 "item_name": item.item_name,
                 "original_qty": flt(item.qty),
                 "already_returned_qty": flt(total_returned_qty),
                 "remaining_returnable_qty": max(0, remaining_qty),
-                "max_returnable_qty": max(0, remaining_qty)  # For frontend compatibility
+                # For frontend compatibility
+                "max_returnable_qty": max(0, remaining_qty)
             })
-        
+
         return {
             "remaining_returnable_amount": max(0, remaining_amount),
             "total_returned_amount": abs(total_returned_amount),
             "original_amount": flt(invoice.grand_total),
             "items": items_stats
         }
-        
+
     except Exception as e:
-        frappe.logger().error(f"[sales_invoice.py] calculate_return_stats: {str(e)}")
+        backend_logger.error(
+            f"[sales_invoice.py] calculate_return_stats: {str(e)}")
         return {
             "remaining_returnable_amount": 0,
             "total_returned_amount": 0,
@@ -140,7 +147,7 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
     - Only submitted invoices (docstatus=1)
     - Not already returns (is_return=0)
     - Only paid or partly paid (outstanding_amount < grand_total)
-    
+
     Note: Does NOT filter by "Credit Note Issued" status because:
     - Partial returns are allowed (ERPNext native behavior)
     - Invoice may have status "Paid" or "Partly Paid" with remaining returnable amount
@@ -193,11 +200,11 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
 
         # Get items data and return stats for each paid invoice
         returnable_invoices = []
-        
+
         for invoice in paid_invoices:
             # Calculate return stats
             return_stats = calculate_return_stats(invoice["name"])
-            
+
             # Only include invoices with remaining returnable amount > 0
             if return_stats["remaining_returnable_amount"] > 0:
                 items = frappe.get_all(
@@ -209,7 +216,7 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
                         "price_list_rate", "conversion_factor"
                     ]
                 )
-                
+
                 # Enrich items with return stats
                 items_dict = {item["item_code"]: item for item in items}
                 for item_stat in return_stats["items"]:
@@ -219,18 +226,19 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
                             "already_returned_qty": item_stat["already_returned_qty"],
                             "remaining_returnable_qty": item_stat["remaining_returnable_qty"]
                         })
-                
+
                 invoice["items"] = list(items_dict.values())
                 invoice["remaining_returnable_amount"] = return_stats["remaining_returnable_amount"]
                 invoice["total_returned_amount"] = return_stats["total_returned_amount"]
                 invoice["original_amount"] = return_stats["original_amount"]
-                
+
                 returnable_invoices.append(invoice)
 
         return returnable_invoices
 
     except Exception as e:
-        frappe.logger().error(f"[sales_invoice.py] get_invoices_for_return: {str(e)}")
+        backend_logger.error(
+            f"[sales_invoice.py] get_invoices_for_return: {str(e)}")
         frappe.throw(_("Error fetching invoices for return"))
         return []
 
@@ -276,7 +284,7 @@ def create_and_submit_invoice(invoice_doc):
         doc.is_pos = 1
         doc.update_stock = 1
         doc.flags.from_pos_page = True
-        
+
         # VALIDATION: If this is a return invoice, validate against over-refunds
         if doc.is_return and doc.return_against:
             validate_return_limits(doc)
@@ -302,14 +310,15 @@ def create_and_submit_invoice(invoice_doc):
         return doc.as_dict()
 
     except Exception as e:
-        frappe.logger().error(f"[sales_invoice.py] create_and_submit_invoice: {str(e)}")
+        backend_logger.error(
+            f"[sales_invoice.py] create_and_submit_invoice: {str(e)}")
         frappe.throw(_("Error creating and submitting invoice"))
 
 
 def validate_return_limits(return_doc):
     """
     Validate that return invoice doesn't exceed remaining returnable amounts.
-    
+
     Raises ValidationError if:
     - Total return amount exceeds remaining amount
     - Any item quantity exceeds remaining quantity
@@ -317,33 +326,35 @@ def validate_return_limits(return_doc):
     try:
         if not return_doc.return_against:
             return
-        
+
         # Get return stats for original invoice
         stats = calculate_return_stats(return_doc.return_against)
-        
+
         # Calculate total return amount (absolute value)
         return_total = abs(flt(return_doc.grand_total))
         remaining_amount = flt(stats["remaining_returnable_amount"])
-        
+
         # Check total amount
         if return_total > remaining_amount + 0.01:  # Allow 0.01 rounding tolerance
             frappe.throw(
                 _("Return amount {0} exceeds remaining returnable amount {1}").format(
-                    frappe.utils.fmt_money(return_total, currency=return_doc.currency),
-                    frappe.utils.fmt_money(remaining_amount, currency=return_doc.currency)
+                    frappe.utils.fmt_money(
+                        return_total, currency=return_doc.currency),
+                    frappe.utils.fmt_money(
+                        remaining_amount, currency=return_doc.currency)
                 ),
                 title=_("Return Amount Exceeded")
             )
-        
+
         # Check per-item quantities
         items_stats_dict = {item["item_code"]: item for item in stats["items"]}
-        
+
         for item in return_doc.items:
             if item.item_code in items_stats_dict:
                 item_stats = items_stats_dict[item.item_code]
                 return_qty = abs(flt(item.qty))
                 max_qty = flt(item_stats["remaining_returnable_qty"])
-                
+
                 if return_qty > max_qty + 0.001:  # Allow 0.001 rounding tolerance
                     frappe.throw(
                         _("Return quantity {0} for item {1} exceeds remaining returnable quantity {2}").format(
@@ -353,9 +364,9 @@ def validate_return_limits(return_doc):
                         ),
                         title=_("Return Quantity Exceeded")
                     )
-    
+
     except Exception as e:
-        frappe.logger().error(f"[sales_invoice.py] validate_return_limits: {str(e)}")
+        backend_logger.error(
+            f"[sales_invoice.py] validate_return_limits: {str(e)}")
         # Don't block submission if validation check fails
         pass
-
