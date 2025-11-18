@@ -54,30 +54,121 @@ frappe.ui.form.on("POS Closing Shift", {
     console.log(
       `[pos_closing_shift.js] Fetching invoices for opening shift: ${frm.doc.pos_opening_shift}`
     );
-    frappe.call({
-      method: "posawesome.api.pos_closing_shift.get_pos_invoices",
-      args: {
-        pos_opening_shift: frm.doc.pos_opening_shift,
-      },
-      callback: (r) => {
-        if (r.exc) {
-          console.error(
-            `[pos_closing_shift.js] Error fetching invoices:`,
-            r.exc
+
+    // Helper function to fetch invoices (defined locally to avoid scope issues)
+    const fetchInvoices = () => {
+      console.log(
+        `[pos_closing_shift.js] fetchInvoices called, cash_mode=${frm.cash_mode_of_payment}`
+      );
+      frappe.call({
+        method: "posawesome.api.pos_closing_shift.get_pos_invoices",
+        args: {
+          pos_opening_shift: frm.doc.pos_opening_shift,
+        },
+        callback: (r) => {
+          if (r.exc) {
+            console.error(
+              `[pos_closing_shift.js] Error fetching invoices:`,
+              r.exc
+            );
+            return;
+          }
+          let pos_docs = r.message;
+          console.log(
+            `[pos_closing_shift.js] Received ${
+              pos_docs ? pos_docs.length : 0
+            } invoices from API`
           );
-          return;
-        }
-        let pos_docs = r.message;
-        console.log(
-          `[pos_closing_shift.js] Received ${
-            pos_docs ? pos_docs.length : 0
-          } invoices from API`
-        );
-        set_form_data(pos_docs, frm);
-        refresh_fields(frm);
-        set_html_data(frm);
-      },
-    });
+          console.log(
+            `[pos_closing_shift.js] Processing invoices to calculate payment reconciliation`
+          );
+          set_form_data(pos_docs, frm);
+          refresh_fields(frm);
+          set_html_data(frm);
+          console.log(
+            `[pos_closing_shift.js] Payment reconciliation updated. Final expected amounts:`,
+            frm.doc.payment_reconciliation.map((p) => ({
+              mode: p.mode_of_payment,
+              opening: p.opening_amount,
+              expected: p.expected_amount,
+            }))
+          );
+        },
+      });
+    };
+
+    // First, get cash mode of payment from POS Profile
+    // Try multiple methods to ensure we get the correct value
+    const getCashMode = () => {
+      // Method 1: Try to get from opening shift's POS Profile document
+      if (frm.doc.pos_opening_shift) {
+        frappe.db
+          .get_doc("POS Opening Shift", frm.doc.pos_opening_shift)
+          .then((opening_shift) => {
+            if (opening_shift && opening_shift.pos_profile) {
+              return frappe.db.get_doc(
+                "POS Profile",
+                opening_shift.pos_profile
+              );
+            }
+            return null;
+          })
+          .then((pos_profile) => {
+            if (pos_profile && pos_profile.posa_cash_mode_of_payment) {
+              frm.cash_mode_of_payment = pos_profile.posa_cash_mode_of_payment;
+              console.log(
+                `[pos_closing_shift.js] Cash mode from POS Profile doc: ${frm.cash_mode_of_payment}`
+              );
+              fetchInvoices();
+              return;
+            }
+            // Fallback: Use API call
+            fallbackGetCashMode();
+          })
+          .catch((err) => {
+            console.warn(
+              `[pos_closing_shift.js] Error getting POS Profile doc:`,
+              err
+            );
+            fallbackGetCashMode();
+          });
+      } else {
+        fallbackGetCashMode();
+      }
+    };
+
+    const fallbackGetCashMode = () => {
+      // Method 2: Use API call as fallback
+      frappe.call({
+        method: "frappe.client.get_value",
+        args: {
+          doctype: "POS Profile",
+          filters: { name: frm.doc.pos_profile },
+          fieldname: ["posa_cash_mode_of_payment"],
+        },
+        callback: (r) => {
+          if (r.exc || !r.message) {
+            console.error(
+              `[pos_closing_shift.js] Error fetching cash mode:`,
+              r.exc
+            );
+            frm.cash_mode_of_payment = "Cash";
+            fetchInvoices();
+            return;
+          }
+
+          // frappe.client.get_value returns {fieldname: value}
+          const cash_mode = r.message.posa_cash_mode_of_payment || "Cash";
+          frm.cash_mode_of_payment = cash_mode;
+          console.log(
+            `[pos_closing_shift.js] Cash mode from API: ${cash_mode}`
+          );
+          fetchInvoices();
+        },
+      });
+    };
+
+    getCashMode();
   },
 
   get_pos_payments(frm) {
@@ -170,30 +261,65 @@ function add_to_payments(d, frm) {
     return;
   }
 
-  // Get cash mode of payment once
-  let cash_mode_of_payment = get_value(
-    "POS Profile",
-    frm.doc.pos_profile,
-    "posa_cash_mode_of_payment"
-  );
+  // Get cash mode of payment - use cached value from form if available
+  let cash_mode_of_payment = frm.cash_mode_of_payment;
+
+  // If not cached, try to get from form's linked POS Profile document
+  if (!cash_mode_of_payment && frm.doc.pos_profile) {
+    const pos_profile_doc = frappe.model.get_doc(
+      "POS Profile",
+      frm.doc.pos_profile
+    );
+    if (pos_profile_doc && pos_profile_doc.posa_cash_mode_of_payment) {
+      cash_mode_of_payment = pos_profile_doc.posa_cash_mode_of_payment;
+      frm.cash_mode_of_payment = cash_mode_of_payment; // Cache it
+    }
+  }
+
+  // If still not found, use synchronous API call (fallback)
+  if (!cash_mode_of_payment) {
+    cash_mode_of_payment = get_value(
+      "POS Profile",
+      frm.doc.pos_profile,
+      "posa_cash_mode_of_payment"
+    );
+    if (cash_mode_of_payment) {
+      frm.cash_mode_of_payment = cash_mode_of_payment; // Cache it
+    }
+  }
+
+  // Final fallback to default
   if (!cash_mode_of_payment) {
     cash_mode_of_payment = "Cash";
+    frm.cash_mode_of_payment = cash_mode_of_payment; // Cache it
   }
+  console.log(
+    `[pos_closing_shift.js] Processing payments for invoice ${d.name}, cash mode = ${cash_mode_of_payment}`
+  );
 
   // Use base_* fields for company currency (matches Sales Register)
   const change_amount = flt(d.base_change_amount || d.change_amount || 0);
+  console.log(
+    `[pos_closing_shift.js] Invoice ${d.name}: base_change_amount = ${change_amount}`
+  );
 
   d.payments.forEach((p) => {
     // Use base_amount if available, otherwise amount (matches Sales Register logic)
     let amount = flt(p.base_amount || p.amount || 0);
+    const original_amount = amount;
 
     // For cash payments: subtract change_amount (matches Sales Register logic)
     if (p.mode_of_payment == cash_mode_of_payment) {
       amount = amount - change_amount;
       console.log(
-        `[pos_closing_shift.js] Cash payment: ${p.mode_of_payment}, amount=${
-          p.base_amount || p.amount
-        }, change=${change_amount}, final=${amount}`
+        `[pos_closing_shift.js] Cash payment for invoice ${d.name}: ` +
+          `mode=${p.mode_of_payment}, base_amount=${original_amount}, ` +
+          `change=${change_amount}, adjusted_amount=${amount}`
+      );
+    } else {
+      console.log(
+        `[pos_closing_shift.js] Non-cash payment for invoice ${d.name}: ` +
+          `mode=${p.mode_of_payment}, base_amount=${amount}`
       );
     }
 
@@ -201,9 +327,11 @@ function add_to_payments(d, frm) {
       (pay) => pay.mode_of_payment === p.mode_of_payment
     );
     if (payment) {
+      const old_expected = payment.expected_amount;
       payment.expected_amount += amount;
       console.log(
-        `[pos_closing_shift.js] Updated payment ${p.mode_of_payment}: added ${amount}, total=${payment.expected_amount}`
+        `[pos_closing_shift.js] Updated payment ${p.mode_of_payment}: ` +
+          `old_expected=${old_expected}, added=${amount}, new_expected=${payment.expected_amount}`
       );
     } else {
       frm.add_child("payment_reconciliation", {
@@ -212,7 +340,7 @@ function add_to_payments(d, frm) {
         expected_amount: amount,
       });
       console.log(
-        `[pos_closing_shift.js] Added new payment ${p.mode_of_payment}: ${amount}`
+        `[pos_closing_shift.js] Added new payment ${p.mode_of_payment}: expected_amount=${amount}`
       );
     }
   });
