@@ -1,6 +1,6 @@
 // ===== SECTION 1: IMPORTS =====
 import { evntBus } from "../bus";
-import { posawesome_logger } from "../logger.js";
+// Frontend logging: Use console.log/error/warn directly
 // Import cache manager utility
 (function () {
   if (window.clearCacheAndReload) return;
@@ -240,11 +240,7 @@ export default {
           }
         },
         error: (err) => {
-          posawesome_logger.error(
-            "Navbar.js",
-            "Error fetching cash total:",
-            err
-          );
+          console.error("Navbar.js", "Error fetching cash total:", err);
           this.totalCash = 0;
         },
       });
@@ -268,11 +264,7 @@ export default {
           }
         },
         error: (err) => {
-          posawesome_logger.error(
-            "Navbar.js",
-            "Error fetching non-cash total:",
-            err
-          );
+          console.error("Navbar.js", "Error fetching non-cash total:", err);
           this.totalNonCash = 0;
         },
       });
@@ -372,7 +364,7 @@ export default {
             this.company_name = company_doc.company_name;
           })
           .catch((err) => {
-            posawesome_logger.error(
+            console.error(
               "Navbar.js",
               "fetchShiftInvoiceCount catch error:",
               err
@@ -417,11 +409,7 @@ export default {
           }, 1000);
         }
       } catch (error) {
-        posawesome_logger.error(
-          "Navbar.js",
-          "clearCacheAndReload error:",
-          error
-        );
+        console.error("Navbar.js", "clearCacheAndReload error:", error);
         this.show_mesage({
           color: "error",
           text: "Error clearing cache: " + error.message,
@@ -446,11 +434,7 @@ export default {
           this.shift_invoice_count = response.message;
         }
       } catch (error) {
-        posawesome_logger.error(
-          "Navbar.js",
-          "getShiftInvoiceCount error:",
-          error
-        );
+        console.error("Navbar.js", "getShiftInvoiceCount error:", error);
         this.shift_invoice_count = 0;
       }
     },
@@ -473,14 +457,10 @@ export default {
             // Sound enabled successfully (logged to backend only)
           })
           .catch((err) => {
-            posawesome_logger.error(
-              "Navbar.js",
-              "enableSound play error:",
-              err
-            );
+            console.error("Navbar.js", "enableSound play error:", err);
           });
       } catch (err) {
-        posawesome_logger.error("Navbar.js", "enableSound error:", err);
+        console.error("Navbar.js", "enableSound error:", err);
       }
     },
     // Play error sound (only if enabled)
@@ -488,16 +468,12 @@ export default {
       if (this.errorSound && this.soundEnabled) {
         this.errorSound.currentTime = 0;
         this.errorSound.play().catch((err) => {
-          posawesome_logger.error(
-            "Navbar.js",
-            "Failed to play error sound:",
-            err
-          );
+          console.error("Navbar.js", "Failed to play error sound:", err);
         });
       } else {
         // If sound not enabled yet, try to enable it and play
         if (!this.soundEnabled) {
-          posawesome_logger.error(
+          console.error(
             "Navbar.js",
             "Sound not enabled, attempting to enable..."
           );
@@ -507,7 +483,7 @@ export default {
             if (this.errorSound && this.soundEnabled) {
               this.errorSound.currentTime = 0;
               this.errorSound.play().catch((err) => {
-                posawesome_logger.error(
+                console.error(
                   "Navbar.js",
                   "Failed to play error sound after enable:",
                   err
@@ -528,7 +504,7 @@ export default {
       const timeoutId = setTimeout(() => {
         if (!responded) {
           timeoutTriggered = true;
-          posawesome_logger.error(
+          console.error(
             "Navbar.js",
             "Ping timeout after 2 seconds - no response from server"
           );
@@ -568,7 +544,7 @@ export default {
             if (!timeoutTriggered) {
               responded = true;
               clearTimeout(timeoutId);
-              posawesome_logger.error("Navbar.js", "Ping error:", err);
+              console.error("Navbar.js", "Ping error:", err);
               this.pingTime = "999";
               // Mark connection as lost
               this.wasConnectionLost = true;
@@ -579,14 +555,10 @@ export default {
           async: true,
         });
       } catch (error) {
-        posawesome_logger.error("Navbar.js", "measurePing error:", error);
+        console.error("Navbar.js", "measurePing error:", error);
         // Exception happens immediately when connection is lost
         if (!timeoutTriggered) {
-          posawesome_logger.error(
-            "Navbar.js",
-            "Ping exception (connection lost)",
-            error
-          );
+          console.error("Navbar.js", "Ping exception (connection lost)", error);
           this.pingTime = "999";
           // Play sound immediately on exception (connection lost)
           this.playErrorSound();
@@ -644,7 +616,7 @@ export default {
         el.style.filter = "brightness(1.03)";
         el.style.borderColor = "rgba(0,0,0,0.08)";
       } catch (err) {
-        posawesome_logger.error("Navbar.js", "badgeMouseEnter error:", err);
+        console.error("Navbar.js", "badgeMouseEnter error:", err);
       }
     },
 
@@ -661,7 +633,7 @@ export default {
           el.style.borderColor = "";
         }
       } catch (err) {
-        posawesome_logger.error("Navbar.js", "badgeMouseLeave error:", err);
+        console.error("Navbar.js", "badgeMouseLeave error:", err);
       }
     },
   },
@@ -767,7 +739,7 @@ export default {
           this.togglePingMonitoring(enable);
         });
       } catch (error) {
-        posawesome_logger.error("Navbar.js", "created error:", error);
+        console.error("Navbar.js", "created error:", error);
         this.show_mesage({
           color: "error",
           text: "An error occurred while loading the menu.",
