@@ -276,12 +276,18 @@ def get_applicable_offers(invoice_name):
 def get_offers_for_profile(profile):
     """Legacy API - redirects to centralized API"""
     try:
+        # FRAPPE STANDARD: Extract name from dict if needed
+        if isinstance(profile, dict):
+            profile_name = profile.get('name')
+        else:
+            profile_name = profile
+
         # Check if offers are enabled
-        if not check_offers_enabled_by_profile(profile):
+        if not check_offers_enabled_by_profile(profile_name):
             return []
 
         # Get applicable offers for POS Profile
-        pos_profile_doc = frappe.get_doc("POS Profile", profile)
+        pos_profile_doc = frappe.get_doc("POS Profile", profile_name)
         company = pos_profile_doc.company
         warehouse = pos_profile_doc.warehouse
         date = nowdate()
@@ -319,7 +325,13 @@ def check_offers_enabled_by_profile(profile):
         return False
 
     try:
-        pos_profile_doc = frappe.get_doc("POS Profile", profile)
+        # FRAPPE STANDARD: Extract name from dict if needed
+        if isinstance(profile, dict):
+            profile_name = profile.get('name')
+        else:
+            profile_name = profile
+
+        pos_profile_doc = frappe.get_doc("POS Profile", profile_name)
         return pos_profile_doc.get("posa_auto_fetch_offers")
     except:
         return False
