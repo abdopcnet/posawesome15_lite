@@ -219,6 +219,11 @@ def get_current_shift_name():
                         "posa_default_card_view",
                         "posa_fetch_zero_qty",
                         "posa_hide_zero_price_items",
+                        # Tax fields
+                        "posa_apply_tax",
+                        "posa_tax_type",
+                        "posa_tax_percent",
+                        "apply_discount_on",
                     ],
                     limit=1,
                     ignore_permissions=True
