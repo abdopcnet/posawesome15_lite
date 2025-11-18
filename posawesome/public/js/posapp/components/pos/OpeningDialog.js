@@ -200,11 +200,19 @@ export default {
         })
         .then((r) => {
           if (r.message) {
-            evntBus.emit(EVENT_NAMES.REGISTER_POS_DATA, r.message);
-            evntBus.emit(EVENT_NAMES.SET_COMPANY, r.message.company);
+            // r.message is the opening_voucher document (as_dict())
+            const opening_shift = r.message;
+            evntBus.emit(EVENT_NAMES.REGISTER_POS_DATA, opening_shift);
+            evntBus.emit(EVENT_NAMES.SET_COMPANY, opening_shift.company);
             // POS Opening Shift Created
+            // r.message is the opening_voucher document as dict (from as_dict())
+            const shift_name = opening_shift.name || "غير معروف";
+            console.log(
+              "[OpeningDialog.js] Opening shift created:",
+              opening_shift
+            );
             showMessage(
-              `تم إنشاء نوبة فتح نقطة البيع ${r.message.pos_opening_shift.name}`,
+              `تم إنشاء نوبة فتح نقطة البيع ${shift_name}`,
               "success"
             );
             close_opening_dialog();
