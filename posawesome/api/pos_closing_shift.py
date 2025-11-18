@@ -323,9 +323,8 @@ def make_closing_shift_from_opening(opening_shift):
         pos_transactions = _get_pos_invoices_helper(opening.name)
         for invoice in pos_transactions:
             closing.append("pos_transactions", {
-                "pos_invoice": invoice.get("name"),
+                "sales_invoice": invoice.get("name"),  # ← Field name is 'sales_invoice' not 'pos_invoice'
                 "posting_date": invoice.get("posting_date"),
-                "posting_time": invoice.get("posting_time"),
                 "grand_total": invoice.get("grand_total"),
                 "customer": invoice.get("customer")
             })
@@ -507,17 +506,28 @@ def _get_payments_entries_helper(pos_opening_shift):
     """
     Helper: Get payment entries for POS Opening Shift
     Returns list of payment entries
+    
+    NOTE: Payment Entry doctype doesn't have posa_pos_opening_shift field.
+    This function returns empty list for now. If you need to track Payment Entries,
+    you'll need to add a custom field to Payment Entry doctype.
     """
     try:
-        return frappe.get_all(
-            "Payment Entry",
-            filters={
-                "posa_pos_opening_shift": pos_opening_shift,
-                "docstatus": 1
-            },
-            fields=["name", "posting_date", "mode_of_payment", "paid_amount"],
-            order_by="posting_date"
-        )
+        # Payment Entry doesn't have posa_pos_opening_shift field
+        # Return empty list to avoid SQL errors
+        return []
+        
+        # TODO: If you want to link Payment Entries to POS Opening Shift:
+        # 1. Add custom field 'posa_pos_opening_shift' to Payment Entry doctype
+        # 2. Then uncomment this code:
+        # return frappe.get_all(
+        #     "Payment Entry",
+        #     filters={
+        #         "posa_pos_opening_shift": pos_opening_shift,
+        #         "docstatus": 1
+        #     },
+        #     fields=["name", "posting_date", "mode_of_payment", "paid_amount"],
+        #     order_by="posting_date"
+        # )
     except Exception as e:
         error_logger.error(
             f"[pos_closing_shift.py] _get_payments_entries_helper: {str(e)}")
