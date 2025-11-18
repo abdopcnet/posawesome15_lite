@@ -49,7 +49,7 @@ frappe.ui.form.on("POS Closing Shift", {
             mode_of_payment: detail.mode_of_payment,
             opening_amount: opening_amount,
             expected_amount: opening_amount, // Will be updated by add_to_payments
-            closing_amount: opening_amount, // Auto-fill with expected_amount (as it was before)
+            closing_amount: 0, // User needs to fill manually
             difference: 0, // Initially no difference
           });
         });
@@ -77,8 +77,6 @@ frappe.ui.form.on("POS Closing Shift", {
         }
         const pos_docs = r.message;
         await set_form_data(pos_docs, frm);
-        // Auto-fill closing_amount with expected_amount
-        auto_fill_closing_amounts(frm);
         refresh_fields(frm);
         set_html_data(frm);
       },
@@ -234,18 +232,10 @@ async function add_to_payments(d, frm, conversion_rate) {
           conversion_rate
         );
       }
-      const old_expected = payment.expected_amount;
-      const old_closing = payment.closing_amount;
       payment.expected_amount += flt(amount);
-
-      // Auto-update closing_amount to match new expected_amount if it was previously matching
-      if (flt(old_closing) === flt(old_expected)) {
-        payment.closing_amount = flt(payment.expected_amount);
-        payment.difference = 0;
-      } else {
-        payment.difference =
-          flt(payment.closing_amount) - flt(payment.expected_amount);
-      }
+      // Recalculate difference (closing_amount is filled by user)
+      payment.difference =
+        flt(payment.closing_amount || 0) - flt(payment.expected_amount);
     } else {
       let amount = get_base_value(p, "amount", "base_amount", conversion_rate);
       if (p.mode_of_payment === cash_mode_of_payment) {
@@ -260,7 +250,7 @@ async function add_to_payments(d, frm, conversion_rate) {
         mode_of_payment: p.mode_of_payment,
         opening_amount: 0,
         expected_amount: amount,
-        closing_amount: amount, // Auto-fill with expected_amount
+        closing_amount: 0, // User needs to fill manually
         difference: 0,
       });
     }
@@ -273,24 +263,17 @@ function add_pos_payment_to_payments(p, frm) {
   );
   if (payment) {
     let amount = p.paid_amount;
-    const old_expected = payment.expected_amount;
     payment.expected_amount += flt(amount);
-    // Auto-update closing_amount to match new expected_amount if it was previously matching
-    if (flt(payment.closing_amount) === flt(old_expected)) {
-      payment.closing_amount = flt(payment.expected_amount);
-      payment.difference = 0;
-    } else {
-      // Recalculate difference
-      payment.difference =
-        flt(payment.closing_amount) - flt(payment.expected_amount);
-    }
+    // Recalculate difference (closing_amount is filled by user)
+    payment.difference =
+      flt(payment.closing_amount || 0) - flt(payment.expected_amount);
   } else {
     const expected_amount = flt(p.amount || 0);
     frm.add_child("payment_reconciliation", {
       mode_of_payment: p.mode_of_payment,
       opening_amount: 0,
       expected_amount: expected_amount,
-      closing_amount: expected_amount, // Auto-fill with expected_amount (as it was before)
+      closing_amount: 0, // User needs to fill manually
       difference: 0, // Initially no difference
     });
   }
