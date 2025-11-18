@@ -3,6 +3,7 @@ import { evntBus } from "../../bus";
 import format from "../../format";
 import Customer from "./Customer.vue";
 import { API_MAP } from "../../api_mapper.js";
+import { posawesome_logger } from "../../logger.js";
 
 const UI_CONFIG = {
   SEARCH_MIN_LENGTH: 3,
@@ -349,7 +350,7 @@ export default {
       this.updateInvoiceDocLocally();
 
       // Log item field change
-      console.log(
+      posawesome_logger.error(
         "[Invoice.js] Item Field Changed - اسم الصنف:",
         item.item_name,
         "الكمية:",
@@ -424,7 +425,9 @@ export default {
     },
 
     quick_return() {
-      console.log("[Invoice.js] Button Clicked: مرتجع سريع (Quick Return)");
+      posawesome_logger.error(
+        "[Invoice.js] Button Clicked: مرتجع سريع (Quick Return)"
+      );
       // Enable Quick Return Mode - creates return invoice without linking to previous invoice
       evntBus.emit("set_customer_readonly", true);
       this.invoiceType = "Return";
@@ -567,7 +570,7 @@ export default {
     // DEPRECATED: Use calculateItemAmount() instead
     // Kept for backward compatibility with legacy code
     calculateDiscountedPrice(item, discountPercent) {
-      console.log(
+      posawesome_logger.error(
         "[Invoice.js] calculateDiscountedPrice is deprecated, use calculateItemAmount"
       );
 
@@ -655,13 +658,15 @@ export default {
             }
           }
         } catch (error) {
-          console.log("[Invoice.js] loadInvoiceDoc error:", error);
+          posawesome_logger.error("[Invoice.js] loadInvoiceDoc error:", error);
         }
       }
     },
 
     cancel_invoice() {
-      console.log("[Invoice.js] Button Clicked: ألغاء (Cancel Invoice)");
+      posawesome_logger.error(
+        "[Invoice.js] Button Clicked: ألغاء (Cancel Invoice)"
+      );
       // Emit event to clear return invoice highlighting
       evntBus.emit("invoice_submitted");
 
@@ -995,7 +1000,7 @@ export default {
               vm.reload_invoice()
                 .then(() => resolve(vm.invoice_doc))
                 .catch((reloadError) => {
-                  console.log(
+                  posawesome_logger.error(
                     "[Invoice.js] reload_invoice catch error:",
                     reloadError
                   );
@@ -1034,7 +1039,7 @@ export default {
     },
 
     async show_payment() {
-      console.log("[Invoice.js] Button Clicked: دفع (Pay)");
+      posawesome_logger.error("[Invoice.js] Button Clicked: دفع (Pay)");
       // Loading...
       evntBus.emit("show_loading", { text: "جاري التحميل...", color: "info" });
 
@@ -1046,7 +1051,7 @@ export default {
         const invoice_doc = await this.process_invoice();
 
         // DEBUG: Log to verify rounded_total is correct
-        console.log(
+        posawesome_logger.error(
           "[Invoice.js] show_payment: rounded_total:",
           invoice_doc.rounded_total,
           "grand_total:",
@@ -1054,7 +1059,7 @@ export default {
         );
 
         // Log invoice totals
-        console.log(
+        posawesome_logger.error(
           "[Invoice.js] Invoice Totals - الإجمالي الكلي:",
           invoice_doc.grand_total,
           "الصافي:",
@@ -1102,7 +1107,10 @@ export default {
               // Payment stays local until Print
             }
           } catch (error) {
-            console.log("[Invoice.js] getDefaultPayment error:", error);
+            posawesome_logger.error(
+              "[Invoice.js] getDefaultPayment error:",
+              error
+            );
           }
         }
 
@@ -1118,7 +1126,7 @@ export default {
         evntBus.emit("invoice_session_reset");
         evntBus.emit("hide_loading");
       } catch (error) {
-        console.log("[Invoice.js] prepareInvoice error:", error);
+        posawesome_logger.error("[Invoice.js] prepareInvoice error:", error);
         evntBus.emit("hide_loading");
         evntBus.emit("show_mesage", {
           text: "خطأ في إعداد الفاتورة: " + error.message,
@@ -1128,7 +1136,7 @@ export default {
     },
 
     open_returns() {
-      console.log("[Invoice.js] Button Clicked: مرتجع (Return)");
+      posawesome_logger.error("[Invoice.js] Button Clicked: مرتجع (Return)");
       if (!this.pos_profile?.posa_allow_return) return;
 
       evntBus.emit("open_returns", {
@@ -1302,7 +1310,7 @@ export default {
       this.updateInvoiceDocLocally();
 
       // Log item field change
-      console.log(
+      posawesome_logger.error(
         "[Invoice.js] Item Field Changed - اسم الصنف:",
         item.item_name,
         "الكمية:",
@@ -1519,7 +1527,7 @@ export default {
           }
         }
       } catch (error) {
-        console.log("[Invoice.js] checkOfferApplied error:", error);
+        posawesome_logger.error("[Invoice.js] checkOfferApplied error:", error);
         return false;
       }
 
@@ -1798,13 +1806,13 @@ export default {
           );
 
           if (Math.abs(item.discount_amount - expectedDiscountAmount) > 0.01) {
-            console.log(
+            posawesome_logger.error(
               `[Invoice.js] Item ${item.item_code}: discount mismatch - expected: ${expectedDiscountAmount}, actual: ${item.discount_amount}`
             );
           }
 
           if (Math.abs(item.rate - expectedRate) > 0.01) {
-            console.log(
+            posawesome_logger.error(
               `[Invoice.js] Item ${item.item_code}: rate mismatch - expected: ${expectedRate}, actual: ${item.rate}`
             );
           }
@@ -1823,7 +1831,7 @@ export default {
         );
 
         if (Math.abs(doc.discount_amount - expectedDiscount) > 0.01) {
-          console.log(
+          posawesome_logger.error(
             "[Invoice.js] Invoice discount mismatch - expected:",
             expectedDiscount,
             "actual:",
@@ -1834,7 +1842,7 @@ export default {
 
       // Warn if both types are active (should not happen in POSAwesome)
       if (hasItemDiscounts && hasInvoiceDiscount) {
-        console.log(
+        posawesome_logger.error(
           "[Invoice.js] Both item and invoice discounts active - this may cause issues"
         );
       }
@@ -2453,7 +2461,7 @@ export default {
     },
 
     printInvoice() {
-      console.log("[Invoice.js] Button Clicked: طباعة (Print)");
+      posawesome_logger.error("[Invoice.js] Button Clicked: طباعة (Print)");
       if (!this.invoice_doc || this.isPrinting) return;
 
       // التحقق من وجود مدفوعات صالحة - إذا لم توجد، لا تفعل شيء
@@ -2461,7 +2469,7 @@ export default {
       this.calculateTotalsLocally(doc);
 
       // Log invoice totals
-      console.log(
+      posawesome_logger.error(
         "[Invoice.js] Invoice Totals - الإجمالي الكلي:",
         doc.grand_total,
         "الصافي:",
@@ -2531,7 +2539,9 @@ export default {
             // Clear search fields in ItemsSelector
             evntBus.emit("clear_search_fields");
           } else {
-            console.log("Invoice.js - Submit failed: No invoice name returned");
+            posawesome_logger.error(
+              "Invoice.js - Submit failed: No invoice name returned"
+            );
             evntBus.emit("show_mesage", {
               // Submit failed
               text: "فشل الإرسال",
@@ -2540,7 +2550,7 @@ export default {
           }
         },
         error: (err) => {
-          console.log(
+          posawesome_logger.error(
             "[Invoice.js] Server error:",
             err?.message || "Unknown error"
           );
@@ -2592,7 +2602,10 @@ export default {
           item._detailSynced = true;
         }
       } catch (error) {
-        console.log("[Invoice.js] Item detail update failed:", error);
+        posawesome_logger.error(
+          "[Invoice.js] Item detail update failed:",
+          error
+        );
       }
     },
   },
@@ -2784,7 +2797,7 @@ export default {
   watch: {
     "invoice_doc.grand_total"(newVal, oldVal) {
       if (newVal !== oldVal && this.invoice_doc) {
-        console.log(
+        posawesome_logger.error(
           "[Invoice.js] Invoice Totals Changed - الإجمالي الكلي:",
           this.invoice_doc.grand_total,
           "الصافي:",
