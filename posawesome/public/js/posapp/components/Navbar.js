@@ -240,7 +240,10 @@ export default {
           }
         },
         error: (err) => {
-          posawesome_logger.error("[Navbar.js] Error fetching cash total:", err);
+          posawesome_logger.error(
+            "[Navbar.js] Error fetching cash total:",
+            err
+          );
           this.totalCash = 0;
         },
       });
@@ -264,7 +267,10 @@ export default {
           }
         },
         error: (err) => {
-          posawesome_logger.error("[Navbar.js] Error fetching non-cash total:", err);
+          posawesome_logger.error(
+            "[Navbar.js] Error fetching non-cash total:",
+            err
+          );
           this.totalNonCash = 0;
         },
       });
@@ -364,7 +370,10 @@ export default {
             this.company_name = company_doc.company_name;
           })
           .catch((err) => {
-            posawesome_logger.error("[Navbar.js] fetchShiftInvoiceCount catch error:", err);
+            posawesome_logger.error(
+              "[Navbar.js] fetchShiftInvoiceCount catch error:",
+              err
+            );
             // Error fetching company info
           });
       }
@@ -405,7 +414,10 @@ export default {
           }, 1000);
         }
       } catch (error) {
-        posawesome_logger.error("[Navbar.js] clearCacheAndReload error:", error);
+        posawesome_logger.error(
+          "[Navbar.js] clearCacheAndReload error:",
+          error
+        );
         this.show_mesage({
           color: "error",
           text: "Error clearing cache: " + error.message,
@@ -430,7 +442,10 @@ export default {
           this.shift_invoice_count = response.message;
         }
       } catch (error) {
-        posawesome_logger.error("[Navbar.js] getShiftInvoiceCount error:", error);
+        posawesome_logger.error(
+          "[Navbar.js] getShiftInvoiceCount error:",
+          error
+        );
         this.shift_invoice_count = 0;
       }
     },
@@ -450,7 +465,7 @@ export default {
             this.errorSound.pause();
             this.errorSound.currentTime = 0;
             this.soundEnabled = true;
-            posawesome_logger.error("[Navbar] Sound enabled successfully");
+            // Sound enabled successfully (logged to backend only)
           })
           .catch((err) => {
             posawesome_logger.error("[Navbar.js] enableSound play error:", err);
@@ -464,12 +479,17 @@ export default {
       if (this.errorSound && this.soundEnabled) {
         this.errorSound.currentTime = 0;
         this.errorSound.play().catch((err) => {
-          posawesome_logger.error("[Navbar.js] Failed to play error sound:", err);
+          posawesome_logger.error(
+            "[Navbar.js] Failed to play error sound:",
+            err
+          );
         });
       } else {
         // If sound not enabled yet, try to enable it and play
         if (!this.soundEnabled) {
-          posawesome_logger.error("[Navbar.js] Sound not enabled, attempting to enable...");
+          posawesome_logger.error(
+            "[Navbar.js] Sound not enabled, attempting to enable..."
+          );
           this.enableSound();
           // Try to play after a short delay
           setTimeout(() => {
@@ -520,7 +540,7 @@ export default {
 
               // If connection was lost before and now it's back, reload page
               if (this.wasConnectionLost) {
-                posawesome_logger.error("[Navbar] Connection restored! Reloading page...");
+                // Connection restored! Reloading page... (logged to backend only)
                 this.wasConnectionLost = false;
                 // Use clearCacheAndReload if available, otherwise just reload
                 if (window.clearCacheAndReload) {
@@ -549,7 +569,11 @@ export default {
         posawesome_logger.error("[Navbar.js] measurePing error:", error);
         // Exception happens immediately when connection is lost
         if (!timeoutTriggered) {
-          posawesome_logger.error("[Navbar.js] Ping exception (connection lost):", error);
+          posawesome_logger.error(
+            "Navbar.js",
+            "Ping exception (connection lost)",
+            error
+          );
           this.pingTime = "999";
           // Play sound immediately on exception (connection lost)
           this.playErrorSound();
