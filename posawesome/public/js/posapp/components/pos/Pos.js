@@ -293,23 +293,46 @@ export default {
 
     async submit_closing_pos(data) {
       try {
+        console.log(
+          "[Pos.js] submit_closing_pos: Submitting closing shift with data:",
+          {
+            name: data.name,
+            payment_reconciliation_count:
+              data.payment_reconciliation?.length || 0,
+            payment_reconciliation: data.payment_reconciliation?.map((p) => ({
+              mode: p.mode_of_payment,
+              opening: p.opening_amount,
+              expected: p.expected_amount,
+              closing: p.closing_amount, // ✅ User input
+              difference: p.difference,
+            })),
+          }
+        );
+
         const response = await frappe.call({
           method: API_MAP.POS_CLOSING_SHIFT.SUBMIT_CLOSING_SHIFT,
           args: {
-            closing_shift: data,
+            closing_shift: data, // ✅ Send entire data object including payment_reconciliation
           },
         });
 
         if (response.message) {
+          console.log(
+            "[Pos.js] submit_closing_pos: Successfully submitted closing shift:",
+            response.message.name
+          );
           // Cashier shift closed successfully
           this.show_message("تم إغلاق نوبة الصراف بنجاح", "success");
           await this.check_opening_entry();
         } else {
           // Failed to close cashier shift
+          console.error(
+            "[Pos.js] submit_closing_pos: No response message from backend"
+          );
           this.show_message("فشل إغلاق نوبة الصراف", "error");
         }
       } catch (error) {
-        console.error("Pos.js", "submit_closing_pos error", error);
+        console.error("[Pos.js] submit_closing_pos error:", error);
         this.show_message("فشل إغلاق نوبة الصراف", "error");
       }
     },
