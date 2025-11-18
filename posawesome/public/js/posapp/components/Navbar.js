@@ -362,7 +362,8 @@ export default {
           .then((company_doc) => {
             this.company_name = company_doc.company_name;
           })
-          .catch(() => {
+          .catch((err) => {
+            console.log("[Navbar.js] fetchShiftInvoiceCount catch error:", err);
             // Error fetching company info
           });
       }
