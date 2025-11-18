@@ -72,12 +72,12 @@ export default {
 
       // View State
       items_view: VIEW_MODES.LIST,
-      item_group: "ALL",
+      item_group: "item_group_menu",
       loading: false,
       search_loading: false,
 
       // Items Data
-      items_group: ["ALL"],
+      items_group: ["item_group_menu"],
       items: [],
 
       // Search State
@@ -145,9 +145,8 @@ export default {
       this.search = this.get_search(this.first_search);
 
       // Cache expensive operations
-      const groupFilter = this.item_group !== "ALL";
-      const hasSearch =
-        this.search && this.search.length >= UI_CONFIG.SEARCH_MIN_LENGTH;
+      const groupFilter = this.item_group !== "item_group_menu";
+      const hasSearch = this.search && this.search.length >= UI_CONFIG.SEARCH_MIN_LENGTH;
 
       let filtred_list = [];
       let filtred_group_list = [];
@@ -155,31 +154,22 @@ export default {
       // Filter by group - cache toLowerCase results
       if (groupFilter) {
         const lowerGroup = this.item_group.toLowerCase();
-        filtred_group_list = this.items.filter((item) =>
-          item.item_group.toLowerCase().includes(lowerGroup)
-        );
+        filtred_group_list = this.items.filter((item) => item.item_group.toLowerCase().includes(lowerGroup));
       } else {
         filtred_group_list = this.items;
       }
 
       // Filter by search term
       if (!hasSearch) {
-        filtred_list = filtred_group_list.slice(
-          0,
-          UI_CONFIG.MAX_DISPLAYED_ITEMS
-        );
+        filtred_list = filtred_group_list.slice(0, UI_CONFIG.MAX_DISPLAYED_ITEMS);
       } else {
         // Search in item_code - cache toLowerCase result
         const lowerSearch = this.search.toLowerCase();
-        filtred_list = filtred_group_list.filter((item) =>
-          item.item_code.toLowerCase().includes(lowerSearch)
-        );
+        filtred_list = filtred_group_list.filter((item) => item.item_code.toLowerCase().includes(lowerSearch));
 
         // Search in item_name if no results
         if (filtred_list.length === 0) {
-          filtred_list = filtred_group_list.filter((item) =>
-            item.item_name.toLowerCase().includes(lowerSearch)
-          );
+          filtred_list = filtred_group_list.filter((item) => item.item_name.toLowerCase().includes(lowerSearch));
         }
       }
 
@@ -221,8 +211,7 @@ export default {
         return;
       }
 
-      const viewportHeight =
-        window.innerHeight || document.documentElement?.clientHeight || 0;
+      const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
 
       if (!viewportHeight) {
         return;
@@ -232,10 +221,7 @@ export default {
       const available = viewportHeight - rect.top - UI_CONFIG.BOTTOM_PADDING;
 
       if (Number.isFinite(available)) {
-        this.itemsScrollHeight = Math.max(
-          UI_CONFIG.MIN_PANEL_HEIGHT,
-          Math.floor(available)
-        );
+        this.itemsScrollHeight = Math.max(UI_CONFIG.MIN_PANEL_HEIGHT, Math.floor(available));
       }
     },
 
@@ -252,9 +238,7 @@ export default {
       this.process_barcode(this.barcode_search.trim());
       this.barcode_search = "";
 
-      const barcodeInput = document.querySelector(
-        'input[placeholder*="Barcode"]'
-      );
+      const barcodeInput = document.querySelector('input[placeholder*="Barcode"]');
       if (barcodeInput) barcodeInput.value = "";
     },
 
@@ -271,11 +255,14 @@ export default {
         return;
       }
 
-      // Single unified method - backend determines barcode type
+      // FRAPPE API CALL PATTERN:
+      // - Send pos_profile object (only 23 fields loaded in frontend)
+      // - Backend receives as dict, then re-fetches from DB to get barcode config fields
+      // - This is standard Frappe pattern for handling incomplete frontend data
       frappe.call({
         method: API_MAP.ITEM.GET_BARCODE_ITEM,
         args: {
-          pos_profile: this.pos_profile,
+          pos_profile: this.pos_profile, // ← JS object with 23 fields
           barcode_value: barcode_value,
         },
         callback: (response) => {
@@ -345,7 +332,7 @@ export default {
       if (search) {
         sr = search;
       }
-      if (vm.item_group != "ALL") {
+      if (vm.item_group != "item_group_menu") {
         gr = vm.item_group.toLowerCase();
       }
 
@@ -354,20 +341,22 @@ export default {
         `get_items called - pos_profile: ${vm.pos_profile?.name}, item_group: ${gr}, search: ${sr}, customer: ${vm.customer}`
       );
 
+      // FRAPPE API CALL PATTERN:
+      // - frappe.call() automatically serializes JavaScript objects to JSON
+      // - pos_profile object contains only loaded fields (23 fields from register_pos_profile event)
+      // - Backend receives as Python dict (Frappe auto-parses JSON)
+      // - Backend must re-fetch from DB if it needs ALL fields (like barcode settings)
       frappe.call({
         method: API_MAP.ITEM.GET_ITEMS,
         args: {
-          pos_profile: vm.pos_profile,
+          pos_profile: vm.pos_profile, // ← JS object, auto-serialized to JSON, received as dict
           price_list: vm.customer_price_list,
           item_group: gr,
           search_value: sr,
           customer: vm.customer,
         },
         callback: function (r) {
-          posawesome_logger.info(
-            "ItemsSelector.js",
-            `get_items response - items count: ${r.message?.length || 0}`
-          );
+          posawesome_logger.info("ItemsSelector.js", `get_items response - items count: ${r.message?.length || 0}`);
 
           if (r.message) {
             vm.items = (r.message || []).map((it) => ({
@@ -388,10 +377,7 @@ export default {
               batch_no_data: [],
             }));
 
-            posawesome_logger.info(
-              "ItemsSelector.js",
-              `get_items: mapped ${vm.items.length} items successfully`
-            );
+            posawesome_logger.info("ItemsSelector.js", `get_items: mapped ${vm.items.length} items successfully`);
 
             vm._buildItemsMap();
             evntBus.emit("set_all_items", vm.items);
@@ -399,10 +385,7 @@ export default {
             vm.search_loading = false;
             vm.scheduleScrollHeightUpdate();
           } else {
-            posawesome_logger.warn(
-              "ItemsSelector.js",
-              "get_items: response.message is empty/null"
-            );
+            posawesome_logger.warn("ItemsSelector.js", "get_items: response.message is empty/null");
           }
         },
         error: function (err) {
@@ -425,24 +408,16 @@ export default {
 
     get_items_groups() {
       if (!this.pos_profile) {
-        posawesome_logger.warn(
-          "ItemsSelector.js",
-          "get_items_groups: pos_profile is null/undefined"
-        );
+        posawesome_logger.warn("ItemsSelector.js", "get_items_groups: pos_profile is null/undefined");
         return;
       }
 
       posawesome_logger.info(
         "ItemsSelector.js",
-        `get_items_groups: pos_profile.item_groups = ${JSON.stringify(
-          this.pos_profile.item_groups
-        )}`
+        `get_items_groups: pos_profile.item_groups = ${JSON.stringify(this.pos_profile.item_groups)}`
       );
 
-      if (
-        this.pos_profile.item_groups &&
-        this.pos_profile.item_groups.length > 0
-      ) {
+      if (this.pos_profile.item_groups && this.pos_profile.item_groups.length > 0) {
         posawesome_logger.info(
           "ItemsSelector.js",
           `get_items_groups: Using ${this.pos_profile.item_groups.length} groups from POS Profile`
@@ -450,18 +425,15 @@ export default {
 
         this.pos_profile.item_groups.forEach((element) => {
           // Handle both formats: string (new) or object with item_group property (old)
-          const groupName =
-            typeof element === "string" ? element : element.item_group;
-          if (groupName && groupName !== "ALL") {
+          const groupName = typeof element === "string" ? element : element.item_group;
+          if (groupName && groupName !== "item_group_menu") {
             this.items_group.push(groupName);
           }
         });
 
         posawesome_logger.info(
           "ItemsSelector.js",
-          `get_items_groups: Loaded ${
-            this.items_group.length
-          } item groups: ${this.items_group.join(", ")}`
+          `get_items_groups: Loaded ${this.items_group.length} item groups: ${this.items_group.join(", ")}`
         );
       } else {
         posawesome_logger.info(
@@ -489,18 +461,11 @@ export default {
                 `get_items_groups: Loaded ${vm.items_group.length} item groups from DB`
               );
             } else {
-              posawesome_logger.warn(
-                "ItemsSelector.js",
-                "get_items_groups: Database returned empty result"
-              );
+              posawesome_logger.warn("ItemsSelector.js", "get_items_groups: Database returned empty result");
             }
           },
           error: function (err) {
-            posawesome_logger.error(
-              "ItemsSelector.js",
-              "get_items_groups error",
-              err
-            );
+            posawesome_logger.error("ItemsSelector.js", "get_items_groups error", err);
           },
         });
       }
@@ -612,8 +577,7 @@ export default {
       const trimmedSearch = searchValue.trim();
 
       // Check if search value looks like a barcode (all digits, length >= 8)
-      const isBarcode =
-        /^\d+$/.test(trimmedSearch) && trimmedSearch.length >= 8;
+      const isBarcode = /^\d+$/.test(trimmedSearch) && trimmedSearch.length >= 8;
 
       // If it looks like a barcode, try get_barcode_item first
       if (isBarcode) {
@@ -652,11 +616,7 @@ export default {
           },
           error: function (err) {
             vm.search_loading = false;
-            posawesome_logger.error(
-              "ItemsSelector.js",
-              "performLiveSearch: get_barcode_item error",
-              err
-            );
+            posawesome_logger.error("ItemsSelector.js", "performLiveSearch: get_barcode_item error", err);
             // Fall back to normal search on error
             vm._performNormalSearch(trimmedSearch);
           },
@@ -677,8 +637,7 @@ export default {
         args: {
           pos_profile: vm.pos_profile,
           price_list: vm.customer_price_list,
-          item_group:
-            vm.item_group !== "ALL" ? vm.item_group.toLowerCase() : "",
+          item_group: vm.item_group !== "item_group_menu" ? vm.item_group.toLowerCase() : "",
           search_value: searchValue,
           customer: vm.customer,
         },
@@ -693,15 +652,9 @@ export default {
               price_list_rate: it.price_list_rate || it.rate,
               base_rate: it.base_rate || it.rate,
               image: it.image, // ✅ Added for card view
-              item_barcode: Array.isArray(it.item_barcode)
-                ? it.item_barcode
-                : [],
-              serial_no_data: Array.isArray(it.serial_no_data)
-                ? it.serial_no_data
-                : [],
-              batch_no_data: Array.isArray(it.batch_no_data)
-                ? it.batch_no_data
-                : [],
+              item_barcode: Array.isArray(it.item_barcode) ? it.item_barcode : [],
+              serial_no_data: Array.isArray(it.serial_no_data) ? it.serial_no_data : [],
+              batch_no_data: Array.isArray(it.batch_no_data) ? it.batch_no_data : [],
             }));
             vm._buildItemsMap();
             evntBus.emit("set_all_items", vm.items);
@@ -710,11 +663,7 @@ export default {
         error: function (err) {
           // Stop search progress bar
           vm.search_loading = false;
-          posawesome_logger.error(
-            "ItemsSelector.js",
-            "_performNormalSearch error",
-            err
-          );
+          posawesome_logger.error("ItemsSelector.js", "_performNormalSearch error", err);
         },
       });
     },
@@ -729,18 +678,11 @@ export default {
       // Detach any existing onScan listener first to prevent duplicates
       try {
         // Check if scannerDetectionData exists before detaching
-        if (
-          document.scannerDetectionData &&
-          document.scannerDetectionData.options
-        ) {
+        if (document.scannerDetectionData && document.scannerDetectionData.options) {
           onScan.detachFrom(document);
         }
       } catch (e) {
-        posawesome_logger.error(
-          "ItemsSelector.js",
-          "scan_barcode detachFrom error",
-          e
-        );
+        posawesome_logger.error("ItemsSelector.js", "scan_barcode detachFrom error", e);
       }
 
       onScan.attachTo(document, {
@@ -775,15 +717,10 @@ export default {
       this.pos_profile = data.pos_profile;
       // Set customer without triggering watcher for first time
       this._suppressCustomerWatcher = true;
-      this.customer =
-        this.pos_profile && this.pos_profile.customer
-          ? this.pos_profile.customer
-          : this.customer;
+      this.customer = this.pos_profile && this.pos_profile.customer ? this.pos_profile.customer : this.customer;
       this.get_items();
       this.get_items_groups();
-      this.items_view = this.pos_profile.posa_default_card_view
-        ? "card"
-        : "list";
+      this.items_view = this.pos_profile.posa_default_card_view ? "card" : "list";
     });
 
     evntBus.on("update_offers_counters", (data) => {
@@ -800,8 +737,8 @@ export default {
       this.barcode_search = "";
       this.debounce_search = "";
       this.first_search = "";
-      if (this.item_group !== "ALL") {
-        this.item_group = "ALL";
+      if (this.item_group !== "item_group_menu") {
+        this.item_group = "item_group_menu";
         this.get_items();
       }
     });
@@ -811,9 +748,7 @@ export default {
       // load_return_invoice event received (logged to backend only)
 
       // Only set is_return_invoice=true if return_against exists (prevents adding items to existing invoice returns)
-      this.is_return_invoice = !!(
-        data.invoice_doc && data.invoice_doc.return_against
-      );
+      this.is_return_invoice = !!(data.invoice_doc && data.invoice_doc.return_against);
 
       // is_return_invoice set (logged to backend only)
     });
@@ -867,18 +802,11 @@ export default {
     // Detach onScan listener
     try {
       // Check if scannerDetectionData exists before detaching
-      if (
-        document.scannerDetectionData &&
-        document.scannerDetectionData.options
-      ) {
+      if (document.scannerDetectionData && document.scannerDetectionData.options) {
         onScan.detachFrom(document);
       }
     } catch (e) {
-      posawesome_logger.error(
-        "ItemsSelector.js",
-        "beforeUnmount detachFrom error",
-        e
-      );
+      posawesome_logger.error("ItemsSelector.js", "beforeUnmount detachFrom error", e);
     }
 
     // Clean up event listeners
