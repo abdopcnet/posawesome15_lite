@@ -131,6 +131,12 @@ function add_to_pos_payments(d, frm) {
 }
 
 function add_to_payments(d, frm) {
+  if (!d.payments || !Array.isArray(d.payments)) {
+    console.warn(
+      `[pos_closing_shift.js] Invoice ${d.name} has no payments array`
+    );
+    return;
+  }
   d.payments.forEach((p) => {
     const payment = frm.doc.payment_reconciliation.find(
       (pay) => pay.mode_of_payment === p.mode_of_payment
@@ -146,7 +152,7 @@ function add_to_payments(d, frm) {
         cash_mode_of_payment = "Cash";
       }
       if (payment.mode_of_payment == cash_mode_of_payment) {
-        amount = p.amount - d.change_amount;
+        amount = p.amount - (d.change_amount || 0);
       }
       payment.expected_amount += flt(amount);
     } else {
@@ -176,6 +182,10 @@ function add_pos_payment_to_payments(p, frm) {
 }
 
 function add_to_taxes(d, frm) {
+  if (!d.taxes || !Array.isArray(d.taxes)) {
+    console.warn(`[pos_closing_shift.js] Invoice ${d.name} has no taxes array`);
+    return;
+  }
   d.taxes.forEach((t) => {
     const tax = frm.doc.taxes.find(
       (tx) => tx.account_head === t.account_head && tx.rate === t.rate
