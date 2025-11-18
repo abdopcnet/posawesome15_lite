@@ -221,7 +221,13 @@ def check_closing_time_allowed(pos_profile):
         if not pos_profile:
             return {"allowed": True, "message": "No profile specified"}
 
-        profile = frappe.get_doc("POS Profile", pos_profile)
+        # FRAPPE STANDARD: Extract name from dict if needed
+        if isinstance(pos_profile, dict):
+            pos_profile_name = pos_profile.get('name')
+        else:
+            pos_profile_name = pos_profile
+
+        profile = frappe.get_doc("POS Profile", pos_profile_name)
 
         # Check if closing time control is enabled
         if not profile.get("posa_closing_time_control"):
@@ -343,6 +349,10 @@ def get_current_cash_total(pos_profile=None, user=None):
     Uses UNIFIED calculation logic from _calculate_payment_totals.
     """
     try:
+        # FRAPPE STANDARD: Extract name from dict if needed
+        if pos_profile and isinstance(pos_profile, dict):
+            pos_profile = pos_profile.get('name')
+
         # Build filters for the open shift
         filters = {"status": "Open"}
         if pos_profile:
@@ -394,6 +404,10 @@ def get_current_non_cash_total(pos_profile=None, user=None):
     Uses UNIFIED calculation logic from _calculate_payment_totals.
     """
     try:
+        # FRAPPE STANDARD: Extract name from dict if needed
+        if pos_profile and isinstance(pos_profile, dict):
+            pos_profile = pos_profile.get('name')
+
         # Build filters for the open shift
         filters = {"status": "Open"}
         if pos_profile:
