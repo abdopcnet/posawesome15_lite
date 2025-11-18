@@ -214,6 +214,7 @@ export default {
           is_loading.value = false;
         })
         .catch((error) => {
+          console.log("[OpeningDialog.js] submitOpeningShift error:", error);
           console.log(
             "[OpeningDialog.js] Error creating opening voucher:",
             error
