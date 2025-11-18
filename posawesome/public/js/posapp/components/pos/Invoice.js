@@ -3,7 +3,7 @@ import { evntBus } from "../../bus";
 import format from "../../format";
 import Customer from "./Customer.vue";
 import { API_MAP } from "../../api_mapper.js";
-import { posawesome_logger } from "../../logger.js";
+// Frontend logging: Use console.log/error/warn directly
 
 const UI_CONFIG = {
   SEARCH_MIN_LENGTH: 3,
@@ -642,7 +642,7 @@ export default {
             }
           }
         } catch (error) {
-          posawesome_logger.error("Invoice.js", "loadInvoiceDoc error", error);
+          console.error("[Invoice.js]", "loadInvoiceDoc error", error);
         }
       }
     },
@@ -982,9 +982,8 @@ export default {
               vm.reload_invoice()
                 .then(() => resolve(vm.invoice_doc))
                 .catch((reloadError) => {
-                  posawesome_logger.error(
-                    "Invoice.js",
-                    "reload_invoice catch error",
+                  console.error(
+                    "[Invoice.js] reload_invoice catch error",
                     reloadError
                   );
                   reject(reloadError);
@@ -1066,11 +1065,7 @@ export default {
               // Payment stays local until Print
             }
           } catch (error) {
-            posawesome_logger.error(
-              "Invoice.js",
-              "getDefaultPayment error",
-              error
-            );
+            console.error("[Invoice.js] getDefaultPayment error", error);
           }
         }
 
@@ -1086,7 +1081,7 @@ export default {
         evntBus.emit("invoice_session_reset");
         evntBus.emit("hide_loading");
       } catch (error) {
-        posawesome_logger.error("Invoice.js", "prepareInvoice error", error);
+        console.error("[Invoice.js]", "prepareInvoice error", error);
         evntBus.emit("hide_loading");
         evntBus.emit("show_mesage", {
           text: "خطأ في إعداد الفاتورة: " + error.message,
@@ -1475,7 +1470,7 @@ export default {
           }
         }
       } catch (error) {
-        posawesome_logger.error("Invoice.js", "checkOfferApplied error", error);
+        console.error("[Invoice.js]", "checkOfferApplied error", error);
         return false;
       }
 
@@ -1580,9 +1575,8 @@ export default {
 
       // Debug logging for tax calculation
       if (applyTax) {
-        posawesome_logger.info(
-          "Invoice.js",
-          `Tax calculation: applyTax=${applyTax}, taxType=${taxType}, normalizedTaxType=${normalizedTaxType}, taxPercent=${taxPercent}, net_total=${doc.net_total}`
+        console.log(
+          `[Invoice.js] Tax calculation: applyTax=${applyTax}, taxType=${taxType}, normalizedTaxType=${normalizedTaxType}, taxPercent=${taxPercent}, net_total=${doc.net_total}`
         );
       }
 
@@ -2467,9 +2461,8 @@ export default {
             // Clear search fields in ItemsSelector
             evntBus.emit("clear_search_fields");
           } else {
-            posawesome_logger.error(
-              "Invoice.js",
-              "Submit failed",
+            console.error(
+              "[Invoice.js] Submit failed",
               "No invoice name returned"
             );
             evntBus.emit("show_mesage", {
@@ -2480,9 +2473,8 @@ export default {
           }
         },
         error: (err) => {
-          posawesome_logger.error(
-            "Invoice.js",
-            "Server error",
+          console.error(
+            "[Invoice.js] Server error",
             err?.message || "Unknown error"
           );
           evntBus.emit("hide_loading");
@@ -2533,11 +2525,7 @@ export default {
           item._detailSynced = true;
         }
       } catch (error) {
-        posawesome_logger.error(
-          "Invoice.js",
-          "Item detail update failed",
-          error
-        );
+        console.error("[Invoice.js] Item detail update failed", error);
       }
     },
   },
@@ -2557,9 +2545,8 @@ export default {
       evntBus.emit("update_invoice_type", this.invoiceType);
 
       // Log POS Profile data for debugging
-      posawesome_logger.info(
-        "Invoice.js",
-        `POS Profile registered: posa_allow_return=${
+      console.log(
+        `[Invoice.js] POS Profile registered: posa_allow_return=${
           data.pos_profile?.posa_allow_return
         }, payments=${data.pos_profile?.payments?.length || 0}`,
         data.pos_profile
