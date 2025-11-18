@@ -51,13 +51,28 @@ frappe.ui.form.on("POS Closing Shift", {
   },
 
   get_pos_invoices(frm) {
+    console.log(
+      `[pos_closing_shift.js] Fetching invoices for opening shift: ${frm.doc.pos_opening_shift}`
+    );
     frappe.call({
       method: "posawesome.api.pos_closing_shift.get_pos_invoices",
       args: {
         pos_opening_shift: frm.doc.pos_opening_shift,
       },
       callback: (r) => {
+        if (r.exc) {
+          console.error(
+            `[pos_closing_shift.js] Error fetching invoices:`,
+            r.exc
+          );
+          return;
+        }
         let pos_docs = r.message;
+        console.log(
+          `[pos_closing_shift.js] Received ${
+            pos_docs ? pos_docs.length : 0
+          } invoices from API`
+        );
         set_form_data(pos_docs, frm);
         refresh_fields(frm);
         set_html_data(frm);
@@ -94,14 +109,31 @@ frappe.ui.form.on("POS Closing Shift Detail", {
 });
 
 function set_form_data(data, frm) {
+  console.log(
+    `[pos_closing_shift.js] Processing ${data.length} invoices for closing shift`
+  );
+
   data.forEach((d) => {
+    // Use base_* fields for company currency totals (matches Sales Register)
+    const grand_total = flt(d.base_grand_total || d.grand_total || 0);
+    const net_total = flt(d.base_net_total || d.net_total || 0);
+    const total_qty = flt(d.total_qty || 0);
+
+    console.log(
+      `[pos_closing_shift.js] Invoice ${d.name}: grand_total=${grand_total}, net_total=${net_total}, qty=${total_qty}`
+    );
+
     add_to_pos_transaction(d, frm);
-    frm.doc.grand_total += flt(d.grand_total);
-    frm.doc.net_total += flt(d.net_total);
-    frm.doc.total_quantity += flt(d.total_qty);
+    frm.doc.grand_total += grand_total;
+    frm.doc.net_total += net_total;
+    frm.doc.total_quantity += total_qty;
     add_to_payments(d, frm);
     add_to_taxes(d, frm);
   });
+
+  console.log(
+    `[pos_closing_shift.js] Final totals: grand_total=${frm.doc.grand_total}, net_total=${frm.doc.net_total}, qty=${frm.doc.total_quantity}`
+  );
 }
 
 function set_form_payments_data(data, frm) {
@@ -137,30 +169,51 @@ function add_to_payments(d, frm) {
     );
     return;
   }
+
+  // Get cash mode of payment once
+  let cash_mode_of_payment = get_value(
+    "POS Profile",
+    frm.doc.pos_profile,
+    "posa_cash_mode_of_payment"
+  );
+  if (!cash_mode_of_payment) {
+    cash_mode_of_payment = "Cash";
+  }
+
+  // Use base_* fields for company currency (matches Sales Register)
+  const change_amount = flt(d.base_change_amount || d.change_amount || 0);
+
   d.payments.forEach((p) => {
+    // Use base_amount if available, otherwise amount (matches Sales Register logic)
+    let amount = flt(p.base_amount || p.amount || 0);
+
+    // For cash payments: subtract change_amount (matches Sales Register logic)
+    if (p.mode_of_payment == cash_mode_of_payment) {
+      amount = amount - change_amount;
+      console.log(
+        `[pos_closing_shift.js] Cash payment: ${p.mode_of_payment}, amount=${
+          p.base_amount || p.amount
+        }, change=${change_amount}, final=${amount}`
+      );
+    }
+
     const payment = frm.doc.payment_reconciliation.find(
       (pay) => pay.mode_of_payment === p.mode_of_payment
     );
     if (payment) {
-      let amount = p.amount;
-      let cash_mode_of_payment = get_value(
-        "POS Profile",
-        frm.doc.pos_profile,
-        "posa_cash_mode_of_payment"
+      payment.expected_amount += amount;
+      console.log(
+        `[pos_closing_shift.js] Updated payment ${p.mode_of_payment}: added ${amount}, total=${payment.expected_amount}`
       );
-      if (!cash_mode_of_payment) {
-        cash_mode_of_payment = "Cash";
-      }
-      if (payment.mode_of_payment == cash_mode_of_payment) {
-        amount = p.amount - (d.change_amount || 0);
-      }
-      payment.expected_amount += flt(amount);
     } else {
       frm.add_child("payment_reconciliation", {
         mode_of_payment: p.mode_of_payment,
         opening_amount: 0,
-        expected_amount: p.amount || 0,
+        expected_amount: amount,
       });
+      console.log(
+        `[pos_closing_shift.js] Added new payment ${p.mode_of_payment}: ${amount}`
+      );
     }
   });
 }
@@ -186,18 +239,28 @@ function add_to_taxes(d, frm) {
     console.warn(`[pos_closing_shift.js] Invoice ${d.name} has no taxes array`);
     return;
   }
+
   d.taxes.forEach((t) => {
+    // Use base_tax_amount for company currency (matches Sales Register)
+    const tax_amount = flt(t.base_tax_amount || t.tax_amount || 0);
+
     const tax = frm.doc.taxes.find(
       (tx) => tx.account_head === t.account_head && tx.rate === t.rate
     );
     if (tax) {
-      tax.amount += flt(t.tax_amount);
+      tax.amount += tax_amount;
+      console.log(
+        `[pos_closing_shift.js] Updated tax ${t.account_head} (${t.rate}%): added ${tax_amount}, total=${tax.amount}`
+      );
     } else {
       frm.add_child("taxes", {
         account_head: t.account_head,
         rate: t.rate,
-        amount: t.tax_amount,
+        amount: tax_amount,
       });
+      console.log(
+        `[pos_closing_shift.js] Added new tax ${t.account_head} (${t.rate}%): ${tax_amount}`
+      );
     }
   });
 }
