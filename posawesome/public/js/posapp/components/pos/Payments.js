@@ -2,7 +2,7 @@
 import { evntBus } from "../../bus";
 import format from "../../format";
 import { API_MAP } from "../../api_mapper.js";
-import { posawesome_logger } from "../../logger.js";
+// Frontend logging: Use console.log/error/warn directly
 
 const EVENT_NAMES = {
   SHOW_PAYMENT: "show_payment",
@@ -109,7 +109,7 @@ export default {
         flt(this.invoice_doc.grand_total);
       const cash_mode = this.pos_profile?.posa_cash_mode_of_payment;
 
-      posawesome_logger.info(
+      console.info(
         "Payments.js",
         `change_amount computed - paid_total: ${paid_total}, target_amount: ${target_amount}, cash_mode: ${cash_mode}`
       );
@@ -146,13 +146,13 @@ export default {
               paid_total - target_amount,
               this.currency_precision
             );
-            posawesome_logger.info(
+            console.info(
               "Payments.js",
               `change_amount calculated: ${change}, cash_payment: ${cash_payment?.mode_of_payment}, cash_amount: ${cash_payment?.amount}, other_totals: ${other_totals}, target_amount: ${target_amount}`
             );
             return change;
           } else {
-            posawesome_logger.info(
+            console.info(
               "Payments.js",
               `change_amount blocked - cash_payment: ${cash_payment?.mode_of_payment}, cash_amount: ${cash_payment?.amount}, other_totals: ${other_totals}, target_amount: ${target_amount}`
             );
@@ -165,7 +165,7 @@ export default {
             paid_total - target_amount,
             this.currency_precision
           );
-          posawesome_logger.info(
+          console.info(
             "Payments.js",
             `change_amount calculated (no cash_mode): ${change}`
           );
@@ -174,7 +174,7 @@ export default {
       }
 
       // No change amount (paid_total <= grand_total)
-      posawesome_logger.info(
+      console.info(
         "Payments.js",
         "change_amount = 0 (paid_total <= target_amount)"
       );
@@ -275,7 +275,7 @@ export default {
       try {
         await this.refreshInvoiceDoc();
       } catch (error) {
-        posawesome_logger.error("Payments.js", "submit error", error);
+        console.error("Payments.js", "submit error", error);
       }
 
       if (this.invoice_doc?.docstatus === 1) {
@@ -519,11 +519,7 @@ export default {
                 this.submit_invoice(print, autoMode, true);
               })
               .catch((err) => {
-                posawesome_logger.error(
-                  "Payments.js",
-                  "refreshInvoiceDoc error",
-                  err
-                );
+                console.error("Payments.js", "refreshInvoiceDoc error", err);
                 this.showMessage(
                   "Invoice was modified elsewhere, please try again",
                   "warning"
@@ -668,13 +664,13 @@ export default {
             this.$forceUpdate();
           });
 
-          posawesome_logger.info(
+          console.info(
             "Payments.js",
             `set_full_amount: idx: ${idx}, mode_of_payment: ${payment.mode_of_payment}, amount: ${amount}`
           );
 
           // Log payment summary
-          posawesome_logger.info(
+          console.info(
             "Payments.js",
             `Payment Summary - paid_amount (إجمالي المدفوعات): ${this.paid_amount}, outstanding_amount (المبلغ المتأخر): ${this.outstanding_amount}, change_amount (المتبقي للعميل): ${this.change_amount}, إجمالي الفاتورة: ${invoice_total}`
           );
@@ -682,7 +678,7 @@ export default {
           delete this.set_full_amount_timeouts[idx];
         }, 150); // 150ms debounce per payment
       } catch (error) {
-        posawesome_logger.error("Payments.js", "set_full_amount error", error);
+        console.error("Payments.js", "set_full_amount error", error);
         if (this.set_full_amount_timeouts[idx]) {
           delete this.set_full_amount_timeouts[idx];
         }
@@ -741,7 +737,7 @@ export default {
           JSON.parse(JSON.stringify(this.invoice_doc.payments))
         );
 
-        posawesome_logger.info(
+        console.info(
           "Payments.js",
           `set_rest_amount: idx: ${idx}, mode_of_payment: ${payment.mode_of_payment}, remaining: ${remaining}, amount: ${amount}`
         );
@@ -752,12 +748,12 @@ export default {
         });
 
         // Log payment summary
-        posawesome_logger.info(
+        console.info(
           "Payments.js",
           `Payment Summary - paid_amount (إجمالي المدفوعات): ${this.paid_amount}, outstanding_amount (المبلغ المتأخر): ${this.outstanding_amount}, change_amount (المتبقي للعميل): ${this.change_amount}, إجمالي الفاتورة: ${invoice_total}`
         );
       } catch (error) {
-        posawesome_logger.error("Payments.js", "set_rest_amount error", error);
+        console.error("Payments.js", "set_rest_amount error", error);
       }
     },
 
@@ -822,7 +818,7 @@ export default {
       const cash_mode = this.pos_profile?.posa_cash_mode_of_payment;
 
       // Log payment change
-      posawesome_logger.info(
+      console.info(
         "Payments.js",
         `Payment Input Changed - idx: ${payment.idx}, mode_of_payment: ${payment.mode_of_payment}, amount: ${payment_amount}`
       );
@@ -838,7 +834,7 @@ export default {
       });
 
       // Log payment summary
-      posawesome_logger.info(
+      console.info(
         "Payments.js",
         `Payment Summary - paid_amount (إجمالي المدفوعات): ${this.paid_amount}, outstanding_amount (المبلغ المتأخر): ${this.outstanding_amount}, change_amount (المتبقي للعميل): ${this.change_amount}, change_amount (manual): ${change_amt}, إجمالي الفاتورة: ${target_amount}`
       );
@@ -978,7 +974,7 @@ export default {
 
       evntBus.on(EVENT_NAMES.SEND_INVOICE_DOC_PAYMENT, (invoice_doc) => {
         // DEBUG: Log received invoice totals
-        posawesome_logger.info(
+        console.info(
           "Payments.js",
           `SEND_INVOICE_DOC_PAYMENT: rounded_total: ${invoice_doc.rounded_total}, grand_total: ${invoice_doc.grand_total}`
         );
