@@ -198,32 +198,46 @@ def get_current_shift_name():
                     "POS Profile",
                     filters={"name": pos_profile_name},
                     fields=[
+                        # Basic fields
                         "name",
                         "company",
                         "customer",
                         "currency",
                         "warehouse",
                         "selling_price_list",
-                        "posa_print_format",
                         "letter_head",
+                        "apply_discount_on",
+                        # Print settings
+                        "posa_print_format",
+                        # Cash settings
                         "posa_cash_mode_of_payment",
-                        "posa_auto_fetch_offers",
                         "posa_allow_write_off_change",
-                        "posa_allow_credit_sale",
+                        # Return settings
                         "posa_allow_return",
                         "posa_allow_quick_return",
+                        # Credit settings
+                        "posa_allow_credit_sale",
                         "posa_use_customer_credit",
                         "posa_use_cashback",
+                        # Offers settings
+                        "posa_auto_fetch_offers",
+                        "posa_fetch_zero_qty",
+                        # Display settings
+                        "posa_default_card_view",
                         "posa_hide_expected_amount",
                         "posa_hide_closing_shift",
-                        "posa_default_card_view",
-                        "posa_fetch_zero_qty",
                         "posa_hide_zero_price_items",
+                        "posa_display_discount_percentage",
+                        "posa_display_discount_amount",
+                        # Discount settings
+                        "posa_allow_user_to_edit_item_discount",
+                        "posa_allow_user_to_edit_additional_discount",
+                        "posa_item_max_discount_allowed",
+                        "posa_invoice_max_discount_allowed",
                         # Tax fields
                         "posa_apply_tax",
                         "posa_tax_type",
                         "posa_tax_percent",
-                        "apply_discount_on",
                     ],
                     limit=1,
                     ignore_permissions=True
@@ -265,9 +279,19 @@ def get_current_shift_name():
 
                 row["pos_profile_data"] = pos_profile_data
 
-                # Log the result for debugging
-                info_logger.info(
-                    f"[pos_opening_shift.py] get_current_shift_name: Loaded POS Profile data with {len(pos_profile_data.keys())} fields, posa_allow_return={pos_profile_data.get('posa_allow_return')}, posa_allow_quick_return={pos_profile_data.get('posa_allow_quick_return')}, payments={len(pos_profile_data.get('payments', []))}")
+                # Log the result for debugging - including all important fields
+                if pos_profile_data:
+                    info_logger.info(
+                        f"[pos_opening_shift.py] get_current_shift_name: Loaded POS Profile '{pos_profile_name}' with {len(pos_profile_data.keys())} fields. "
+                        f"Tax: apply={pos_profile_data.get('posa_apply_tax')}, type={pos_profile_data.get('posa_tax_type')}, percent={pos_profile_data.get('posa_tax_percent')}. "
+                        f"Discount: item_edit={pos_profile_data.get('posa_allow_user_to_edit_item_discount')}, invoice_edit={pos_profile_data.get('posa_allow_user_to_edit_additional_discount')}, "
+                        f"item_max={pos_profile_data.get('posa_item_max_discount_allowed')}, invoice_max={pos_profile_data.get('posa_invoice_max_discount_allowed')}. "
+                        f"Display: discount_pct={pos_profile_data.get('posa_display_discount_percentage')}, discount_amt={pos_profile_data.get('posa_display_discount_amount')}. "
+                        f"Settings: allow_return={pos_profile_data.get('posa_allow_return')}, fetch_zero_qty={pos_profile_data.get('posa_fetch_zero_qty')}, "
+                        f"payments={len(pos_profile_data.get('payments', []))}, item_groups={len(pos_profile_data.get('item_groups', []))}")
+                else:
+                    error_logger.error(
+                        f"[pos_opening_shift.py] get_current_shift_name: pos_profile_data is None for '{pos_profile_name}'")
             except Exception as e:
                 error_logger.error(
                     f"[pos_opening_shift.py] get_current_shift_name: Error loading POS Profile {pos_profile_name}: {str(e)}")
