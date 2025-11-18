@@ -11,9 +11,7 @@ export const posawesome_logger = {
    * @param {object} data - Additional data to log
    */
   info(file, message, data = null) {
-    const logMessage = `[${file}] ${message}`;
-    console.log(logMessage, data || "");
-
+    // Only log to backend, not to console (to reduce console noise)
     // Send to backend for persistent logging
     this._sendToBackend("info", file, message, data);
   },
