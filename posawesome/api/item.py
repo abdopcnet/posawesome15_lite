@@ -39,7 +39,7 @@ import json
 import frappe
 from frappe import _
 from frappe.utils import flt
-from posawesome import info_logger, error_logger
+from posawesome import posawesome_logger
 
 
 @frappe.whitelist()
@@ -63,12 +63,12 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
     - If POS Profile.posa_hide_zero_price_items = 0 or NULL: Shows all items regardless of price
     """
     try:
-        info_logger.info(
+        posawesome_logger.info(
             f"[item.py] get_items START - item_group: {item_group}, search_value: {search_value}")
 
         # Validate pos_profile is not empty/null
         if not pos_profile:
-            error_logger.error(
+            posawesome_logger.error(
                 f"[item.py] get_items: pos_profile is empty or null")
             frappe.throw(_("POS Profile is required"))
 
@@ -77,7 +77,7 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
         if isinstance(pos_profile, str):
             # Check if string is empty or whitespace
             if not pos_profile.strip():
-                error_logger.error(
+                posawesome_logger.error(
                     f"[item.py] get_items: pos_profile is empty string")
                 frappe.throw(_("POS Profile is required"))
             try:
@@ -86,10 +86,10 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
                 # If JSON parsing fails, treat it as POS Profile name
                 # But first validate it's not empty
                 if not pos_profile or not pos_profile.strip():
-                    error_logger.error(
+                    posawesome_logger.error(
                         f"[item.py] get_items: pos_profile name is empty")
                     frappe.throw(_("POS Profile is required"))
-                info_logger.info(
+                posawesome_logger.info(
                     f"[item.py] get_items: Fetching POS Profile from DB: {pos_profile}")
                 pos_profile = frappe.get_cached_doc(
                     "POS Profile", pos_profile).as_dict()
@@ -100,20 +100,20 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
 
         # Validate parameter type
         if not isinstance(pos_profile, dict):
-            error_logger.error(
+            posawesome_logger.error(
                 f"[item.py] get_items: pos_profile is not a dict, type: {type(pos_profile)}")
             frappe.throw(_("Invalid POS Profile data"))
         
         # Validate pos_profile has required 'name' field
         if not pos_profile.get('name'):
-            error_logger.error(
+            posawesome_logger.error(
                 f"[item.py] get_items: pos_profile dict missing 'name' field")
             frappe.throw(_("POS Profile name is required"))
 
         # CRITICAL: Frontend only sends loaded fields (23 fields), not all DB fields
         # We use the minimal data sent from frontend for this method since we only need:
         # name, warehouse, selling_price_list, posa_fetch_zero_qty, posa_hide_zero_price_items, item_groups
-        info_logger.info(
+        posawesome_logger.info(
             f"[item.py] get_items: pos_profile loaded - name: {pos_profile.get('name')}, warehouse: {pos_profile.get('warehouse')}")
 
         if not price_list:
@@ -121,7 +121,7 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
 
         warehouse = pos_profile.get("warehouse", "")
 
-        info_logger.info(
+        posawesome_logger.info(
             f"[item.py] get_items: price_list: {price_list}, warehouse: {warehouse}")
 
         # Check POS Profile setting for fetching zero qty items
@@ -146,7 +146,7 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
         # Get allowed item groups from POS Profile
         allowed_item_groups = []
         if pos_profile.get("item_groups"):
-            info_logger.info(
+            posawesome_logger.info(
                 f"[item.py] get_items: item_groups found in profile: {pos_profile.get('item_groups')}")
             # POS Profile has item_groups child table
             # Handle both formats: list of strings or list of dicts (for backward compatibility)
@@ -159,10 +159,10 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
                     # New format: list of strings (item_group names directly)
                     allowed_item_groups.append(ig)
         else:
-            info_logger.warning(
+            posawesome_logger.warning(
                 f"[item.py] get_items: NO item_groups in POS Profile - will show ALL items")
 
-        info_logger.info(
+        posawesome_logger.info(
             f"[item.py] get_items: allowed_item_groups: {allowed_item_groups}")
 
         # Add item_group filter based on selection and allowed groups
@@ -202,9 +202,9 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
 
         where_clause = " AND ".join(where_conditions)
 
-        info_logger.info(
+        posawesome_logger.info(
             f"[item.py] get_items: SQL WHERE clause: {where_clause}")
-        info_logger.info(f"[item.py] get_items: SQL params: {params}")
+        posawesome_logger.info(f"[item.py] get_items: SQL params: {params}")
 
         # Single optimized query
         items = frappe.db.sql(
@@ -239,15 +239,15 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
             as_dict=True
         )
 
-        info_logger.info(f"[item.py] get_items: Found {len(items)} items")
+        posawesome_logger.info(f"[item.py] get_items: Found {len(items)} items")
         if len(items) > 0:
-            info_logger.info(
+            posawesome_logger.info(
                 f"[item.py] get_items: First item: {items[0].get('item_name')}")
 
         return items
 
     except Exception as e:
-        error_logger.error(f"[item.py] get_items: {str(e)}")
+        posawesome_logger.error(f"[item.py] get_items: {str(e)}")
         frappe.throw(_("Error fetching items"))
         return []
 
@@ -263,7 +263,7 @@ def get_items_groups():
             order_by="name"
         )
     except Exception as e:
-        error_logger.error(f"[item.py] get_items_groups: {str(e)}")
+        posawesome_logger.error(f"[item.py] get_items_groups: {str(e)}")
         frappe.throw(_("Error fetching item groups"))
         return []
 
@@ -275,12 +275,12 @@ def get_barcode_item(pos_profile, barcode_value):
     Tries each barcode type in order.
     """
     try:
-        info_logger.info(
+        posawesome_logger.info(
             f"[item.py] get_barcode_item: START - barcode: {barcode_value}")
 
         # Validate pos_profile is not empty/null
         if not pos_profile:
-            error_logger.error(
+            posawesome_logger.error(
                 f"[item.py] get_barcode_item: pos_profile is empty or null")
             frappe.throw(_("POS Profile is required"))
 
@@ -288,7 +288,7 @@ def get_barcode_item(pos_profile, barcode_value):
         if isinstance(pos_profile, str):
             # Check if string is empty or whitespace
             if not pos_profile.strip():
-                error_logger.error(
+                posawesome_logger.error(
                     f"[item.py] get_barcode_item: pos_profile is empty string")
                 frappe.throw(_("POS Profile is required"))
             try:
@@ -297,23 +297,23 @@ def get_barcode_item(pos_profile, barcode_value):
                 # If JSON parsing fails, treat it as POS Profile name and fetch the document
                 # But first validate it's not empty
                 if not pos_profile or not pos_profile.strip():
-                    error_logger.error(
+                    posawesome_logger.error(
                         f"[item.py] get_barcode_item: pos_profile name is empty")
                     frappe.throw(_("POS Profile is required"))
-                info_logger.info(
+                posawesome_logger.info(
                     f"[item.py] get_barcode_item: Fetching POS Profile from DB: {pos_profile}")
                 pos_profile = frappe.get_cached_doc(
                     "POS Profile", pos_profile).as_dict()
 
         # Ensure pos_profile is a dictionary
         if not isinstance(pos_profile, dict):
-            error_logger.error(
+            posawesome_logger.error(
                 f"[item.py] get_barcode_item: pos_profile is not a dict, type: {type(pos_profile)}")
             frappe.throw(_("Invalid POS Profile data"))
         
         # Validate pos_profile has required 'name' field
         if not pos_profile.get('name'):
-            error_logger.error(
+            posawesome_logger.error(
                 f"[item.py] get_barcode_item: pos_profile dict missing 'name' field")
             frappe.throw(_("POS Profile name is required"))
 
@@ -321,7 +321,7 @@ def get_barcode_item(pos_profile, barcode_value):
         # Always fetch the complete POS Profile from database to get barcode configuration
         profile_name = pos_profile.get('name')
         if profile_name:
-            info_logger.info(
+            posawesome_logger.info(
                 f"[item.py] get_barcode_item: Fetching complete POS Profile from DB: {profile_name}")
             pos_profile = frappe.get_cached_doc(
                 "POS Profile", profile_name).as_dict()
@@ -337,53 +337,53 @@ def get_barcode_item(pos_profile, barcode_value):
                         item_groups_list.append(ig)
                 pos_profile["item_groups"] = item_groups_list
 
-            info_logger.info(
+            posawesome_logger.info(
                 f"[item.py] get_barcode_item: POS Profile fetched - barcode fields - scale_enabled: {pos_profile.get('posa_enable_scale_barcode')}, private_enabled: {pos_profile.get('posa_enable_private_barcode')}")
 
-        info_logger.info(
+        posawesome_logger.info(
             f"[item.py] get_barcode_item: Trying scale barcode...")
         result = _check_scale_barcode(pos_profile, barcode_value)
 
         if result:
-            info_logger.info(
+            posawesome_logger.info(
                 f"[item.py] get_barcode_item: Found via scale barcode - item: {result.get('item_code')}")
             return result
 
-        info_logger.info(
+        posawesome_logger.info(
             f"[item.py] get_barcode_item: Trying private barcode...")
         result = _check_private_barcode(pos_profile, barcode_value)
 
         if result:
-            info_logger.info(
+            posawesome_logger.info(
                 f"[item.py] get_barcode_item: Found via private barcode - item: {result.get('item_code')}")
             return result
 
-        info_logger.info(
+        posawesome_logger.info(
             f"[item.py] get_barcode_item: Trying normal barcode...")
         result = _check_normal_barcode(pos_profile, barcode_value)
 
         if result:
-            info_logger.info(
+            posawesome_logger.info(
                 f"[item.py] get_barcode_item: Found via normal barcode - item: {result.get('item_code')}")
             return result
 
-        info_logger.warning(
+        posawesome_logger.warning(
             f"[item.py] get_barcode_item: No item found for barcode: {barcode_value}")
         return {}
 
     except Exception as e:
-        error_logger.error(f"[item.py] get_barcode_item: {str(e)}")
+        posawesome_logger.error(f"[item.py] get_barcode_item: {str(e)}")
         frappe.throw(_("Error processing barcode"))
         return {}
 
 
 def _check_scale_barcode(profile, barcode):
     """Check if barcode matches scale format and extract item."""
-    info_logger.info(
+    posawesome_logger.info(
         f"[item.py] _check_scale_barcode: Checking barcode: {barcode}")
 
     if not profile.get("posa_enable_scale_barcode"):
-        info_logger.info(
+        posawesome_logger.info(
             f"[item.py] _check_scale_barcode: Scale barcode disabled in profile")
         return None
 
@@ -392,19 +392,19 @@ def _check_scale_barcode(profile, barcode):
     item_len = profile.get("posa_scale_item_code_length")
     weight_len = profile.get("posa_weight_length")
 
-    info_logger.info(
+    posawesome_logger.info(
         f"[item.py] _check_scale_barcode: Config - prefix: {prefix}, total_len: {total_len}, item_len: {item_len}, weight_len: {weight_len}")
 
     if not all([prefix, total_len, item_len, weight_len]):
-        info_logger.warning(
+        posawesome_logger.warning(
             f"[item.py] _check_scale_barcode: Missing configuration values")
         return None
 
-    info_logger.info(
+    posawesome_logger.info(
         f"[item.py] _check_scale_barcode: Barcode length: {len(barcode)}, starts with prefix: {barcode.startswith(prefix)}")
 
     if not barcode.startswith(prefix) or len(barcode) != total_len:
-        info_logger.info(
+        posawesome_logger.info(
             f"[item.py] _check_scale_barcode: Barcode doesn't match format (prefix or length)")
         return None
 
@@ -414,29 +414,29 @@ def _check_scale_barcode(profile, barcode):
     weight_part = barcode[prefix_len +
                           item_len:prefix_len + item_len + weight_len]
 
-    info_logger.info(
+    posawesome_logger.info(
         f"[item.py] _check_scale_barcode: Extracted - item_code: {item_code}, weight_part: {weight_part}")
 
     # Get item using get_items with include_zero_stock=True
     items = get_items(profile, profile.get("selling_price_list"),
                       search_value=item_code, include_zero_stock=True)
     if not items:
-        info_logger.warning(
+        posawesome_logger.warning(
             f"[item.py] _check_scale_barcode: No item found for item_code: {item_code}")
         return None
 
     item = items[0]
-    info_logger.info(
+    posawesome_logger.info(
         f"[item.py] _check_scale_barcode: Found item: {item.get('item_code')}")
 
     try:
         weight_value = flt(weight_part) / 1000  # Convert grams to kg
         item["qty"] = flt(weight_value, 3)
-        info_logger.info(
+        posawesome_logger.info(
             f"[item.py] _check_scale_barcode: Weight calculated: {item['qty']} kg")
     except:
         item["qty"] = 1
-        info_logger.warning(
+        posawesome_logger.warning(
             f"[item.py] _check_scale_barcode: Failed to parse weight, defaulting to 1")
 
     return item
@@ -444,11 +444,11 @@ def _check_scale_barcode(profile, barcode):
 
 def _check_private_barcode(profile, barcode):
     """Check if barcode matches private format and extract item."""
-    info_logger.info(
+    posawesome_logger.info(
         f"[item.py] _check_private_barcode: Checking barcode: {barcode}")
 
     if not profile.get("posa_enable_private_barcode"):
-        info_logger.info(
+        posawesome_logger.info(
             f"[item.py] _check_private_barcode: Private barcode disabled in profile")
         return None
 
@@ -456,46 +456,46 @@ def _check_private_barcode(profile, barcode):
     total_len = profile.get("posa_private_barcode_lenth")
     item_len = profile.get("posa_private_item_code_length")
 
-    info_logger.info(
+    posawesome_logger.info(
         f"[item.py] _check_private_barcode: Config - prefixes: {prefixes_str}, total_len: {total_len}, item_len: {item_len}")
-    info_logger.info(
+    posawesome_logger.info(
         f"[item.py] _check_private_barcode: Barcode length: {len(barcode)}")
 
     if not all([prefixes_str, total_len, item_len]) or len(barcode) != total_len:
-        info_logger.info(
+        posawesome_logger.info(
             f"[item.py] _check_private_barcode: Missing config or barcode length mismatch")
         return None
 
     # Check prefix match
     prefixes = [p.strip() for p in prefixes_str.split(",")]
-    info_logger.info(
+    posawesome_logger.info(
         f"[item.py] _check_private_barcode: Parsed prefixes: {prefixes}")
 
     matched_prefix = next((p for p in prefixes if barcode.startswith(p)), None)
 
     if not matched_prefix:
-        info_logger.info(
+        posawesome_logger.info(
             f"[item.py] _check_private_barcode: No matching prefix found")
         return None
 
-    info_logger.info(
+    posawesome_logger.info(
         f"[item.py] _check_private_barcode: Matched prefix: {matched_prefix}")
 
     # Extract item_code
     item_code = barcode[len(matched_prefix):len(matched_prefix) + item_len]
-    info_logger.info(
+    posawesome_logger.info(
         f"[item.py] _check_private_barcode: Extracted item_code: {item_code}")
 
     # Get item using get_items with include_zero_stock=True
     items = get_items(profile, profile.get("selling_price_list"),
                       search_value=item_code, include_zero_stock=True)
     if not items:
-        info_logger.warning(
+        posawesome_logger.warning(
             f"[item.py] _check_private_barcode: No item found for item_code: {item_code}")
         return None
 
     item = items[0]
-    info_logger.info(
+    posawesome_logger.info(
         f"[item.py] _check_private_barcode: Found item: {item.get('item_code')}")
     item["qty"] = 1
     return item
@@ -503,7 +503,7 @@ def _check_private_barcode(profile, barcode):
 
 def _check_normal_barcode(profile, barcode):
     """Check normal barcode in Item Barcode table."""
-    info_logger.info(
+    posawesome_logger.info(
         f"[item.py] _check_normal_barcode: Checking barcode: {barcode}")
 
     # First, check if barcode exists in Item Barcode table
@@ -515,10 +515,10 @@ def _check_normal_barcode(profile, barcode):
     """, (barcode,), as_dict=True)
 
     if barcode_record:
-        info_logger.info(
+        posawesome_logger.info(
             f"[item.py] _check_normal_barcode: Barcode found in DB - parent: {barcode_record[0].get('parent')}")
     else:
-        info_logger.warning(
+        posawesome_logger.warning(
             f"[item.py] _check_normal_barcode: Barcode NOT found in tabItem Barcode table")
 
     # Simply use get_items with the barcode value and include_zero_stock=True
@@ -526,11 +526,11 @@ def _check_normal_barcode(profile, barcode):
                       search_value=barcode, include_zero_stock=True)
 
     if not items:
-        info_logger.warning(
+        posawesome_logger.warning(
             f"[item.py] _check_normal_barcode: get_items returned 0 items for barcode: {barcode}")
         return None
 
-    info_logger.info(
+    posawesome_logger.info(
         f"[item.py] _check_normal_barcode: Found item via get_items - item_code: {items[0].get('item_code')}")
     item = items[0]
     item["qty"] = 1
@@ -547,7 +547,7 @@ def process_batch_selection(item_code, current_item_row_id, existing_items_data,
             "data": {}
         }
     except Exception as e:
-        error_logger.error(f"[item.py] process_batch_selection: {str(e)}")
+        posawesome_logger.error(f"[item.py] process_batch_selection: {str(e)}")
         return {
             "success": False,
             "message": str(e),
