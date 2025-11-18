@@ -16,8 +16,9 @@
         bottom: 0;
         background: rgba(0, 0, 0, 0.7);
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
+        padding-top: 5vh;
         z-index: 1050 !important;
         animation: modal-fade-in 0.2s ease;
       "
@@ -30,8 +31,8 @@
           border-radius: 16px;
           overflow: hidden;
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-          max-width: 90vw;
-          min-width: 550px;
+          max-width: 95vw;
+          min-width: 700px;
           width: auto;
           animation: dialogSlideIn 0.3s ease-out;
           border: 1px solid rgba(255, 152, 0, 0.1);
@@ -72,7 +73,7 @@
             <h3
               style="
                 margin: 0;
-                font-size: 16px;
+                font-size: 20px;
                 font-weight: 700;
                 color: white;
                 text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
