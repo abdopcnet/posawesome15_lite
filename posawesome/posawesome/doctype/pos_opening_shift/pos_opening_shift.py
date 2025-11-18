@@ -9,7 +9,7 @@ from frappe.utils import cint, comma_or, nowdate, getdate
 from frappe.model.document import Document
 import sys
 from datetime import datetime, timedelta
-from posawesome import info_logger, error_logger
+from posawesome import posawesome_logger
 
 
 class OverAllowanceError(frappe.ValidationError):
@@ -23,7 +23,7 @@ def validate_status(status, options):
             frappe.throw(
                 _("Status must be one of {0}").format(comma_or(options)))
     except Exception as e:
-        error_logger.error(
+        posawesome_logger.error(
             f"[[pos_opening_shift.py]] validate_status: {str(e)}")
         raise
 
@@ -71,7 +71,7 @@ class StatusUpdater(Document):
                                 self.status = s[0]
                                 break
                         except Exception as e:
-                            error_logger.error(
+                            posawesome_logger.error(
                                 f"[[pos_opening_shift.py]] set_status: {str(e)}")
                             raise
                     elif getattr(self, s[1])():
@@ -88,7 +88,7 @@ class StatusUpdater(Document):
                     self.db_set('status', self.status,
                                 update_modified=update_modified)
         except Exception as e:
-            error_logger.error(
+            posawesome_logger.error(
                 f"[[pos_opening_shift.py]] set_status: {str(e)}")
             raise
 
@@ -102,7 +102,7 @@ class POSOpeningShift(StatusUpdater):
             self.validate_pos_shift()
             self.set_status()
         except Exception as e:
-            error_logger.error(
+            posawesome_logger.error(
                 f"[[pos_opening_shift.py]] validate: {str(e)}")
             raise
 
@@ -130,7 +130,7 @@ class POSOpeningShift(StatusUpdater):
                     frappe.throw(_("User {} is not registered in POS Profile {}. Please select a user registered in the profile".format(
                         self.user, self.pos_profile)))
         except Exception as e:
-            error_logger.error(
+            posawesome_logger.error(
                 f"[[pos_opening_shift.py]] validate_pos_profile_and_cashier: {str(e)}")
             raise
 
@@ -196,7 +196,7 @@ class POSOpeningShift(StatusUpdater):
                 frappe.throw(_("Opening cash amount cannot be negative"))
 
         except Exception as e:
-            error_logger.error(
+            posawesome_logger.error(
                 f"[[pos_opening_shift.py]] validate_pos_shift: {str(e)}")
             raise
 
@@ -221,7 +221,7 @@ class POSOpeningShift(StatusUpdater):
         try:
             self.set_status(update=True)
         except Exception as e:
-            error_logger.error(
+            posawesome_logger.error(
                 f"[[pos_opening_shift.py]] on_submit: {str(e)}")
             raise
 
