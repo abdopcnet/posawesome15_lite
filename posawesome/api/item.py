@@ -66,13 +66,29 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
         info_logger.info(
             f"[item.py] get_items START - item_group: {item_group}, search_value: {search_value}")
 
+        # Validate pos_profile is not empty/null
+        if not pos_profile:
+            error_logger.error(
+                f"[item.py] get_items: pos_profile is empty or null")
+            frappe.throw(_("POS Profile is required"))
+
         # FRAPPE STANDARD: Handle string (JSON) or dict parameter
         # Frontend sends dict, Frappe auto-parses JSON, but we handle both cases
         if isinstance(pos_profile, str):
+            # Check if string is empty or whitespace
+            if not pos_profile.strip():
+                error_logger.error(
+                    f"[item.py] get_items: pos_profile is empty string")
+                frappe.throw(_("POS Profile is required"))
             try:
                 pos_profile = json.loads(pos_profile)
             except (json.JSONDecodeError, ValueError):
                 # If JSON parsing fails, treat it as POS Profile name
+                # But first validate it's not empty
+                if not pos_profile or not pos_profile.strip():
+                    error_logger.error(
+                        f"[item.py] get_items: pos_profile name is empty")
+                    frappe.throw(_("POS Profile is required"))
                 info_logger.info(
                     f"[item.py] get_items: Fetching POS Profile from DB: {pos_profile}")
                 pos_profile = frappe.get_cached_doc(
@@ -87,6 +103,12 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
             error_logger.error(
                 f"[item.py] get_items: pos_profile is not a dict, type: {type(pos_profile)}")
             frappe.throw(_("Invalid POS Profile data"))
+        
+        # Validate pos_profile has required 'name' field
+        if not pos_profile.get('name'):
+            error_logger.error(
+                f"[item.py] get_items: pos_profile dict missing 'name' field")
+            frappe.throw(_("POS Profile name is required"))
 
         # CRITICAL: Frontend only sends loaded fields (23 fields), not all DB fields
         # We use the minimal data sent from frontend for this method since we only need:
@@ -256,12 +278,28 @@ def get_barcode_item(pos_profile, barcode_value):
         info_logger.info(
             f"[item.py] get_barcode_item: START - barcode: {barcode_value}")
 
+        # Validate pos_profile is not empty/null
+        if not pos_profile:
+            error_logger.error(
+                f"[item.py] get_barcode_item: pos_profile is empty or null")
+            frappe.throw(_("POS Profile is required"))
+
         # Parse pos_profile if it's a JSON string
         if isinstance(pos_profile, str):
+            # Check if string is empty or whitespace
+            if not pos_profile.strip():
+                error_logger.error(
+                    f"[item.py] get_barcode_item: pos_profile is empty string")
+                frappe.throw(_("POS Profile is required"))
             try:
                 pos_profile = json.loads(pos_profile)
             except (json.JSONDecodeError, ValueError):
                 # If JSON parsing fails, treat it as POS Profile name and fetch the document
+                # But first validate it's not empty
+                if not pos_profile or not pos_profile.strip():
+                    error_logger.error(
+                        f"[item.py] get_barcode_item: pos_profile name is empty")
+                    frappe.throw(_("POS Profile is required"))
                 info_logger.info(
                     f"[item.py] get_barcode_item: Fetching POS Profile from DB: {pos_profile}")
                 pos_profile = frappe.get_cached_doc(
@@ -272,6 +310,12 @@ def get_barcode_item(pos_profile, barcode_value):
             error_logger.error(
                 f"[item.py] get_barcode_item: pos_profile is not a dict, type: {type(pos_profile)}")
             frappe.throw(_("Invalid POS Profile data"))
+        
+        # Validate pos_profile has required 'name' field
+        if not pos_profile.get('name'):
+            error_logger.error(
+                f"[item.py] get_barcode_item: pos_profile dict missing 'name' field")
+            frappe.throw(_("POS Profile name is required"))
 
         # CRITICAL FIX: Frontend doesn't send all barcode fields, so we must fetch from DB
         # Always fetch the complete POS Profile from database to get barcode configuration
