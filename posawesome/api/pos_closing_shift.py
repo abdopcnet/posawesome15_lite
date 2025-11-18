@@ -39,6 +39,10 @@ def check_closing_time_allowed(pos_profile):
         if not pos_profile:
             return {"allowed": True, "message": "No profile specified"}
 
+        # FRAPPE STANDARD: Handle string or dict
+        if isinstance(pos_profile, dict):
+            pos_profile = pos_profile.get('name')
+
         profile = frappe.get_doc("POS Profile", pos_profile)
 
         # Check if closing time control is enabled
@@ -87,7 +91,8 @@ def check_closing_time_allowed(pos_profile):
             }
 
     except Exception as e:
-        error_logger.error(f"[pos_closing_shift.py] check_closing_time_allowed: {str(e)}")
+        error_logger.error(
+            f"[pos_closing_shift.py] check_closing_time_allowed: {str(e)}")
         return {"allowed": True, "message": "Error checking time, allowing by default"}
 
 
@@ -111,7 +116,8 @@ def get_pos_invoices(pos_opening_shift):
     try:
         return _get_pos_invoices_helper(pos_opening_shift)
     except Exception as e:
-        error_logger.error(f"[pos_closing_shift.py] get_pos_invoices: {str(e)}")
+        error_logger.error(
+            f"[pos_closing_shift.py] get_pos_invoices: {str(e)}")
         frappe.throw(_("Error fetching POS invoices"))
 
 
@@ -123,7 +129,8 @@ def get_payments_entries(pos_opening_shift):
     try:
         return _get_payments_entries_helper(pos_opening_shift)
     except Exception as e:
-        error_logger.error(f"[pos_closing_shift.py] get_payments_entries: {str(e)}")
+        error_logger.error(
+            f"[pos_closing_shift.py] get_payments_entries: {str(e)}")
         frappe.throw(_("Error fetching payment entries"))
 
 
@@ -170,7 +177,8 @@ def get_current_cash_total(pos_profile=None, user=None):
         return {"total": cash_total}
 
     except Exception as e:
-        error_logger.error(f"[pos_closing_shift.py] get_current_cash_total: {str(e)}")
+        error_logger.error(
+            f"[pos_closing_shift.py] get_current_cash_total: {str(e)}")
         return {"total": 0.0}
 
 
@@ -217,7 +225,8 @@ def get_current_non_cash_total(pos_profile=None, user=None):
         return {"total": non_cash_total}
 
     except Exception as e:
-        error_logger.error(f"[pos_closing_shift.py] get_current_non_cash_total: {str(e)}")
+        error_logger.error(
+            f"[pos_closing_shift.py] get_current_non_cash_total: {str(e)}")
         return {"total": 0.0}
 
 
@@ -228,10 +237,42 @@ def make_closing_shift_from_opening(opening_shift):
     Returns: closing shift document as dict
     """
     try:
-        info_logger.info(f"[pos_closing_shift.py] Creating closing shift from opening: {opening_shift}")
+        info_logger.info(
+            f"[pos_closing_shift.py] Creating closing shift from opening: {opening_shift}")
+
+        # Handle string and dict formats only (no JSON parsing)
+        if isinstance(opening_shift, str):
+            # String = document name directly
+            opening_shift_name = opening_shift
+            info_logger.info(
+                f"[pos_closing_shift.py] Using string as document name: {opening_shift_name}")
+        elif isinstance(opening_shift, dict):
+            # Dict = extract 'name' field
+            opening_shift_name = opening_shift.get("name")
+            if not opening_shift_name:
+                error_logger.error(
+                    f"[pos_closing_shift.py] make_closing_shift_from_opening: opening_shift dict has no 'name' field")
+                frappe.throw(
+                    _("Invalid opening shift data: missing 'name' field"))
+            info_logger.info(
+                f"[pos_closing_shift.py] Using name from dict: {opening_shift_name}")
+        else:
+            error_logger.error(
+                f"[pos_closing_shift.py] make_closing_shift_from_opening: opening_shift is neither string nor dict, type: {type(opening_shift)}")
+            frappe.throw(
+                _("Invalid opening shift data: must be string or dict"))
+
+        if not opening_shift_name:
+            error_logger.error(
+                f"[pos_closing_shift.py] make_closing_shift_from_opening: Could not extract opening_shift_name")
+            frappe.throw(
+                _("Invalid opening shift data: could not determine shift name"))
+
+        info_logger.info(
+            f"[pos_closing_shift.py] Using opening shift name: {opening_shift_name}")
 
         # Get opening shift document
-        opening = frappe.get_doc("POS Opening Shift", opening_shift)
+        opening = frappe.get_doc("POS Opening Shift", opening_shift_name)
 
         # Check if opening shift is valid
         if opening.docstatus != 1:
@@ -244,7 +285,7 @@ def make_closing_shift_from_opening(opening_shift):
         existing_closing = frappe.db.get_value(
             "POS Closing Shift",
             filters={
-                "pos_opening_shift": opening_shift,
+                "pos_opening_shift": opening_shift_name,
                 "docstatus": ["<", 2]  # Draft or Submitted
             },
             fieldname="name"
@@ -252,7 +293,8 @@ def make_closing_shift_from_opening(opening_shift):
 
         if existing_closing:
             # Return existing closing shift
-            info_logger.info(f"[pos_closing_shift.py] Returning existing closing shift: {existing_closing}")
+            info_logger.info(
+                f"[pos_closing_shift.py] Returning existing closing shift: {existing_closing}")
             return frappe.get_doc("POS Closing Shift", existing_closing).as_dict()
 
         # Create new closing shift
@@ -265,7 +307,8 @@ def make_closing_shift_from_opening(opening_shift):
         closing.company = opening.company
 
         # Get payment totals using centralized helper
-        payment_totals = _calculate_payment_totals(opening.name, opening.pos_profile)
+        payment_totals = _calculate_payment_totals(
+            opening.name, opening.pos_profile)
 
         # Add payment reconciliation rows
         for payment in payment_totals:
@@ -301,12 +344,14 @@ def make_closing_shift_from_opening(opening_shift):
         closing.insert(ignore_permissions=True)
         frappe.db.commit()
 
-        info_logger.info(f"[pos_closing_shift.py] Created closing shift: {closing.name}")
+        info_logger.info(
+            f"[pos_closing_shift.py] Created closing shift: {closing.name}")
 
         return closing.as_dict()
 
     except Exception as e:
-        error_logger.error(f"[pos_closing_shift.py] make_closing_shift_from_opening: {str(e)}")
+        error_logger.error(
+            f"[pos_closing_shift.py] make_closing_shift_from_opening: {str(e)}")
         frappe.throw(_("Error creating closing shift"))
 
 
@@ -320,8 +365,14 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
     Returns list of payment totals with expected amounts
     """
     try:
+        # FRAPPE STANDARD: Extract name from dict if needed
+        if isinstance(pos_profile, dict):
+            pos_profile_name = pos_profile.get('name')
+        else:
+            pos_profile_name = pos_profile
+
         # Get POS Profile document to get payment methods
-        profile_doc = frappe.get_doc("POS Profile", pos_profile)
+        profile_doc = frappe.get_doc("POS Profile", pos_profile_name)
 
         # Get opening shift document
         opening_doc = frappe.get_doc("POS Opening Shift", pos_opening_shift)
@@ -373,7 +424,8 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
         return payment_totals
 
     except Exception as e:
-        error_logger.error(f"[pos_closing_shift.py] _calculate_payment_totals: {str(e)}")
+        error_logger.error(
+            f"[pos_closing_shift.py] _calculate_payment_totals: {str(e)}")
         return []
 
 
@@ -399,7 +451,8 @@ def _parse_time_helper(time_value):
         else:
             return None
     except Exception as e:
-        error_logger.error(f"[pos_closing_shift.py] _parse_time_helper: {str(e)}")
+        error_logger.error(
+            f"[pos_closing_shift.py] _parse_time_helper: {str(e)}")
         return None
 
 
@@ -422,11 +475,13 @@ def _submit_printed_invoices(pos_opening_shift):
                 doc = frappe.get_doc("Sales Invoice", invoice.name)
                 doc.submit()
             except Exception as e:
-                error_logger.error(f"[pos_closing_shift.py] Error submitting invoice {invoice.name}: {str(e)}")
+                error_logger.error(
+                    f"[pos_closing_shift.py] Error submitting invoice {invoice.name}: {str(e)}")
                 pass
 
     except Exception as e:
-        error_logger.error(f"[pos_closing_shift.py] _submit_printed_invoices: {str(e)}")
+        error_logger.error(
+            f"[pos_closing_shift.py] _submit_printed_invoices: {str(e)}")
 
 
 def _get_pos_invoices_helper(pos_opening_shift):
@@ -438,11 +493,13 @@ def _get_pos_invoices_helper(pos_opening_shift):
                 "posa_pos_opening_shift": pos_opening_shift,
                 "docstatus": 1
             },
-            fields=["name", "posting_date", "posting_time", "grand_total", "customer"],
+            fields=["name", "posting_date",
+                    "posting_time", "grand_total", "customer"],
             order_by="posting_date, posting_time"
         )
     except Exception as e:
-        error_logger.error(f"[pos_closing_shift.py] _get_pos_invoices_helper: {str(e)}")
+        error_logger.error(
+            f"[pos_closing_shift.py] _get_pos_invoices_helper: {str(e)}")
         return []
 
 
@@ -462,5 +519,6 @@ def _get_payments_entries_helper(pos_opening_shift):
             order_by="posting_date"
         )
     except Exception as e:
-        error_logger.error(f"[pos_closing_shift.py] _get_payments_entries_helper: {str(e)}")
+        error_logger.error(
+            f"[pos_closing_shift.py] _get_payments_entries_helper: {str(e)}")
         return []
