@@ -16,7 +16,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 from frappe.utils import nowdate, flt
-from posawesome import info_logger, error_logger
+from posawesome import posawesome_logger
 
 
 @frappe.whitelist()
