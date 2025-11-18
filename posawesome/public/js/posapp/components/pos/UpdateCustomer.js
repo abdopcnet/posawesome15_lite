@@ -1,6 +1,6 @@
 import { evntBus } from "../../bus";
 import { API_MAP } from "../../api_mapper.js";
-import { posawesome_logger } from "../../logger.js";
+// Frontend logging: Use console.log/error/warn directly
 
 const EVENT_NAMES = {
   SHOW_MESSAGE: "show_mesage",
@@ -110,7 +110,7 @@ export default {
           }
         })
         .catch((err) => {
-          posawesome_logger.error("[UpdateCustomer.js] getCustomerGroups error:", err);
+          console.error("[UpdateCustomer.js] getCustomerGroups error:", err);
           this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_GROUPS, "error");
         });
     },
@@ -131,7 +131,10 @@ export default {
           }
         })
         .catch((err) => {
-          posawesome_logger.error("[UpdateCustomer.js] getCustomerTerritorys error:", err);
+          console.error(
+            "[UpdateCustomer.js] getCustomerTerritorys error:",
+            err
+          );
           this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_TERRITORIES, "error");
         });
     },
@@ -148,7 +151,7 @@ export default {
           }
         })
         .catch((err) => {
-          posawesome_logger.error("[UpdateCustomer.js] getGenders error:", err);
+          console.error("[UpdateCustomer.js] getGenders error:", err);
           this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_GENDERS, "error");
         });
     },
@@ -204,7 +207,7 @@ export default {
           }
         },
         error: (err) => {
-          posawesome_logger.error("[UpdateCustomer.js] submit_dialog error:", err);
+          console.error("[UpdateCustomer.js] submit_dialog error:", err);
           this.handleCustomerError();
         },
       });
@@ -238,7 +241,7 @@ export default {
             }
           },
           error: (err) => {
-            posawesome_logger.error(
+            console.error(
               "[UpdateCustomer.js] handleCustomerSuccess error:",
               err
             );
