@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 import frappe
+from posawesome import backend_logger
 
 
 @frappe.whitelist()
@@ -43,7 +44,7 @@ def get_default_payment_from_pos_profile(pos_profile, company):
         return None
 
     except Exception as e:
-        frappe.logger().error(f"[pos_profile.py] get_default_payment_from_pos_profile: {str(e)}")
+        backend_logger.error(f"[pos_profile.py] get_default_payment_from_pos_profile: {str(e)}")
         return None
 
 
@@ -89,7 +90,7 @@ def get_opening_dialog_data():
         return data
 
     except Exception as e:
-        frappe.logger().error(f"[pos_profile.py] get_opening_dialog_data: {str(e)}")
+        backend_logger.error(f"[pos_profile.py] get_opening_dialog_data: {str(e)}")
         return {}
 
 
@@ -110,7 +111,7 @@ def get_profile_users(profile_name):
         return result
 
     except Exception as e:
-        frappe.logger().error(f"[pos_profile.py] get_profile_users: {str(e)}")
+        backend_logger.error(f"[pos_profile.py] get_profile_users: {str(e)}")
         return []
 
 
@@ -131,7 +132,7 @@ def get_profile_warehouses(profile_name):
         return result
 
     except Exception as e:
-        frappe.logger().error(f"[pos_profile.py] get_profile_warehouses: {str(e)}")
+        backend_logger.error(f"[pos_profile.py] get_profile_warehouses: {str(e)}")
         return []
 
 
@@ -210,5 +211,5 @@ def get_payment_account(mode_of_payment, company):
         return result
 
     except Exception as e:
-        frappe.logger().error(f"[pos_profile.py] get_payment_account: {str(e)}")
+        backend_logger.error(f"[pos_profile.py] get_payment_account: {str(e)}")
         return {"account": ""}
