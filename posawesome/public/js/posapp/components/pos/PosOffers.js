@@ -1,7 +1,7 @@
 // ===== SECTION 1: IMPORTS =====
 import { evntBus } from "../../bus";
 import format from "../../format";
-import { posawesome_logger } from "../../logger.js";
+// Frontend logging: Use console.log/error/warn directly
 
 // CONSTANTS
 const EVENT_NAMES = {
@@ -178,7 +178,7 @@ export default {
           this.discount_percentage_offer_name = null;
         }
       } catch (error) {
-        posawesome_logger.error("[PosOffers.js] handleManualOfferChange error:", error);
+        console.error("[PosOffers.js] handleManualOfferChange error:", error);
         this.showMessage("خطأ في معالجة تغيير العرض", "error");
       }
     },
@@ -202,7 +202,7 @@ export default {
           );
         });
       } catch (error) {
-        posawesome_logger.error("[PosOffers.js] updatePosOffers error:", error);
+        console.error("[PosOffers.js] updatePosOffers error:", error);
       }
     },
 
@@ -234,7 +234,7 @@ export default {
           this.discount_percentage_offer_name = grandTotalOffers[0].name;
         }
       } catch (error) {
-        posawesome_logger.error("[PosOffers.js] applyBestOffer error:", error);
+        console.error("[PosOffers.js] applyBestOffer error:", error);
         this.showMessage("خطأ في تطبيق أفضل عرض", "error");
       }
     },
@@ -245,7 +245,7 @@ export default {
           (offer) => !offers_id_list.includes(offer.name || offer.offer_name)
         );
       } catch (error) {
-        posawesome_logger.error("[PosOffers.js] removeAllOffers error:", error);
+        console.error("[PosOffers.js] removeAllOffers error:", error);
         this.showMessage("خطأ في إزالة العروض", "error");
       }
     },
@@ -257,7 +257,7 @@ export default {
         );
         evntBus.emit(EVENT_NAMES.UPDATE_INVOICE_OFFERS, applyedOffers);
       } catch (error) {
-        posawesome_logger.error("[PosOffers.js] processOffers error:", error);
+        console.error("[PosOffers.js] processOffers error:", error);
         this.showMessage("خطأ في معالجة العروض", "error");
       }
     },
@@ -288,7 +288,7 @@ export default {
 
         return [];
       } catch (error) {
-        posawesome_logger.error("[PosOffers.js] getFreeItems error:", error);
+        console.error("[PosOffers.js] getFreeItems error:", error);
         this.showMessage("خطأ في جلب الأصناف المجانية", "error");
         return [];
       }
@@ -301,7 +301,7 @@ export default {
           appliedOffersCount: this.appliedOffersCount,
         });
       } catch (error) {
-        posawesome_logger.error("[PosOffers.js] updateCounters error:", error);
+        console.error("[PosOffers.js] updateCounters error:", error);
         this.showMessage("خطأ في تحديث العدادات", "error");
       }
     },
