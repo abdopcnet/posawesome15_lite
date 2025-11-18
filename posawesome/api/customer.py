@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 Customer API Module
+
+FRAPPE API PATTERN:
+- All @frappe.whitelist() methods handle both dict and string parameters
+- pos_profile can be dict {name: 'Profile1'} or string 'Profile1'
+- args/filters can be JSON string or dict - use frappe.parse_json()
+- Use isinstance() checks to normalize parameters before processing
+
 Consolidated API for all customer-related operations including CRUD operations,
 credit management, and address handling.
 """
@@ -81,13 +88,21 @@ def create_customer(
         pos_defaults = {}
         if pos_profile:
             try:
-                pos_doc = frappe.get_cached_doc("POS Profile", pos_profile)
+                # FRAPPE STANDARD: Extract name from dict if needed
+                if isinstance(pos_profile, dict):
+                    pos_profile_name = pos_profile.get('name')
+                else:
+                    pos_profile_name = pos_profile
+
+                pos_doc = frappe.get_cached_doc(
+                    "POS Profile", pos_profile_name)
                 if hasattr(pos_doc, 'customer_group') and pos_doc.customer_group:
                     pos_defaults["customer_group"] = pos_doc.customer_group
                 if hasattr(pos_doc, 'territory') and pos_doc.territory:
                     pos_defaults["territory"] = pos_doc.territory
             except Exception as pos_error:
-                error_logger.error(f"[[customer.py]] create_customer: {str(pos_error)}")
+                error_logger.error(
+                    f"[[customer.py]] create_customer: {str(pos_error)}")
                 # Silent fallback - no logging needed for optional POS defaults
                 pass
 
@@ -117,18 +132,20 @@ def create_customer(
 
         # Insert the customer (this will trigger validate and after_insert)
         customer_doc.insert(ignore_permissions=False)
-        
+
         # Create primary contact (following ERPNext logic in on_update)
         # This ensures Contact is created with proper mobile_no and email_id
         if not customer_doc.customer_primary_contact and not customer_doc.lead_name:
             if customer_doc.mobile_no or customer_doc.email_id:
                 try:
                     contact = _make_contact_for_customer(customer_doc)
-                    customer_doc.db_set("customer_primary_contact", contact.name)
+                    customer_doc.db_set(
+                        "customer_primary_contact", contact.name)
                     customer_doc.db_set("mobile_no", customer_doc.mobile_no)
                     customer_doc.db_set("email_id", customer_doc.email_id)
                 except Exception as contact_error:
-                    error_logger.error(f"[[customer.py]] create_customer: {str(contact_error)}")
+                    error_logger.error(
+                        f"[[customer.py]] create_customer: {str(contact_error)}")
                     # Don't fail customer creation if contact creation fails
 
         frappe.db.commit()
@@ -178,7 +195,8 @@ def create_customer_address(args):
         return address.as_dict()
 
     except Exception as e:
-        error_logger.error(f"[[customer.py]] create_customer_address: {str(e)}")
+        error_logger.error(
+            f"[[customer.py]] create_customer_address: {str(e)}")
         frappe.throw(_("Error creating address"))
 
 
@@ -258,7 +276,8 @@ def get_customer(customer_id):
                 )
                 result["loyalty_points"] = lp_details.get("loyalty_points", 0)
             except Exception as loyalty_error:
-                error_logger.error(f"[[customer.py]] get_customer: {str(loyalty_error)}")
+                error_logger.error(
+                    f"[[customer.py]] get_customer: {str(loyalty_error)}")
                 result["loyalty_points"] = 0
 
         return result
@@ -323,7 +342,8 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
                             query_filters["customer_group"] = [
                                 "in", customer_groups]
             except Exception as profile_error:
-                error_logger.error(f"[[customer.py]] get_many_customers: {str(profile_error)}")
+                error_logger.error(
+                    f"[[customer.py]] get_many_customers: {str(profile_error)}")
                 # Silent fallback for POS profile processing
                 pass
 
@@ -415,7 +435,8 @@ def get_customers_count(search_term="", pos_profile=None, filters=None):
                 additional_filters = frappe.parse_json(filters)
                 query_filters.update(additional_filters)
             except Exception as filter_error:
-                error_logger.error(f"[[customer.py]] get_customers_count: {str(filter_error)}")
+                error_logger.error(
+                    f"[[customer.py]] get_customers_count: {str(filter_error)}")
                 pass
 
         # Apply POS Profile filtering
@@ -435,7 +456,8 @@ def get_customers_count(search_term="", pos_profile=None, filters=None):
                             query_filters["customer_group"] = [
                                 "in", customer_groups]
             except Exception as profile_error:
-                error_logger.error(f"[[customer.py]] get_customers_count: {str(profile_error)}")
+                error_logger.error(
+                    f"[[customer.py]] get_customers_count: {str(profile_error)}")
                 pass
 
         # Add search filtering
@@ -494,13 +516,15 @@ def get_many_customer_addresses(customer_id):
                 address = frappe.get_doc("Address", link.parent)
                 addresses.append(address.as_dict())
             except Exception as address_error:
-                error_logger.error(f"[[customer.py]] get_many_customer_addresses: {str(address_error)}")
+                error_logger.error(
+                    f"[[customer.py]] get_many_customer_addresses: {str(address_error)}")
                 continue  # Skip if address doesn't exist
 
         return addresses
 
     except Exception as e:
-        error_logger.error(f"[[customer.py]] get_many_customer_addresses: {str(e)}")
+        error_logger.error(
+            f"[[customer.py]] get_many_customer_addresses: {str(e)}")
         frappe.throw(_("Error retrieving addresses"))
 
 
@@ -588,7 +612,8 @@ def update_customer(
                 existing = frappe.db.get_value(
                     "Customer", {"mobile_no": mobile_no, "name": ["!=", customer_id]}, "name")
                 if existing:
-                    existing_customer_name = frappe.db.get_value("Customer", existing, "customer_name")
+                    existing_customer_name = frappe.db.get_value(
+                        "Customer", existing, "customer_name")
                     frappe.throw(_("رقم الجوال '{0}' مستخدم بالفعل للعميل: {1}").format(
                         mobile_no, existing_customer_name or existing))
             customer_doc.mobile_no = mobile_no
@@ -637,10 +662,12 @@ def update_customer(
 
         if posa_discount is not None and hasattr(customer_doc, 'posa_discount'):
             try:
-                customer_doc.posa_discount = float(posa_discount) if posa_discount else 0
+                customer_doc.posa_discount = float(
+                    posa_discount) if posa_discount else 0
                 updated_fields.append("posa_discount")
             except (ValueError, TypeError):
-                frappe.throw(_("Invalid discount percentage: {0}").format(posa_discount))
+                frappe.throw(
+                    _("Invalid discount percentage: {0}").format(posa_discount))
 
         # Update any additional fields from kwargs
         for field_name, field_value in kwargs.items():
@@ -657,14 +684,15 @@ def update_customer(
         # Save the document if any fields were updated
         if updated_fields:
             customer_doc.save()
-            
+
             # Update the primary contact if mobile_no or email_id changed (following ERPNext pattern)
             mobile_no_updated = "mobile_no" in updated_fields
             email_id_updated = "email_id" in updated_fields
-            
+
             if mobile_no_updated or email_id_updated:
-                _update_contact_for_customer(customer_doc, mobile_no_updated, email_id_updated)
-            
+                _update_contact_for_customer(
+                    customer_doc, mobile_no_updated, email_id_updated)
+
             frappe.db.commit()
 
         # Return the updated customer document
@@ -853,7 +881,8 @@ def get_customer_credit_summary(customer_id, company=None):
         }
 
     except Exception as e:
-        error_logger.error(f"[[customer.py]] get_customer_credit_summary: {str(e)}")
+        error_logger.error(
+            f"[[customer.py]] get_customer_credit_summary: {str(e)}")
         frappe.throw(_("Error retrieving customer credit summary"))
 
 
@@ -959,15 +988,33 @@ def _resolve_default_customer_name(pos_profile):
         return None
 
     try:
-        if isinstance(pos_profile, str) and not pos_profile.startswith('{'):
-            profile_doc = frappe.get_cached_doc("POS Profile", pos_profile)
+        # FRAPPE STANDARD: Handle dict or string for pos_profile
+        if isinstance(pos_profile, dict):
+            pos_profile_name = pos_profile.get('name')
+        elif isinstance(pos_profile, str) and not pos_profile.startswith('{'):
+            pos_profile_name = pos_profile
+        else:
+            # Try to parse JSON string
+            try:
+                pos_profile_data = frappe.parse_json(pos_profile)
+                if isinstance(pos_profile_data, dict):
+                    pos_profile_name = pos_profile_data.get('name')
+                else:
+                    return None
+            except:
+                return None
+
+        if pos_profile_name:
+            profile_doc = frappe.get_cached_doc(
+                "POS Profile", pos_profile_name)
             return getattr(profile_doc, "customer", None)
 
         pos_profile_data = frappe.parse_json(pos_profile)
         if isinstance(pos_profile_data, dict):
             return pos_profile_data.get("customer")
     except Exception as resolve_error:
-        error_logger.error(f"[[customer.py]] _resolve_default_customer_name: {str(resolve_error)}")
+        error_logger.error(
+            f"[[customer.py]] _resolve_default_customer_name: {str(resolve_error)}")
         # Silent fallback - default customer remains None
         return None
 
@@ -1006,7 +1053,8 @@ def _ensure_default_customer_in_results(customers, default_customer_name, fields
         if default_customer_data:
             customers.insert(0, default_customer_data[0])
     except Exception as ensure_error:
-        error_logger.error(f"[[customer.py]] _ensure_default_customer_in_results: {str(ensure_error)}")
+        error_logger.error(
+            f"[[customer.py]] _ensure_default_customer_in_results: {str(ensure_error)}")
         # Silent fallback - return the original list unchanged
         return customers
 
@@ -1016,21 +1064,21 @@ def _ensure_default_customer_in_results(customers, default_customer_name, fields
 def _make_contact_for_customer(customer_doc):
     """
     Create a primary contact for a customer (following ERPNext make_contact logic).
-    
+
     Args:
         customer_doc: Customer document object
-        
+
     Returns:
         Contact document
     """
     from erpnext.selling.doctype.customer.customer import parse_full_name
-    
+
     values = {
         "doctype": "Contact",
         "is_primary_contact": 1,
         "links": [{"link_doctype": "Customer", "link_name": customer_doc.name}],
     }
-    
+
     # Set name based on customer type
     if customer_doc.customer_type == "Individual":
         first, middle, last = parse_full_name(customer_doc.customer_name)
@@ -1043,16 +1091,16 @@ def _make_contact_for_customer(customer_doc):
         values.update({
             "company_name": customer_doc.customer_name,
         })
-    
+
     contact = frappe.get_doc(values)
-    
+
     # Add email if provided
     if customer_doc.email_id:
         contact.append("email_ids", {
             "email_id": customer_doc.email_id,
             "is_primary": 1
         })
-    
+
     # Add mobile if provided
     if customer_doc.mobile_no:
         contact.append("phone_nos", {
@@ -1060,10 +1108,10 @@ def _make_contact_for_customer(customer_doc):
             "is_primary_mobile_no": 1,
             "is_primary_phone": 0
         })
-    
+
     contact.flags.ignore_mandatory = True
     contact.insert(ignore_permissions=True)
-    
+
     return contact
 
 
@@ -1071,7 +1119,7 @@ def _update_contact_for_customer(customer_doc, mobile_no_updated, email_id_updat
     """
     Update the primary contact when customer mobile_no or email_id changes.
     Follows ERPNext pattern of updating both the main field and child tables.
-    
+
     Args:
         customer_doc: Customer document object
         mobile_no_updated: Boolean indicating if mobile_no was updated
@@ -1084,18 +1132,20 @@ def _update_contact_for_customer(customer_doc, mobile_no_updated, email_id_updat
                 contact = _make_contact_for_customer(customer_doc)
                 customer_doc.db_set("customer_primary_contact", contact.name)
             except Exception as e:
-                error_logger.error(f"[[customer.py]] _update_contact_for_customer: {str(e)}")
+                error_logger.error(
+                    f"[[customer.py]] _update_contact_for_customer: {str(e)}")
         return
-    
+
     try:
-        contact_doc = frappe.get_doc("Contact", customer_doc.customer_primary_contact)
+        contact_doc = frappe.get_doc(
+            "Contact", customer_doc.customer_primary_contact)
         contact_updated = False
-        
+
         if mobile_no_updated:
             # Update mobile_no field directly (this is what shows in Contact form)
             contact_doc.mobile_no = customer_doc.mobile_no or ""
             contact_updated = True
-            
+
             # Update phone_nos child table for primary mobile
             primary_mobile_found = False
             for phone in contact_doc.phone_nos:
@@ -1103,7 +1153,7 @@ def _update_contact_for_customer(customer_doc, mobile_no_updated, email_id_updat
                     phone.phone = customer_doc.mobile_no or ""
                     primary_mobile_found = True
                     break
-            
+
             # If no primary mobile exists in child table, add one
             if not primary_mobile_found and customer_doc.mobile_no:
                 contact_doc.append("phone_nos", {
@@ -1111,12 +1161,12 @@ def _update_contact_for_customer(customer_doc, mobile_no_updated, email_id_updat
                     "is_primary_mobile_no": 1,
                     "is_primary_phone": 0
                 })
-        
+
         if email_id_updated:
             # Update email_id field directly (this is what shows in Contact form)
             contact_doc.email_id = customer_doc.email_id or ""
             contact_updated = True
-            
+
             # Update email_ids child table for primary email
             primary_email_found = False
             for email in contact_doc.email_ids:
@@ -1124,18 +1174,19 @@ def _update_contact_for_customer(customer_doc, mobile_no_updated, email_id_updat
                     email.email_id = customer_doc.email_id or ""
                     primary_email_found = True
                     break
-            
+
             # If no primary email exists in child table, add one
             if not primary_email_found and customer_doc.email_id:
                 contact_doc.append("email_ids", {
                     "email_id": customer_doc.email_id,
                     "is_primary": 1
                 })
-        
+
         if contact_updated:
             contact_doc.flags.ignore_mandatory = True
             contact_doc.save(ignore_permissions=True)
-            
+
     except Exception as contact_error:
-        error_logger.error(f"[[customer.py]] _update_contact_for_customer: {str(contact_error)}")
+        error_logger.error(
+            f"[[customer.py]] _update_contact_for_customer: {str(contact_error)}")
         # Don't fail the whole operation if contact update fails
