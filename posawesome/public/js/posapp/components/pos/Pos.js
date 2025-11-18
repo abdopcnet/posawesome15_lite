@@ -10,6 +10,7 @@ import ClosingDialog from "./ClosingDialog.vue";
 import NewAddress from "./NewAddress.vue";
 import Returns from "./Returns.vue";
 import { API_MAP } from "../../api_mapper.js";
+import { posawesome_logger } from "../../logger.js";
 
 // ===== EVENT BUS EVENTS =====
 const EVENTS = {
@@ -103,9 +104,9 @@ export default {
           allShiftsResponse.message.count > 1
         ) {
           // User has MULTIPLE open shifts - show warning component
-          console.log(
-            "[Pos.js] check_opening_entry: multiple shifts found:",
-            allShiftsResponse.message.count
+          posawesome_logger.info(
+            "Pos.js",
+            `check_opening_entry: multiple shifts found: ${allShiftsResponse.message.count}`
           );
           this.openShifts = allShiftsResponse.message.shifts;
           this.showOpenShiftsWarning = true;
@@ -118,75 +119,62 @@ export default {
         });
 
         if (response.message.success && response.message.data) {
-          // Active shift exists - load full profile data
-          console.log(
-            "[Pos.js] check_opening_entry: shift found:",
-            response.message.data.name,
-            "profile:",
-            response.message.data.pos_profile
+          // Active shift exists - use profile data from shift response
+          posawesome_logger.info(
+            "Pos.js",
+            `check_opening_entry: shift found: ${response.message.data.name}, profile: ${response.message.data.pos_profile}`
           );
-          await this.get_full_profile_data(response.message.data.pos_profile);
+
+          // POS Profile data is already included in shift response
+          const shift_data = response.message.data;
+          const pos_profile = shift_data.pos_profile_data;
+
+          if (!pos_profile) {
+            // Profile data not available - show error
+            posawesome_logger.error(
+              "Pos.js",
+              "check_opening_entry: pos_profile_data is null/undefined",
+              shift_data
+            );
+            this.show_message("فشل تحميل بيانات الملف الشخصي", "error");
+            return;
+          }
+
+          // Update component state
+          this.pos_profile = pos_profile;
+          this.pos_opening_shift = {
+            name: shift_data.name,
+            company: shift_data.company,
+            period_start_date: shift_data.period_start_date,
+            pos_profile: shift_data.pos_profile,
+            user: shift_data.user,
+          };
+
+          // Prepare data for event bus
+          const event_data = {
+            pos_profile: pos_profile,
+            pos_opening_shift: this.pos_opening_shift,
+            company: { name: pos_profile.company },
+          };
+
+          // Load offers for this profile
+          await this.get_offers(pos_profile.name);
+
+          // Emit events to notify other components
+          evntBus.emit(EVENTS.REGISTER_POS_PROFILE, event_data);
+          evntBus.emit(EVENTS.SET_COMPANY, { name: pos_profile.company });
+          evntBus.emit(EVENTS.SET_POS_OPENING_SHIFT, this.pos_opening_shift);
         } else {
           // No active shift - show opening dialog
-          console.log("[Pos.js] check_opening_entry: no active shift");
+          posawesome_logger.info(
+            "Pos.js",
+            "check_opening_entry: no active shift"
+          );
           this.create_opening_voucher();
         }
       } catch (error) {
-        console.log("[Pos.js] check_opening_entry error:", error);
+        posawesome_logger.error("Pos.js", "check_opening_entry error", error);
         this.show_message("فشل التحقق من إدخال الافتتاح", "error");
-      }
-    },
-
-    async get_full_profile_data(pos_profile_name) {
-      try {
-        // Fetch POS profile
-        const profileResponse = await frappe.call({
-          method: "frappe.client.get",
-          args: {
-            doctype: "POS Profile",
-            name: pos_profile_name,
-          },
-        });
-
-        if (!profileResponse.message) {
-          throw new Error("Failed to load POS profile");
-        }
-
-        const pos_profile = profileResponse.message;
-
-        // Check and apply language from POS Profile
-
-        // Fetch current shift data
-        const shiftResponse = await frappe.call({
-          method: API_MAP.POS_OPENING_SHIFT.GET_CURRENT_SHIFT_NAME,
-        });
-
-        const pos_opening_shift = shiftResponse.message.success
-          ? shiftResponse.message.data
-          : null;
-
-        // Update component state
-        this.pos_profile = pos_profile;
-        this.pos_opening_shift = pos_opening_shift;
-
-        // Prepare data for event bus
-        const shift_data = {
-          pos_profile: pos_profile,
-          pos_opening_shift: pos_opening_shift,
-          company: { name: pos_profile.company },
-        };
-
-        // Load offers for this profile
-        await this.get_offers(pos_profile.name);
-
-        // Emit events to notify other components
-        evntBus.emit(EVENTS.REGISTER_POS_PROFILE, shift_data);
-        evntBus.emit(EVENTS.SET_COMPANY, { name: pos_profile.company });
-        // Profile loaded
-        evntBus.emit(EVENTS.SET_POS_OPENING_SHIFT, pos_opening_shift);
-      } catch (error) {
-        console.log("[Pos.js] get_full_profile_data error:", error);
-        this.show_message("فشل تحميل بيانات الملف الشخصي", "error");
       }
     },
 
@@ -205,7 +193,7 @@ export default {
         const doc = await frappe.db.get_doc("POS Settings", undefined);
         evntBus.emit(EVENTS.SET_POS_SETTINGS, doc);
       } catch (error) {
-        console.log("[Pos.js] get_pos_setting error:", error);
+        posawesome_logger.error("Pos.js", "get_pos_setting error", error);
       }
     },
 
@@ -239,7 +227,7 @@ export default {
           this.show_message("فشل تحميل العروض", "error");
         }
       } catch (error) {
-        console.log("[Pos.js] get_offers error:", error);
+        posawesome_logger.error("Pos.js", "get_offers error", error);
         this.show_message("فشل تحميل العروض", "error");
       }
     },
@@ -261,7 +249,7 @@ export default {
           this.show_message("فشل تحميل بيانات الإغلاق", "error");
         }
       } catch (error) {
-        console.log("[Pos.js] get_closing_data error:", error);
+        posawesome_logger.error("Pos.js", "get_closing_data error", error);
         this.show_message("فشل تحميل بيانات الإغلاق", "error");
       }
     },
@@ -284,7 +272,7 @@ export default {
           this.show_message("فشل إغلاق نوبة الصراف", "error");
         }
       } catch (error) {
-        console.log("[Pos.js] submit_closing_pos error:", error);
+        posawesome_logger.error("Pos.js", "submit_closing_pos error", error);
         this.show_message("فشل إغلاق نوبة الصراف", "error");
       }
     },
