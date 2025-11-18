@@ -119,11 +119,11 @@
                   display: flex;
                   align-items: center;
                   justify-content: center;
-                  padding: 3px 6px;
+                  padding: 8px 6px;
                   border-radius: 3px;
                   border: 1px solid #4caf50;
                   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-                  min-height: 22px;
+                  min-height: 38px;
                   transition: all 0.2s ease;
                 "
               >
@@ -168,7 +168,7 @@
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '3px 6px',
+                  padding: '8px 6px',
                   borderRadius: '3px',
                   border:
                     change_amount > 0
@@ -178,7 +178,7 @@
                     change_amount > 0
                       ? 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)'
                       : 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)',
-                  minHeight: '22px',
+                  minHeight: '38px',
                   transition: 'all 0.2s ease',
                 }"
               >
@@ -223,7 +223,7 @@
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '3px 6px',
+                  padding: '8px 6px',
                   borderRadius: '3px',
                   border:
                     outstanding_amount > 0
@@ -233,7 +233,7 @@
                     outstanding_amount > 0
                       ? 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)'
                       : 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)',
-                  minHeight: '22px',
+                  minHeight: '38px',
                   transition: 'all 0.2s ease',
                 }"
               >
