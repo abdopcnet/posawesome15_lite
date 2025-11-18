@@ -1,5 +1,6 @@
 import { evntBus } from "../../bus";
 import { API_MAP } from "../../api_mapper.js";
+import { posawesome_logger } from "../../logger.js";
 
 const EVENT_NAMES = {
   SHOW_MESSAGE: "show_mesage",
@@ -109,7 +110,7 @@ export default {
           }
         })
         .catch((err) => {
-          console.log("[UpdateCustomer.js] getCustomerGroups error:", err);
+          posawesome_logger.error("[UpdateCustomer.js] getCustomerGroups error:", err);
           this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_GROUPS, "error");
         });
     },
@@ -130,7 +131,7 @@ export default {
           }
         })
         .catch((err) => {
-          console.log("[UpdateCustomer.js] getCustomerTerritorys error:", err);
+          posawesome_logger.error("[UpdateCustomer.js] getCustomerTerritorys error:", err);
           this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_TERRITORIES, "error");
         });
     },
@@ -147,7 +148,7 @@ export default {
           }
         })
         .catch((err) => {
-          console.log("[UpdateCustomer.js] getGenders error:", err);
+          posawesome_logger.error("[UpdateCustomer.js] getGenders error:", err);
           this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_GENDERS, "error");
         });
     },
@@ -203,7 +204,7 @@ export default {
           }
         },
         error: (err) => {
-          console.log("[UpdateCustomer.js] submit_dialog error:", err);
+          posawesome_logger.error("[UpdateCustomer.js] submit_dialog error:", err);
           this.handleCustomerError();
         },
       });
@@ -237,7 +238,7 @@ export default {
             }
           },
           error: (err) => {
-            console.log(
+            posawesome_logger.error(
               "[UpdateCustomer.js] handleCustomerSuccess error:",
               err
             );
