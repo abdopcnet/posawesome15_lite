@@ -70,7 +70,8 @@ export default {
         }
       } catch (error) {
         posawesome_logger.error(
-          "[Customer.js] get_many_customers error:",
+          "Customer.js",
+          "get_many_customers error",
           error
         );
         this.showMessage(ERROR_MESSAGES.UNEXPECTED_ERROR, "error");
@@ -113,14 +114,11 @@ export default {
                 this.customer_search = selected.customer_name;
                 this.customer_info = selected;
                 this.defaultLoaded = true;
-                posawesome_logger.error(
-                  "[Customer.js] Default customer loaded:",
-                  selected.name,
-                  selected.customer_name
-                );
+                // Default customer loaded (logged to backend only)
               } else {
                 posawesome_logger.error(
-                  "[Customer.js] Default customer not found:",
+                  "Customer.js",
+                  "Default customer not found",
                   this.customer
                 );
               }
@@ -130,7 +128,8 @@ export default {
         },
         error: (err) => {
           posawesome_logger.error(
-            "[Customer.js] load_all_customers error:",
+            "Customer.js",
+            "load_all_customers error",
             err
           );
           this.showMessage(ERROR_MESSAGES.FAILED_TO_FETCH, "error");
@@ -294,7 +293,8 @@ export default {
         );
       } catch (err) {
         posawesome_logger.error(
-          "[Customer.js] registerEventListeners error:",
+          "Customer.js",
+          "registerEventListeners error",
           err
         );
         this.showMessage(ERROR_MESSAGES.INITIALIZATION_ERROR, "error");
