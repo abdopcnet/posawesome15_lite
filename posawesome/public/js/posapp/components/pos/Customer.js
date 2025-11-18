@@ -1,7 +1,7 @@
 import { evntBus } from "../../bus";
 import UpdateCustomer from "./UpdateCustomer.vue";
 import { API_MAP } from "../../api_mapper.js";
-import { posawesome_logger } from "../../logger.js";
+// Frontend logging: Use console.log/error/warn directly
 
 const EVENT_NAMES = {
   UPDATE_CUSTOMER: "update_customer",
@@ -69,11 +69,7 @@ export default {
           evntBus.emit(EVENT_NAMES.UPDATE_CUSTOMER, this.customer);
         }
       } catch (error) {
-        posawesome_logger.error(
-          "Customer.js",
-          "get_many_customers error",
-          error
-        );
+        console.error("Customer.js", "get_many_customers error", error);
         this.showMessage(ERROR_MESSAGES.UNEXPECTED_ERROR, "error");
       }
     },
@@ -116,7 +112,7 @@ export default {
                 this.defaultLoaded = true;
                 // Default customer loaded (logged to backend only)
               } else {
-                posawesome_logger.error(
+                console.error(
                   "Customer.js",
                   "Default customer not found",
                   this.customer
@@ -127,11 +123,7 @@ export default {
           this.loading = false;
         },
         error: (err) => {
-          posawesome_logger.error(
-            "Customer.js",
-            "load_all_customers error",
-            err
-          );
+          console.error("Customer.js", "load_all_customers error", err);
           this.showMessage(ERROR_MESSAGES.FAILED_TO_FETCH, "error");
           this.loading = false;
         },
@@ -184,7 +176,7 @@ export default {
       try {
         evntBus.emit(EVENT_NAMES.OPEN_UPDATE_CUSTOMER, null);
       } catch (err) {
-        posawesome_logger.error("Customer.js", "new_customer error", err);
+        console.error("Customer.js", "new_customer error", err);
         this.showMessage(ERROR_MESSAGES.NEW_CUSTOMER_ERROR, "error");
       }
     },
@@ -193,7 +185,7 @@ export default {
       try {
         evntBus.emit(EVENT_NAMES.OPEN_UPDATE_CUSTOMER, this.customer_info);
       } catch (err) {
-        posawesome_logger.error("Customer.js", "edit_customer error", err);
+        console.error("Customer.js", "edit_customer error", err);
         this.showMessage(ERROR_MESSAGES.EDIT_CUSTOMER_ERROR, "error");
       }
     },
@@ -247,7 +239,7 @@ export default {
           this.showDropdown = false;
         }
       } catch (err) {
-        posawesome_logger.error("Customer.js", "handleClickOutside error", err);
+        console.error("Customer.js", "handleClickOutside error", err);
         this.showDropdown = false;
       }
     },
@@ -292,11 +284,7 @@ export default {
           this.handleCustomerDropdownOpened
         );
       } catch (err) {
-        posawesome_logger.error(
-          "Customer.js",
-          "registerEventListeners error",
-          err
-        );
+        console.error("Customer.js", "registerEventListeners error", err);
         this.showMessage(ERROR_MESSAGES.INITIALIZATION_ERROR, "error");
       }
     },
