@@ -67,7 +67,7 @@
             >
               <i
                 class="mdi mdi-cash-register"
-                style="color: white; font-size: 18px"
+                style="color: white; font-size: 20px"
               ></i>
             </div>
             <h3
@@ -130,7 +130,7 @@
               <div
                 style="
                   padding: 6px 8px;
-                  font-size: 10px;
+                  font-size: 12px;
                   font-weight: 600;
                   color: #475569;
                   text-transform: uppercase;
@@ -145,7 +145,7 @@
               <div
                 style="
                   padding: 6px 8px;
-                  font-size: 10px;
+                  font-size: 12px;
                   font-weight: 600;
                   color: #475569;
                   text-transform: uppercase;
@@ -160,7 +160,7 @@
               <div
                 style="
                   padding: 6px 8px;
-                  font-size: 10px;
+                  font-size: 12px;
                   font-weight: 600;
                   color: #475569;
                   text-transform: uppercase;
@@ -176,7 +176,7 @@
                 v-if="!pos_profile.posa_hide_expected_amount"
                 style="
                   padding: 6px 8px;
-                  font-size: 10px;
+                  font-size: 12px;
                   font-weight: 600;
                   color: #475569;
                   text-transform: uppercase;
@@ -192,7 +192,7 @@
                 v-if="!pos_profile.posa_hide_expected_amount"
                 style="
                   padding: 6px 8px;
-                  font-size: 10px;
+                  font-size: 12px;
                   font-weight: 600;
                   color: #475569;
                   text-transform: uppercase;
@@ -226,20 +226,20 @@
                     display: flex;
                     align-items: center;
                     justify-content: flex-start;
-                    font-size: 12px;
+                    font-size: 14px;
                     min-height: 32px;
                   "
                 >
                   <div style="display: flex; align-items: center; gap: 6px">
                     <i
                       class="mdi mdi-cash-multiple"
-                      style="font-size: 14px; color: #ff6f00; flex-shrink: 0"
+                      style="font-size: 16px; color: #ff6f00; flex-shrink: 0"
                     ></i>
                     <span
                       style="
                         font-weight: 500;
                         color: #334155;
-                        font-size: 11px;
+                        font-size: 13px;
                         white-space: nowrap;
                       "
                     >
@@ -255,7 +255,7 @@
                     display: flex;
                     align-items: center;
                     justify-content: flex-end;
-                    font-size: 12px;
+                    font-size: 14px;
                     min-height: 32px;
                   "
                 >
@@ -263,7 +263,7 @@
                     style="
                       font-weight: 600;
                       color: #1e293b;
-                      font-size: 11px;
+                      font-size: 13px;
                       font-family: monospace;
                     "
                   >
@@ -278,7 +278,7 @@
                     display: flex;
                     align-items: center;
                     justify-content: flex-end;
-                    font-size: 12px;
+                    font-size: 14px;
                     min-height: 32px;
                   "
                 >
@@ -289,7 +289,7 @@
                       border: 1px solid #6366f1;
                       border-radius: 4px;
                       padding: 2px 6px;
-                      font-size: 11px;
+                      font-size: 13px;
                       font-weight: 600;
                       font-family: monospace;
                       width: 70px;
@@ -311,7 +311,7 @@
                         outline: none;
                         background: transparent;
                         text-align: right;
-                        font-size: 11px;
+                        font-size: 13px;
                         font-weight: 600;
                         font-family: monospace;
                       "
@@ -332,7 +332,7 @@
                     <span
                       style="
                         font-weight: 600;
-                        font-size: 11px;
+                        font-size: 13px;
                         font-family: monospace;
                       "
                       :style="
@@ -363,7 +363,7 @@
                         transition: opacity 0.1s ease;
                         color: #6366f1;
                         margin-left: 2px;
-                        font-size: 10px;
+                        font-size: 12px;
                       "
                     ></i>
                   </div>
@@ -377,7 +377,7 @@
                     display: flex;
                     align-items: center;
                     justify-content: flex-end;
-                    font-size: 12px;
+                    font-size: 14px;
                     min-height: 32px;
                   "
                 >
@@ -385,7 +385,7 @@
                     style="
                       font-weight: 600;
                       color: #1e293b;
-                      font-size: 11px;
+                      font-size: 13px;
                       font-family: monospace;
                     "
                   >
@@ -402,7 +402,7 @@
                     align-items: center;
                     justify-content: flex-end;
                     gap: 4px;
-                    font-size: 12px;
+                    font-size: 14px;
                     min-height: 32px;
                   "
                 >
@@ -419,7 +419,7 @@
                       v-if="item.closing_amount > item.expected_amount"
                       style="
                         font-weight: 600;
-                        font-size: 11px;
+                        font-size: 13px;
                         font-family: monospace;
                         color: #059669;
                         display: flex;
@@ -429,7 +429,7 @@
                     >
                       <i
                         class="mdi mdi-arrow-up"
-                        style="font-size: 12px; color: #059669"
+                        style="font-size: 14px; color: #059669"
                       ></i>
                       {{
                         formatCurrency(
@@ -442,7 +442,7 @@
                       v-else-if="item.closing_amount < item.expected_amount"
                       style="
                         font-weight: 600;
-                        font-size: 11px;
+                        font-size: 13px;
                         font-family: monospace;
                         color: #dc2626;
                         display: flex;
@@ -452,7 +452,7 @@
                     >
                       <i
                         class="mdi mdi-arrow-down"
-                        style="font-size: 12px; color: #dc2626"
+                        style="font-size: 14px; color: #dc2626"
                       ></i>
                       {{
                         formatCurrency(
@@ -465,7 +465,7 @@
                       v-else
                       style="
                         font-weight: 600;
-                        font-size: 11px;
+                        font-size: 13px;
                         font-family: monospace;
                         color: #64748b;
                       "
@@ -478,7 +478,7 @@
                     v-else
                     style="
                       font-weight: 600;
-                      font-size: 11px;
+                      font-size: 13px;
                       font-family: monospace;
                       color: #dc2626;
                     "
@@ -513,7 +513,7 @@
               gap: 4px;
               padding: 6px 12px;
               border-radius: 6px;
-              font-size: 12px;
+              font-size: 14px;
               font-weight: 500;
               cursor: pointer;
               transition: all 0.2s ease;
@@ -523,7 +523,7 @@
             "
           >
             <!-- Cancel -->
-            <i class="mdi mdi-close" style="font-size: 14px"></i>
+            <i class="mdi mdi-close" style="font-size: 16px"></i>
             إلغاء
           </button>
 
@@ -537,7 +537,7 @@
               gap: 4px;
               padding: 6px 12px;
               border-radius: 6px;
-              font-size: 12px;
+              font-size: 14px;
               font-weight: 500;
               cursor: pointer;
               transition: all 0.2s ease;
@@ -547,7 +547,7 @@
             "
           >
             <!-- Submit -->
-            <i class="mdi mdi-check" style="font-size: 14px"></i>
+            <i class="mdi mdi-check" style="font-size: 16px"></i>
             تأكيد
           </button>
 
@@ -559,7 +559,7 @@
               align-items: center;
               gap: 8px;
               color: #f59e0b;
-              font-size: 12px;
+              font-size: 14px;
               font-weight: 500;
               padding: 8px 12px;
               background: rgba(245, 158, 11, 0.1);
@@ -569,7 +569,7 @@
           >
             <i
               class="mdi mdi-clock-alert-outline"
-              style="color: #ff9800; font-size: 14px"
+              style="color: #ff9800; font-size: 16px"
             ></i>
             {{ closingTimeMessage }}
           </div>
