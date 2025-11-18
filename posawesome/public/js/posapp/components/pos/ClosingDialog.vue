@@ -64,7 +64,10 @@
                 justify-content: center;
               "
             >
-              <i class="mdi mdi-cash-register" style="color: white; font-size: 18px"></i>
+              <i
+                class="mdi mdi-cash-register"
+                style="color: white; font-size: 18px"
+              ></i>
             </div>
             <h3
               style="
@@ -106,7 +109,14 @@
         <!-- =========================================== -->
         <div v-if="pos_profile" style="padding: 8px; background: #fafbfc">
           <!-- Payment Table -->
-          <div style="background: white; border-radius: 8px; overflow: hidden; border: 1px solid #e8eaed">
+          <div
+            style="
+              background: white;
+              border-radius: 8px;
+              overflow: hidden;
+              border: 1px solid #e8eaed;
+            "
+          >
             <!-- Table Header -->
             <div
               style="
@@ -220,8 +230,18 @@
                   "
                 >
                   <div style="display: flex; align-items: center; gap: 6px">
-                    <i class="mdi mdi-cash-multiple" style="font-size: 14px; color: #ff6f00; flex-shrink: 0"></i>
-                    <span style="font-weight: 500; color: #334155; font-size: 11px; white-space: nowrap">
+                    <i
+                      class="mdi mdi-cash-multiple"
+                      style="font-size: 14px; color: #ff6f00; flex-shrink: 0"
+                    ></i>
+                    <span
+                      style="
+                        font-weight: 500;
+                        color: #334155;
+                        font-size: 11px;
+                        white-space: nowrap;
+                      "
+                    >
                       {{ item.mode_of_payment }}
                     </span>
                   </div>
@@ -238,7 +258,14 @@
                     min-height: 32px;
                   "
                 >
-                  <span style="font-weight: 600; color: #1e293b; font-size: 11px; font-family: monospace">
+                  <span
+                    style="
+                      font-weight: 600;
+                      color: #1e293b;
+                      font-size: 11px;
+                      font-family: monospace;
+                    "
+                  >
                     {{ formatCurrency(item.opening_amount) }}
                   </span>
                 </div>
@@ -272,6 +299,9 @@
                     <input
                       v-model="item.closing_amount"
                       type="number"
+                      :required="
+                        item.expected_amount && item.expected_amount > 0
+                      "
                       @blur="item.editing = false"
                       @keyup.enter="item.editing = false"
                       style="
@@ -298,8 +328,29 @@
                       background: rgba(99, 102, 241, 0.05);
                     "
                   >
-                    <span style="font-weight: 600; color: #1e293b; font-size: 11px; font-family: monospace">
-                      {{ formatCurrency(item.closing_amount) }}
+                    <span
+                      style="
+                        font-weight: 600;
+                        font-size: 11px;
+                        font-family: monospace;
+                      "
+                      :style="
+                        item.expected_amount &&
+                        item.expected_amount > 0 &&
+                        (!item.closing_amount ||
+                          item.closing_amount === null ||
+                          item.closing_amount === '')
+                          ? 'color: #dc2626'
+                          : 'color: #1e293b'
+                      "
+                    >
+                      {{
+                        item.closing_amount !== null &&
+                        item.closing_amount !== undefined &&
+                        item.closing_amount !== ""
+                          ? formatCurrency(item.closing_amount)
+                          : "---"
+                      }}
                     </span>
                     <i
                       class="mdi mdi-pencil"
@@ -326,7 +377,14 @@
                     min-height: 32px;
                   "
                 >
-                  <span style="font-weight: 600; color: #1e293b; font-size: 11px; font-family: monospace">
+                  <span
+                    style="
+                      font-weight: 600;
+                      color: #1e293b;
+                      font-size: 11px;
+                      font-family: monospace;
+                    "
+                  >
                     {{ formatCurrency(item.expected_amount) }}
                   </span>
                 </div>
@@ -339,21 +397,88 @@
                     display: flex;
                     align-items: center;
                     justify-content: flex-end;
+                    gap: 4px;
                     font-size: 12px;
                     min-height: 32px;
                   "
                 >
-                  <span
-                    style="font-weight: 600; font-size: 11px; font-family: monospace"
-                    :style="
-                      item.expected_amount - item.closing_amount > 0
-                        ? 'color: #059669'
-                        : item.expected_amount - item.closing_amount < 0
-                        ? 'color: #dc2626'
-                        : 'color: #64748b'
+                  <template
+                    v-if="
+                      item.closing_amount !== null &&
+                      item.closing_amount !== undefined &&
+                      item.closing_amount !== ''
                     "
                   >
-                    {{ formatCurrency(item.expected_amount - item.closing_amount) }}
+                    <!-- الفعلي > المتوقع: أخضر + سهم لأعلى -->
+                    <span
+                      v-if="item.closing_amount > item.expected_amount"
+                      style="
+                        font-weight: 600;
+                        font-size: 11px;
+                        font-family: monospace;
+                        color: #059669;
+                        display: flex;
+                        align-items: center;
+                        gap: 3px;
+                      "
+                    >
+                      <i
+                        class="mdi mdi-arrow-up"
+                        style="font-size: 12px; color: #059669"
+                      ></i>
+                      {{
+                        formatCurrency(
+                          item.closing_amount - item.expected_amount
+                        )
+                      }}
+                    </span>
+                    <!-- الفعلي < المتوقع: أحمر + سهم لأسفل -->
+                    <span
+                      v-else-if="item.closing_amount < item.expected_amount"
+                      style="
+                        font-weight: 600;
+                        font-size: 11px;
+                        font-family: monospace;
+                        color: #dc2626;
+                        display: flex;
+                        align-items: center;
+                        gap: 3px;
+                      "
+                    >
+                      <i
+                        class="mdi mdi-arrow-down"
+                        style="font-size: 12px; color: #dc2626"
+                      ></i>
+                      {{
+                        formatCurrency(
+                          item.expected_amount - item.closing_amount
+                        )
+                      }}
+                    </span>
+                    <!-- الفعلي = المتوقع: رمادي -->
+                    <span
+                      v-else
+                      style="
+                        font-weight: 600;
+                        font-size: 11px;
+                        font-family: monospace;
+                        color: #64748b;
+                      "
+                    >
+                      {{ formatCurrency(0) }}
+                    </span>
+                  </template>
+                  <!-- الحقل فارغ -->
+                  <span
+                    v-else
+                    style="
+                      font-weight: 600;
+                      font-size: 11px;
+                      font-family: monospace;
+                      color: #dc2626;
+                    "
+                  >
+                    ---
                   </span>
                 </div>
               </div>
@@ -399,7 +524,7 @@
 
           <!-- Submit Button -->
           <button
-            v-if="isClosingAllowed"
+            v-if="isClosingAllowed && isAllRequiredFieldsFilled"
             @click="submit_dialog"
             style="
               display: flex;
@@ -437,7 +562,10 @@
               border: 1px solid rgba(245, 158, 11, 0.2);
             "
           >
-            <i class="mdi mdi-clock-alert-outline" style="color: #ff9800; font-size: 14px"></i>
+            <i
+              class="mdi mdi-clock-alert-outline"
+              style="color: #ff9800; font-size: 14px"
+            ></i>
             {{ closingTimeMessage }}
           </div>
         </div>
