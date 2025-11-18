@@ -336,7 +336,7 @@
 
 <script>
 import comp from "./Customer.js";
-import { posawesome_logger } from "../../logger.js";
+// Frontend logging: Use console.log/error/warn directly
 
 comp.methods = {
   ...comp.methods,
@@ -383,7 +383,7 @@ comp.methods = {
       el.style.color = "#0b66d1";
       el.style.boxShadow = "0 8px 22px rgba(11,102,209,0.12)";
     } catch (err) {
-      posawesome_logger.error("Customer.vue", "buttonHoverEnter error", err);
+      console.error("[Customer.vue] buttonHoverEnter error", err);
     }
   },
 
@@ -398,7 +398,7 @@ comp.methods = {
       delete el.dataset._origColor;
       delete el.dataset._origBox;
     } catch (err) {
-      posawesome_logger.error("Customer.vue", "buttonHoverLeave error", err);
+      console.error("[Customer.vue] buttonHoverLeave error", err);
     }
   },
 };
