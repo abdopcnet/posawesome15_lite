@@ -1,5 +1,6 @@
 import { createApp } from "vue";
 import Home from "./Home.vue";
+import { posawesome_logger } from "./logger.js";
 
 // Define Vue 3 feature flags for better tree-shaking and performance
 // See: https://link.vuejs.org/feature-flags
@@ -11,7 +12,7 @@ if (typeof window !== "undefined") {
 
 // Define SetVueGlobals function to set up Vue global properties
 function SetVueGlobals(app) {
-  console.log("[posapp.js Vue] Setting up Vue global properties...");
+  posawesome_logger.error("posapp.js", "Setting up Vue global properties");
 
   // Set up global properties that components might need
   app.config.globalProperties.$frappe = frappe;
@@ -21,7 +22,7 @@ function SetVueGlobals(app) {
     app.config.globalProperties.$call = frappe.call;
     app.config.globalProperties.$format = frappe.format;
     app.config.globalProperties.$db = frappe.db;
-    console.log("[posapp.js Vue] ✓ Frappe utilities added");
+    posawesome_logger.error("posapp.js", "Frappe utilities added");
   }
 }
 
