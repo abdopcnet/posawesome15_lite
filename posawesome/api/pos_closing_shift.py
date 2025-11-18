@@ -310,6 +310,15 @@ def make_closing_shift_from_opening(opening_shift):
 
         # Get opening shift document
         opening = frappe.get_doc("POS Opening Shift", opening_shift_name)
+        
+        # Ensure balance_details is loaded (reload if needed)
+        if not hasattr(opening, 'balance_details') or not opening.balance_details:
+            posawesome_logger.warning(
+                f"[pos_closing_shift.py] balance_details not loaded, reloading opening shift")
+            opening.reload()
+        
+        posawesome_logger.debug(
+            f"[pos_closing_shift.py] Opening shift balance_details: {opening.balance_details}")
 
         # Check if opening shift is valid
         if opening.docstatus != 1:
@@ -345,9 +354,19 @@ def make_closing_shift_from_opening(opening_shift):
             opening_amounts = {}
             if hasattr(opening, 'balance_details') and opening.balance_details:
                 for detail in opening.balance_details:
-                    mode = detail.get("mode_of_payment")
-                    amount = flt(detail.get("amount") or 0)
-                    opening_amounts[mode] = amount
+                    # detail is a Document object (child table row), use attribute access directly
+                    mode = getattr(detail, 'mode_of_payment', None)
+                    amount = flt(getattr(detail, 'amount', 0) or 0)
+                    if mode:
+                        opening_amounts[mode] = amount
+                        posawesome_logger.debug(
+                            f"[pos_closing_shift.py] Opening amount for {mode}: {amount} (from balance_details)")
+                    else:
+                        posawesome_logger.warning(
+                            f"[pos_closing_shift.py] balance_details row has no mode_of_payment: {detail}")
+            else:
+                posawesome_logger.warning(
+                    f"[pos_closing_shift.py] Opening shift {opening.name} has no balance_details")
             
             # Update payment_reconciliation with recalculated expected_amount
             # Clear existing rows and add new ones with correct calculations
@@ -359,7 +378,7 @@ def make_closing_shift_from_opening(opening_shift):
                     "mode_of_payment": mode_of_payment,
                     "opening_amount": opening_amount,
                     "expected_amount": expected,  # Recalculated with correct logic
-                    "closing_amount": 0.0,  # User needs to fill manually
+                    "closing_amount": 0.0,  # User needs to fill manually (0 means empty in UI)
                     "difference": 0.0,  # Initially no difference
                 })
                 posawesome_logger.debug(
@@ -394,11 +413,19 @@ def make_closing_shift_from_opening(opening_shift):
         opening_amounts = {}
         if hasattr(opening, 'balance_details') and opening.balance_details:
             for detail in opening.balance_details:
-                mode = detail.get("mode_of_payment")
-                amount = flt(detail.get("amount") or 0)
-                opening_amounts[mode] = amount
-                posawesome_logger.debug(
-                    f"[pos_closing_shift.py] Opening amount for {mode}: {amount}")
+                # detail is a Document object (child table row), use attribute access directly
+                mode = getattr(detail, 'mode_of_payment', None)
+                amount = flt(getattr(detail, 'amount', 0) or 0)
+                if mode:
+                    opening_amounts[mode] = amount
+                    posawesome_logger.debug(
+                        f"[pos_closing_shift.py] Opening amount for {mode}: {amount} (from balance_details)")
+                else:
+                    posawesome_logger.warning(
+                        f"[pos_closing_shift.py] balance_details row has no mode_of_payment: {detail}")
+        else:
+            posawesome_logger.warning(
+                f"[pos_closing_shift.py] Opening shift {opening.name} has no balance_details")
 
         # Add payment reconciliation rows (payment_totals is a dict, not a list!)
         for mode_of_payment, expected_amount in payment_totals.items():
@@ -408,7 +435,7 @@ def make_closing_shift_from_opening(opening_shift):
                 "mode_of_payment": mode_of_payment,
                 "opening_amount": opening_amount,
                 "expected_amount": expected,  # This already has change_amount subtracted
-                "closing_amount": 0.0,  # User needs to fill manually
+                "closing_amount": 0.0,  # User needs to fill manually (0 means empty in UI)
                 "difference": 0.0,  # Initially no difference
             })
             posawesome_logger.debug(
