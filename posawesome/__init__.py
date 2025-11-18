@@ -6,13 +6,17 @@ from frappe.utils.logger import get_logger
 
 __version__ = "18.11.2025"
 
-# Backend Logger
-backend_logger = get_logger('posawesome_backend', max_size=1_000_000)
-backend_logger.setLevel(logging.INFO)
+# Info Logger - logs to posawesome_info.log
+info_logger = get_logger('posawesome_info', max_size=1_000_000)
+info_logger.setLevel(logging.INFO)
 
-# Frontend Logger
-frontend_logger = get_logger('posawesome_frontend', max_size=1_000_000)
-frontend_logger.setLevel(logging.INFO)
+# Error Logger - logs to posawesome_error.log
+error_logger = get_logger('posawesome_error', max_size=1_000_000)
+error_logger.setLevel(logging.ERROR)
+
+# Backward compatibility aliases (deprecated - use info_logger/error_logger directly)
+backend_logger = info_logger
+frontend_logger = info_logger
 
 
 def console(*data):
