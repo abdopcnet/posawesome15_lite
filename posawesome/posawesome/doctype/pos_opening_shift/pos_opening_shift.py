@@ -414,6 +414,7 @@ def get_current_shift_name():
                         "posa_auto_fetch_offers",
                         "posa_allow_write_off_change",
                         "posa_allow_credit_sale",
+                        "posa_allow_return",
                         "posa_use_customer_credit",
                         "posa_use_cashback",
                         "posa_hide_expected_amount",
@@ -446,6 +447,25 @@ def get_current_shift_name():
                         backend_logger.warning(
                             f"[[pos_opening_shift.py]] Could not load item_groups for POS Profile {pos_profile_name}: {str(item_groups_error)}")
                         pos_profile_data["item_groups"] = []
+
+                    # Get payments child table (POS Payment Method)
+                    try:
+                        payments_result = frappe.db.sql("""
+                            SELECT 
+                                mode_of_payment,
+                                `default`,
+                                allow_in_returns
+                            FROM `tabPOS Payment Method`
+                            WHERE parent = %s
+                            AND parentfield = 'payments'
+                            AND parenttype = 'POS Profile'
+                            ORDER BY idx
+                        """, (pos_profile_name,), as_dict=True)
+                        pos_profile_data["payments"] = payments_result
+                    except Exception as payments_error:
+                        backend_logger.warning(
+                            f"[[pos_opening_shift.py]] Could not load payments for POS Profile {pos_profile_name}: {str(payments_error)}")
+                        pos_profile_data["payments"] = []
                 else:
                     pos_profile_data = None
                     backend_logger.error(
