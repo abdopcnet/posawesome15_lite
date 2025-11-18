@@ -2506,7 +2506,7 @@ export default {
           this.isPrinting = false; // Re-enable print button
 
           if (r.message?.name) {
-            const print_format = this.pos_profile?.print_format;
+            const print_format = this.pos_profile?.posa_print_format;
 
             // Open print window directly
             const print_url = frappe.urllib.get_full_url(
