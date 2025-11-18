@@ -12,21 +12,75 @@ from posawesome import posawesome_logger
 
 @frappe.whitelist()
 def submit_closing_shift(closing_shift):
-    """Submit closing shift - simple wrapper for API calls."""
-    import json
-    closing_shift = json.loads(closing_shift)
+    """
+    POST - Submit closing shift with updated payment_reconciliation data
+    Updates payment_reconciliation child table with closing_amount values from frontend
+    """
+    try:
+        import json
+        
+        posawesome_logger.info(
+            f"[pos_closing_shift.py] submit_closing_shift: Received closing shift data")
+        
+        # FRAPPE STANDARD: Parse JSON if string
+        if isinstance(closing_shift, str):
+            closing_shift = json.loads(closing_shift)
+        
+        # Get closing shift document
+        if closing_shift.get("name"):
+            doc = frappe.get_doc("POS Closing Shift", closing_shift.get("name"))
+            posawesome_logger.info(
+                f"[pos_closing_shift.py] submit_closing_shift: Found existing closing shift {doc.name}")
+            
+            # ✅ CRITICAL: Update payment_reconciliation with data from frontend
+            if closing_shift.get("payment_reconciliation"):
+                payment_reconciliation = closing_shift.get("payment_reconciliation")
+                posawesome_logger.info(
+                    f"[pos_closing_shift.py] submit_closing_shift: Updating {len(payment_reconciliation)} payment reconciliation rows")
+                
+                # Clear existing rows
+                doc.set("payment_reconciliation", [])
+                
+                # Add updated rows from frontend
+                for payment in payment_reconciliation:
+                    doc.append("payment_reconciliation", {
+                        "mode_of_payment": payment.get("mode_of_payment"),
+                        "opening_amount": flt(payment.get("opening_amount", 0)),
+                        "expected_amount": flt(payment.get("expected_amount", 0)),
+                        "closing_amount": flt(payment.get("closing_amount", 0)),  # ✅ This is the user input!
+                        "difference": flt(payment.get("difference", 0)),
+                    })
+                    posawesome_logger.debug(
+                        f"[pos_closing_shift.py] submit_closing_shift: Updated payment {payment.get('mode_of_payment')}: "
+                        f"opening={payment.get('opening_amount')}, expected={payment.get('expected_amount')}, "
+                        f"closing={payment.get('closing_amount')}, difference={payment.get('difference')}")
+            
+            # Save the updated document before submitting
+            doc.save(ignore_permissions=True)
+            frappe.db.commit()
+            posawesome_logger.info(
+                f"[pos_closing_shift.py] submit_closing_shift: Saved updated closing shift {doc.name}")
+        else:
+            # New document - create from dict
+            doc = frappe.get_doc(closing_shift)
+            doc.insert(ignore_permissions=True)
+            frappe.db.commit()
+            posawesome_logger.info(
+                f"[pos_closing_shift.py] submit_closing_shift: Created new closing shift {doc.name}")
 
-    if closing_shift.get("name"):
-        doc = frappe.get_doc("POS Closing Shift", closing_shift.get("name"))
-    else:
-        doc = frappe.get_doc(closing_shift)
-        doc.insert()
+        # Submit the document (calls on_submit() which calls delete_draft_invoices())
+        doc.submit()
         frappe.db.commit()
-
-    doc.submit()  # This calls on_submit() which calls delete_draft_invoices()
-    frappe.db.commit()
-
-    return doc
+        
+        posawesome_logger.info(
+            f"[pos_closing_shift.py] submit_closing_shift: Successfully submitted closing shift {doc.name}")
+        
+        return doc.as_dict()
+        
+    except Exception as e:
+        posawesome_logger.error(
+            f"[pos_closing_shift.py] submit_closing_shift error: {str(e)}", exc_info=True)
+        frappe.throw(_("Failed to submit closing shift: {0}").format(str(e)))
 
 
 @frappe.whitelist()
@@ -338,15 +392,15 @@ def make_closing_shift_from_opening(opening_shift):
         )
 
         if existing_closing:
-            # Update existing closing shift with recalculated payment totals
+            # Update existing closing shift with recalculated payment totals, taxes, and totals
             posawesome_logger.info(
                 f"[pos_closing_shift.py] Updating existing closing shift: {existing_closing}")
             closing = frappe.get_doc("POS Closing Shift", existing_closing)
-            
+
             # Recalculate payment totals using unified helper (ensures consistency)
             payment_totals = _calculate_payment_totals(
                 opening.name, opening.pos_profile)
-            
+        
             posawesome_logger.info(
                 f"[pos_closing_shift.py] Recalculated payment totals for existing closing shift: {payment_totals}")
             
@@ -385,6 +439,74 @@ def make_closing_shift_from_opening(opening_shift):
                     f"[pos_closing_shift.py] Updated payment reconciliation: {mode_of_payment}, "
                     f"opening={opening_amount}, expected={expected_amount}")
             
+            # Recalculate totals and taxes from invoices
+            pos_transactions = _get_pos_invoices_helper(opening.name)
+            
+            # Reset totals
+            closing.grand_total = 0.0
+            closing.net_total = 0.0
+            closing.total_quantity = 0.0
+            
+            # Process invoices: calculate totals, taxes, and update pos_transactions
+            taxes_dict = {}  # Key: (account_head, rate), Value: amount
+            
+            # Clear existing pos_transactions and taxes
+            closing.set("pos_transactions", [])
+            closing.set("taxes", [])
+            
+            for invoice in pos_transactions:
+                # Get conversion rate for this invoice
+                conversion_rate = invoice.get("conversion_rate") or invoice.get("exchange_rate") or invoice.get("target_exchange_rate") or 1.0
+                
+                # Use base_* fields for company currency (matches Sales Register)
+                base_grand_total = flt(invoice.get("base_grand_total") or invoice.get("grand_total") or 0)
+                base_net_total = flt(invoice.get("base_net_total") or invoice.get("net_total") or 0)
+                total_qty = flt(invoice.get("total_qty") or 0)
+                
+                # Add to totals
+                closing.grand_total += base_grand_total
+                closing.net_total += base_net_total
+                closing.total_quantity += total_qty
+                
+                posawesome_logger.debug(
+                    f"[pos_closing_shift.py] Invoice {invoice.get('name')}: "
+                    f"base_grand_total={base_grand_total}, base_net_total={base_net_total}, total_qty={total_qty}")
+                
+                # Process taxes
+                invoice_taxes = invoice.get("taxes", [])
+                for tax in invoice_taxes:
+                    account_head = tax.get("account_head")
+                    rate = flt(tax.get("rate") or 0)
+                    # Use base_tax_amount for company currency
+                    base_tax_amount = flt(tax.get("base_tax_amount") or tax.get("tax_amount") or 0)
+                    
+                    tax_key = (account_head, rate)
+                    if tax_key in taxes_dict:
+                        taxes_dict[tax_key] += base_tax_amount
+                    else:
+                        taxes_dict[tax_key] = base_tax_amount
+                
+                # Add to pos_transactions
+                closing.append("pos_transactions", {
+                    "sales_invoice": invoice.get("name"),
+                    "posting_date": invoice.get("posting_date"),
+                    "grand_total": base_grand_total,  # Use base value
+                    "customer": invoice.get("customer")
+                })
+            
+            # Add taxes to closing shift
+            for (account_head, rate), amount in taxes_dict.items():
+                closing.append("taxes", {
+                    "account_head": account_head,
+                    "rate": rate,
+                    "amount": amount
+                })
+            
+            posawesome_logger.info(
+                f"[pos_closing_shift.py] Updated existing closing shift: "
+                f"grand_total={closing.grand_total}, net_total={closing.net_total}, "
+                f"total_quantity={closing.total_quantity}, taxes_count={len(taxes_dict)}")
+            
             # Save the updated closing shift
             closing.save(ignore_permissions=True)
             frappe.db.commit()
@@ -401,6 +523,11 @@ def make_closing_shift_from_opening(opening_shift):
         closing.pos_profile = opening.pos_profile
         closing.user = opening.user
         closing.company = opening.company
+        
+        # Initialize totals
+        closing.grand_total = 0.0
+        closing.net_total = 0.0
+        closing.total_quantity = 0.0
 
         # Get payment totals using centralized helper (returns dict: {mode_of_payment: amount})
         payment_totals = _calculate_payment_totals(
@@ -444,13 +571,67 @@ def make_closing_shift_from_opening(opening_shift):
 
         # Get POS invoices using helper
         pos_transactions = _get_pos_invoices_helper(opening.name)
+        
+        # Process invoices: calculate totals, taxes, and add to pos_transactions
+        taxes_dict = {}  # Key: (account_head, rate), Value: amount
+        
         for invoice in pos_transactions:
+            # Get conversion rate for this invoice
+            conversion_rate = invoice.get("conversion_rate") or invoice.get("exchange_rate") or invoice.get("target_exchange_rate") or 1.0
+            
+            # Use base_* fields for company currency (matches Sales Register)
+            base_grand_total = flt(invoice.get("base_grand_total") or invoice.get("grand_total") or 0)
+            base_net_total = flt(invoice.get("base_net_total") or invoice.get("net_total") or 0)
+            total_qty = flt(invoice.get("total_qty") or 0)
+            
+            # Add to totals
+            closing.grand_total += base_grand_total
+            closing.net_total += base_net_total
+            closing.total_quantity += total_qty
+            
+            posawesome_logger.debug(
+                f"[pos_closing_shift.py] Invoice {invoice.get('name')}: "
+                f"base_grand_total={base_grand_total}, base_net_total={base_net_total}, total_qty={total_qty}")
+            
+            # Process taxes
+            invoice_taxes = invoice.get("taxes", [])
+            for tax in invoice_taxes:
+                account_head = tax.get("account_head")
+                rate = flt(tax.get("rate") or 0)
+                # Use base_tax_amount for company currency
+                base_tax_amount = flt(tax.get("base_tax_amount") or tax.get("tax_amount") or 0)
+                
+                tax_key = (account_head, rate)
+                if tax_key in taxes_dict:
+                    taxes_dict[tax_key] += base_tax_amount
+                else:
+                    taxes_dict[tax_key] = base_tax_amount
+                
+                posawesome_logger.debug(
+                    f"[pos_closing_shift.py] Tax {account_head} @ {rate}%: base_tax_amount={base_tax_amount}")
+            
+            # Add to pos_transactions
             closing.append("pos_transactions", {
                 "sales_invoice": invoice.get("name"),  # ← Field name is 'sales_invoice' not 'pos_invoice'
                 "posting_date": invoice.get("posting_date"),
-                "grand_total": invoice.get("grand_total"),
+                "grand_total": base_grand_total,  # Use base value
                 "customer": invoice.get("customer")
             })
+        
+        # Add taxes to closing shift
+        for (account_head, rate), amount in taxes_dict.items():
+            closing.append("taxes", {
+                "account_head": account_head,
+                "rate": rate,
+                "amount": amount
+            })
+            posawesome_logger.debug(
+                f"[pos_closing_shift.py] Added tax: {account_head} @ {rate}% = {amount}")
+        
+        posawesome_logger.info(
+            f"[pos_closing_shift.py] make_closing_shift_from_opening: "
+            f"grand_total={closing.grand_total}, net_total={closing.net_total}, "
+            f"total_quantity={closing.total_quantity}, taxes_count={len(taxes_dict)}")
 
         # Get payment entries using helper
         payment_entries = _get_payments_entries_helper(opening.name)
