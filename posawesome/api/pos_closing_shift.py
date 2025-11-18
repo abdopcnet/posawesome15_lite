@@ -354,11 +354,13 @@ def make_closing_shift_from_opening(opening_shift):
             closing.set("payment_reconciliation", [])
             for mode_of_payment, expected_amount in payment_totals.items():
                 opening_amount = opening_amounts.get(mode_of_payment, 0.0)
+                expected = flt(expected_amount)
                 closing.append("payment_reconciliation", {
                     "mode_of_payment": mode_of_payment,
                     "opening_amount": opening_amount,
-                    "expected_amount": flt(expected_amount),  # Recalculated with correct logic
-                    "closing_amount": 0.0,  # Reset to 0, user needs to fill
+                    "expected_amount": expected,  # Recalculated with correct logic
+                    "closing_amount": expected,  # Auto-fill with expected_amount (as it was before)
+                    "difference": 0.0,  # Initially no difference
                 })
                 posawesome_logger.debug(
                     f"[pos_closing_shift.py] Updated payment reconciliation: {mode_of_payment}, "
@@ -401,11 +403,13 @@ def make_closing_shift_from_opening(opening_shift):
         # Add payment reconciliation rows (payment_totals is a dict, not a list!)
         for mode_of_payment, expected_amount in payment_totals.items():
             opening_amount = opening_amounts.get(mode_of_payment, 0.0)
+            expected = flt(expected_amount)
             closing.append("payment_reconciliation", {
                 "mode_of_payment": mode_of_payment,
                 "opening_amount": opening_amount,
-                "expected_amount": flt(expected_amount),  # This already has change_amount subtracted
-                "closing_amount": 0.0,  # To be filled by user
+                "expected_amount": expected,  # This already has change_amount subtracted
+                "closing_amount": expected,  # Auto-fill with expected_amount (as it was before)
+                "difference": 0.0,  # Initially no difference
             })
             posawesome_logger.debug(
                 f"[pos_closing_shift.py] Added payment reconciliation: {mode_of_payment}, "
