@@ -7,6 +7,7 @@ import frappe
 from frappe import _
 from datetime import datetime, timedelta
 from posawesome import info_logger, error_logger
+from posawesome.api.pos_profile import get_payment_methods
 
 
 @frappe.whitelist()
@@ -224,20 +225,9 @@ def get_current_shift_name():
                             f"[pos_opening_shift.py] Could not load item_groups for POS Profile {pos_profile_name}: {str(item_groups_error)}")
                         pos_profile_data["item_groups"] = []
 
-                    # Get payments child table (POS Payment Method)
+                    # Get payments child table using central function
                     try:
-                        payments_result = frappe.db.sql("""
-                            SELECT 
-                                mode_of_payment,
-                                `default`,
-                                allow_in_returns
-                            FROM `tabPOS Payment Method`
-                            WHERE parent = %s
-                            AND parentfield = 'payments'
-                            AND parenttype = 'POS Profile'
-                            ORDER BY idx
-                        """, (pos_profile_name,), as_dict=True)
-                        pos_profile_data["payments"] = payments_result
+                        pos_profile_data["payments"] = get_payment_methods(pos_profile_name=pos_profile_name)
                     except Exception as payments_error:
                         error_logger.warning(
                             f"[pos_opening_shift.py] Could not load payments for POS Profile {pos_profile_name}: {str(payments_error)}")
