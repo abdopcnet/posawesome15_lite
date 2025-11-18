@@ -3,6 +3,21 @@ import { evntBus } from "../../bus";
 import format from "../../format";
 import { API_MAP } from "../../api_mapper.js";
 
+// Helper function to convert value to float
+function flt(value, precision) {
+  if (value === null || value === undefined || value === "") {
+    return 0.0;
+  }
+  const num = parseFloat(value);
+  if (isNaN(num)) {
+    return 0.0;
+  }
+  if (precision !== undefined) {
+    return parseFloat(num.toFixed(precision));
+  }
+  return num;
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CONSTANTS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -164,6 +179,24 @@ export default {
      * Emits submit event with payment reconciliation data
      */
     const submit_dialog = () => {
+      console.log(
+        "[ClosingDialog.js] submit_dialog: Submitting closing shift data:",
+        {
+          name: dialog_data.value.name,
+          payment_reconciliation_count:
+            dialog_data.value.payment_reconciliation?.length || 0,
+          payment_reconciliation: dialog_data.value.payment_reconciliation?.map(
+            (p) => ({
+              mode: p.mode_of_payment,
+              opening: p.opening_amount,
+              expected: p.expected_amount,
+              closing: p.closing_amount, // ✅ User input
+              difference: p.difference,
+            })
+          ),
+        }
+      );
+
       evntBus.emit(EVENT_NAMES.SUBMIT_CLOSING_POS, dialog_data.value);
       closingDialog.value = false;
     };
@@ -194,6 +227,17 @@ export default {
       if (difference > 0) return "positive-diff";
       if (difference < 0) return "negative-diff";
       return "zero-diff";
+    };
+
+    /**
+     * Update difference when closing_amount changes
+     * @param {Object} payment - Payment reconciliation item
+     */
+    const updateDifference = (payment) => {
+      if (payment) {
+        payment.difference =
+          flt(payment.closing_amount || 0) - flt(payment.expected_amount || 0);
+      }
     };
 
     /**
@@ -262,9 +306,14 @@ export default {
           ) {
             payment.closing_amount = 0;
           }
+          // Add editing flag for UI
+          if (payment.editing === undefined) {
+            payment.editing = false;
+          }
           // Update difference
           payment.difference =
-            (payment.closing_amount || 0) - (payment.expected_amount || 0);
+            flt(payment.closing_amount || 0) -
+            flt(payment.expected_amount || 0);
         });
       }
 
@@ -338,6 +387,7 @@ export default {
       // Helpers
       getPaymentIcon,
       getDifferenceClass,
+      updateDifference,
     };
   },
 };
