@@ -168,7 +168,11 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
 
         # Add pos_profile filter if provided
         if pos_profile:
-            filters["pos_profile"] = pos_profile
+            # FRAPPE STANDARD: Extract name from dict if needed
+            if isinstance(pos_profile, dict):
+                filters["pos_profile"] = pos_profile.get('name')
+            else:
+                filters["pos_profile"] = pos_profile
 
         # Add invoice name search if provided
         if invoice_name:
