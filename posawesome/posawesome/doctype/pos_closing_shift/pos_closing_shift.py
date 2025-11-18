@@ -249,6 +249,9 @@ def get_current_cash_total(pos_profile=None, user=None):
     GET - Get current cash total for shift (used in POS frontend Navbar)
     """
     try:
+        posawesome_logger.info(
+            f"[pos_closing_shift.py] get_current_cash_total: user={user}, pos_profile={pos_profile}")
+        
         # Use session user if not specified
         if not user:
             user = frappe.session.user
@@ -268,6 +271,8 @@ def get_current_cash_total(pos_profile=None, user=None):
         )
 
         if not open_shift:
+            posawesome_logger.debug(
+                f"[pos_closing_shift.py] get_current_cash_total: No open shift found")
             return {"total": 0.0}
 
         shift_name = open_shift[0].name
@@ -281,12 +286,18 @@ def get_current_cash_total(pos_profile=None, user=None):
         )
         if not cash_mode_of_payment:
             cash_mode_of_payment = "Cash"
+        
+        posawesome_logger.debug(
+            f"[pos_closing_shift.py] get_current_cash_total: Cash mode = {cash_mode_of_payment}")
 
-        # Calculate payment totals using helper
+        # Calculate payment totals using helper (returns dict: {mode_of_payment: amount})
         payment_totals = _calculate_payment_totals(shift_name, pos_profile_name)
 
-        # Get cash total from the dictionary
+        # Get cash total from dict (payment_totals is a dict, not a list!)
         cash_total = flt(payment_totals.get(cash_mode_of_payment, 0.0))
+        
+        posawesome_logger.info(
+            f"[pos_closing_shift.py] get_current_cash_total: Cash total = {cash_total}")
 
         return {"total": cash_total}
 
@@ -302,6 +313,9 @@ def get_current_non_cash_total(pos_profile=None, user=None):
     GET - Get current non-cash total for shift (used in POS frontend Navbar)
     """
     try:
+        posawesome_logger.info(
+            f"[pos_closing_shift.py] get_current_non_cash_total: user={user}, pos_profile={pos_profile}")
+        
         # Use session user if not specified
         if not user:
             user = frappe.session.user
@@ -321,6 +335,8 @@ def get_current_non_cash_total(pos_profile=None, user=None):
         )
 
         if not open_shift:
+            posawesome_logger.debug(
+                f"[pos_closing_shift.py] get_current_non_cash_total: No open shift found")
             return {"total": 0.0}
 
         shift_name = open_shift[0].name
@@ -334,15 +350,23 @@ def get_current_non_cash_total(pos_profile=None, user=None):
         )
         if not cash_mode_of_payment:
             cash_mode_of_payment = "Cash"
+        
+        posawesome_logger.debug(
+            f"[pos_closing_shift.py] get_current_non_cash_total: Cash mode = {cash_mode_of_payment}")
 
-        # Calculate payment totals using helper
+        # Calculate payment totals using helper (returns dict: {mode_of_payment: amount})
         payment_totals = _calculate_payment_totals(shift_name, pos_profile_name)
 
-        # Sum all non-cash payments
+        # Sum all non-cash payments (payment_totals is a dict, not a list!)
         non_cash_total = 0.0
         for mode_of_payment, amount in payment_totals.items():
             if mode_of_payment != cash_mode_of_payment:
                 non_cash_total += flt(amount)
+                posawesome_logger.debug(
+                    f"[pos_closing_shift.py] Non-cash payment {mode_of_payment}: {amount}")
+        
+        posawesome_logger.info(
+            f"[pos_closing_shift.py] get_current_non_cash_total: Non-cash total = {non_cash_total}")
 
         return {"total": non_cash_total}
 
@@ -360,14 +384,18 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
     """
     UNIFIED payment calculation logic used by both closing shift and navbar.
     This is the SINGLE SOURCE OF TRUTH for payment totals.
+    Matches Sales Register report calculation exactly.
 
-    Returns: dict with payment_totals per mode_of_payment
+    Returns: dict with payment_totals per mode_of_payment (in company currency)
     Example: {
         "Cash": 930.00,
         "شبكة - فرع الخضراء": 3017.65
     }
     """
     try:
+        posawesome_logger.info(
+            f"[pos_closing_shift.py] _calculate_payment_totals: Calculating for shift {pos_opening_shift}, profile {pos_profile}")
+        
         invoices = _get_pos_invoices_helper(pos_opening_shift)
         payments = {}
 
@@ -379,36 +407,69 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
         )
         if not cash_mode_of_payment:
             cash_mode_of_payment = "Cash"
+        
+        posawesome_logger.debug(
+            f"[pos_closing_shift.py] _calculate_payment_totals: Cash mode of payment = {cash_mode_of_payment}")
 
-        # Process Sales Invoice Payments
+        # Process Sales Invoice Payments (matches Sales Register logic)
         for d in invoices:
-            for p in d.payments:
-                amount = p.amount
+            invoice_name = d.get("name", "Unknown")
+            invoice_payments = d.get("payments", [])
+            
+            if not invoice_payments:
+                posawesome_logger.warning(
+                    f"[pos_closing_shift.py] _calculate_payment_totals: Invoice {invoice_name} has no payments")
+                continue
+            
+            # Use base_* fields for company currency (matches Sales Register)
+            change_amount = flt(d.get("base_change_amount") or d.get("change_amount") or 0)
+            
+            for p in invoice_payments:
+                # Use base_amount for company currency (matches Sales Register)
+                amount = flt(p.get("base_amount") or p.get("amount") or 0)
+                mode_of_payment = p.get("mode_of_payment")
 
-                # ✅ طرح change_amount من المبلغ النقدي فقط
+                # ✅ طرح change_amount من المبلغ النقدي فقط (matches Sales Register)
                 # change_amount هو المبلغ الذي يُرجع للعميل كباقي
                 # يجب طرحه من المبلغ المتوقع في المصالحة النقدية
-                if p.mode_of_payment == cash_mode_of_payment:
-                    amount = p.amount - flt(d.change_amount or 0)
+                if mode_of_payment == cash_mode_of_payment:
+                    amount = amount - change_amount
+                    posawesome_logger.debug(
+                        f"[pos_closing_shift.py] Cash payment for {invoice_name}: "
+                        f"base_amount={p.get('base_amount') or p.get('amount')}, "
+                        f"change={change_amount}, final={amount}")
 
                 # Add to payments dict
-                if p.mode_of_payment in payments:
-                    payments[p.mode_of_payment] += flt(amount)
+                if mode_of_payment in payments:
+                    payments[mode_of_payment] += amount
                 else:
-                    payments[p.mode_of_payment] = flt(amount)
+                    payments[mode_of_payment] = amount
+                
+                posawesome_logger.debug(
+                    f"[pos_closing_shift.py] Payment {mode_of_payment}: added {amount}, total={payments[mode_of_payment]}")
 
         # Process Payment Entries
         pos_payments = _get_payments_entries_helper(pos_opening_shift)
         for py in pos_payments:
-            if py.mode_of_payment in payments:
-                payments[py.mode_of_payment] += flt(py.paid_amount)
+            mode_of_payment = py.get("mode_of_payment")
+            # Use base_paid_amount for company currency
+            paid_amount = flt(py.get("base_paid_amount") or py.get("paid_amount") or 0)
+            
+            if mode_of_payment in payments:
+                payments[mode_of_payment] += paid_amount
             else:
-                payments[py.mode_of_payment] = flt(py.paid_amount)
+                payments[mode_of_payment] = paid_amount
+            
+            posawesome_logger.debug(
+                f"[pos_closing_shift.py] Payment Entry {mode_of_payment}: added {paid_amount}, total={payments[mode_of_payment]}")
 
+        posawesome_logger.info(
+            f"[pos_closing_shift.py] _calculate_payment_totals: Final totals: {payments}")
         return payments
 
     except Exception as e:
-        posawesome_logger.error(f"Error in _calculate_payment_totals: {str(e)}")
+        posawesome_logger.error(
+            f"[pos_closing_shift.py] Error in _calculate_payment_totals: {str(e)}", exc_info=True)
         return {}
 
 
@@ -445,8 +506,15 @@ def _submit_printed_invoices(pos_opening_shift):
 
 
 def _get_pos_invoices_helper(pos_opening_shift):
-    """Helper function to get POS invoices"""
+    """
+    Helper function to get POS invoices with full document data.
+    Returns full documents matching Sales Register report data structure.
+    """
     try:
+        posawesome_logger.info(
+            f"[pos_closing_shift.py] _get_pos_invoices_helper: Fetching invoices for shift {pos_opening_shift}")
+        
+        # Get invoice names first (same query as Sales Register)
         data = frappe.db.sql(
             """
         select
@@ -455,13 +523,50 @@ def _get_pos_invoices_helper(pos_opening_shift):
             `tabSales Invoice`
         where
             docstatus = 1 and posa_pos_opening_shift = %s
+        order by posting_date, posting_time
         """,
             (pos_opening_shift),
             as_dict=1,
         )
 
-        return [frappe.get_doc("Sales Invoice", d.name).as_dict() for d in data]
+        posawesome_logger.info(
+            f"[pos_closing_shift.py] _get_pos_invoices_helper: Found {len(data)} invoice names")
+        
+        # Return full documents with all child tables (payments, taxes, etc.)
+        # This matches exactly what Sales Register report uses
+        invoices = []
+        grand_total_sum = 0.0
+        net_total_sum = 0.0
+        
+        for d in data:
+            try:
+                doc = frappe.get_doc("Sales Invoice", d.name)
+                invoice_dict = doc.as_dict()
+                
+                # Log invoice totals for debugging
+                base_grand = flt(invoice_dict.get("base_grand_total") or invoice_dict.get("grand_total") or 0)
+                base_net = flt(invoice_dict.get("base_net_total") or invoice_dict.get("net_total") or 0)
+                grand_total_sum += base_grand
+                net_total_sum += base_net
+                
+                posawesome_logger.debug(
+                    f"[pos_closing_shift.py] Invoice {d.name}: base_grand_total={base_grand}, base_net_total={base_net}, "
+                    f"payments_count={len(invoice_dict.get('payments', []))}, taxes_count={len(invoice_dict.get('taxes', []))}")
+                
+                invoices.append(invoice_dict)
+            except Exception as e:
+                posawesome_logger.error(
+                    f"[pos_closing_shift.py] _get_pos_invoices_helper: Error loading invoice {d.name}: {str(e)}", exc_info=True)
+                continue
+        
+        posawesome_logger.info(
+            f"[pos_closing_shift.py] _get_pos_invoices_helper: Processed {len(invoices)} invoices, "
+            f"total base_grand_total={grand_total_sum}, total base_net_total={net_total_sum}")
+        
+        return invoices
     except Exception as e:
+        posawesome_logger.error(
+            f"[pos_closing_shift.py] _get_pos_invoices_helper: {str(e)}", exc_info=True)
         return []
 
 
