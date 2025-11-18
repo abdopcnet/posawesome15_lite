@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 """
 Frontend Logger API
-Receives logs from frontend and writes them to posawesome_frontend.log
+Receives logs from frontend and writes them to posawesome_info.log and posawesome_error.log
 """
 from __future__ import unicode_literals
 import frappe
-from posawesome import frontend_logger
+from posawesome import info_logger, error_logger
 
 
 @frappe.whitelist()
 def log_frontend(level, file, message, data=None):
     """
-    Log frontend messages to backend log file
+    Log frontend messages to backend log files
 
     Args:
         level: Log level (info, warn, error)
@@ -27,11 +27,11 @@ def log_frontend(level, file, message, data=None):
 
         # Log based on level
         if level == 'error':
-            frontend_logger.error(log_message)
+            error_logger.error(log_message)
         elif level == 'warn':
-            frontend_logger.warning(log_message)
+            error_logger.warning(log_message)
         else:
-            frontend_logger.info(log_message)
+            info_logger.info(log_message)
 
         return {"success": True}
 
