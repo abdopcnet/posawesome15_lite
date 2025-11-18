@@ -12,7 +12,7 @@ if (typeof window !== "undefined") {
 
 // Define SetVueGlobals function to set up Vue global properties
 function SetVueGlobals(app) {
-  posawesome_logger.error("posapp.js", "Setting up Vue global properties");
+  // Setting up Vue global properties... (logged to backend only)
 
   // Set up global properties that components might need
   app.config.globalProperties.$frappe = frappe;
@@ -22,7 +22,7 @@ function SetVueGlobals(app) {
     app.config.globalProperties.$call = frappe.call;
     app.config.globalProperties.$format = frappe.format;
     app.config.globalProperties.$db = frappe.db;
-    posawesome_logger.error("posapp.js", "Frappe utilities added");
+    // Frappe utilities added (logged to backend only)
   }
 }
 
