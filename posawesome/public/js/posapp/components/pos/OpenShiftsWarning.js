@@ -1,4 +1,6 @@
 // ===== OPEN SHIFTS WARNING COMPONENT =====
+import { posawesome_logger } from "../../logger.js";
+
 export default {
   name: "OpenShiftsWarning",
 
@@ -29,7 +31,7 @@ export default {
           hour12: true,
         });
       } catch (error) {
-        console.log("[OpenShiftsWarning.js] formatDate error:", error);
+        posawesome_logger.error("[OpenShiftsWarning.js] formatDate error:", error);
         return dateString;
       }
     },
