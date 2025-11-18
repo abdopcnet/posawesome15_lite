@@ -458,19 +458,32 @@ export default {
         this.errorSound = new Audio(soundUrl);
         this.errorSound.preload = "auto";
         // Play and immediately pause to "unlock" audio for future use
+        // Note: This may fail if called before user interaction - that's OK, we'll retry
         this.errorSound
           .play()
           .then(() => {
             this.errorSound.pause();
             this.errorSound.currentTime = 0;
             this.soundEnabled = true;
-            // Sound enabled successfully (logged to backend only)
+            console.log("[Navbar.js] Sound enabled successfully");
           })
           .catch((err) => {
-            console.error("Navbar.js", "enableSound play error:", err);
+            // Silently handle autoplay policy errors - this is expected behavior
+            // The sound will be enabled on the next user interaction
+            if (
+              err.name === "NotAllowedError" ||
+              err.name === "NotSupportedError"
+            ) {
+              // Expected: Browser autoplay policy - will retry on next interaction
+              console.log(
+                "[Navbar.js] Sound enablement deferred (autoplay policy)"
+              );
+            } else {
+              console.error("[Navbar.js] enableSound play error:", err);
+            }
           });
       } catch (err) {
-        console.error("Navbar.js", "enableSound error:", err);
+        console.error("[Navbar.js] enableSound error:", err);
       }
     },
     // Play error sound (only if enabled)
@@ -651,15 +664,25 @@ export default {
     this.$nextTick(function () {
       try {
         // Enable sound on first user interaction
-        const enableSoundOnce = () => {
-          this.enableSound();
+        // Note: We try to enable immediately, but it may fail due to autoplay policy
+        // The event listeners will retry on actual user interaction
+        const enableSoundOnce = (event) => {
+          // Only enable if we haven't already
+          if (!this.soundEnabled) {
+            this.enableSound();
+          }
           document.removeEventListener("click", enableSoundOnce);
           document.removeEventListener("touchstart", enableSoundOnce);
+          document.removeEventListener("keydown", enableSoundOnce);
         };
+        // Try to enable immediately (may fail silently due to autoplay policy)
+        this.enableSound();
+        // Also listen for user interactions to ensure sound is enabled
         document.addEventListener("click", enableSoundOnce, { once: true });
         document.addEventListener("touchstart", enableSoundOnce, {
           once: true,
         });
+        document.addEventListener("keydown", enableSoundOnce, { once: true });
 
         // Check if ping monitoring should be enabled
         // We can add a global setting to control this
