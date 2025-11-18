@@ -39,7 +39,10 @@
             position: relative;
           "
         >
-          <i class="mdi mdi-shape" style="color: #1976d2; flex-shrink: 0; font-size: 18px"></i>
+          <i
+            class="mdi mdi-shape"
+            style="color: #1976d2; flex-shrink: 0; font-size: 18px"
+          ></i>
           <select
             v-model="item_group"
             @change="onItemGroupChange"
@@ -57,10 +60,11 @@
               appearance: none;
               -webkit-appearance: none;
               -moz-appearance: none;
+              text-align: center;
             "
           >
             <option v-for="group in items_group" :key="group" :value="group">
-              {{ group }}
+              {{ group === "item_group_menu" ? "مجموعات الأصناف" : group }}
             </option>
           </select>
           <!-- Dropdown arrow -->
@@ -101,13 +105,19 @@
           "
         >
           <i class="mdi mdi-tag-multiple" style="font-size: 18px"></i>
-          <span>{{ offersCount }} Offers</span>
+          <span>{{ offersCount }} العروض</span>
         </button>
       </div>
     </div>
 
     <div
-      style="flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative"
+      style="
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+      "
     >
       <!-- Loading Progress -->
       <div
@@ -159,14 +169,28 @@
               overflow: hidden;
             "
           >
-            <div style="display: flex; align-items: center; padding: 0 6px; height: 100%">
-              <i class="mdi mdi-barcode" style="color: #4caf50; font-size: 20px"></i>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                padding: 0 6px;
+                height: 100%;
+              "
+            >
+              <i
+                class="mdi mdi-barcode"
+                style="color: #4caf50; font-size: 20px"
+              ></i>
             </div>
 
             <!-- Barcode disabled in return mode or Scan Barcode -->
             <input
               type="text"
-              :placeholder="is_return_invoice ? 'الباركود معطل في وضع المرتجعات' : 'مسح الباركود'"
+              :placeholder="
+                is_return_invoice
+                  ? 'الباركود معطل في وضع المرتجعات'
+                  : 'مسح الباركود'
+              "
               v-model="barcode_search"
               @keyup.enter="handle_barcode_input"
               ref="barcode_search"
@@ -183,6 +207,7 @@
                 fontWeight: '700',
                 height: '100%',
                 cursor: is_return_invoice ? 'not-allowed' : 'text',
+                textAlign: 'center',
               }"
             />
 
@@ -249,8 +274,18 @@
               ></div>
             </div>
 
-            <div style="display: flex; align-items: center; padding: 0 6px; height: 100%">
-              <i class="mdi mdi-magnify" style="color: #1976d2; font-size: 20px"></i>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                padding: 0 6px;
+                height: 100%;
+              "
+            >
+              <i
+                class="mdi mdi-magnify"
+                style="color: #1976d2; font-size: 20px"
+              ></i>
             </div>
 
             <!-- Search Item -->
@@ -271,6 +306,7 @@
                 color: #0f172a;
                 font-weight: 700;
                 height: 100%;
+                text-align: center;
               "
             />
 
@@ -304,11 +340,25 @@
       <!-- =========================================== -->
       <!-- ITEMS DISPLAY AREA -->
       <!-- =========================================== -->
-      <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0">
+      <div
+        style="
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          min-height: 0;
+        "
+      >
         <!-- Card View -->
         <div
           v-if="items_view == 'card'"
-          style="flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0"
+          style="
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+          "
         >
           <div
             ref="itemsScrollArea"
@@ -325,7 +375,11 @@
               v-for="(item, idx) in filtred_items"
               :key="idx"
               @click="add_item(item)"
-              :title="is_return_invoice ? 'Cannot add items in return mode' : item.item_name"
+              :title="
+                is_return_invoice
+                  ? 'Cannot add items in return mode'
+                  : item.item_name
+              "
               :style="{
                 position: 'relative',
                 borderRadius: '8px',
@@ -342,8 +396,14 @@
                 opacity: is_return_invoice ? 0.5 : 1,
                 filter: is_return_invoice ? 'grayscale(50%)' : 'none',
               }"
-              @mouseenter="!is_return_invoice && ($event.currentTarget.style.transform = 'scale(1.02)')"
-              @mouseleave="!is_return_invoice && ($event.currentTarget.style.transform = 'scale(1)')"
+              @mouseenter="
+                !is_return_invoice &&
+                  ($event.currentTarget.style.transform = 'scale(1.02)')
+              "
+              @mouseleave="
+                !is_return_invoice &&
+                  ($event.currentTarget.style.transform = 'scale(1)')
+              "
             >
               <!-- Quantity Pill -->
               <div
@@ -366,8 +426,8 @@
                     item.actual_qty > 10
                       ? 'rgba(76, 175, 80, 0.9)'
                       : item.actual_qty <= 0
-                        ? 'rgba(244, 67, 54, 0.9)'
-                        : 'rgba(255, 152, 0, 0.9)',
+                      ? 'rgba(244, 67, 54, 0.9)'
+                      : 'rgba(255, 152, 0, 0.9)',
                   color: 'white',
                 }"
               >
@@ -436,7 +496,9 @@
                 >
                   {{ item.item_name }}
                 </div>
-                <div style="font-size: 0.85rem; font-weight: 700; color: #1976d2">
+                <div
+                  style="font-size: 0.85rem; font-weight: 700; color: #1976d2"
+                >
                   {{ formatCurrency(item.rate) }} / {{ item.stock_uom }}
                 </div>
               </div>
@@ -447,7 +509,13 @@
         <!-- List View -->
         <div
           v-if="items_view == 'list'"
-          style="flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0"
+          style="
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+          "
         >
           <div
             ref="itemsScrollArea"
@@ -505,14 +573,22 @@
                   v-for="item in filtred_items"
                   :key="item.item_code"
                   @click="add_item_table(item)"
-                  :title="is_return_invoice ? 'Cannot add items in return mode' : item.item_name"
+                  :title="
+                    is_return_invoice
+                      ? 'Cannot add items in return mode'
+                      : item.item_name
+                  "
                   @mouseenter="
-                    !is_return_invoice && ($event.currentTarget.style.background = 'rgba(16,24,40,0.09)');
-                    $event.currentTarget.style.transition = 'background-color 160ms ease';
+                    !is_return_invoice &&
+                      ($event.currentTarget.style.background =
+                        'rgba(16,24,40,0.09)');
+                    $event.currentTarget.style.transition =
+                      'background-color 160ms ease';
                   "
                   @mouseleave="
                     $event.currentTarget.style.background = '';
-                    $event.currentTarget.style.transition = 'background-color 160ms ease';
+                    $event.currentTarget.style.transition =
+                      'background-color 160ms ease';
                   "
                   :style="{
                     borderBottom: '1px solid #f0f0f0',
@@ -550,13 +626,21 @@
                     </span>
                     <span
                       v-else-if="header.key === 'actual_qty'"
-                      style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
+                      style="
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                      "
                     >
                       {{ formatFloat(item.actual_qty) }}
                     </span>
                     <span
                       v-else
-                      style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
+                      style="
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                      "
                     >
                       {{ item[header.key] }}
                     </span>
