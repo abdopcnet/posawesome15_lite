@@ -147,7 +147,8 @@ def create_opening_voucher(pos_profile, company, balance_details):
         posawesome_logger.info(
             f"[pos_opening_shift.py] Created opening shift: {opening_voucher.name} for user {user}")
 
-        return opening_voucher
+        # Return as dict for frontend (Frappe automatically converts Document to dict in whitelist)
+        return opening_voucher.as_dict()
 
     except Exception as e:
         posawesome_logger.error(
