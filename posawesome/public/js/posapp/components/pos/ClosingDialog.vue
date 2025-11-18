@@ -285,14 +285,14 @@
                   <div
                     v-if="item.editing"
                     style="
-                      background: white;
+                      background: #f0f9ff;
                       border: 1px solid #6366f1;
                       border-radius: 4px;
-                      padding: 2px 6px;
+                      padding: 4px 8px;
                       font-size: 13px;
                       font-weight: 600;
                       font-family: monospace;
-                      width: 70px;
+                      width: 100px;
                       text-align: right;
                       outline: none;
                     "
@@ -323,10 +323,15 @@
                     @click="item.editing = true"
                     style="
                       cursor: pointer;
-                      padding: 2px 4px;
-                      border-radius: 3px;
+                      padding: 4px 8px;
+                      border-radius: 4px;
                       transition: all 0.1s ease;
-                      background: rgba(99, 102, 241, 0.05);
+                      background: #f0f9ff;
+                      border: 1px solid #e0e7ff;
+                      min-width: 100px;
+                      display: inline-flex;
+                      align-items: center;
+                      justify-content: flex-end;
                     "
                   >
                     <span
@@ -362,7 +367,7 @@
                         opacity: 0;
                         transition: opacity 0.1s ease;
                         color: #6366f1;
-                        margin-left: 2px;
+                        margin-left: 4px;
                         font-size: 12px;
                       "
                     ></i>
