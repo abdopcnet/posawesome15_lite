@@ -343,18 +343,35 @@ def make_closing_shift_from_opening(opening_shift):
         closing.user = opening.user
         closing.company = opening.company
 
-        # Get payment totals using centralized helper
+        # Get payment totals using centralized helper (returns dict: {mode_of_payment: amount})
         payment_totals = _calculate_payment_totals(
             opening.name, opening.pos_profile)
+        
+        posawesome_logger.info(
+            f"[pos_closing_shift.py] make_closing_shift_from_opening: Payment totals = {payment_totals}")
 
-        # Add payment reconciliation rows
-        for payment in payment_totals:
+        # Get opening amounts from opening shift balance_details
+        opening_amounts = {}
+        if hasattr(opening, 'balance_details') and opening.balance_details:
+            for detail in opening.balance_details:
+                mode = detail.get("mode_of_payment")
+                amount = flt(detail.get("amount") or 0)
+                opening_amounts[mode] = amount
+                posawesome_logger.debug(
+                    f"[pos_closing_shift.py] Opening amount for {mode}: {amount}")
+
+        # Add payment reconciliation rows (payment_totals is a dict, not a list!)
+        for mode_of_payment, expected_amount in payment_totals.items():
+            opening_amount = opening_amounts.get(mode_of_payment, 0.0)
             closing.append("payment_reconciliation", {
-                "mode_of_payment": payment.get("mode_of_payment"),
-                "opening_amount": payment.get("opening_amount", 0.0),
-                "expected_amount": payment.get("expected_amount", 0.0),
+                "mode_of_payment": mode_of_payment,
+                "opening_amount": opening_amount,
+                "expected_amount": flt(expected_amount),  # This already has change_amount subtracted
                 "closing_amount": 0.0,  # To be filled by user
             })
+            posawesome_logger.debug(
+                f"[pos_closing_shift.py] Added payment reconciliation: {mode_of_payment}, "
+                f"opening={opening_amount}, expected={expected_amount}")
 
         # Get POS invoices using helper
         pos_transactions = _get_pos_invoices_helper(opening.name)
@@ -613,30 +630,39 @@ def _get_pos_invoices_helper(pos_opening_shift):
 def _get_payments_entries_helper(pos_opening_shift):
     """
     Helper: Get payment entries for POS Opening Shift
-    Returns list of payment entries
-    
-    NOTE: Payment Entry doctype doesn't have posa_pos_opening_shift field.
-    This function returns empty list for now. If you need to track Payment Entries,
-    you'll need to add a custom field to Payment Entry doctype.
+    Payment Entries link to Sales Invoices via Payment Entry Reference child table.
+    Returns list of payment entries with base_paid_amount for company currency.
     """
     try:
-        # Payment Entry doesn't have posa_pos_opening_shift field
-        # Return empty list to avoid SQL errors
-        return []
+        posawesome_logger.info(
+            f"[pos_closing_shift.py] _get_payments_entries_helper: Fetching payment entries for shift {pos_opening_shift}")
         
-        # TODO: If you want to link Payment Entries to POS Opening Shift:
-        # 1. Add custom field 'posa_pos_opening_shift' to Payment Entry doctype
-        # 2. Then uncomment this code:
-        # return frappe.get_all(
-        #     "Payment Entry",
-        #     filters={
-        #         "posa_pos_opening_shift": pos_opening_shift,
-        #         "docstatus": 1
-        #     },
-        #     fields=["name", "posting_date", "mode_of_payment", "paid_amount"],
-        #     order_by="posting_date"
-        # )
+        # Query Payment Entries that reference Sales Invoices from this shift
+        # Calculate base_paid_amount using allocated_amount * exchange_rate (matches Sales Register)
+        payment_entries = frappe.db.sql("""
+            SELECT DISTINCT
+                pe.name,
+                pe.mode_of_payment,
+                per.allocated_amount as paid_amount,
+                (per.allocated_amount * COALESCE(per.exchange_rate, pe.target_exchange_rate, pe.source_exchange_rate, 1)) as base_paid_amount,
+                pe.posting_date,
+                pe.party,
+                per.reference_name
+            FROM `tabPayment Entry` pe
+            INNER JOIN `tabPayment Entry Reference` per ON per.parent = pe.name
+            INNER JOIN `tabSales Invoice` si ON si.name = per.reference_name
+            WHERE pe.docstatus = 1
+            AND pe.payment_type = 'Receive'
+            AND per.reference_doctype = 'Sales Invoice'
+            AND si.posa_pos_opening_shift = %s
+            ORDER BY pe.posting_date
+        """, (pos_opening_shift,), as_dict=1)
+
+        posawesome_logger.info(
+            f"[pos_closing_shift.py] _get_payments_entries_helper: Found {len(payment_entries)} payment entries")
+        
+        return payment_entries
     except Exception as e:
         posawesome_logger.error(
-            f"[pos_closing_shift.py] _get_payments_entries_helper: {str(e)}")
+            f"[pos_closing_shift.py] Error in _get_payments_entries_helper: {str(e)}", exc_info=True)
         return []
