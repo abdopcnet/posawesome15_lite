@@ -92,9 +92,9 @@
             margin-bottom: 2px;
           "
         >
-          <!-- Summary Row 1 -->
+          <!-- Summary Row 1: Three Separate Fields -->
           <div style="display: flex; gap: 3px; align-items: flex-start">
-            <!-- Total Paid -->
+            <!-- paid_amount: إجمالي المدفوعات -->
             <div
               style="flex: 1.4; display: flex; flex-direction: column; gap: 2px"
             >
@@ -108,16 +108,17 @@
                   margin: 0;
                   padding: 0 2px;
                   line-height: 1;
+                  text-align: center;
+                  display: block;
                 "
               >
-                <!-- Total Paid -->
-                إجمالي المدفوع
+                إجمالي المدفوعات
               </label>
               <div
                 style="
                   display: flex;
                   align-items: center;
-                  justify-content: space-between;
+                  justify-content: center;
                   padding: 3px 6px;
                   border-radius: 3px;
                   border: 1px solid #4caf50;
@@ -128,91 +129,21 @@
               >
                 <span
                   style="
-                    font-size: 0.6rem;
-                    font-weight: 600;
-                    color: #666;
-                    margin-right: 3px;
-                  "
-                >
-                  {{ currencySymbol(invoice_doc.currency) }}
-                </span>
-                <span
-                  style="
-                    font-size: 0.7rem;
+                    font-size: 0.8rem;
                     font-weight: 700;
                     color: #2e7d32;
-                    flex: 1;
-                    text-align: right;
+                    text-align: center;
+                    width: 100%;
+                    display: block;
                   "
                 >
-                  {{ formatCurrency(total_payments) }}
+                  {{ currencySymbol(invoice_doc.currency)
+                  }}{{ formatCurrency(paid_amount) }}
                 </span>
               </div>
             </div>
 
-            <!-- Remaining -->
-            <div
-              style="flex: 1; display: flex; flex-direction: column; gap: 2px"
-            >
-              <label
-                style="
-                  font-size: 0.6rem;
-                  font-weight: 600;
-                  color: #666;
-                  text-transform: uppercase;
-                  letter-spacing: 0.3px;
-                  margin: 0;
-                  padding: 0 2px;
-                  line-height: 1;
-                "
-              >
-                <!-- Remaining -->
-                المتبقي
-              </label>
-              <div
-                style="
-                  display: flex;
-                  align-items: center;
-                  justify-content: space-between;
-                  padding: 3px 6px;
-                  border-radius: 3px;
-                  border: 1px solid #ff9800;
-                  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-                  min-height: 22px;
-                  transition: all 0.2s ease;
-                "
-              >
-                <span
-                  style="
-                    font-size: 0.6rem;
-                    font-weight: 600;
-                    color: #666;
-                    margin-right: 3px;
-                  "
-                >
-                  {{ currencySymbol(invoice_doc.currency) }}
-                </span>
-                <span
-                  style="
-                    font-size: 0.7rem;
-                    font-weight: 700;
-                    color: #e65100;
-                    flex: 1;
-                    text-align: right;
-                  "
-                >
-                  {{ formatCurrency(diff_payment) }}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Summary Row 2 (Change Amount) -->
-          <div
-            v-if="diff_payment < 0 && !invoice_doc.is_return"
-            style="display: flex; gap: 3px; align-items: flex-start"
-          >
-            <!-- Remaining Amount -->
+            <!-- change_amount: المبلغ المتبقي للعميل -->
             <div
               style="flex: 1.4; display: flex; flex-direction: column; gap: 2px"
             >
@@ -226,60 +157,50 @@
                   margin: 0;
                   padding: 0 2px;
                   line-height: 1;
+                  text-align: center;
+                  display: block;
                 "
               >
-                <!-- Remaining Amount -->
-                المبلغ المتبقي
+                المتبقي للعميل
               </label>
               <div
-                style="
-                  display: flex;
-                  align-items: center;
-                  background: white;
-                  border: 1px solid #1976d2;
-                  border-radius: 3px;
-                  padding: 1px 4px;
-                  min-height: 22px;
-                  transition: all 0.2s ease;
-                "
+                :style="{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '3px 6px',
+                  borderRadius: '3px',
+                  border:
+                    change_amount > 0
+                      ? '1px solid #4caf50'
+                      : '1px solid #e0e0e0',
+                  background:
+                    change_amount > 0
+                      ? 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)'
+                      : 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)',
+                  minHeight: '22px',
+                  transition: 'all 0.2s ease',
+                }"
               >
                 <span
-                  style="
-                    font-size: 0.6rem;
-                    font-weight: 600;
-                    color: #1976d2;
-                    margin-right: 3px;
-                    flex-shrink: 0;
-                  "
+                  :style="{
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    color: change_amount > 0 ? '#2e7d32' : '#9e9e9e',
+                    textAlign: 'center',
+                    width: '100%',
+                    display: 'block',
+                  }"
                 >
-                  {{ currencySymbol(invoice_doc.currency) }}
+                  {{ currencySymbol(invoice_doc.currency)
+                  }}{{ formatCurrency(change_amount) }}
                 </span>
-                <input
-                  type="number"
-                  v-model="paid_change"
-                  @input="set_paid_change()"
-                  readonly
-                  style="
-                    flex: 1;
-                    border: none;
-                    outline: none;
-                    background: transparent;
-                    font-size: 0.7rem;
-                    font-weight: 700;
-                    color: #757575;
-                    text-align: right;
-                    padding: 1px;
-                    min-width: 0;
-                    line-height: 1.2;
-                    cursor: not-allowed;
-                  "
-                />
               </div>
             </div>
 
-            <!-- Change Amount -->
+            <!-- outstanding_amount: المبلغ المتأخر على الفاتورة -->
             <div
-              style="flex: 1; display: flex; flex-direction: column; gap: 2px"
+              style="flex: 1.4; display: flex; flex-direction: column; gap: 2px"
             >
               <label
                 style="
@@ -291,44 +212,43 @@
                   margin: 0;
                   padding: 0 2px;
                   line-height: 1;
+                  text-align: center;
+                  display: block;
                 "
               >
-                <!-- Change Amount -->
-                مبلغ الباقي
+                المبلغ المتأخر
               </label>
               <div
-                style="
-                  display: flex;
-                  align-items: center;
-                  justify-content: space-between;
-                  padding: 3px 6px;
-                  border-radius: 3px;
-                  border: 1px solid #2196f3;
-                  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-                  min-height: 22px;
-                  transition: all 0.2s ease;
-                "
+                :style="{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '3px 6px',
+                  borderRadius: '3px',
+                  border:
+                    outstanding_amount > 0
+                      ? '1px solid #ff9800'
+                      : '1px solid #e0e0e0',
+                  background:
+                    outstanding_amount > 0
+                      ? 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)'
+                      : 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)',
+                  minHeight: '22px',
+                  transition: 'all 0.2s ease',
+                }"
               >
                 <span
-                  style="
-                    font-size: 0.6rem;
-                    font-weight: 600;
-                    color: #666;
-                    margin-right: 3px;
-                  "
+                  :style="{
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    color: outstanding_amount > 0 ? '#e65100' : '#9e9e9e',
+                    textAlign: 'center',
+                    width: '100%',
+                    display: 'block',
+                  }"
                 >
-                  {{ currencySymbol(invoice_doc.currency) }}
-                </span>
-                <span
-                  style="
-                    font-size: 0.7rem;
-                    font-weight: 700;
-                    color: #0d47a1;
-                    flex: 1;
-                    text-align: right;
-                  "
-                >
-                  {{ formatCurrency(credit_change) }}
+                  {{ currencySymbol(invoice_doc.currency)
+                  }}{{ formatCurrency(outstanding_amount) }}
                 </span>
               </div>
             </div>
@@ -404,13 +324,17 @@
                   {{ currencySymbol(invoice_doc.currency) }}
                 </span>
                 <input
+                  :id="`mode_of_payment_input_${payment.idx || 0}`"
+                  :ref="`mode_of_payment_input_${payment.idx || 0}`"
                   type="text"
                   :value="formatCurrency(payment.amount)"
                   @change="
-                    setFormatedCurrency(payment, 'amount', null, true, $event)
+                    setFormatedCurrency(payment, 'amount', null, true, $event);
+                    validate_payment_amount(payment);
                   "
                   @focus="set_rest_amount(payment.idx)"
-                  :readonly="invoice_doc.is_return ? true : false"
+                  @click="set_rest_amount(payment.idx)"
+                  :readonly="invoice_doc.is_return"
                   placeholder="0.00"
                   style="
                     flex: 1;
@@ -431,6 +355,8 @@
 
             <!-- Payment Method Button -->
             <button
+              :id="`mode_of_payment_button_${payment.idx || 0}`"
+              :ref="`mode_of_payment_button_${payment.idx || 0}`"
               :style="
                 payment.type == 'Phone' &&
                 payment.amount > 0 &&
@@ -454,7 +380,7 @@
                 text-overflow: ellipsis;
                 padding: 0 4px;
               "
-              @click="set_full_amount(payment.idx)"
+              @click.stop="set_full_amount(payment.idx)"
             >
               {{ payment.mode_of_payment }}
             </button>
@@ -790,7 +716,7 @@
           <div
             v-if="
               pos_profile.posa_allow_write_off_change &&
-              diff_payment > 0 &&
+              outstanding_amount > 0 &&
               !invoice_doc.is_return
             "
             style="flex: 1 1 calc(50% - 2px); min-width: 130px"
