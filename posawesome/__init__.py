@@ -10,7 +10,7 @@ import logging
 import frappe
 from frappe.utils.logger import get_logger
 
-__version__ = "18.11.2025"
+__version__ = "19.11.2025"
 
 # =============================================================================
 # GLOBAL LOGGER - Single Source of Truth
