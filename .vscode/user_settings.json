@@ -1,0 +1,41 @@
+{
+  "github.copilot.nextEditSuggestions.enabled": false,
+  "workbench.startupEditor": "none",
+  "security.workspace.trust.untrustedFiles": "open",
+  "git.autofetch": true,
+  "extensions.ignoreRecommendations": true,
+  "workbench.editor.enablePreview": false,
+  "diffEditor.experimental.showMoves": true,
+  "diffEditor.renderSideBySide": true,
+  "chat.tools.terminal.autoApprove": {},
+  "github.copilot.enable": {
+    "*": true,
+    "markdown": true,
+    "scminput": true,
+    "plaintext": true
+  },
+  "settingsSync.ignoredExtensions": [],
+  "settingsSync.ignoredSettings": [],
+  "[python]": {
+    "diffEditor.ignoreTrimWhitespace": true,
+    "editor.defaultFormatter": "ms-python.autopep8"
+  },
+  "diffEditor.ignoreTrimWhitespace": true,
+  "javascript.updateImportsOnFileMove.enabled": "never",
+  "chat.agent.todoList": {
+    "position": "default"
+  },
+  "workbench.iconTheme": "vscode-icons",
+  "vsicons.dontShowNewVersionMessage": true,
+  "chat.mcp.gallery.enabled": true,
+  "editor.formatOnSave": true,
+  "prettier.jsxSingleQuote": true,
+  "prettier.printWidth": 120,
+  "notebook.formatOnSave.enabled": true,
+  "html.format.indentInnerHtml": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "git.enableSmartCommit": true,
+  "git.confirmSync": false,
+  "update.showReleaseNotes": false,
+  "scm.repositories.selectionMode": "single"
+}
