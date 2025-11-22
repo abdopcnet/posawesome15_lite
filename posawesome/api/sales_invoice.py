@@ -8,7 +8,6 @@ import json
 import frappe
 from frappe import _
 from frappe.utils import flt
-from posawesome import posawesome_logger
 
 
 # ===== DELETE OPERATIONS =====
@@ -44,8 +43,7 @@ def delete_invoice(invoice_name):
         }
 
     except Exception as e:
-        posawesome_logger.error(
-            f"Error deleting invoice {invoice_name}: {str(e)}", exc_info=True)
+        frappe.log_error(f"[[sales_invoice.py]] delete_invoice: {str(e)}")
         frappe.throw(_("Error deleting invoice"))
 
 
@@ -124,8 +122,7 @@ def calculate_return_stats(invoice_name):
         }
 
     except Exception as e:
-        posawesome_logger.error(
-            f"[sales_invoice.py] calculate_return_stats: {str(e)}")
+        frappe.log_error(f"[[sales_invoice.py]] get_returnable_amounts: {str(e)}")
         return {
             "remaining_returnable_amount": 0,
             "total_returned_amount": 0,
@@ -241,8 +238,7 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
         return returnable_invoices
 
     except Exception as e:
-        posawesome_logger.error(
-            f"[sales_invoice.py] get_invoices_for_return: {str(e)}")
+        frappe.log_error(f"[[sales_invoice.py]] get_returnable_invoices: {str(e)}")
         frappe.throw(_("Error fetching invoices for return"))
         return []
 
@@ -314,8 +310,7 @@ def create_and_submit_invoice(invoice_doc):
         return doc.as_dict()
 
     except Exception as e:
-        posawesome_logger.error(
-            f"[sales_invoice.py] create_and_submit_invoice: {str(e)}")
+        frappe.log_error(f"[[sales_invoice.py]] create_and_submit_invoice: {str(e)}")
         frappe.throw(_("Error creating and submitting invoice"))
 
 
@@ -370,7 +365,6 @@ def validate_return_limits(return_doc):
                     )
 
     except Exception as e:
-        posawesome_logger.error(
-            f"[sales_invoice.py] validate_return_limits: {str(e)}")
+        frappe.log_error(f"[[sales_invoice.py]] validate_return_limits: {str(e)}")
         # Don't block submission if validation check fails
         pass
