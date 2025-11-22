@@ -188,7 +188,7 @@
               type="text"
               :placeholder="
                 is_return_invoice
-                  ? 'الباركود معطل في وضع المرتجعات'
+                  ? 'الباركود معطل في وضع المرتجع'
                   : 'مسح الباركود'
               "
               v-model="barcode_search"
