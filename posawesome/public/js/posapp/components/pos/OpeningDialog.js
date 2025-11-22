@@ -202,22 +202,61 @@ export default {
           if (r.message) {
             // r.message is the opening_voucher document (as_dict())
             const opening_shift = r.message;
-            evntBus.emit(EVENT_NAMES.REGISTER_POS_DATA, opening_shift);
-            evntBus.emit(EVENT_NAMES.SET_COMPANY, opening_shift.company);
-            // POS Opening Shift Created
-            // r.message is the opening_voucher document as dict (from as_dict())
             const shift_name = opening_shift.name || "غير معروف";
             console.log("[OpeningDialog.js] Opening shift created:", shift_name);
-            showMessage(
-              `تم إنشاء نوبة فتح نقطة البيع ${shift_name}`,
-              "success"
-            );
-            close_opening_dialog();
+            
+            // Fetch complete shift data including pos_profile_data
+            frappe.call({
+              method: API_MAP.POS_OPENING_SHIFT.GET_CURRENT_SHIFT_NAME,
+              callback: (shiftResponse) => {
+                if (shiftResponse.message && shiftResponse.message.success && shiftResponse.message.data) {
+                  const shift_data = shiftResponse.message.data;
+                  const pos_profile = shift_data.pos_profile_data;
+                  
+                  if (pos_profile) {
+                    // Prepare data in the format expected by Pos.js and Navbar.js
+                    const pos_opening_shift = {
+                      name: shift_data.name,
+                      company: shift_data.company,
+                      period_start_date: shift_data.period_start_date,
+                      pos_profile: shift_data.pos_profile,
+                      user: shift_data.user,
+                    };
+                    
+                    const event_data = {
+                      pos_profile: pos_profile,
+                      pos_opening_shift: pos_opening_shift,
+                      company: { name: pos_profile.company },
+                    };
+                    
+                    // Emit events with complete data
+                    evntBus.emit(EVENT_NAMES.REGISTER_POS_DATA, event_data);
+                    evntBus.emit(EVENT_NAMES.SET_COMPANY, { name: pos_profile.company });
+                    
+                    showMessage(
+                      `تم إنشاء وردية فتح نقطة البيع ${shift_name}`,
+                      "success"
+                    );
+                    close_opening_dialog();
+                  } else {
+                    showMessage("فشل تحميل بيانات الملف الشخصي", "error");
+                  }
+                } else {
+                  showMessage("فشل تحميل بيانات الوردية", "error");
+                }
+                is_loading.value = false;
+              },
+              error: (err) => {
+                console.log("[OpeningDialog.js] get_current_shift_name error:", err);
+                showMessage("فشل تحميل بيانات الوردية", "error");
+                is_loading.value = false;
+              },
+            });
           } else {
             // Failed to create opening document
             showMessage("فشل إنشاء مستند الافتتاح", "error");
+            is_loading.value = false;
           }
-          is_loading.value = false;
         })
         .catch((error) => {
           console.log("[OpeningDialog.js] submit_dialog error:", error);
