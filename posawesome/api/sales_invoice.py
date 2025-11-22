@@ -373,6 +373,11 @@ def create_and_submit_invoice(invoice_doc):
         # Check if this is an existing draft invoice (following POS-Awesome-V15 logic)
         invoice_name = invoice_doc.get("name")
         
+        # Determine invoice type for logging
+        invoice_type = "Sales_Mode"
+        if invoice_doc.get("is_return"):
+            invoice_type = "Return_Invoice" if invoice_doc.get("return_against") else "Quick_Return"
+        
         # Following POS-Awesome-V15 submit_invoice logic exactly:
         # If invoice name exists and document exists in DB, load and update it
         if invoice_name and frappe.db.exists("Sales Invoice", invoice_name):
@@ -381,15 +386,15 @@ def create_and_submit_invoice(invoice_doc):
             if doc.docstatus == 0:
                 # Update existing draft (Frappe's update() replaces child tables when passed as list)
                 doc.update(invoice_doc)
-                frappe.log_error(f"[[sales_invoice.py]] Updated draft: {invoice_name}")
+                frappe.log_error(f"[[sales_invoice.py]] Updated draft: {invoice_name}, type: {invoice_type}")
             else:
                 # If already submitted, create new invoice (don't update submitted invoices)
                 doc = frappe.get_doc(invoice_doc)
-                frappe.log_error(f"[[sales_invoice.py]] Creating new (existing submitted)")
+                frappe.log_error(f"[[sales_invoice.py]] Creating new (existing submitted), type: {invoice_type}")
         else:
             # Create new document from dict - using ERPNext native method
             doc = frappe.get_doc(invoice_doc)
-            frappe.log_error(f"[[sales_invoice.py]] Creating new invoice")
+            frappe.log_error(f"[[sales_invoice.py]] Creating new invoice, type: {invoice_type}")
 
         # Set POS flags (following POS-Awesome-V15 pattern)
         doc.is_pos = 1
@@ -400,21 +405,45 @@ def create_and_submit_invoice(invoice_doc):
         if doc.is_return and doc.return_against:
             validate_return_limits(doc)
 
-        # Fix: Convert negative payment amounts to positive for return invoices
-        # ERPNext requires positive amounts in payment table, even for returns
-        if doc.is_return and doc.payments:
-            for payment in doc.payments:
-                if payment.amount < 0:
-                    payment.amount = abs(payment.amount)
-                    if hasattr(payment, 'base_amount') and payment.base_amount is not None and payment.base_amount < 0:
-                        payment.base_amount = abs(payment.base_amount)
-
         # Step 1: Use ERPNext native set_missing_values() - fills all default values
         # This is called from SellingController and sets customer, warehouse, etc.
         doc.set_missing_values()
 
+        # For return invoices, payments should be negative amounts (following POS-Awesome-V15 and ERPNext requirement)
+        # MUST be done AFTER set_missing_values() but BEFORE validate() because validate() calls verify_payment_amount_is_negative()
+        # ERPNext's verify_payment_amount_is_negative() requires negative amounts for return invoices
+        if doc.is_return and doc.payments:
+            for payment in doc.payments:
+                # Log before conversion for debugging
+                if payment.amount != 0:
+                    frappe.log_error(f"[[sales_invoice.py]] Payment before: {payment.mode_of_payment}, amount: {payment.amount}, base: {payment.base_amount}")
+                # Convert positive amounts to negative (skip zero amounts)
+                if payment.amount > 0:
+                    payment.amount = -abs(payment.amount)
+                elif payment.amount == 0:
+                    # Skip zero amounts - they will be removed or ignored
+                    continue
+                # Ensure base_amount is also negative if it exists
+                if hasattr(payment, 'base_amount') and payment.base_amount is not None:
+                    if payment.base_amount > 0:
+                        payment.base_amount = -abs(payment.base_amount)
+                    elif payment.base_amount == 0:
+                        payment.base_amount = 0
+            
+            # Filter out zero-amount payments for return invoices
+            doc.payments = [p for p in doc.payments if p.amount != 0]
+            
+            # Update paid amounts (will be negative for returns)
+            # Handle None values in base_amount to avoid TypeError
+            doc.paid_amount = flt(sum(p.amount for p in doc.payments))
+            if hasattr(doc, 'base_paid_amount'):
+                base_amounts = [flt(p.base_amount) if p.base_amount is not None else 0 for p in doc.payments]
+                doc.base_paid_amount = flt(sum(base_amounts))
+            frappe.log_error(f"[[sales_invoice.py]] Return invoice: {len(doc.payments)} payments, total: {doc.paid_amount}")
+
         # Step 2: Use ERPNext native validate() - full validation
         # This validates customer, items, taxes, payments, etc.
+        # For return invoices, this will call verify_payment_amount_is_negative() which requires negative amounts
         doc.validate()
 
         # Step 3: Save document (insert for new, save for existing draft)
