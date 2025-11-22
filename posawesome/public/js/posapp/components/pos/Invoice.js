@@ -695,6 +695,104 @@ export default {
       evntBus.emit("show_payment", "false");
     },
 
+    // Smart Draft Button Handler
+    async handleDraftButton() {
+      if (this.hasItems) {
+        // Save current invoice as draft
+        await this.save_draft_invoice();
+      } else {
+        // Load draft invoice
+        await this.load_draft_invoice();
+      }
+    },
+
+    // Save current invoice as draft
+    async save_draft_invoice() {
+      if (!this.items || this.items.length === 0) {
+        evntBus.emit("show_mesage", {
+          text: "لا يوجد أصناف للحفظ",
+          color: "warning",
+        });
+        return;
+      }
+
+      try {
+        const doc = this.get_invoice_doc("draft");
+        this.calculateTotalsLocally(doc);
+
+        // Mark as draft (not submitted)
+        doc.__islocal = 1;
+        doc.docstatus = 0;
+
+        frappe.call({
+          method: API_MAP.SALES_INVOICE.SAVE_DRAFT,
+          args: {
+            invoice_doc: doc,
+          },
+          callback: (r) => {
+            if (r.message) {
+              console.log("[Invoice.js] Draft saved:", r.message.name);
+              evntBus.emit("show_mesage", {
+                text: `تم حفظ الفاتورة: ${r.message.name}`,
+                color: "success",
+              });
+              // Clear current invoice after saving
+              this.reset_invoice_session();
+            }
+          },
+          error: (err) => {
+            console.log("[Invoice.js] save_draft_invoice error:", err);
+            evntBus.emit("show_mesage", {
+              text: "فشل حفظ الفاتورة",
+              color: "error",
+            });
+          },
+        });
+      } catch (error) {
+        console.log("[Invoice.js] save_draft_invoice error:", error);
+        evntBus.emit("show_mesage", {
+          text: "فشل حفظ الفاتورة",
+          color: "error",
+        });
+      }
+    },
+
+    // Load draft invoice
+    async load_draft_invoice() {
+      try {
+        frappe.call({
+          method: API_MAP.SALES_INVOICE.GET_DRAFTS,
+          args: {
+            pos_opening_shift: this.pos_opening_shift?.name,
+          },
+          callback: (r) => {
+            if (r.message && r.message.length > 0) {
+              // Open drafts dialog
+              evntBus.emit("open_drafts_dialog", r.message);
+            } else {
+              evntBus.emit("show_mesage", {
+                text: "لا توجد فواتير مسودة",
+                color: "info",
+              });
+            }
+          },
+          error: (err) => {
+            console.log("[Invoice.js] load_draft_invoice error:", err);
+            evntBus.emit("show_mesage", {
+              text: "فشل جلب الفواتير المسودة",
+              color: "error",
+            });
+          },
+        });
+      } catch (error) {
+        console.log("[Invoice.js] load_draft_invoice error:", error);
+        evntBus.emit("show_mesage", {
+          text: "فشل جلب الفواتير المسودة",
+          color: "error",
+        });
+      }
+    },
+
     reset_invoice_session() {
       this.resetInvoiceState();
       this.return_doc = null;
@@ -2648,6 +2746,19 @@ export default {
       this.$nextTick(() => {
         this.$forceUpdate();
       });
+    });
+
+    // Load draft invoice event
+    evntBus.on("load_draft_invoice", (draft_invoice) => {
+      if (draft_invoice) {
+        // Load the draft invoice as a new invoice
+        this.new_invoice(draft_invoice);
+        console.log("[Invoice.js] Draft invoice loaded:", draft_invoice.name);
+        evntBus.emit("show_mesage", {
+          text: `تم تحميل الفاتورة: ${draft_invoice.name}`,
+          color: "success",
+        });
+      }
     });
 
     // Event-driven approach for items changes
