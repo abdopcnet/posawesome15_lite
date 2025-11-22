@@ -1232,7 +1232,7 @@
         >
           <i class="mdi mdi-keyboard-return" style="font-size: 16px"></i>
           <!-- Return_invoice -->
-          <span style="font-size: 0.85rem;">مرتجع فاتورة</span>
+          <span style="font-size: 0.85rem;">إرجاع فاتورة</span>
         </button>
 
         <!-- Quick Return Button -->
