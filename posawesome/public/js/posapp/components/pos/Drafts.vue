@@ -71,7 +71,7 @@
             >
               <i class="mdi mdi-file-document-edit" style="font-size: 18px"></i>
               <!-- Load Draft Invoice -->
-              تكملة فاتورة
+              جدول تكملة فاتورة
             </span>
             <button
               @click="draftsDialog = false"
@@ -126,8 +126,9 @@
               <thead>
                 <tr
                   style="
-                    background: #f5f5f5;
+                    background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
                     border-bottom: 2px solid #e0e0e0;
+                    color: white;
                   "
                 >
                   <th
@@ -135,7 +136,7 @@
                       padding: 12px;
                       text-align: right;
                       font-weight: 600;
-                      color: #333;
+                      color: white;
                     "
                   >
                     العميل
@@ -145,7 +146,7 @@
                       padding: 12px;
                       text-align: center;
                       font-weight: 600;
-                      color: #333;
+                      color: white;
                     "
                   >
                     التاريخ
@@ -155,7 +156,7 @@
                       padding: 12px;
                       text-align: center;
                       font-weight: 600;
-                      color: #333;
+                      color: white;
                     "
                   >
                     الوقت
@@ -165,7 +166,7 @@
                       padding: 12px;
                       text-align: right;
                       font-weight: 600;
-                      color: #333;
+                      color: white;
                     "
                   >
                     رقم الفاتورة
@@ -175,7 +176,7 @@
                       padding: 12px;
                       text-align: left;
                       font-weight: 600;
-                      color: #333;
+                      color: white;
                     "
                   >
                     المبلغ
