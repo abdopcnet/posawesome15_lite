@@ -9,6 +9,7 @@ import PosOffers from "./PosOffers.vue";
 import ClosingDialog from "./ClosingDialog.vue";
 import NewAddress from "./NewAddress.vue";
 import Returns from "./Returns.vue";
+import Drafts from "./Drafts.vue";
 import { API_MAP } from "../../api_mapper.js";
 // Frontend logging: Use console.log/error/warn directly
 
@@ -43,6 +44,7 @@ export default {
     Payments,
     ClosingDialog,
     Returns,
+    Drafts,
     PosOffers,
     NewAddress,
   },
