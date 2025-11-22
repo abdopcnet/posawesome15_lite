@@ -295,7 +295,7 @@ def create_and_submit_invoice(invoice_doc):
             for payment in doc.payments:
                 if payment.amount < 0:
                     payment.amount = abs(payment.amount)
-                    if hasattr(payment, 'base_amount') and payment.base_amount < 0:
+                    if hasattr(payment, 'base_amount') and payment.base_amount is not None and payment.base_amount < 0:
                         payment.base_amount = abs(payment.base_amount)
 
         # Step 1: Use ERPNext native set_missing_values() - fills all default values
