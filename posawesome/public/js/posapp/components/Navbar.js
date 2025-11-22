@@ -211,7 +211,7 @@ export default {
       });
     },
 
-    // Fetch payment totals
+    // Fetch payment totals (optimized: single API call instead of two)
     fetchPaymentTotals() {
       // Only fetch if we have pos_profile
       if (!this.pos_profile || !this.pos_profile.name) {
@@ -220,52 +220,25 @@ export default {
         return;
       }
 
-      // Fetch cash total
+      // Fetch both totals in one API call (optimized for performance)
       frappe.call({
-        method: API_MAP.POS_CLOSING_SHIFT.GET_CURRENT_CASH_TOTAL,
+        method: API_MAP.POS_CLOSING_SHIFT.GET_PAYMENT_TOTALS,
         args: {
           pos_profile: this.pos_profile.name,
           user: frappe.session.user,
         },
         callback: (r) => {
-          if (
-            r.message &&
-            r.message.total !== undefined &&
-            r.message.total !== null
-          ) {
-            const cashTotal = parseFloat(r.message.total) || 0;
-            this.totalCash = cashTotal;
-            console.log("[Navbar.js] Cash total:", cashTotal);
+          if (r.message) {
+            this.totalCash = parseFloat(r.message.cash_total || 0) || 0;
+            this.totalNonCash = parseFloat(r.message.non_cash_total || 0) || 0;
+            console.log("[Navbar.js] Cash total:", this.totalCash, "Non-cash total:", this.totalNonCash);
           } else {
             this.totalCash = 0;
-          }
-        },
-        error: (err) => {
-          this.totalCash = 0;
-        },
-      });
-
-      // Fetch non-cash total
-      frappe.call({
-        method: API_MAP.POS_CLOSING_SHIFT.GET_CURRENT_NON_CASH_TOTAL,
-        args: {
-          pos_profile: this.pos_profile.name,
-          user: frappe.session.user,
-        },
-        callback: (r) => {
-          if (
-            r.message &&
-            r.message.total !== undefined &&
-            r.message.total !== null
-          ) {
-            const nonCashTotal = parseFloat(r.message.total) || 0;
-            this.totalNonCash = nonCashTotal;
-            console.log("[Navbar.js] Non-cash total:", nonCashTotal);
-          } else {
             this.totalNonCash = 0;
           }
         },
         error: (err) => {
+          this.totalCash = 0;
           this.totalNonCash = 0;
         },
       });
