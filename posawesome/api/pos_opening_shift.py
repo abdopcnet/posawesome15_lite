@@ -15,7 +15,6 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 from datetime import datetime, timedelta
-from posawesome import posawesome_logger
 from posawesome.api.pos_profile import get_payment_methods
 
 
@@ -82,8 +81,7 @@ def check_opening_time_allowed(pos_profile):
             }
 
     except Exception as e:
-        posawesome_logger.error(
-            f"[pos_opening_shift.py] check_opening_time_allowed: {str(e)}")
+        frappe.log_error(f"[[pos_opening_shift.py]] check_opening_time_allowed: {str(e)}")
         return {"allowed": False, "message": f"Error: {str(e)}"}
 
 
@@ -99,20 +97,13 @@ def create_opening_voucher(pos_profile, company, balance_details):
         if isinstance(balance_details, str):
             balance_details = json.loads(balance_details)
 
-        # FRAPPE STANDARD: Handle dict or string for pos_profile
-        if isinstance(pos_profile, dict):
-            pos_profile = pos_profile.get('name')
-
-        user = frappe.session.user
-
-        # Prevent duplicate open shifts for same user + company + POS profile
+        # Check for existing open shift
         existing_shift = frappe.db.get_value(
             "POS Opening Shift",
             {
-                "user": user,
+                "user": frappe.session.user,
                 "company": company,
                 "pos_profile": pos_profile,
-                "docstatus": 1,
                 "status": "Open"
             },
             "name"
@@ -123,7 +114,7 @@ def create_opening_voucher(pos_profile, company, balance_details):
                 "An open POS Opening Shift already exists for user {0}, company {1}, and POS profile {2}. "
                 "Please close shift {3} before opening a new one."
             ).format(
-                frappe.bold(user),
+                frappe.bold(frappe.session.user),
                 frappe.bold(company),
                 frappe.bold(pos_profile),
                 frappe.bold(existing_shift)
@@ -132,7 +123,7 @@ def create_opening_voucher(pos_profile, company, balance_details):
         # Create new POS Opening Shift document
         opening_voucher = frappe.new_doc("POS Opening Shift")
         opening_voucher.period_start_date = frappe.utils.now()
-        opening_voucher.user = user
+        opening_voucher.user = frappe.session.user
         opening_voucher.company = company
         opening_voucher.pos_profile = pos_profile
         opening_voucher.status = "Open"
@@ -143,40 +134,28 @@ def create_opening_voucher(pos_profile, company, balance_details):
         # Save and submit
         opening_voucher.insert(ignore_permissions=True)
         opening_voucher.submit()
-
-        posawesome_logger.info(
-            f"[pos_opening_shift.py] Created opening shift: {opening_voucher.name} for user {user}")
-
         # Return as dict for frontend (Frappe automatically converts Document to dict in whitelist)
         return opening_voucher.as_dict()
 
     except Exception as e:
-        posawesome_logger.error(
-            f"[pos_opening_shift.py] create_opening_voucher: {str(e)}")
-        frappe.throw(_("Error creating opening voucher: {0}").format(str(e)))
+        frappe.log_error(f"[[pos_opening_shift.py]] create_opening_voucher: {str(e)}")
+        frappe.throw(_("Error creating opening voucher"))
 
 
 @frappe.whitelist()
 def get_current_shift_name():
     """
-    GET - Get current user's open POS Opening Shift with full POS Profile data
+    GET - Get current open shift for logged-in user
     """
     try:
-        user = frappe.session.user
-
-        # Find latest open shift for current user
-        rows = frappe.get_all(
-            "POS Opening Shift",
-            filters={
-                "user": user,
-                "docstatus": 1,
-                "status": "Open",
-            },
-            fields=["name", "company", "period_start_date",
-                    "pos_profile", "user"],
-            order_by="period_start_date desc",
-            limit=1,
-        )
+        rows = frappe.db.sql("""
+            SELECT name, pos_profile, company, period_start_date, user
+            FROM `tabPOS Opening Shift`
+            WHERE user = %s
+            AND status = 'Open'
+            ORDER BY period_start_date DESC
+            LIMIT 1
+        """, (frappe.session.user,), as_dict=True)
 
         if not rows:
             return {
@@ -261,55 +240,26 @@ def get_current_shift_name():
                         pos_profile_data["item_groups"] = [
                             ig.item_group for ig in item_groups_result]
                     except Exception as item_groups_error:
-                        posawesome_logger.warning(
-                            f"[pos_opening_shift.py] Could not load item_groups for POS Profile {pos_profile_name}: {str(item_groups_error)}")
-                        pos_profile_data["item_groups"] = []
+                        # Note: Silent fallback - item_groups will be empty if query fails
+                        frappe.log_error(f"[[pos_opening_shift.py]] get_current_shift_name: item_groups error: {str(item_groups_error)}")
+                        pass
 
-                    # Get payments child table using central function
-                    try:
-                        pos_profile_data["payments"] = get_payment_methods(
-                            pos_profile_name=pos_profile_name)
-                    except Exception as payments_error:
-                        posawesome_logger.warning(
-                            f"[pos_opening_shift.py] Could not load payments for POS Profile {pos_profile_name}: {str(payments_error)}")
-                        pos_profile_data["payments"] = []
-                else:
-                    pos_profile_data = None
-                    posawesome_logger.error(
-                        f"[pos_opening_shift.py] get_current_shift_name: POS Profile {pos_profile_name} not found")
+                    row["pos_profile_data"] = pos_profile_data
+            except Exception as profile_error:
+                # Note: Silent fallback - pos_profile_data will be None if query fails
+                frappe.log_error(f"[[pos_opening_shift.py]] get_current_shift_name: profile error: {str(profile_error)}")
+                pass
 
-                row["pos_profile_data"] = pos_profile_data
-
-                # Log the result for debugging - including all important fields
-                if pos_profile_data:
-                    posawesome_logger.info(
-                        f"[pos_opening_shift.py] get_current_shift_name: Loaded POS Profile '{pos_profile_name}' with {len(pos_profile_data.keys())} fields. "
-                        f"Tax: apply={pos_profile_data.get('posa_apply_tax')}, type={pos_profile_data.get('posa_tax_type')}, percent={pos_profile_data.get('posa_tax_percent')}. "
-                        f"Discount: item_edit={pos_profile_data.get('posa_allow_user_to_edit_item_discount')}, invoice_edit={pos_profile_data.get('posa_allow_user_to_edit_additional_discount')}, "
-                        f"item_max={pos_profile_data.get('posa_item_max_discount_allowed')}, invoice_max={pos_profile_data.get('posa_invoice_max_discount_allowed')}. "
-                        f"Display: discount_pct={pos_profile_data.get('posa_display_discount_percentage')}, discount_amt={pos_profile_data.get('posa_display_discount_amount')}. "
-                        f"Settings: allow_return={pos_profile_data.get('posa_allow_return')}, fetch_zero_qty={pos_profile_data.get('posa_fetch_zero_qty')}, "
-                        f"payments={len(pos_profile_data.get('payments', []))}, item_groups={len(pos_profile_data.get('item_groups', []))}")
-                else:
-                    posawesome_logger.error(
-                        f"[pos_opening_shift.py] get_current_shift_name: pos_profile_data is None for '{pos_profile_name}'")
-            except Exception as e:
-                posawesome_logger.error(
-                    f"[pos_opening_shift.py] get_current_shift_name: Error loading POS Profile {pos_profile_name}: {str(e)}")
-                row["pos_profile_data"] = None
-
-        result = {
+        return {
             "success": True,
-            "data": row,
+            "data": row if rows else None
         }
-        return result
 
     except Exception as e:
-        posawesome_logger.error(
-            f"[pos_opening_shift.py] get_current_shift_name: {str(e)}")
+        frappe.log_error(f"[[pos_opening_shift.py]] get_current_shift_name: {str(e)}")
         return {
             "success": False,
-            "message": f"Error getting current shift: {str(e)}",
+            "message": "No active shift found",
             "data": None,
         }
 
@@ -317,23 +267,15 @@ def get_current_shift_name():
 @frappe.whitelist()
 def get_all_open_shifts():
     """
-    GET - Get all open shifts for current user (for info display)
+    GET - Get all open shifts
     """
     try:
-        user = frappe.session.user
-
-        # Find all open shifts for this user
-        shifts = frappe.get_all(
-            "POS Opening Shift",
-            filters={
-                "user": user,
-                "docstatus": 1,
-                "status": "Open",
-            },
-            fields=["name", "company", "period_start_date",
-                    "pos_profile", "user"],
-            order_by="period_start_date desc",
-        )
+        shifts = frappe.db.sql("""
+            SELECT name, pos_profile, company, period_start_date, user
+            FROM `tabPOS Opening Shift`
+            WHERE status = 'Open'
+            ORDER BY period_start_date DESC
+        """, as_dict=True)
 
         # Make dates JSON-serializable
         for shift in shifts:
@@ -347,11 +289,9 @@ def get_all_open_shifts():
         }
 
     except Exception as e:
-        posawesome_logger.error(
-            f"[pos_opening_shift.py] get_all_open_shifts: {str(e)}")
+        frappe.log_error(f"[[pos_opening_shift.py]] get_all_open_shifts: {str(e)}")
         return {
             "success": False,
-            "message": f"Error getting open shifts: {str(e)}",
             "count": 0,
             "shifts": [],
         }
@@ -384,8 +324,8 @@ def get_profile_users(doctype, txt, searchfield, start, page_len, filters):
         return result
 
     except Exception as e:
-        posawesome_logger.error(
-            f"[pos_opening_shift.py] get_profile_users: {str(e)}")
+        # Note: get_profile_users doesn't have pos_profile parameter
+        frappe.log_error(f"[[pos_opening_shift.py]] get_profile_users: {str(e)}")
         frappe.throw(_("Error retrieving profile users"))
 
 
@@ -402,8 +342,7 @@ def get_user_shift_invoice_count(pos_profile, pos_opening_shift):
         return count
 
     except Exception as e:
-        posawesome_logger.error(
-            f"[pos_opening_shift.py] get_user_shift_invoice_count: {str(e)}")
+        frappe.log_error(f"[[pos_opening_shift.py]] get_user_shift_invoice_count: {str(e)}")
         return 0
 
 
@@ -438,6 +377,6 @@ def _parse_time_helper(time_value):
             return None
 
     except Exception as e:
-        posawesome_logger.error(
-            f"[pos_opening_shift.py] _parse_time_helper: {str(e)}")
+        # Note: _parse_time_helper doesn't have pos_profile parameter
+        frappe.log_error(f"[[pos_opening_shift.py]] _parse_time_helper: {str(e)}")
         return None
