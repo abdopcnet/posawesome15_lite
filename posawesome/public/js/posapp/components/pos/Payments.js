@@ -253,7 +253,7 @@ export default {
       try {
         await this.refreshInvoiceDoc();
       } catch (error) {
-        console.log("[Payments.js] submit error:", error);
+        console.log("[Payments.js] submit error:", error?.message || error);
       }
 
       if (this.invoice_doc?.docstatus === 1) {
@@ -334,57 +334,8 @@ export default {
         this.currency_precision
       );
 
-      // Allow excess payment only if it's from cash mode
-      const cash_mode = this.pos_profile?.posa_cash_mode_of_payment;
-      const cash_payment = this.invoice_doc.payments?.find(
-        (p) => p.mode_of_payment === cash_mode
-      );
-
-      // If payment exceeds invoice total, check if excess is from cash
-      if (allPaymentsTotal > targetAmount) {
-        if (
-          !cash_mode ||
-          !cash_payment ||
-          this.flt(cash_payment.amount || 0) <= 0
-        ) {
-          this.showMessage(
-            "المبلغ الزائد مسموح فقط لطريقة الدفع النقدي",
-            "error"
-          );
-          return;
-        }
-
-        // Check if excess is only from cash payment
-        const other_payments =
-          this.invoice_doc.payments
-            ?.filter((p) => p.mode_of_payment !== cash_mode)
-            .reduce((sum, p) => sum + this.flt(p.amount || 0), 0) || 0;
-
-        const other_totals = this.flt(
-          (this.invoice_doc.loyalty_amount || 0) +
-            (this.redeemed_customer_credit || 0) +
-            other_payments,
-          this.currency_precision
-        );
-
-        if (other_totals > targetAmount) {
-          this.showMessage(
-            "المبلغ الزائد مسموح فقط لطريقة الدفع النقدي",
-            "error"
-          );
-          return;
-        }
-      } else {
-        // Normal case: payment is less than or equal to invoice total
-        const difference = Math.abs(allPaymentsTotal - targetAmount);
-        if (difference > 0.05) {
-          this.showMessage(
-            `Payment mismatch: Total ${allPaymentsTotal} vs Target ${targetAmount}`,
-            "error"
-          );
-          return;
-        }
-      }
+      // Simplified: No validation here - just allow submission
+      // Validation is done in Invoice.vue to hide print button
 
       if (this.invoice_doc.is_return && totalPayedAmount == 0) {
         this.invoice_doc.is_pos = 0;
@@ -497,7 +448,7 @@ export default {
                 this.submit_invoice(print, autoMode, true);
               })
               .catch((err) => {
-                console.log("[Payments.js] refreshInvoiceDoc error:", err);
+                console.log("[Payments.js] refreshInvoiceDoc error:", err?.message || err);
                 this.showMessage(
                   "Invoice was modified elsewhere, please try again",
                   "error"
@@ -645,7 +596,7 @@ export default {
           delete this.set_full_amount_timeouts[idx];
         }, 150); // 150ms debounce per payment
       } catch (error) {
-        console.log("[Payments.js] set_full_amount error:", error);
+        console.log("[Payments.js] set_full_amount error:", error?.message || error);
         if (this.set_full_amount_timeouts[idx]) {
           delete this.set_full_amount_timeouts[idx];
         }
@@ -733,7 +684,7 @@ export default {
         });
 
       } catch (error) {
-        console.log("[Payments.js] set_rest_amount error:", error);
+        console.log("[Payments.js] set_rest_amount error:", error?.message || error);
       }
     },
 
@@ -823,70 +774,31 @@ export default {
           this.$forceUpdate();
         });
       } catch (e) {
-        console.log("[Payments.js] handlePaymentAmountChange error:", e);
+        console.log("[Payments.js] handlePaymentAmountChange error:", e?.message || e);
         payment.amount = 0;
       }
     },
 
     validate_payment_amount(payment) {
-      // Check if payment amount exceeds invoice total for non-cash payments
+      // Simplified: Just emit event to update Invoice component
+      // Invoice.vue will handle showing message and hiding print button
       const target_amount =
         flt(this.invoice_doc.rounded_total) ||
         flt(this.invoice_doc.grand_total);
       const payment_amount = this.flt(payment.amount || 0);
-      const cash_mode = this.pos_profile?.posa_cash_mode_of_payment;
-      const isQuickReturn = !!this.quick_return;
+      const cash_mode = this.pos_profile?.posa_cash_mode_of_payment || "Cash";
 
-      // Calculate change_amount manually to ensure it's calculated
-      const paid_total = this.paid_amount;
-      const change_amt =
-        paid_total > target_amount ? paid_total - target_amount : 0;
+      // For non-cash payments exceeding invoice total, emit event
+      if (payment.mode_of_payment !== cash_mode && payment_amount > target_amount) {
+        // Emit event to update Invoice component
+        evntBus.emit("payment_amount_changed");
+      }
 
       // Force update to recalculate computed properties
       this.$nextTick(() => {
         this.$forceUpdate();
       });
 
-      // For non-cash payments, check if amount exceeds invoice total
-      if (cash_mode && payment.mode_of_payment !== cash_mode) {
-        // Non-cash payment: cannot exceed invoice total
-        // ✅ في حالة المرتجع السريع (quick_return)، نستخدم القيمة المطلقة للمقارنة
-        if (isQuickReturn) {
-          // Quick return mode: compare absolute values
-          const abs_payment = Math.abs(payment_amount);
-          const abs_target = Math.abs(target_amount);
-
-          if (abs_payment > abs_target) {
-            // Reset to invoice total (negative)
-            const max_amount = -Math.abs(target_amount);
-            payment.amount = max_amount;
-            if (payment.base_amount !== undefined) {
-              payment.base_amount = payment.amount;
-            }
-            this.showMessage(
-              "المبلغ الزائد مسموح فقط لطريقة الدفع النقدي",
-              "error"
-            );
-            return false;
-          }
-        } else {
-          // Normal mode: compare directly
-          if (payment_amount > target_amount) {
-            // Reset to invoice total
-            payment.amount = target_amount;
-            if (payment.base_amount !== undefined) {
-              payment.base_amount = payment.amount;
-            }
-            this.showMessage(
-              "المبلغ الزائد مسموح فقط لطريقة الدفع النقدي",
-              "error"
-            );
-            return false;
-          }
-        }
-      }
-
-      // For cash payment, allow excess (no validation needed)
       return true;
     },
 
