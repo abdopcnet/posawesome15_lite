@@ -236,16 +236,12 @@ export default {
           ) {
             const cashTotal = parseFloat(r.message.total) || 0;
             this.totalCash = cashTotal;
-            console.log(`[Navbar.js] Cash total received: ${cashTotal}`);
+            console.log("[Navbar.js] Cash total:", cashTotal);
           } else {
-            console.warn(
-              "[Navbar.js] Cash total is null/undefined, setting to 0"
-            );
             this.totalCash = 0;
           }
         },
         error: (err) => {
-          console.error("[Navbar.js] Error fetching cash total:", err);
           this.totalCash = 0;
         },
       });
@@ -265,16 +261,12 @@ export default {
           ) {
             const nonCashTotal = parseFloat(r.message.total) || 0;
             this.totalNonCash = nonCashTotal;
-            console.log(`[Navbar.js] Non-cash total received: ${nonCashTotal}`);
+            console.log("[Navbar.js] Non-cash total:", nonCashTotal);
           } else {
-            console.warn(
-              "[Navbar.js] Non-cash total is null/undefined, setting to 0"
-            );
             this.totalNonCash = 0;
           }
         },
         error: (err) => {
-          console.error("[Navbar.js] Error fetching non-cash total:", err);
           this.totalNonCash = 0;
         },
       });
@@ -374,11 +366,6 @@ export default {
             this.company_name = company_doc.company_name;
           })
           .catch((err) => {
-            console.error(
-              "Navbar.js",
-              "fetchShiftInvoiceCount catch error:",
-              err
-            );
             // Error fetching company info
           });
       }
@@ -419,7 +406,6 @@ export default {
           }, 1000);
         }
       } catch (error) {
-        console.error("Navbar.js", "clearCacheAndReload error:", error);
         this.show_mesage({
           color: "error",
           text: "Error clearing cache: " + error.message,
@@ -444,7 +430,6 @@ export default {
           this.shift_invoice_count = response.message;
         }
       } catch (error) {
-        console.error("Navbar.js", "getShiftInvoiceCount error:", error);
         this.shift_invoice_count = 0;
       }
     },
@@ -465,7 +450,7 @@ export default {
             this.errorSound.pause();
             this.errorSound.currentTime = 0;
             this.soundEnabled = true;
-            console.log("[Navbar.js] Sound enabled successfully");
+            console.log("[Navbar.js] Sound enabled");
           })
           .catch((err) => {
             // Silently handle autoplay policy errors - this is expected behavior
@@ -475,15 +460,10 @@ export default {
               err.name === "NotSupportedError"
             ) {
               // Expected: Browser autoplay policy - will retry on next interaction
-              console.log(
-                "[Navbar.js] Sound enablement deferred (autoplay policy)"
-              );
             } else {
-              console.error("[Navbar.js] enableSound play error:", err);
             }
           });
       } catch (err) {
-        console.error("[Navbar.js] enableSound error:", err);
       }
     },
     // Play error sound (only if enabled)
@@ -491,26 +471,17 @@ export default {
       if (this.errorSound && this.soundEnabled) {
         this.errorSound.currentTime = 0;
         this.errorSound.play().catch((err) => {
-          console.error("Navbar.js", "Failed to play error sound:", err);
         });
       } else {
         // If sound not enabled yet, try to enable it and play
         if (!this.soundEnabled) {
-          console.error(
-            "Navbar.js",
-            "Sound not enabled, attempting to enable..."
-          );
           this.enableSound();
           // Try to play after a short delay
           setTimeout(() => {
             if (this.errorSound && this.soundEnabled) {
               this.errorSound.currentTime = 0;
               this.errorSound.play().catch((err) => {
-                console.error(
-                  "Navbar.js",
-                  "Failed to play error sound after enable:",
-                  err
-                );
+                // Error playing sound
               });
             }
           }, 100);
@@ -527,10 +498,6 @@ export default {
       const timeoutId = setTimeout(() => {
         if (!responded) {
           timeoutTriggered = true;
-          console.error(
-            "Navbar.js",
-            "Ping timeout after 2 seconds - no response from server"
-          );
           this.pingTime = "999";
           this.playErrorSound();
           // Mark connection as lost
@@ -567,7 +534,6 @@ export default {
             if (!timeoutTriggered) {
               responded = true;
               clearTimeout(timeoutId);
-              console.error("Navbar.js", "Ping error:", err);
               this.pingTime = "999";
               // Mark connection as lost
               this.wasConnectionLost = true;
@@ -578,10 +544,8 @@ export default {
           async: true,
         });
       } catch (error) {
-        console.error("Navbar.js", "measurePing error:", error);
         // Exception happens immediately when connection is lost
         if (!timeoutTriggered) {
-          console.error("Navbar.js", "Ping exception (connection lost)", error);
           this.pingTime = "999";
           // Play sound immediately on exception (connection lost)
           this.playErrorSound();
@@ -639,7 +603,6 @@ export default {
         el.style.filter = "brightness(1.03)";
         el.style.borderColor = "rgba(0,0,0,0.08)";
       } catch (err) {
-        console.error("Navbar.js", "badgeMouseEnter error:", err);
       }
     },
 
@@ -656,7 +619,6 @@ export default {
           el.style.borderColor = "";
         }
       } catch (err) {
-        console.error("Navbar.js", "badgeMouseLeave error:", err);
       }
     },
   },
@@ -772,7 +734,6 @@ export default {
           this.togglePingMonitoring(enable);
         });
       } catch (error) {
-        console.error("Navbar.js", "created error:", error);
         this.show_mesage({
           color: "error",
           text: "An error occurred while loading the menu.",
