@@ -101,13 +101,13 @@ export default {
           return "#9c27b0"; // Purple for Quick Return Mode
         }
         if (this.invoice_doc?.is_return) {
-          return "#757575"; // Grey for Return Invoice Mode
+          return "#607d8b"; // Blue-grey for Return Invoice Mode (same as return button)
         }
         return "#4caf50"; // Green for Sales Invoice Mode
       }
       // Use hex colors even when invoice exists
       if (this.quick_return_value) return "#9c27b0";
-      return this.invoice_doc.is_return ? "#757575" : "#4caf50";
+      return this.invoice_doc.is_return ? "#607d8b" : "#4caf50";
     },
     shiftNumberText() {
       if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
