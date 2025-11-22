@@ -126,8 +126,8 @@
             >
               <i class="mdi mdi-information" style="margin-right: 6px"></i>
               <!-- You have X open shift(s). Please close these shifts before opening a new one. -->
-              لديك {{ shifts.length }} نوبة مفتوحة. يرجى إغلاق هذه النوبات قبل
-              فتح نوبة جديدة.
+              لديك {{ shifts.length }} وردية مفتوحة. يرجى إغلاق هذه الورديات قبل
+              فتح وردية جديدة.
             </p>
           </div>
 
