@@ -51,7 +51,7 @@
           <!-- =========================================== -->
           <div
             style="
-              background: linear-gradient(135deg, #ff6f00 0%, #ff9800 100%);
+              background: #607d8b;
               color: white;
               padding: 12px 16px;
               border-bottom: 1px solid #e0e0e0;
@@ -71,7 +71,7 @@
             >
               <i class="mdi mdi-keyboard-return" style="font-size: 18px"></i>
               <!-- Return Invoice -->
-              إرجاع فاتورة
+              جدول إرجاع فاتورة
             </span>
             <button
               @click="invoicesDialog = false"
@@ -243,23 +243,10 @@
                     <tr
                       style="
                         border-bottom: 2px solid #e0e0e0;
-                        background: #f5f5f5;
+                        background: #607d8b;
+                        color: white;
                       "
                     >
-                      <th
-                        style="
-                          padding: 10px;
-                          text-align: left;
-                          font-weight: 600;
-                          color: #333;
-                          font-size: 0.75rem;
-                          text-transform: uppercase;
-                          white-space: nowrap;
-                        "
-                      >
-                        <!-- Select -->
-                        اختر
-                      </th>
                       <th
                         v-for="header in headers"
                         :key="header.key"
@@ -267,7 +254,7 @@
                           padding: '10px',
                           textAlign: header.align || 'left',
                           fontWeight: '600',
-                          color: '#333',
+                          color: 'white',
                           fontSize: '0.75rem',
                           textTransform: 'uppercase',
                           whiteSpace: 'nowrap',
@@ -283,25 +270,23 @@
                     <tr
                       v-for="item in dialog_data"
                       :key="item.name"
-                      style="
-                        border-bottom: 1px solid #f0f0f0;
-                        transition: background-color 0.15s ease;
+                      @click="selectInvoice(item)"
+                      :style="
+                        selected && selected.name === item.name
+                          ? 'background: #e3f2fd; cursor: pointer;'
+                          : 'cursor: pointer;'
                       "
-                      :style="`background: ${
-                        item.checked ? '#f0f7ff' : 'white'
-                      }`"
+                      style="border-bottom: 1px solid #e0e0e0; transition: background 0.2s"
+                      @mouseenter="
+                        $event.currentTarget.style.background = '#f5f5f5'
+                      "
+                      @mouseleave="
+                        $event.currentTarget.style.background =
+                          selected && selected.name === item.name
+                            ? '#e3f2fd'
+                            : 'transparent'
+                      "
                     >
-                      <!-- Radio Select -->
-                      <td style="padding: 10px">
-                        <input
-                          type="radio"
-                          :value="item.name"
-                          v-model="selected"
-                          name="invoice"
-                          style="cursor: pointer"
-                        />
-                      </td>
-
                       <!-- Customer -->
                       <td
                         style="
@@ -335,6 +320,7 @@
                         <a
                           :href="getInvoiceUrl(item.name)"
                           target="_blank"
+                          @click.stop
                           style="
                             color: #3b82f6;
                             font-weight: 600;
