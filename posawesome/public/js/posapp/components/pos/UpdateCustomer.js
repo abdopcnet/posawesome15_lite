@@ -110,7 +110,7 @@ export default {
           }
         })
         .catch((err) => {
-          console.error("[UpdateCustomer.js] getCustomerGroups error:", err);
+          console.log("[UpdateCustomer.js] getCustomerGroups error:", err);
           this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_GROUPS, "error");
         });
     },
@@ -131,10 +131,7 @@ export default {
           }
         })
         .catch((err) => {
-          console.error(
-            "[UpdateCustomer.js] getCustomerTerritorys error:",
-            err
-          );
+          console.log("[UpdateCustomer.js] getCustomerTerritorys error:", err);
           this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_TERRITORIES, "error");
         });
     },
@@ -151,7 +148,7 @@ export default {
           }
         })
         .catch((err) => {
-          console.error("[UpdateCustomer.js] getGenders error:", err);
+          console.log("[UpdateCustomer.js] getGenders error:", err);
           this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_GENDERS, "error");
         });
     },
@@ -207,7 +204,7 @@ export default {
           }
         },
         error: (err) => {
-          console.error("[UpdateCustomer.js] submit_dialog error:", err);
+          console.log("[UpdateCustomer.js] submit_dialog error:", err);
           this.handleCustomerError();
         },
       });
@@ -241,10 +238,7 @@ export default {
             }
           },
           error: (err) => {
-            console.error(
-              "[UpdateCustomer.js] handleCustomerSuccess error:",
-              err
-            );
+            // Error handling
           },
         });
       }
