@@ -1,0 +1,1217 @@
+<!-- ====== هيدر الفاتورة - كل عنصر في سطر ====== -->
+<div
+	style="
+		width: 100%;
+		max-width: 100%;
+		margin: 1px 0;
+		padding: 0;
+		box-sizing: border-box;
+		background: none;
+	"
+>
+	<div
+		style="
+			width: 100%;
+			max-width: 500px;
+			margin: 0 auto;
+			direction: rtl;
+			text-align: center;
+			font-family: Arial, sans-serif;
+			padding: 0;
+			background: none;
+		"
+	>
+		<!-- عنوان الفاتورة -->
+		<p
+			style="
+				font-size: 18px;
+				font-weight: bold;
+				margin: 0 0 4px 0;
+				color: #000;
+				white-space: nowrap;
+				font-family: Cairo;
+				padding: 0;
+				background: none;
+			"
+		>
+			{% if doc.is_return == 1 %} مرتجع فاتورة ضريبية مبسطه {% else %} فاتورة ضريبية مبسطة {%
+			endif %}
+		</p>
+
+		<!-- شعار الشركة -->
+		<img
+			src="{{ frappe.db.get_value('Company', doc.company, 'company_logo') or '' }}"
+			alt="Logo"
+			style="
+				display: block;
+				width: 120px;
+				height: auto;
+				margin: 0 auto 4px;
+				padding: 0;
+				background: none;
+				object-fit: contain;
+			"
+		/>
+
+		<!-- معلومات الشركة -->
+		<div style="width: 100%; text-align: right; margin: 0; padding: 0; background: none">
+			<div style="margin: 0; padding: 0; font-size: 13px; line-height: 1.2">
+				<span style="font-weight: bold; color: #000; white-space: nowrap"
+					>اسم الشركة :</span
+				>
+				<div
+					style="
+						margin: 0;
+						padding: 0;
+						font-size: 13px;
+						line-height: 1.2;
+						white-space: normal;
+						display: inline-block;
+						vertical-align: top;
+					"
+				>
+					<span style="color: #000">شركة مذاق الأندلس للحلويات</span><br />
+					<span style="color: #000">شركة شخص واحد</span>
+				</div>
+			</div>
+
+			<div style="margin: 0; padding: 0; font-size: 13px; line-height: 1.2">
+				<span style="font-weight: bold; color: #000; white-space: nowrap"
+					>الرقم الضريبي :</span
+				>
+				<span style="color: #000; white-space: normal; padding-left: 2px"
+					>311073268600003</span
+				>
+			</div>
+
+			<div style="margin: 0; padding: 0; font-size: 13px; line-height: 1.2">
+				<span style="font-weight: bold; color: #000; white-space: nowrap">الفرع :</span>
+				<span style="color: #000; white-space: normal; padding-left: 2px"
+					>{{ doc.branch or "الرئيسي" }}</span
+				>
+			</div>
+
+			<div style="margin: 0; padding: 0; font-size: 13px; line-height: 1.2">
+				<span style="font-weight: bold; color: #000; white-space: nowrap"
+					>السجل التجاري :</span
+				>
+				<span style="color: #000; white-space: normal; padding-left: 2px"
+					>{{ doc.branch_cr_no or "غير متوفر" }}</span
+				>
+			</div>
+
+			<div style="margin: 0; padding: 0; font-size: 13px; line-height: 1.2">
+				<span style="font-weight: bold; color: #000; white-space: nowrap"
+					>رقم الفاتورة :</span
+				>
+				<span style="color: #000; white-space: normal; padding-left: 2px"
+					>{{ doc.name }}</span
+				>
+			</div>
+
+			<div style="margin: 0; padding: 0; font-size: 13px; line-height: 1.2">
+				<span style="font-weight: bold; color: #000; white-space: nowrap">التاريخ :</span>
+				<span style="color: #000; white-space: normal; padding-left: 2px">
+					{% set days_ar =
+					['الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت','الأحد'] %} {% set
+					dt = frappe.utils.get_datetime(doc.posting_date ~ ' ' ~ doc.posting_time) %} {%
+					set weekday = dt.weekday() %} {% set hour = dt.hour %} {% set minute =
+					dt.minute %} {% set hour12 = hour if 1 <= hour <= 12 else (hour - 12 if hour >
+					12 else 12) %} {% set am_pm = 'صباحا' if hour < 12 else 'مساءا' %} {{
+					days_ar[weekday] }} {{ dt.day }}-{{ dt.month }}-{{ dt.year }}
+				</span>
+			</div>
+
+			<div style="margin: 0; padding: 0; font-size: 13px; line-height: 1.2">
+				<span style="font-weight: bold; color: #000; white-space: nowrap">الساعة :</span>
+				<span style="color: #000; white-space: normal; padding-left: 2px">
+					{{ hour12 }}:{{ "%02d"|format(minute) }} {{ am_pm }}
+				</span>
+			</div>
+
+			<div style="margin: 0; padding: 0; font-size: 13px; line-height: 1.2">
+				<span style="font-weight: bold; color: #000; white-space: nowrap">العميل :</span>
+				<span style="color: #000; white-space: normal; padding-left: 2px"
+					>{{ doc.customer_name }}</span
+				>
+			</div>
+
+			{% if doc.customer_cr_no %}
+			<div style="margin: 0; padding: 0; font-size: 13px; line-height: 1.2">
+				<span style="font-weight: bold; color: #000; white-space: nowrap"
+					>السجل التجاري للعميل :</span
+				>
+				<span style="color: #000; white-space: normal; padding-left: 2px"
+					>{{ doc.customer_cr_no }}</span
+				>
+			</div>
+			{% endif %} {% if doc.customer_700_number %}
+			<div style="margin: 0; padding: 0; font-size: 13px; line-height: 1.2">
+				<span style="font-weight: bold; color: #000; white-space: nowrap"
+					>الرقم الموحد للمنشأة :</span
+				>
+				<span style="color: #000; white-space: normal; padding-left: 2px"
+					>{{ doc.customer_700_number }}</span
+				>
+			</div>
+			{% endif %}
+		</div>
+	</div>
+</div>
+
+<!-- ====== جدول الأصناف - Heavy Inline Style مباشر ====== -->
+<div
+	style="
+		width: 100%;
+		max-width: 100%;
+		margin: 0 !important;
+		padding: 0 !important;
+		text-align: center;
+		direction: rtl;
+		background: none !important;
+		box-sizing: border-box;
+	"
+>
+	<table
+		style="
+			width: 100%;
+			max-width: 100%;
+			border-collapse: collapse;
+			border-spacing: 0;
+			margin: 0 !important;
+			padding: 0 !important;
+			font-size: 12px;
+			line-height: 0.95;
+			table-layout: fixed;
+			background: none !important;
+			box-sizing: border-box;
+		"
+	>
+		<thead>
+			<tr
+				style="
+					height: 10px;
+					margin: 0 !important;
+					padding: 0 !important;
+					background: none !important;
+				"
+			>
+				<th
+					style="
+						width: 45%;
+						border: none !important;
+						padding: 0 5px !important;
+						margin: 0 !important;
+						font-weight: bold;
+						font-family: Arial, Tahoma, Helvetica, sans-serif;
+						color: #000 !important;
+						text-align: right;
+						vertical-align: middle;
+						background: none !important;
+						height: 10px;
+					"
+				>
+					{{ _("الصنف") }}
+				</th>
+				<th
+					style="
+						width: 15%;
+						border: none !important;
+						padding: 0 10px !important;
+						margin: 0 !important;
+						font-weight: bold;
+						font-family: Arial, Tahoma, Helvetica, sans-serif;
+						color: #000 !important;
+						text-align: center;
+						vertical-align: middle;
+						background: none !important;
+						height: 10px;
+						white-space: nowrap;
+					"
+				>
+					{{ _("الكمية") }}
+				</th>
+				<th
+					style="
+						width: 20%;
+						border: none !important;
+						padding: 0 10px !important;
+						margin: 0 !important;
+						font-weight: bold;
+						font-family: Arial, Tahoma, Helvetica, sans-serif;
+						color: #000 !important;
+						text-align: center;
+						vertical-align: middle;
+						background: none !important;
+						height: 10px;
+						white-space: nowrap;
+					"
+				>
+					{{ _("السعر") }}
+				</th>
+				<th
+					style="
+						width: 20%;
+						border: none !important;
+						padding: 0 10px !important;
+						margin: 0 !important;
+						font-weight: bold;
+						font-family: Arial, Tahoma, Helvetica, sans-serif;
+						color: #000 !important;
+						text-align: center;
+						vertical-align: middle;
+						background: none !important;
+						height: 10px;
+						white-space: nowrap;
+					"
+				>
+					{{ _("الإجمالي") }}
+				</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for item in doc.items %}
+			<tr
+				style="
+					height: 10px;
+					margin: 0 !important;
+					padding: 0 !important;
+					background: none !important;
+				"
+			>
+				<td
+					style="
+						width: 45%;
+						border: none !important;
+						padding: 0 5px !important;
+						margin: 0 !important;
+						font-family: Arial, Tahoma, Helvetica, sans-serif;
+						color: #000 !important;
+						text-align: right;
+						vertical-align: middle;
+						background: none !important;
+					"
+				>
+					{{ item.item_name }}
+				</td>
+				<td
+					style="
+						width: 15%;
+						border: none !important;
+						padding: 0 10px !important;
+						margin: 0 !important;
+						font-family: Arial, Tahoma, Helvetica, sans-serif;
+						color: #000 !important;
+						text-align: center;
+						vertical-align: middle;
+						background: none !important;
+						height: 9px;
+						white-space: nowrap;
+					"
+				>
+					{{ item.qty }}
+				</td>
+				<td
+					style="
+						width: 20%;
+						border: none !important;
+						padding: 0 10px !important;
+						margin: 0 !important;
+						font-family: Arial, Tahoma, Helvetica, sans-serif;
+						color: #000 !important;
+						text-align: center;
+						vertical-align: middle;
+						background: none !important;
+						height: 9px;
+						white-space: nowrap;
+					"
+				>
+					{{ item.get_formatted("rate") }}
+				</td>
+				<td
+					style="
+						width: 20%;
+						border: none !important;
+						padding: 0 10px !important;
+						margin: 0 !important;
+						font-family: Arial, Tahoma, Helvetica, sans-serif;
+						color: #000 !important;
+						text-align: center;
+						vertical-align: middle;
+						background: none !important;
+						height: 9px;
+						white-space: nowrap;
+					"
+				>
+					{{ item.get_formatted("amount") }}
+				</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</div>
+<!-- ====== نهاية جدول الأصناف ====== -->
+<div style="height: 15px; margin: 0; padding: 0; background: none !important"></div>
+
+<!-- ====== جدول المجاميع ====== -->
+<div
+	style="
+		width: 100%;
+		max-width: 100%;
+		margin: 0 !important;
+		padding: 0 !important;
+		box-sizing: border-box;
+		background: none !important;
+	"
+>
+	<div
+		style="
+			text-align: center;
+			margin: 0 !important;
+			padding: 0 !important;
+			width: 100%;
+			max-width: 100%;
+			direction: rtl;
+			background: none !important;
+			box-sizing: border-box;
+		"
+	>
+		<!-- اجمالي الاصناف -->
+		<table
+			style="
+				width: 100%;
+				border-collapse: collapse;
+				margin: 0 !important;
+				padding: 0 !important;
+				font-size: 13px;
+				line-height: 0.95;
+				table-layout: fixed;
+				background: none !important;
+				box-sizing: border-box;
+				max-width: 100%;
+			"
+		>
+			<tr style="height: 10px">
+				<td
+					style="
+						text-align: right;
+						font-weight: bold;
+						color: #000 !important;
+						width: 50%;
+						white-space: nowrap;
+						padding: 0 !important;
+						margin: 0 !important;
+						background: none !important;
+						font-size: 13px;
+						line-height: 0.95;
+					"
+				>
+					اجمالي الاصناف
+				</td>
+				<td
+					style="
+						text-align: left;
+						font-weight: bold;
+						color: #175e17 !important;
+						width: 50%;
+						white-space: nowrap;
+						padding: 0 !important;
+						margin: 0 !important;
+						background: none !important;
+						font-size: 13px;
+						line-height: 0.95;
+					"
+				>
+					<span style="display: inline-flex; align-items: center">
+						{{ "{:.2f}".format(doc.total) }}
+						<span
+							style="
+								background: none !important;
+								border-radius: 50%;
+								display: inline-flex;
+								align-items: center;
+								justify-content: center;
+								margin-right: 4px;
+								width: 17px;
+								height: 17px;
+								box-shadow: none !important;
+							"
+						>
+							<img
+								src="https://erp.andalus-sweets.com/files/Saudi_Riyal.png"
+								style="
+									width: 17px;
+									height: 17px;
+									display: block;
+									margin: 0 !important;
+									padding: 0 !important;
+								"
+								alt="ر.س"
+							/>
+						</span>
+					</span>
+				</td>
+			</tr>
+		</table>
+
+		<!-- خط فاصل -->
+		<div
+			style="
+				width: 100%;
+				border-top: 1px solid #000;
+				margin: 5px 0 !important;
+				padding: 0 !important;
+				background: none !important;
+			"
+		></div>
+
+		<!-- الخصم علي الفاتورة -->
+		{% if doc.discount_amount and doc.discount_amount != 0 %}
+		<table
+			style="
+				width: 100%;
+				border-collapse: collapse;
+				margin: 0 !important;
+				padding: 0 !important;
+				font-size: 13px;
+				line-height: 0.95;
+				table-layout: fixed;
+				background: none !important;
+				box-sizing: border-box;
+				max-width: 100%;
+			"
+		>
+			<tr style="height: 10px">
+				<td
+					style="
+						text-align: right;
+						font-weight: bold;
+						color: #000 !important;
+						width: 50%;
+						white-space: nowrap;
+						padding: 0 !important;
+						margin: 0 !important;
+						background: none !important;
+						font-size: 13px;
+						line-height: 0.95;
+					"
+				>
+					{% if doc.additional_discount_percentage %} نسبة الخصم الفاتورة ({{
+					doc.additional_discount_percentage }}%) {% else %} الخصم علي الفاتورة {% endif
+					%}
+				</td>
+				<td
+					style="
+						text-align: left;
+						font-weight: bold;
+						color: #175e17 !important;
+						width: 50%;
+						white-space: nowrap;
+						padding: 0 !important;
+						margin: 0 !important;
+						background: none !important;
+						font-size: 13px;
+						line-height: 0.95;
+					"
+				>
+					<span style="display: inline-flex; align-items: center">
+						{{ "{:.2f}".format(doc.discount_amount) }}
+						<span
+							style="
+								background: none !important;
+								border-radius: 50%;
+								display: inline-flex;
+								align-items: center;
+								justify-content: center;
+								margin-right: 4px;
+								width: 17px;
+								height: 17px;
+								box-shadow: none !important;
+							"
+						>
+							<img
+								src="https://erp.andalus-sweets.com/files/Saudi_Riyal.png"
+								style="
+									width: 17px;
+									height: 17px;
+									display: block;
+									margin: 0 !important;
+									padding: 0 !important;
+								"
+								alt="ر.س"
+							/>
+						</span>
+					</span>
+				</td>
+			</tr>
+		</table>
+		{% endif %}
+
+		<!-- الخاضع للضريبة -->
+		<table
+			style="
+				width: 100%;
+				border-collapse: collapse;
+				margin: 0 !important;
+				padding: 0 !important;
+				font-size: 13px;
+				line-height: 0.95;
+				table-layout: fixed;
+				background: none !important;
+				box-sizing: border-box;
+				max-width: 100%;
+			"
+		>
+			<tr style="height: 10px">
+				<td
+					style="
+						text-align: right;
+						font-weight: bold;
+						color: #000 !important;
+						width: 50%;
+						white-space: nowrap;
+						padding: 0 !important;
+						margin: 0 !important;
+						background: none !important;
+						font-size: 13px;
+						line-height: 0.95;
+					"
+				>
+					الخاضع للضريبة
+				</td>
+				<td
+					style="
+						text-align: left;
+						font-weight: bold;
+						color: #175e17 !important;
+						width: 50%;
+						white-space: nowrap;
+						padding: 0 !important;
+						margin: 0 !important;
+						background: none !important;
+						font-size: 13px;
+						line-height: 0.95;
+					"
+				>
+					<span style="display: inline-flex; align-items: center">
+						{{ "{:.2f}".format(doc.net_total) }}
+						<span
+							style="
+								background: none !important;
+								border-radius: 50%;
+								display: inline-flex;
+								align-items: center;
+								justify-content: center;
+								margin-right: 4px;
+								width: 17px;
+								height: 17px;
+								box-shadow: none !important;
+							"
+						>
+							<img
+								src="https://erp.andalus-sweets.com/files/Saudi_Riyal.png"
+								style="
+									width: 17px;
+									height: 17px;
+									display: block;
+									margin: 0 !important;
+									padding: 0 !important;
+								"
+								alt="ر.س"
+							/>
+						</span>
+					</span>
+				</td>
+			</tr>
+		</table>
+
+		<!-- قيمة الضريبة -->
+		<table
+			style="
+				width: 100%;
+				border-collapse: collapse;
+				margin: 0 !important;
+				padding: 0 !important;
+				font-size: 13px;
+				line-height: 0.95;
+				table-layout: fixed;
+				background: none !important;
+				box-sizing: border-box;
+				max-width: 100%;
+			"
+		>
+			<tr style="height: 10px">
+				<td
+					style="
+						text-align: right;
+						font-weight: bold;
+						color: #000 !important;
+						width: 50%;
+						white-space: nowrap;
+						padding: 0 !important;
+						margin: 0 !important;
+						background: none !important;
+						font-size: 13px;
+						line-height: 0.95;
+					"
+				>
+					قيمة الضريبة
+				</td>
+				<td
+					style="
+						text-align: left;
+						font-weight: bold;
+						color: #175e17 !important;
+						width: 50%;
+						white-space: nowrap;
+						padding: 0 !important;
+						margin: 0 !important;
+						background: none !important;
+						font-size: 13px;
+						line-height: 0.95;
+					"
+				>
+					<span style="display: inline-flex; align-items: center">
+						{{ "{:.2f}".format(doc.total_taxes_and_charges) }}
+						<span
+							style="
+								background: none !important;
+								border-radius: 50%;
+								display: inline-flex;
+								align-items: center;
+								justify-content: center;
+								margin-right: 4px;
+								width: 17px;
+								height: 17px;
+								box-shadow: none !important;
+							"
+						>
+							<img
+								src="https://erp.andalus-sweets.com/files/Saudi_Riyal.png"
+								style="
+									width: 17px;
+									height: 17px;
+									display: block;
+									margin: 0 !important;
+									padding: 0 !important;
+								"
+								alt="ر.س"
+							/>
+						</span>
+					</span>
+				</td>
+			</tr>
+		</table>
+
+		<!-- المبلغ المستحق -->
+		<table
+			style="
+				width: 100%;
+				border-collapse: collapse;
+				margin: 0 !important;
+				padding: 0 !important;
+				font-size: 13px;
+				line-height: 0.95;
+				table-layout: fixed;
+				background: none !important;
+				box-sizing: border-box;
+				max-width: 100%;
+			"
+		>
+			<tr style="height: 10px">
+				<td
+					style="
+						text-align: right;
+						font-weight: bold;
+						color: #000 !important;
+						width: 50%;
+						white-space: nowrap;
+						padding: 0 !important;
+						margin: 0 !important;
+						background: none !important;
+						font-size: 13px;
+						line-height: 0.95;
+					"
+				>
+					المبلغ المستحق
+				</td>
+				<td
+					style="
+						text-align: left;
+						font-weight: bold;
+						color: #175e17 !important;
+						width: 50%;
+						white-space: nowrap;
+						padding: 0 !important;
+						margin: 0 !important;
+						background: none !important;
+						font-size: 13px;
+						line-height: 0.95;
+					"
+				>
+					<span style="display: inline-flex; align-items: center">
+						{{ "{:.2f}".format(doc.grand_total) }}
+						<span
+							style="
+								background: none !important;
+								border-radius: 50%;
+								display: inline-flex;
+								align-items: center;
+								justify-content: center;
+								margin-right: 4px;
+								width: 19px;
+								height: 19px;
+								box-shadow: none !important;
+							"
+						>
+							<img
+								src="https://erp.andalus-sweets.com/files/Saudi_Riyal.png"
+								style="
+									width: 19px;
+									height: 19px;
+									display: block;
+									margin: 0 !important;
+									padding: 0 !important;
+								"
+								alt="ر.س"
+							/>
+						</span>
+					</span>
+				</td>
+			</tr>
+		</table>
+
+		<!-- خط فاصل -->
+		<div
+			style="
+				width: 100%;
+				border-top: 1px solid #000;
+				margin: 5px 0 !important;
+				padding: 0 !important;
+				background: none !important;
+			"
+		></div>
+
+		<!-- طرق الدفع -->
+		{% if doc.payments %} {% for payment in doc.payments %}
+		<table
+			style="
+				width: 100%;
+				border-collapse: collapse;
+				margin: 0 !important;
+				padding: 0 !important;
+				font-size: 13px;
+				line-height: 0.95;
+				table-layout: fixed;
+				background: none !important;
+				box-sizing: border-box;
+				max-width: 100%;
+			"
+		>
+			<tr style="height: 10px">
+				<td
+					style="
+						text-align: right;
+						font-weight: bold;
+						color: #000 !important;
+						width: 50%;
+						white-space: nowrap;
+						padding: 0 !important;
+						margin: 0 !important;
+						background: none !important;
+						font-size: 13px;
+						line-height: 0.95;
+					"
+				>
+					{{ payment.mode_of_payment }}
+				</td>
+				<td
+					style="
+						text-align: left;
+						font-weight: bold;
+						color: #175e17 !important;
+						width: 50%;
+						white-space: nowrap;
+						padding: 0 !important;
+						margin: 0 !important;
+						background: none !important;
+						font-size: 13px;
+						line-height: 0.95;
+					"
+				>
+					<span style="display: inline-flex; align-items: center">
+						{{ "{:.2f}".format(payment.amount) }}
+						<span
+							style="
+								background: none !important;
+								border-radius: 50%;
+								display: inline-flex;
+								align-items: center;
+								justify-content: center;
+								margin-right: 4px;
+								width: 17px;
+								height: 17px;
+								box-shadow: none !important;
+							"
+						>
+							<img
+								src="https://erp.andalus-sweets.com/files/Saudi_Riyal.png"
+								style="
+									width: 17px;
+									height: 17px;
+									display: block;
+									margin: 0 !important;
+									padding: 0 !important;
+								"
+								alt="ر.س"
+							/>
+						</span>
+					</span>
+				</td>
+			</tr>
+		</table>
+		{% endfor %} {% endif %}
+
+		<!-- المبلغ المدفوع -->
+		<table
+			style="
+				width: 100%;
+				border-collapse: collapse;
+				margin: 0 !important;
+				padding: 0 !important;
+				font-size: 13px;
+				line-height: 0.95;
+				table-layout: fixed;
+				background: none !important;
+				box-sizing: border-box;
+				max-width: 100%;
+			"
+		>
+			<tr style="height: 10px">
+				<td
+					style="
+						text-align: right;
+						font-weight: bold;
+						color: #000 !important;
+						width: 50%;
+						white-space: nowrap;
+						padding: 0 !important;
+						margin: 0 !important;
+						background: none !important;
+						font-size: 13px;
+						line-height: 0.95;
+					"
+				>
+					المبلغ المدفوع
+				</td>
+				<td
+					style="
+						text-align: left;
+						font-weight: bold;
+						color: #175e17 !important;
+						width: 50%;
+						white-space: nowrap;
+						padding: 0 !important;
+						margin: 0 !important;
+						background: none !important;
+						font-size: 13px;
+						line-height: 0.95;
+					"
+				>
+					<span style="display: inline-flex; align-items: center">
+						{{ "{:.2f}".format(doc.paid_amount) }}
+						<span
+							style="
+								background: none !important;
+								border-radius: 50%;
+								display: inline-flex;
+								align-items: center;
+								justify-content: center;
+								margin-right: 4px;
+								width: 17px;
+								height: 17px;
+								box-shadow: none !important;
+							"
+						>
+							<img
+								src="https://erp.andalus-sweets.com/files/Saudi_Riyal.png"
+								style="
+									width: 17px;
+									height: 17px;
+									display: block;
+									margin: 0 !important;
+									padding: 0 !important;
+								"
+								alt="ر.س"
+							/>
+						</span>
+					</span>
+				</td>
+			</tr>
+		</table>
+
+		<!-- المبلغ المتبقي للعميل -->
+		<table
+			style="
+				width: 100%;
+				border-collapse: collapse;
+				margin: 0 !important;
+				padding: 0 !important;
+				font-size: 13px;
+				line-height: 0.95;
+				table-layout: fixed;
+				background: none !important;
+				box-sizing: border-box;
+				max-width: 100%;
+			"
+		>
+			<tr style="height: 10px">
+				<td
+					style="
+						text-align: right;
+						font-weight: bold;
+						color: #000 !important;
+						width: 50%;
+						white-space: nowrap;
+						padding: 0 !important;
+						margin: 0 !important;
+						background: none !important;
+						font-size: 13px;
+						line-height: 0.95;
+					"
+				>
+					المبلغ المتبقي للعميل
+				</td>
+				<td
+					style="
+						text-align: left;
+						font-weight: bold;
+						color: #175e17 !important;
+						width: 50%;
+						white-space: nowrap;
+						padding: 0 !important;
+						margin: 0 !important;
+						background: none !important;
+						font-size: 13px;
+						line-height: 0.95;
+					"
+				>
+					<span style="display: inline-flex; align-items: center">
+						{{ "{:.2f}".format(doc.change_amount) }}
+						<span
+							style="
+								background: none !important;
+								border-radius: 50%;
+								display: inline-flex;
+								align-items: center;
+								justify-content: center;
+								margin-right: 4px;
+								width: 17px;
+								height: 17px;
+								box-shadow: none !important;
+							"
+						>
+							<img
+								src="https://erp.andalus-sweets.com/files/Saudi_Riyal.png"
+								style="
+									width: 17px;
+									height: 17px;
+									display: block;
+									margin: 0 !important;
+									padding: 0 !important;
+								"
+								alt="ر.س"
+							/>
+						</span>
+					</span>
+				</td>
+			</tr>
+		</table>
+	</div>
+</div>
+
+<!-- ====== رسالة الشكر - بدون أي تباعد خارجي أو داخلي، تباعد سطور أقل ما يمكن، استغلال عرض 100% للطباعة الحرارية ====== -->
+<div
+	style="
+		text-align: center;
+		margin: 0 !important;
+		padding: 0 !important;
+		width: 100%;
+		max-width: 100%;
+		direction: rtl;
+		box-sizing: border-box;
+		background: none !important;
+	"
+>
+	<!-- العنوان -->
+	<div
+		style="
+			font-size: 18px;
+			margin: 10px 0 0 0 !important;
+			padding: 0 !important;
+			color: #000 !important;
+			line-height: 1.2;
+			width: 100%;
+			background: none !important;
+		"
+	>
+		شكراً لزيارتكم الكريمة
+	</div>
+
+	<!-- نص خدمات المناسبات -->
+	<p
+		style="
+			font-size: 16px;
+			margin: 0 !important;
+			padding: 0 !important;
+			color: #000 !important;
+			line-height: 1.2;
+			width: 100%;
+			background: none !important;
+		"
+	>
+		{{ _("لدينا خدمات تجهيز الحفلات والمناسبات") }}
+	</p>
+
+	<!-- نص التواصل -->
+	<p
+		style="
+			font-size: 14px;
+			margin: 0 !important;
+			padding: 0 !important;
+			color: #000 !important;
+			line-height: 1.2;
+			width: 100%;
+			background: none !important;
+		"
+	>
+		{{ _("نسعد بتواصلكم معنا") }}
+	</p>
+
+	<!-- رقم الواتس اب -->
+	<p
+		style="
+			font-size: 14px;
+			margin: 0 !important;
+			padding: 0 !important;
+			color: #000 !important;
+			line-height: 1.2;
+			width: 100%;
+			background: none !important;
+		"
+	>
+		واتس اب 0125666555
+	</p>
+
+	<!-- مسافة تباعد فارغة بنفس ارتفاع السطر -->
+	<div style="height: 6px; line-height: 6px; font-size: 1px">&nbsp;</div>
+
+	<!-- مسافة تباعد فارغة بنفس ارتفاع السطر -->
+	<div style="height: 6px; line-height: 6px; font-size: 1px">&nbsp;</div>
+
+	<!-- سطر عبارة  -->
+	<div
+		style="
+			width: 100%;
+			max-width: 100%;
+			margin: 0 auto;
+			padding: 0;
+			font-family: 'Cairo', Tahoma, Arial, sans-serif;
+			font-size: 14px;
+			color: #111;
+			text-align: center;
+			line-height: 0.95;
+			box-sizing: border-box;
+		"
+	>
+		&#9829; كل قطعة حلوى تروي قصة حب &#9829;
+	</div>
+
+	<!-- مسافة تباعد فارغة بنفس ارتفاع السطر -->
+	<div style="height: 6px; line-height: 6px; font-size: 1px">&nbsp;</div>
+
+	<!-- مسافة تباعد فارغة بنفس ارتفاع السطر -->
+	<div style="height: 6px; line-height: 6px; font-size: 1px">&nbsp;</div>
+</div>
+
+<!-- ====== كود QR - بدون أي تباعد خارجي أو داخلي، عرض كامل، وضوح عالي للطباعة الحرارية ====== -->
+<div
+	style="
+		text-align: center;
+		margin: 0 !important;
+		padding: 0 !important;
+		width: 100%;
+		max-width: 100%;
+		box-sizing: border-box;
+		background: none !important;
+	"
+>
+	<!-- صورة QR أو رسالة الخطأ -->
+	{% if doc.custom_qr_image_src %}
+	<img
+		src="{{ doc.custom_qr_image_src }}"
+		style="
+			width: 180px;
+			height: 180px;
+			object-fit: contain;
+			margin: 0 auto !important;
+			display: block;
+			filter: none !important;
+			background: none !important;
+			padding: 0 !important;
+			box-sizing: border-box;
+		"
+	/>
+	{% else %}
+	<p
+		style="
+			color: #000 !important;
+			font-weight: bold;
+			font-size: 12px;
+			margin: 0 !important;
+			padding: 0 !important;
+			line-height: 0.95;
+			background: none !important;
+			width: 100%;
+			text-align: center;
+		"
+	>
+		الرمز لم يتم إنشاءه
+	</p>
+	{% endif %}
+
+	<!-- حالة الربط -->
+	{% if doc.custom_integration_status %}
+	<p
+		style="
+			font-size: 10px;
+			margin: 5px 0 0 0 !important;
+			padding: 0 !important;
+			color: #000 !important;
+			line-height: 1.2;
+			width: 100%;
+			text-align: center;
+			background: none !important;
+		"
+	>
+		{{ doc.custom_integration_status }}
+	</p>
+	{% endif %}
+
+	<!-- نص سياسة الاستبدال -->
+	<p
+		style="
+			font-size: 14px;
+			font-weight: bold;
+			margin: 10px 0 0 0 !important;
+			padding: 0 !important;
+			color: #000 !important;
+			line-height: 1.2;
+			width: 100%;
+			text-align: center;
+			background: none !important;
+		"
+	>
+		{{ _("البضاعة المباعة لا تُرد ولا تُستبدل") }}
+	</p>
+</div>
