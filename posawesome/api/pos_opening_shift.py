@@ -244,6 +244,26 @@ def get_current_shift_name():
                         frappe.log_error(f"[[pos_opening_shift.py]] get_current_shift_name: item_groups error: {str(item_groups_error)}")
                         pass
 
+                    # Get payments child table using SQL (child tables are not DocTypes)
+                    # Note: POS Payment Method is the child table for payments field in POS Profile
+                    try:
+                        payments_result = frappe.db.sql("""
+                            SELECT 
+                                mode_of_payment,
+                                `default`,
+                                allow_in_returns
+                            FROM `tabPOS Payment Method`
+                            WHERE parent = %s
+                            AND parentfield = 'payments'
+                            AND parenttype = 'POS Profile'
+                            ORDER BY idx
+                        """, (pos_profile_name,), as_dict=True)
+                        pos_profile_data["payments"] = payments_result
+                    except Exception as payments_error:
+                        # Note: Silent fallback - payments will be empty if query fails
+                        frappe.log_error(f"[[pos_opening_shift.py]] get_current_shift_name: payments error: {str(payments_error)}")
+                        pass
+
                     row["pos_profile_data"] = pos_profile_data
             except Exception as profile_error:
                 # Note: Silent fallback - pos_profile_data will be None if query fails
