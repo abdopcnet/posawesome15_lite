@@ -69,7 +69,7 @@ export default {
           evntBus.emit(EVENT_NAMES.UPDATE_CUSTOMER, this.customer);
         }
       } catch (error) {
-        console.error("Customer.js", "get_many_customers error", error);
+        console.log("[Customer.js] get_many_customers error:", error);
         this.showMessage(ERROR_MESSAGES.UNEXPECTED_ERROR, "error");
       }
     },
@@ -112,18 +112,14 @@ export default {
                 this.defaultLoaded = true;
                 // Default customer loaded (logged to backend only)
               } else {
-                console.error(
-                  "Customer.js",
-                  "Default customer not found",
-                  this.customer
-                );
+                console.log("[Customer.js] Default customer not found:", this.customer);
               }
             }
           }
           this.loading = false;
         },
         error: (err) => {
-          console.error("Customer.js", "load_all_customers error", err);
+          console.log("[Customer.js] load_all_customers error:", err);
           this.showMessage(ERROR_MESSAGES.FAILED_TO_FETCH, "error");
           this.loading = false;
         },
@@ -176,7 +172,7 @@ export default {
       try {
         evntBus.emit(EVENT_NAMES.OPEN_UPDATE_CUSTOMER, null);
       } catch (err) {
-        console.error("Customer.js", "new_customer error", err);
+        console.log("[Customer.js] new_customer error:", err);
         this.showMessage(ERROR_MESSAGES.NEW_CUSTOMER_ERROR, "error");
       }
     },
@@ -185,7 +181,7 @@ export default {
       try {
         evntBus.emit(EVENT_NAMES.OPEN_UPDATE_CUSTOMER, this.customer_info);
       } catch (err) {
-        console.error("Customer.js", "edit_customer error", err);
+        console.log("[Customer.js] edit_customer error:", err);
         this.showMessage(ERROR_MESSAGES.EDIT_CUSTOMER_ERROR, "error");
       }
     },
@@ -239,7 +235,7 @@ export default {
           this.showDropdown = false;
         }
       } catch (err) {
-        console.error("Customer.js", "handleClickOutside error", err);
+        console.log("[Customer.js] handleClickOutside error:", err);
         this.showDropdown = false;
       }
     },
@@ -284,7 +280,7 @@ export default {
           this.handleCustomerDropdownOpened
         );
       } catch (err) {
-        console.error("Customer.js", "registerEventListeners error", err);
+        console.log("[Customer.js] registerEventListeners error:", err);
         this.showMessage(ERROR_MESSAGES.INITIALIZATION_ERROR, "error");
       }
     },
