@@ -257,15 +257,15 @@ export default {
 
         if (response.message) {
           console.log("[Pos.js] submit_closing_pos:", response.message.name);
-          this.show_message("تم إغلاق نوبة الصراف بنجاح", "success");
+          this.show_message("تم إغلاق وردية الصراف بنجاح", "success");
           await this.check_opening_entry();
         } else {
           // Failed to close cashier shift
-          this.show_message("فشل إغلاق نوبة الصراف", "error");
+          this.show_message("فشل إغلاق وردية الصراف", "error");
         }
       } catch (error) {
         console.log("[Pos.js] submit_closing_pos error:", error);
-        this.show_message("فشل إغلاق نوبة الصراف", "error");
+        this.show_message("فشل إغلاق وردية الصراف", "error");
       }
     },
 
@@ -322,6 +322,7 @@ export default {
       this.pos_opening_shift = data.pos_opening_shift;
       this.get_offers(this.pos_profile.name);
       evntBus.emit(EVENTS.REGISTER_POS_PROFILE, data);
+      evntBus.emit(EVENTS.SET_POS_OPENING_SHIFT, this.pos_opening_shift);
     },
 
     handleShowPayment(data) {
