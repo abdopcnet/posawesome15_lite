@@ -642,7 +642,7 @@ export default {
             }
           }
         } catch (error) {
-          console.error("[Invoice.js]", "loadInvoiceDoc error", error);
+          console.log("[Invoice.js] loadInvoiceDoc error:", error);
         }
       }
     },
@@ -982,10 +982,6 @@ export default {
               vm.reload_invoice()
                 .then(() => resolve(vm.invoice_doc))
                 .catch((reloadError) => {
-                  console.error(
-                    "[Invoice.js] reload_invoice catch error",
-                    reloadError
-                  );
                   reject(reloadError);
                 });
             } else {
@@ -1065,7 +1061,7 @@ export default {
               // Payment stays local until Print
             }
           } catch (error) {
-            console.error("[Invoice.js] getDefaultPayment error", error);
+            console.log("[Invoice.js] getDefaultPayment error:", error);
           }
         }
 
@@ -1081,7 +1077,7 @@ export default {
         evntBus.emit("invoice_session_reset");
         evntBus.emit("hide_loading");
       } catch (error) {
-        console.error("[Invoice.js]", "prepareInvoice error", error);
+        console.log("[Invoice.js] prepareInvoice error:", error);
         evntBus.emit("hide_loading");
         evntBus.emit("show_mesage", {
           text: "خطأ في إعداد الفاتورة: " + error.message,
@@ -1470,7 +1466,7 @@ export default {
           }
         }
       } catch (error) {
-        console.error("[Invoice.js]", "checkOfferApplied error", error);
+        console.log("[Invoice.js] checkOfferApplied error:", error);
         return false;
       }
 
@@ -1573,11 +1569,8 @@ export default {
       const taxPercent = flt(this.pos_profile?.posa_tax_percent) || 0;
       const normalizedTaxType = taxType?.replace(/^Tax\s*/i, "").trim();
 
-      // Debug logging for tax calculation
       if (applyTax) {
-        console.log(
-          `[Invoice.js] Tax calculation: applyTax=${applyTax}, taxType=${taxType}, normalizedTaxType=${normalizedTaxType}, taxPercent=${taxPercent}, net_total=${doc.net_total}`
-        );
+        console.log("[Invoice.js] Tax calculation:", doc.net_total);
       }
 
       if (applyTax && normalizedTaxType && taxPercent > 0) {
@@ -2461,10 +2454,6 @@ export default {
             // Clear search fields in ItemsSelector
             evntBus.emit("clear_search_fields");
           } else {
-            console.error(
-              "[Invoice.js] Submit failed",
-              "No invoice name returned"
-            );
             evntBus.emit("show_mesage", {
               // Submit failed
               text: "فشل الإرسال",
@@ -2473,10 +2462,6 @@ export default {
           }
         },
         error: (err) => {
-          console.error(
-            "[Invoice.js] Server error",
-            err?.message || "Unknown error"
-          );
           evntBus.emit("hide_loading");
           this.isPrinting = false; // Re-enable print button on error
           evntBus.emit("show_mesage", {
@@ -2525,7 +2510,7 @@ export default {
           item._detailSynced = true;
         }
       } catch (error) {
-        console.error("[Invoice.js] Item detail update failed", error);
+        console.log("[Invoice.js] Item detail update failed:", error);
       }
     },
   },
@@ -2544,13 +2529,7 @@ export default {
       this.invoiceType = "Invoice";
       evntBus.emit("update_invoice_type", this.invoiceType);
 
-      // Log POS Profile data for debugging
-      console.log(
-        `[Invoice.js] POS Profile registered: posa_allow_return=${
-          data.pos_profile?.posa_allow_return
-        }, payments=${data.pos_profile?.payments?.length || 0}`,
-        data.pos_profile
-      );
+      console.log("[Invoice.js] POS Profile registered:", data.pos_profile?.name);
     });
     evntBus.on("add_item", (item) => {
       this.add_item(item);
@@ -2608,9 +2587,6 @@ export default {
       if (data.invoice_doc?.is_return) {
         this.quick_return_value = true;
         evntBus.emit("toggle_quick_return", true);
-        console.log(
-          "[Invoice.js] Return invoice loaded, quick_return enabled for input"
-        );
       }
 
       // Handle return_doc data only if it exists (for returns against specific invoices)
