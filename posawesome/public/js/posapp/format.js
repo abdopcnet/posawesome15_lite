@@ -17,7 +17,6 @@ export default {
         rounding_method = "Banker's Rounding";
         return flt(value, precision, number_format, rounding_method);
       } catch (error) {
-        console.error("format.js", "flt error", error);
         return parseFloat(value || 0).toFixed(precision || 2);
       }
     },
@@ -31,7 +30,6 @@ export default {
           precision || this.currency_precision || 2
         );
       } catch (error) {
-        console.error("format.js", "currency error", error);
         return parseFloat(value || 0).toFixed(precision || 2);
       }
     },
@@ -45,7 +43,6 @@ export default {
           precision || this.float_precision || 3
         );
       } catch (error) {
-        console.error("format.js", "float error", error);
         return parseFloat(value || 0).toFixed(precision || 3);
       }
     },
@@ -68,7 +65,6 @@ export default {
         }
         value = this.formatCurrency($event.target.value, precision);
       } catch (e) {
-        console.error("format.js", "setCurrency error", e);
         value = parseFloat($event.target.value || 0).toFixed(precision || 2);
       }
 
@@ -91,7 +87,6 @@ export default {
         }
         value = this.formatFloat($event.target.value, precision);
       } catch (e) {
-        console.error("format.js", "setFloat error", e);
         value = parseFloat($event.target.value || 0).toFixed(precision || 3);
       }
 
@@ -112,7 +107,6 @@ export default {
         const pattern = /^-?(\d+|\d{1,3}(\.\d{3})*)(,\d+)?$/;
         return pattern.test(value) || "invalid number";
       } catch (error) {
-        console.error("format.js", "isNumber error", error);
         return false;
       }
     },
