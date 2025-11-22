@@ -179,23 +179,7 @@ export default {
      * Emits submit event with payment reconciliation data
      */
     const submit_dialog = () => {
-      console.log(
-        "[ClosingDialog.js] submit_dialog: Submitting closing shift data:",
-        {
-          name: dialog_data.value.name,
-          payment_reconciliation_count:
-            dialog_data.value.payment_reconciliation?.length || 0,
-          payment_reconciliation: dialog_data.value.payment_reconciliation?.map(
-            (p) => ({
-              mode: p.mode_of_payment,
-              opening: p.opening_amount,
-              expected: p.expected_amount,
-              closing: p.closing_amount, // ✅ User input
-              difference: p.difference,
-            })
-          ),
-        }
-      );
+      console.log("[ClosingDialog.js] submit_dialog:", dialog_data.value.name);
 
       evntBus.emit(EVENT_NAMES.SUBMIT_CLOSING_POS, dialog_data.value);
       closingDialog.value = false;
@@ -278,16 +262,7 @@ export default {
      * @param {Object} data - Payment reconciliation data
      */
     const openClosingDialogHandler = (data) => {
-      console.log(`[ClosingDialog.js] Opening closing dialog with data:`, data);
-      console.log(
-        `[ClosingDialog.js] Payment reconciliation:`,
-        data.payment_reconciliation?.map((p) => ({
-          mode: p.mode_of_payment,
-          opening: p.opening_amount,
-          expected: p.expected_amount,
-          closing: p.closing_amount,
-        }))
-      );
+      console.log("[ClosingDialog.js] Opening closing dialog:", data.name);
 
       closingDialog.value = true;
 
@@ -319,17 +294,6 @@ export default {
 
       dialog_data.value = data;
       checkClosingTimeAllowed();
-
-      console.log(
-        `[ClosingDialog.js] Dialog opened. Final payment reconciliation:`,
-        dialog_data.value.payment_reconciliation?.map((p) => ({
-          mode: p.mode_of_payment,
-          opening: p.opening_amount,
-          expected: p.expected_amount,
-          closing: p.closing_amount,
-          difference: p.difference,
-        }))
-      );
     };
 
     /**
