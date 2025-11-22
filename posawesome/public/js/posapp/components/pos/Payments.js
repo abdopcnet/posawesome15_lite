@@ -780,19 +780,8 @@ export default {
     },
 
     validate_payment_amount(payment) {
-      // Simplified: Just emit event to update Invoice component
-      // Invoice.vue will handle showing message and hiding print button
-      const target_amount =
-        flt(this.invoice_doc.rounded_total) ||
-        flt(this.invoice_doc.grand_total);
-      const payment_amount = this.flt(payment.amount || 0);
-      const cash_mode = this.pos_profile?.posa_cash_mode_of_payment || "Cash";
-
-      // For non-cash payments exceeding invoice total, emit event
-      if (payment.mode_of_payment !== cash_mode && payment_amount > target_amount) {
-        // Emit event to update Invoice component
-        evntBus.emit("payment_amount_changed");
-      }
+      // Emit event to update Invoice component (validation happens in Invoice.js)
+      evntBus.emit("payment_amount_changed");
 
       // Force update to recalculate computed properties
       this.$nextTick(() => {
