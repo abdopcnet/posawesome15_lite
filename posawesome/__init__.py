@@ -1,27 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-POS Awesome - Global Logger
-
-Backend: from posawesome import posawesome_logger
-Frontend: console.log (direct)
+POS Awesome
 """
 from __future__ import unicode_literals
-import logging
 import frappe
-from frappe.utils.logger import get_logger
 
 __version__ = "22.11.2025"
-
-# =============================================================================
-# GLOBAL LOGGER - Single Source of Truth
-# =============================================================================
-
-# Single logger - logs to posawesome.log
-logger = get_logger('posawesome', max_size=1_000_000)
-logger.setLevel(logging.DEBUG)
-
-# Global logger alias for easy import
-posawesome_logger = logger
 
 
 def console(*data):
