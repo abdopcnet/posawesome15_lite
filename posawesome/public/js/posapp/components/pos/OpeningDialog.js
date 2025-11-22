@@ -207,10 +207,7 @@ export default {
             // POS Opening Shift Created
             // r.message is the opening_voucher document as dict (from as_dict())
             const shift_name = opening_shift.name || "غير معروف";
-            console.log(
-              "[OpeningDialog.js] Opening shift created:",
-              opening_shift
-            );
+            console.log("[OpeningDialog.js] Opening shift created:", shift_name);
             showMessage(
               `تم إنشاء نوبة فتح نقطة البيع ${shift_name}`,
               "success"
@@ -223,11 +220,7 @@ export default {
           is_loading.value = false;
         })
         .catch((error) => {
-          console.error("[OpeningDialog.js] submitOpeningShift error:", error);
-          console.error(
-            "[OpeningDialog.js] Error creating opening voucher:",
-            error
-          );
+          console.log("[OpeningDialog.js] submit_dialog error:", error);
           showMessage("فشل إنشاء مستند الافتتاح", "error");
           is_loading.value = false;
         });
