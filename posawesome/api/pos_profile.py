@@ -16,11 +16,18 @@ import frappe
 
 
 @frappe.whitelist()
-def get_default_payment_from_pos_profile(pos_profile, company):
+def get_default_payment_from_pos_profile(company=None, pos_profile=None):
     """
     Get default payment method from POS Profile
+    
+    Args:
+        company (str): Company name (required)
+        pos_profile (str|dict): POS Profile name or dict (optional)
     """
     try:
+        if not company:
+            frappe.throw(_("Company is required"))
+        
         if not pos_profile:
             return None
 
