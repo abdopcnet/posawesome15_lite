@@ -29,7 +29,6 @@
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
           max-width: 600px;
           width: 100%;
-          animation: dialogSlideIn 0.3s ease-out;
           border: 1px solid rgba(255, 152, 0, 0.1);
         "
         @click.stop
@@ -323,15 +322,3 @@
 
 <script src="./OpenShiftsWarning.js" />
 
-<style scoped>
-@keyframes dialogSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-</style>
