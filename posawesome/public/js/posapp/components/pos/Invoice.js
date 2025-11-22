@@ -156,7 +156,7 @@ export default {
 
   // ===== COMPUTED =====
   computed: {
-    // Check if there's excess payment in non-cash methods
+    // Check if there's excess payment
     hasExcessNonCashPayment() {
       if (!this.invoice_doc?.payments || !this.pos_profile) {
         return false;
@@ -164,11 +164,32 @@ export default {
       
       const targetAmount = this.flt(this.invoice_doc.rounded_total || this.invoice_doc.grand_total || 0);
       const cash_mode = this.pos_profile?.posa_cash_mode_of_payment || "Cash";
+      const isReturn = this.invoice_doc?.is_return || this.quick_return_value;
       
-      // Check each non-cash payment
-      for (const payment of this.invoice_doc.payments) {
-        if (payment.mode_of_payment !== cash_mode && this.flt(payment.amount || 0) > targetAmount) {
+      if (isReturn) {
+        // For returns: check total of ALL payment methods combined (absolute values)
+        // In returns, amounts are negative, so we use absolute values for comparison
+        const totalPayments = this.invoice_doc.payments.reduce((sum, p) => {
+          return sum + Math.abs(this.flt(p.amount || 0));
+        }, 0);
+        
+        // Add loyalty and customer credit if they exist
+        const loyaltyAmount = Math.abs(this.flt(this.invoice_doc.loyalty_amount || 0));
+        const customerCredit = Math.abs(this.flt(this.redeemed_customer_credit || 0));
+        const totalAllPayments = totalPayments + loyaltyAmount + customerCredit;
+        
+        const absTargetAmount = Math.abs(targetAmount);
+        
+        // In returns, total payments cannot exceed invoice total
+        if (totalAllPayments > absTargetAmount) {
           return true;
+        }
+      } else {
+        // For Sales_Mode: check each non-cash payment separately
+        for (const payment of this.invoice_doc.payments) {
+          if (payment.mode_of_payment !== cash_mode && this.flt(payment.amount || 0) > targetAmount) {
+            return true;
+          }
         }
       }
       
@@ -2606,10 +2627,10 @@ export default {
     evntBus.on("load_return_invoice", (data) => {
       this.new_invoice(data.invoice_doc);
 
-      // ✅ في حالة المرتجع (سواء quick return أو عادي)، تفعيل quick_return لتمكين الإدخال
-      if (data.invoice_doc?.is_return) {
-        this.quick_return_value = true;
-        evntBus.emit("toggle_quick_return", true);
+      // Simple: if it's a regular return invoice (has return_against), disable quick_return
+      if (data.invoice_doc?.is_return && data.return_doc) {
+        this.quick_return_value = false;
+        evntBus.emit("toggle_quick_return", false);
       }
 
       // Handle return_doc data only if it exists (for returns against specific invoices)
