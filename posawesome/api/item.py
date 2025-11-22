@@ -39,7 +39,6 @@ import json
 import frappe
 from frappe import _
 from frappe.utils import flt
-from posawesome import is_custom_logger_enabled
 
 
 @frappe.whitelist()
@@ -210,8 +209,7 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
         return items
 
     except Exception as e:
-        if is_custom_logger_enabled(pos_profile):
-            frappe.log_error(f"[[item.py]] get_items: {str(e)}")
+        frappe.log_error(f"[[item.py]] get_items: {str(e)}")
         frappe.throw(_("Error fetching items"))
         return []
 
@@ -227,7 +225,6 @@ def get_items_groups():
             order_by="name"
         )
     except Exception as e:
-        # Note: get_items_groups doesn't have pos_profile parameter
         frappe.log_error(f"[[item.py]] get_items_groups: {str(e)}")
         frappe.throw(_("Error fetching item groups"))
         return []
@@ -305,15 +302,12 @@ def get_barcode_item(pos_profile, barcode_value):
         result = _check_normal_barcode(pos_profile, barcode_value)
 
         if result:
-            posawesome_logger.info(
-                f"[item.py] get_barcode_item: Found via normal barcode - item: {result.get('item_code')}")
             return result
 
         return {}
 
     except Exception as e:
-        if is_custom_logger_enabled(pos_profile):
-            frappe.log_error(f"[[item.py]] get_barcode_item: {str(e)}")
+        frappe.log_error(f"[[item.py]] get_barcode_item: {str(e)}")
         frappe.throw(_("Error processing barcode"))
         return {}
 
@@ -331,15 +325,9 @@ def _check_scale_barcode(profile, barcode):
     weight_len = profile.get("posa_weight_length")
 
     if not all([prefix, total_len, item_len, weight_len]):
-
         return None
 
-    posawesome_logger.info(
-        f"[item.py] _check_scale_barcode: Barcode length: {len(barcode)}, starts with prefix: {barcode.startswith(prefix)}")
-
     if not barcode.startswith(prefix) or len(barcode) != total_len:
-        posawesome_logger.info(
-            f"[item.py] _check_scale_barcode: Barcode doesn't match format (prefix or length)")
         return None
 
     # Extract item_code and weight
@@ -356,8 +344,6 @@ def _check_scale_barcode(profile, barcode):
         return None
 
     item = items[0]
-    posawesome_logger.info(
-        f"[item.py] _check_scale_barcode: Found item: {item.get('item_code')}")
 
     try:
         weight_value = flt(weight_part) / 1000  # Convert grams to kg
@@ -379,9 +365,6 @@ def _check_private_barcode(profile, barcode):
     prefixes_str = str(profile.get("posa_private_barcode_prefixes", ""))
     total_len = profile.get("posa_private_barcode_lenth")
     item_len = profile.get("posa_private_item_code_length")
-
-    posawesome_logger.info(
-        f"[item.py] _check_private_barcode: Barcode length: {len(barcode)}")
 
     if not all([prefixes_str, total_len, item_len]) or len(barcode) != total_len:
 
@@ -407,8 +390,6 @@ def _check_private_barcode(profile, barcode):
         return None
 
     item = items[0]
-    posawesome_logger.info(
-        f"[item.py] _check_private_barcode: Found item: {item.get('item_code')}")
     item["qty"] = 1
     return item
 
@@ -425,20 +406,19 @@ def _check_normal_barcode(profile, barcode):
     """, (barcode,), as_dict=True)
 
     if barcode_record:
-        posawesome_logger.info(
-            f"[item.py] _check_normal_barcode: Barcode found in DB - parent: {barcode_record[0].get('parent')}")
+        # Barcode found in DB
+        pass
     else:
+        # Barcode not in DB, use get_items
+        pass
 
     # Simply use get_items with the barcode value and include_zero_stock=True
     items = get_items(profile, profile.get("selling_price_list"),
                       search_value=barcode, include_zero_stock=True)
 
     if not items:
-
         return None
 
-    posawesome_logger.info(
-        f"[item.py] _check_normal_barcode: Found item via get_items - item_code: {items[0].get('item_code')}")
     item = items[0]
     item["qty"] = 1
     return item
@@ -454,7 +434,6 @@ def process_batch_selection(item_code, current_item_row_id, existing_items_data,
             "data": {}
         }
     except Exception as e:
-        posawesome_logger.error(f"[item.py] process_batch_selection: {str(e)}")
         # Note: process_batch_selection doesn't have pos_profile parameter
         frappe.log_error(f"[[item.py]] process_batch_selection: {str(e)}")
         return {
