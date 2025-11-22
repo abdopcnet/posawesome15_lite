@@ -17,7 +17,6 @@ from __future__ import unicode_literals
 import json
 import frappe
 from frappe import _
-from posawesome import posawesome_logger
 
 
 # =============================================================================
@@ -101,8 +100,6 @@ def create_customer(
                 if hasattr(pos_doc, 'territory') and pos_doc.territory:
                     pos_defaults["territory"] = pos_doc.territory
             except Exception as pos_error:
-                posawesome_logger.error(
-                    f"[[customer.py]] create_customer: {str(pos_error)}")
                 # Silent fallback - no logging needed for optional POS defaults
                 pass
 
@@ -144,9 +141,9 @@ def create_customer(
                     customer_doc.db_set("mobile_no", customer_doc.mobile_no)
                     customer_doc.db_set("email_id", customer_doc.email_id)
                 except Exception as contact_error:
-                    posawesome_logger.error(
-                        f"[[customer.py]] create_customer: {str(contact_error)}")
                     # Don't fail customer creation if contact creation fails
+                    frappe.log_error(f"[[customer.py]] create_customer: {str(contact_error)}")
+                    pass
 
         frappe.db.commit()
 
@@ -154,7 +151,7 @@ def create_customer(
         return customer_doc.as_dict()
 
     except Exception as e:
-        posawesome_logger.error(f"[[customer.py]] create_customer: {str(e)}")
+        frappe.log_error(f"[[customer.py]] create_customer: {str(e)}")
         frappe.throw(_("Error creating customer"))
 
 
@@ -195,8 +192,7 @@ def create_customer_address(args):
         return address.as_dict()
 
     except Exception as e:
-        posawesome_logger.error(
-            f"[[customer.py]] create_customer_address: {str(e)}")
+        frappe.log_error(f"[[customer.py]] create_customer_address: {str(e)}")
         frappe.throw(_("Error creating address"))
 
 
@@ -276,14 +272,13 @@ def get_customer(customer_id):
                 )
                 result["loyalty_points"] = lp_details.get("loyalty_points", 0)
             except Exception as loyalty_error:
-                posawesome_logger.error(
-                    f"[[customer.py]] get_customer: {str(loyalty_error)}")
+                frappe.log_error(f"[[customer.py]] get_customer: {str(loyalty_error)}")
                 result["loyalty_points"] = 0
 
         return result
 
     except Exception as e:
-        posawesome_logger.error(f"[[customer.py]] get_customer: {str(e)}")
+        frappe.log_error(f"[[customer.py]] get_customer: {str(e)}")
         frappe.throw(_("Error retrieving customer information"))
 
 
@@ -342,8 +337,7 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
                             query_filters["customer_group"] = [
                                 "in", customer_groups]
             except Exception as profile_error:
-                posawesome_logger.error(
-                    f"[[customer.py]] get_many_customers: {str(profile_error)}")
+                frappe.log_error(f"[[customer.py]] get_many_customers: {str(profile_error)}")
                 # Silent fallback for POS profile processing
                 pass
 
@@ -408,7 +402,7 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
         return customers
 
     except Exception as e:
-        posawesome_logger.error(f"[[customer.py]] get_many_customers: {str(e)}")
+        frappe.log_error(f"[[customer.py]] get_many_customers: {str(e)}")
         frappe.throw(_("Error searching customers"))
 
 
@@ -435,8 +429,7 @@ def get_customers_count(search_term="", pos_profile=None, filters=None):
                 additional_filters = frappe.parse_json(filters)
                 query_filters.update(additional_filters)
             except Exception as filter_error:
-                posawesome_logger.error(
-                    f"[[customer.py]] get_customers_count: {str(filter_error)}")
+                frappe.log_error(f"[[customer.py]] get_customers_count: {str(filter_error)}")
                 pass
 
         # Apply POS Profile filtering
@@ -456,8 +449,7 @@ def get_customers_count(search_term="", pos_profile=None, filters=None):
                             query_filters["customer_group"] = [
                                 "in", customer_groups]
             except Exception as profile_error:
-                posawesome_logger.error(
-                    f"[[customer.py]] get_customers_count: {str(profile_error)}")
+                frappe.log_error(f"[[customer.py]] get_customers_count: {str(profile_error)}")
                 pass
 
         # Add search filtering
@@ -477,7 +469,7 @@ def get_customers_count(search_term="", pos_profile=None, filters=None):
         return count
 
     except Exception as e:
-        posawesome_logger.error(f"[[customer.py]] get_customers_count: {str(e)}")
+        frappe.log_error(f"[[customer.py]] get_customers_count: {str(e)}")
         return 0
 
 
@@ -516,15 +508,15 @@ def get_many_customer_addresses(customer_id):
                 address = frappe.get_doc("Address", link.parent)
                 addresses.append(address.as_dict())
             except Exception as address_error:
-                posawesome_logger.error(
-                    f"[[customer.py]] get_many_customer_addresses: {str(address_error)}")
+                # Note: get_many_customer_addresses doesn't have pos_profile parameter
+                frappe.log_error(f"[[customer.py]] get_many_customer_addresses: {str(address_error)}")
                 continue  # Skip if address doesn't exist
 
         return addresses
 
     except Exception as e:
-        posawesome_logger.error(
-            f"[[customer.py]] get_many_customer_addresses: {str(e)}")
+        # Note: get_many_customer_addresses doesn't have pos_profile parameter
+        frappe.log_error(f"[[customer.py]] get_many_customer_addresses: {str(e)}")
         frappe.throw(_("Error retrieving addresses"))
 
 
@@ -699,7 +691,8 @@ def update_customer(
         return customer_doc.as_dict()
 
     except Exception as e:
-        posawesome_logger.error(f"[[customer.py]] update_customer: {str(e)}")
+        # Note: update_customer doesn't have pos_profile parameter
+        frappe.log_error(f"[[customer.py]] update_customer: {str(e)}")
         frappe.throw(_("Error updating customer"))
 
 
@@ -727,7 +720,8 @@ def patch_customer(customer_id, **kwargs):
         return update_customer(customer_id, **update_data)
 
     except Exception as e:
-        posawesome_logger.error(f"[[customer.py]] patch_customer: {str(e)}")
+        # Note: patch_customer doesn't have pos_profile parameter
+        frappe.log_error(f"[[customer.py]] patch_customer: {str(e)}")
         frappe.throw(_("Error updating customer"))
 
 
@@ -789,7 +783,8 @@ def get_customer_credit(customer_id, company=None):
         return result
 
     except Exception as e:
-        posawesome_logger.error(f"[[customer.py]] get_customer_credit: {str(e)}")
+        # Note: get_customer_credit doesn't have pos_profile parameter
+        frappe.log_error(f"[[customer.py]] get_customer_credit: {str(e)}")
         frappe.throw(_("Error retrieving customer credit"))
 
 
@@ -881,8 +876,8 @@ def get_customer_credit_summary(customer_id, company=None):
         }
 
     except Exception as e:
-        posawesome_logger.error(
-            f"[[customer.py]] get_customer_credit_summary: {str(e)}")
+        # Note: get_customer_credit_summary doesn't have pos_profile parameter
+        frappe.log_error(f"[[customer.py]] get_customer_credit_summary: {str(e)}")
         frappe.throw(_("Error retrieving customer credit summary"))
 
 
@@ -1013,8 +1008,7 @@ def _resolve_default_customer_name(pos_profile):
         if isinstance(pos_profile_data, dict):
             return pos_profile_data.get("customer")
     except Exception as resolve_error:
-        posawesome_logger.error(
-            f"[[customer.py]] _resolve_default_customer_name: {str(resolve_error)}")
+        frappe.log_error(f"[[customer.py]] _resolve_default_customer_name: {str(resolve_error)}")
         # Silent fallback - default customer remains None
         return None
 
@@ -1053,8 +1047,8 @@ def _ensure_default_customer_in_results(customers, default_customer_name, fields
         if default_customer_data:
             customers.insert(0, default_customer_data[0])
     except Exception as ensure_error:
-        posawesome_logger.error(
-            f"[[customer.py]] _ensure_default_customer_in_results: {str(ensure_error)}")
+        # Note: _ensure_default_customer_in_results doesn't have pos_profile parameter
+        frappe.log_error(f"[[customer.py]] _ensure_default_customer_in_results: {str(ensure_error)}")
         # Silent fallback - return the original list unchanged
         return customers
 
@@ -1132,8 +1126,8 @@ def _update_contact_for_customer(customer_doc, mobile_no_updated, email_id_updat
                 contact = _make_contact_for_customer(customer_doc)
                 customer_doc.db_set("customer_primary_contact", contact.name)
             except Exception as e:
-                posawesome_logger.error(
-                    f"[[customer.py]] _update_contact_for_customer: {str(e)}")
+                # Note: _update_contact_for_customer doesn't have pos_profile parameter
+                frappe.log_error(f"[[customer.py]] _update_contact_for_customer: {str(e)}")
         return
 
     try:
@@ -1187,6 +1181,6 @@ def _update_contact_for_customer(customer_doc, mobile_no_updated, email_id_updat
             contact_doc.save(ignore_permissions=True)
 
     except Exception as contact_error:
-        posawesome_logger.error(
-            f"[[customer.py]] _update_contact_for_customer: {str(contact_error)}")
+        # Note: _update_contact_for_customer doesn't have pos_profile parameter
+        frappe.log_error(f"[[customer.py]] _update_contact_for_customer: {str(contact_error)}")
         # Don't fail the whole operation if contact update fails
