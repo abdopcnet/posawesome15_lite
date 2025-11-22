@@ -63,6 +63,8 @@ def get_draft_invoices(pos_opening_shift=None):
     Get all draft invoices (docstatus = 0) for the current POS opening shift.
     """
     try:
+        frappe.log_error(f"[[sales_invoice.py]] get_draft_invoices called: pos_opening_shift={pos_opening_shift}")
+        
         filters = {
             "is_pos": 1,
             "docstatus": 0,
@@ -79,6 +81,8 @@ def get_draft_invoices(pos_opening_shift=None):
             limit=50
         )
 
+        frappe.log_error(f"[[sales_invoice.py]] get_draft_invoices: Found {len(invoices_list)} draft invoices")
+
         # Get full invoice data
         data = []
         for invoice in invoices_list:
@@ -91,6 +95,7 @@ def get_draft_invoices(pos_opening_shift=None):
                 frappe.log_error(f"[[sales_invoice.py]] get_draft_invoices: Error loading {invoice['name']}: {str(e)}")
                 continue
 
+        frappe.log_error(f"[[sales_invoice.py]] get_draft_invoices: Returning {len(data)} invoices")
         return data
 
     except Exception as e:
@@ -365,10 +370,28 @@ def create_and_submit_invoice(invoice_doc):
         if isinstance(invoice_doc, str):
             invoice_doc = json.loads(invoice_doc)
 
-        # Create new document from dict - using ERPNext native method
-        doc = frappe.get_doc(invoice_doc)
+        # Check if this is an existing draft invoice (following POS-Awesome-V15 logic)
+        invoice_name = invoice_doc.get("name")
+        
+        # Following POS-Awesome-V15 submit_invoice logic exactly:
+        # If invoice name exists and document exists in DB, load and update it
+        if invoice_name and frappe.db.exists("Sales Invoice", invoice_name):
+            doc = frappe.get_doc("Sales Invoice", invoice_name)
+            # Check if it's a draft (docstatus = 0) - only update drafts
+            if doc.docstatus == 0:
+                # Update existing draft (Frappe's update() replaces child tables when passed as list)
+                doc.update(invoice_doc)
+                frappe.log_error(f"[[sales_invoice.py]] Updated draft: {invoice_name}")
+            else:
+                # If already submitted, create new invoice (don't update submitted invoices)
+                doc = frappe.get_doc(invoice_doc)
+                frappe.log_error(f"[[sales_invoice.py]] Creating new (existing submitted)")
+        else:
+            # Create new document from dict - using ERPNext native method
+            doc = frappe.get_doc(invoice_doc)
+            frappe.log_error(f"[[sales_invoice.py]] Creating new invoice")
 
-        # Set POS flags
+        # Set POS flags (following POS-Awesome-V15 pattern)
         doc.is_pos = 1
         doc.update_stock = 1
         doc.flags.from_pos_page = True
@@ -394,14 +417,27 @@ def create_and_submit_invoice(invoice_doc):
         # This validates customer, items, taxes, payments, etc.
         doc.validate()
 
-        # Step 3: Use ERPNext native insert() - save draft
-        # This saves the document and sets docstatus = 0
-        doc.insert()
-        invoice_name = doc.name
+        # Step 3: Save document (insert for new, save for existing draft)
+        # Check if this is an existing draft by checking if doc has name and docstatus = 0
+        is_existing_draft = doc.name and doc.docstatus == 0
+        
+        if is_existing_draft:
+            # For existing draft, just save (already loaded and updated above)
+            # Following POS-Awesome-V15: doc.update() already handled child tables
+            doc.save()
+            invoice_name = doc.name
+            frappe.log_error(f"[[sales_invoice.py]] Saved draft: {invoice_name}")
+        else:
+            # For new invoice, use insert() - save draft
+            # This saves the document and sets docstatus = 0
+            doc.insert()
+            invoice_name = doc.name
+            frappe.log_error(f"[[sales_invoice.py]] Inserted new: {invoice_name}")
 
         # Step 4: Use ERPNext native submit() - submit document
         # This runs before_submit() then on_submit() hooks
         doc.submit()
+        frappe.log_error(f"[[sales_invoice.py]] Submitted: {invoice_name}")
 
         # Return the submitted document
         return doc.as_dict()
