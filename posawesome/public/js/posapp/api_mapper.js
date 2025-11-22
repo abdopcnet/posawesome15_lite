@@ -82,6 +82,11 @@ const API_MAP = {
       "posawesome.api.pos_closing_shift.get_current_non_cash_total",
   },
 
+  // POS Awesome APIs
+  POSAWESOME: {
+    PING: "posawesome.api.ping.ping",
+  },
+
   // ERPNext Standard APIs (from Invoice.vue, Returns.vue, Payments.vue, Pos.vue)
   FRAPPE: {
     CLIENT_GET: "frappe.client.get",
