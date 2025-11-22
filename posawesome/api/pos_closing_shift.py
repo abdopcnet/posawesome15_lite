@@ -330,10 +330,11 @@ def make_closing_shift_from_opening(opening_shift):
         
         # Ensure balance_details is loaded (reload if needed)
         if not hasattr(opening, 'balance_details') or not opening.balance_details:
-            frappe.log_error(f"[[pos_closing_shift.py]] balance_details not loaded, reloading opening shift")
+            frappe.log_error(f"[[pos_closing_shift.py]] balance_details not loaded, reloading")
             opening.reload()
         
-        frappe.log_error(f"[[pos_closing_shift.py]] Opening shift balance_details: {opening.balance_details}")
+        if opening.balance_details:
+            frappe.log_error(f"[[pos_closing_shift.py]] balance_details: {len(opening.balance_details)} rows")
 
         # Check if opening shift is valid
         if opening.docstatus != 1:
@@ -361,7 +362,7 @@ def make_closing_shift_from_opening(opening_shift):
             payment_totals = _calculate_payment_totals(
                 opening.name, opening.pos_profile)
         
-            frappe.log_error(f"[[pos_closing_shift.py]] Recalculated payment totals for existing closing shift: {payment_totals}")
+            frappe.log_error(f"[[pos_closing_shift.py]] Recalculated payment totals: {len(payment_totals)} modes")
             
             # Get opening amounts from opening shift balance_details
             opening_amounts = {}
@@ -374,7 +375,7 @@ def make_closing_shift_from_opening(opening_shift):
                         opening_amounts[mode] = amount
                         frappe.log_error(f"[[pos_closing_shift.py]] Opening amount for {mode}: {amount} (from balance_details)")
                     else:
-                        frappe.log_error(f"[[pos_closing_shift.py]] balance_details row has no mode_of_payment: {detail}")
+                        frappe.log_error(f"[[pos_closing_shift.py]] balance_details row missing mode_of_payment")
             else:
                 frappe.log_error(f"[[pos_closing_shift.py]] Opening shift {opening.name} has no balance_details")
             
@@ -422,7 +423,7 @@ def make_closing_shift_from_opening(opening_shift):
                 closing.net_total += base_net_total
                 closing.total_quantity += total_qty
                 
-                frappe.log_error(f"[[pos_closing_shift.py]] Invoice {invoice.get('name')}: base_grand_total={base_grand_total}, base_net_total={base_net_total}, total_qty={total_qty}")
+                frappe.log_error(f"[[pos_closing_shift.py]] Invoice {invoice.get('name')}: grand_total={base_grand_total}")
                 
                 # Process taxes
                 invoice_taxes = invoice.get("taxes", [])
@@ -454,7 +455,7 @@ def make_closing_shift_from_opening(opening_shift):
                     "amount": amount
                 })
             
-            frappe.log_error(f"[[pos_closing_shift.py]] Updated existing closing shift: grand_total={closing.grand_total}, net_total={closing.net_total}, total_quantity={closing.total_quantity}, taxes_count={len(taxes_dict)}")
+            frappe.log_error(f"[[pos_closing_shift.py]] Updated closing shift: grand_total={closing.grand_total}")
             
             # Save the updated closing shift
             closing.save(ignore_permissions=True)
@@ -481,7 +482,7 @@ def make_closing_shift_from_opening(opening_shift):
         payment_totals = _calculate_payment_totals(
             opening.name, opening.pos_profile)
         
-        frappe.log_error(f"[[pos_closing_shift.py]] make_closing_shift_from_opening: Payment totals = {payment_totals}")
+        frappe.log_error(f"[[pos_closing_shift.py]] Payment totals: {len(payment_totals)} modes")
 
         # Get opening amounts from opening shift balance_details
         opening_amounts = {}
@@ -494,7 +495,7 @@ def make_closing_shift_from_opening(opening_shift):
                     opening_amounts[mode] = amount
                     frappe.log_error(f"[[pos_closing_shift.py]] Opening amount for {mode}: {amount} (from balance_details)")
                 else:
-                    frappe.log_error(f"[[pos_closing_shift.py]] balance_details row has no mode_of_payment: {detail}")
+                    frappe.log_error(f"[[pos_closing_shift.py]] balance_details row missing mode_of_payment")
         else:
             frappe.log_error(f"[[pos_closing_shift.py]] Opening shift {opening.name} has no balance_details")
 
@@ -531,7 +532,7 @@ def make_closing_shift_from_opening(opening_shift):
             closing.net_total += base_net_total
             closing.total_quantity += total_qty
             
-            frappe.log_error(f"[[pos_closing_shift.py]] Invoice {invoice.get('name')}: base_grand_total={base_grand_total}, base_net_total={base_net_total}, total_qty={total_qty}")
+            frappe.log_error(f"[[pos_closing_shift.py]] Invoice {invoice.get('name')}: grand_total={base_grand_total}")
             
             # Process taxes
             invoice_taxes = invoice.get("taxes", [])
@@ -566,7 +567,7 @@ def make_closing_shift_from_opening(opening_shift):
             })
             frappe.log_error(f"[[pos_closing_shift.py]] Added tax: {account_head} @ {rate}% = {amount}")
         
-        frappe.log_error(f"[[pos_closing_shift.py]] make_closing_shift_from_opening: grand_total={closing.grand_total}, net_total={closing.net_total}, total_quantity={closing.total_quantity}, taxes_count={len(taxes_dict)}")
+        frappe.log_error(f"[[pos_closing_shift.py]] make_closing_shift_from_opening: grand_total={closing.grand_total}")
 
         # Get payment entries using helper
         payment_entries = _get_payments_entries_helper(opening.name)
@@ -676,7 +677,7 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
             
             frappe.log_error(f"[[pos_closing_shift.py]] Payment Entry {mode_of_payment}: added {paid_amount}, total={payments[mode_of_payment]}")
 
-        frappe.log_error(f"[[pos_closing_shift.py]] _calculate_payment_totals: Final totals: {payments}")
+        frappe.log_error(f"[[pos_closing_shift.py]] _calculate_payment_totals: {len(payments)} modes")
         return payments
 
     except Exception as e:
@@ -774,14 +775,14 @@ def _get_pos_invoices_helper(pos_opening_shift):
                 grand_total_sum += base_grand
                 net_total_sum += base_net
                 
-                frappe.log_error(f"[[pos_closing_shift.py]] Invoice {inv.name}: base_grand_total={base_grand}, base_net_total={base_net}, payments_count={len(invoice_dict.get('payments', []))}, taxes_count={len(invoice_dict.get('taxes', []))}")
+                frappe.log_error(f"[[pos_closing_shift.py]] Invoice {inv.name}: grand_total={base_grand}")
                 
                 invoices.append(invoice_dict)
             except Exception as e:
                 frappe.log_error(f"[[pos_closing_shift.py]] _get_pos_invoices_helper: Error loading invoice {inv.name}: {str(e)}")
                 continue
         
-        frappe.log_error(f"[[pos_closing_shift.py]] _get_pos_invoices_helper: Processed {len(invoices)} invoices, total base_grand_total={grand_total_sum}, total base_net_total={net_total_sum}")
+        frappe.log_error(f"[[pos_closing_shift.py]] _get_pos_invoices_helper: {len(invoices)} invoices, total={grand_total_sum}")
         
         return invoices
     except Exception as e:
