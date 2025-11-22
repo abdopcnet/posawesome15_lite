@@ -10,6 +10,94 @@ from frappe import _
 from frappe.utils import flt
 
 
+# ===== DRAFT OPERATIONS =====
+
+@frappe.whitelist()
+def save_draft_invoice(invoice_doc):
+    """
+    Save invoice as draft (docstatus = 0) without submitting.
+    Used for saving incomplete invoices to continue later.
+    """
+    try:
+        # Parse invoice_doc if it's a string
+        if isinstance(invoice_doc, str):
+            invoice_doc = json.loads(invoice_doc)
+
+        # Create or update document
+        if invoice_doc.get("name"):
+            doc = frappe.get_doc("Sales Invoice", invoice_doc["name"])
+            doc.update(invoice_doc)
+        else:
+            doc = frappe.get_doc(invoice_doc)
+
+        # Set POS flags
+        doc.is_pos = 1
+        doc.update_stock = 0  # Don't update stock for drafts
+        doc.flags.from_pos_page = True
+        doc.flags.ignore_permissions = True
+        frappe.flags.ignore_account_permission = True
+
+        # Set as draft (not submitted)
+        doc.docstatus = 0
+
+        # Set missing values
+        doc.set_missing_values()
+
+        # Validate
+        doc.validate()
+
+        # Save as draft
+        doc.save()
+
+        frappe.log_error(f"[[sales_invoice.py]] save_draft_invoice: {doc.name}")
+        return doc.as_dict()
+
+    except Exception as e:
+        frappe.log_error(f"[[sales_invoice.py]] save_draft_invoice: {str(e)}")
+        frappe.throw(_("Error saving draft invoice"))
+
+
+@frappe.whitelist()
+def get_draft_invoices(pos_opening_shift=None):
+    """
+    Get all draft invoices (docstatus = 0) for the current POS opening shift.
+    """
+    try:
+        filters = {
+            "is_pos": 1,
+            "docstatus": 0,
+        }
+        
+        if pos_opening_shift:
+            filters["posa_pos_opening_shift"] = pos_opening_shift
+
+        invoices_list = frappe.get_all(
+            "Sales Invoice",
+            filters=filters,
+            fields=["name", "customer", "posting_date", "posting_time", "grand_total", "currency"],
+            order_by="modified desc",
+            limit=50
+        )
+
+        # Get full invoice data
+        data = []
+        for invoice in invoices_list:
+            try:
+                doc = frappe.get_cached_doc("Sales Invoice", invoice["name"])
+                invoice_dict = doc.as_dict()
+                invoice_dict["customer_name"] = frappe.get_value("Customer", invoice["customer"], "customer_name") if invoice["customer"] else ""
+                data.append(invoice_dict)
+            except Exception as e:
+                frappe.log_error(f"[[sales_invoice.py]] get_draft_invoices: Error loading {invoice['name']}: {str(e)}")
+                continue
+
+        return data
+
+    except Exception as e:
+        frappe.log_error(f"[[sales_invoice.py]] get_draft_invoices: {str(e)}")
+        return []
+
+
 # ===== DELETE OPERATIONS =====
 
 @frappe.whitelist()
