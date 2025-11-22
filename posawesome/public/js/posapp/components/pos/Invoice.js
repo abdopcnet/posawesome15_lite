@@ -1715,7 +1715,7 @@ export default {
       const normalizedTaxType = taxType?.replace(/^Tax\s*/i, "").trim();
 
       if (applyTax) {
-        console.log("[Invoice.js] Tax calculation:", doc.net_total);
+        console.log("[Invoice.js] Tax calculation:", flt(doc.net_total));
       }
 
       if (applyTax && normalizedTaxType && taxPercent > 0) {
@@ -2566,7 +2566,10 @@ export default {
         doc.__islocal = 1; // Mark as local document only for new invoices
       }
       
-      console.log("[Invoice.js] printInvoice:", doc.name ? `Updating draft: ${doc.name}` : "Creating new invoice");
+      // Determine invoice type for logging
+      const invoiceType = doc.is_return ? (doc.return_against ? "Return_Invoice" : "Quick_Return") : "Sales_Mode";
+      const invoiceStatus = doc.name ? `Updating draft: ${doc.name}` : "Creating new invoice";
+      console.log(`[Invoice.js] printInvoice: ${invoiceStatus}, type: ${invoiceType}`);
 
       // Send to server for update + submit (if draft exists) or insert + submit (if new)
       frappe.call({
