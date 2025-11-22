@@ -1117,6 +1117,7 @@
       >
         <!-- Print Button -->
         <button
+          v-if="!hasExcessNonCashPayment"
           :disabled="!hasItems || isPrinting || !hasValidPayments()"
           @click="printInvoice"
           title="طباعة الفاتورة"
@@ -1147,6 +1148,28 @@
           <!-- Printing / Print -->
           <span>{{ isPrinting ? "جاري الطباعة..." : "طباعة" }}</span>
         </button>
+
+        <!-- Warning Message for Excess Non-Cash Payment -->
+        <div
+          v-if="hasExcessNonCashPayment"
+          style="
+            flex: 1;
+            padding: 8px 4px;
+            border-radius: 5px;
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            text-align: center;
+          "
+        >
+          <i class="mdi mdi-alert" style="font-size: 16px"></i>
+          <span>المبلغ الزائد غير مسموح</span>
+        </div>
 
         <!-- Pay Button -->
         <button
