@@ -760,14 +760,18 @@ export default {
     // Load draft invoice
     async load_draft_invoice() {
       try {
+        const pos_opening_shift_name = this.pos_opening_shift?.name;
+        console.log("[Invoice.js] Loading draft invoices, pos_opening_shift:", pos_opening_shift_name);
+        
         frappe.call({
           method: API_MAP.SALES_INVOICE.GET_DRAFTS,
           args: {
-            pos_opening_shift: this.pos_opening_shift?.name,
+            pos_opening_shift: pos_opening_shift_name,
           },
           callback: (r) => {
+            console.log("[Invoice.js] Draft invoices response:", r.message?.length || 0, "invoices");
             if (r.message && r.message.length > 0) {
-              // Open drafts dialog
+              // Open drafts dialog with fresh data from server
               evntBus.emit("open_drafts_dialog", r.message);
             } else {
               evntBus.emit("show_mesage", {
@@ -901,6 +905,10 @@ export default {
         !this.invoice_doc?.submitted_for_payment
       ) {
         doc.name = this.invoice_doc?.name;
+        // Include docstatus if available (for draft invoices)
+        if (this.invoice_doc?.docstatus !== undefined) {
+          doc.docstatus = this.invoice_doc.docstatus;
+        }
       }
       doc.doctype = "Sales Invoice";
       doc.is_pos = 1;
@@ -2552,10 +2560,15 @@ export default {
       // Processing...
       evntBus.emit("show_loading", { text: "جاري المعالجة...", color: "info" });
 
-      // Build invoice_doc locally as __islocal (ERPNext native approach)
-      doc.__islocal = 1; // Mark as local document (matches ERPNext behavior)
+      // If this is an existing draft invoice (has name), don't mark as __islocal
+      // This allows the backend to update the existing draft instead of creating a new one
+      if (!doc.name || doc.docstatus !== 0) {
+        doc.__islocal = 1; // Mark as local document only for new invoices
+      }
+      
+      console.log("[Invoice.js] printInvoice:", doc.name ? `Updating draft: ${doc.name}` : "Creating new invoice");
 
-      // Send to server for insert + submit (ERPNext native workflow)
+      // Send to server for update + submit (if draft exists) or insert + submit (if new)
       frappe.call({
         method: "posawesome.api.sales_invoice.create_and_submit_invoice",
         args: {
@@ -2750,7 +2763,13 @@ export default {
 
     // Load draft invoice event
     evntBus.on("load_draft_invoice", (draft_invoice) => {
-      if (draft_invoice) {
+      if (draft_invoice && draft_invoice.name) {
+        // Prevent duplicate loading by checking if already loaded
+        if (this.invoice_doc?.name === draft_invoice.name) {
+          console.log("[Invoice.js] Draft invoice already loaded:", draft_invoice.name);
+          return;
+        }
+        
         // Load the draft invoice as a new invoice
         this.new_invoice(draft_invoice);
         console.log("[Invoice.js] Draft invoice loaded:", draft_invoice.name);
@@ -2840,12 +2859,14 @@ export default {
     evntBus.off("update_invoice_offers");
     evntBus.off("set_all_items");
     evntBus.off("load_return_invoice");
+    evntBus.off("load_draft_invoice");
     evntBus.off("item_added");
     evntBus.off("item_removed");
     evntBus.off("item_updated");
     evntBus.off("send_invoice_doc_payment");
     evntBus.off("payments_updated");
     evntBus.off("request_invoice_print");
+    evntBus.off("payment_amount_changed");
 
     // Clear ALL timers to prevent memory leaks
     if (this._itemOperationTimer) {
