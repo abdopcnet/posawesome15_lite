@@ -198,6 +198,11 @@ export default {
       };
     },
 
+    // Select invoice (similar to Drafts.js)
+    selectInvoice(invoice) {
+      this.selected = invoice;
+    },
+
     // Submit selected invoice for return
     async submit_dialog() {
       if (!this.selected || !this.dialog_data.length) {
@@ -206,9 +211,7 @@ export default {
         return;
       }
 
-      const selectedItem = this.dialog_data.find(
-        (item) => item.name === this.selected
-      );
+      const selectedItem = this.selected;
       if (!selectedItem) {
         // Selected invoice not found
         this.showMessage("الفاتورة المحددة غير موجودة", "error");
