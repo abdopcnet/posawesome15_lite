@@ -1129,7 +1129,7 @@
             cursor: pointer;
             background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
             color: white;
-            font-size: 0.7rem;
+            font-size: 0.85rem;
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -1146,7 +1146,7 @@
         >
           <i class="mdi mdi-printer" style="font-size: 16px"></i>
           <!-- Printing / Print -->
-          <span>{{ isPrinting ? "جاري الطباعة..." : "طباعة" }}</span>
+          <span style="font-size: 0.85rem;">{{ isPrinting ? "جاري الطباعة..." : "طباعة" }}</span>
         </button>
 
         <!-- Warning Message for Excess Non-Cash Payment -->
@@ -1158,7 +1158,7 @@
             border-radius: 5px;
             background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
             color: white;
-            font-size: 0.7rem;
+            font-size: 0.85rem;
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -1168,7 +1168,7 @@
           "
         >
           <i class="mdi mdi-alert" style="font-size: 16px"></i>
-          <span>المبلغ الزائد غير مسموح</span>
+          <span style="font-size: 0.85rem;">المبلغ الزائد غير مسموح</span>
         </div>
 
         <!-- Pay Button -->
@@ -1183,7 +1183,7 @@
             cursor: pointer;
             background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
             color: white;
-            font-size: 0.7rem;
+            font-size: 0.85rem;
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -1200,7 +1200,7 @@
         >
           <i class="mdi mdi-cash-multiple" style="font-size: 16px"></i>
           <!-- Pay -->
-          <span>دفع</span>
+          <span style="font-size: 0.85rem;">دفع</span>
         </button>
 
         <!-- Return Button -->
@@ -1215,7 +1215,7 @@
             cursor: pointer;
             background: #607d8b;
             color: white;
-            font-size: 0.7rem;
+            font-size: 0.85rem;
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -1231,8 +1231,8 @@
           type="button"
         >
           <i class="mdi mdi-keyboard-return" style="font-size: 16px"></i>
-          <!-- Return -->
-          <span>مرتجع</span>
+          <!-- Return_invoice -->
+          <span style="font-size: 0.85rem;">مرتجع فاتورة</span>
         </button>
 
         <!-- Quick Return Button -->
@@ -1247,7 +1247,7 @@
             cursor: pointer;
             background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
             color: white;
-            font-size: 0.7rem;
+            font-size: 0.85rem;
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -1264,7 +1264,7 @@
         >
           <i class="mdi mdi-flash" style="font-size: 16px"></i>
           <!-- Quick_Return -->
-          <span>مرتجع سريع</span>
+          <span style="font-size: 0.85rem;">مرتجع سريع</span>
         </button>
 
         <!-- Cancel Button -->
@@ -1278,7 +1278,7 @@
             cursor: pointer;
             background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
             color: white;
-            font-size: 0.7rem;
+            font-size: 0.85rem;
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -1290,7 +1290,7 @@
         >
           <i class="mdi mdi-close-circle" style="font-size: 16px"></i>
           <!-- Cancel -->
-          <span>إلغاء</span>
+          <span style="font-size: 0.85rem;">إلغاء</span>
         </button>
       </div>
     </div>
