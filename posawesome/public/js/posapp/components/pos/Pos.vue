@@ -9,6 +9,7 @@
     <!-- =========================================== -->
     <ClosingDialog></ClosingDialog>
     <Returns></Returns>
+    <Drafts></Drafts>
     <NewAddress></NewAddress>
     <OpeningDialog v-if="dialog" :dialog="dialog"></OpeningDialog>
     <OpenShiftsWarning :isOpen="showOpenShiftsWarning" :shifts="openShifts"></OpenShiftsWarning>
