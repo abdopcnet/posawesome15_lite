@@ -18,10 +18,33 @@
       <!-- CUSTOMER SECTION -->
       <!-- =========================================== -->
       <div
-        style="
-          padding: 4px 6px;
-          border-bottom: 1px solid #e0e0e0;
-          margin-bottom: 0;
+        :style="
+          quick_return_value
+            ? {
+                padding: '4px 6px',
+                borderBottom: '1px solid #e0e0e0',
+                marginBottom: '0',
+                border: '3px solid #9c27b0',
+                borderRadius: '8px',
+                transition: 'border 0.3s ease',
+              }
+            : invoice_doc?.is_return
+            ? {
+                padding: '4px 6px',
+                borderBottom: '1px solid #e0e0e0',
+                marginBottom: '0',
+                border: '3px solid #607d8b',
+                borderRadius: '8px',
+                transition: 'border 0.3s ease',
+              }
+            : {
+                padding: '4px 6px',
+                borderBottom: '1px solid #e0e0e0',
+                marginBottom: '0',
+                border: '3px solid #4caf50',
+                borderRadius: '8px',
+                transition: 'border 0.3s ease',
+              }
         "
       >
         <Customer></Customer>
@@ -1167,7 +1190,7 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            background: linear-gradient(135deg, #607d8b 0%, #455a64 100%);
+            background: #607d8b;
             color: white;
             font-size: 0.7rem;
             font-weight: 600;
