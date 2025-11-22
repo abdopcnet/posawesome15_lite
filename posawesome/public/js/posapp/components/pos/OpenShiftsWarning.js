@@ -31,7 +31,6 @@ export default {
           hour12: true,
         });
       } catch (error) {
-        console.error("[OpenShiftsWarning.js] formatDate error:", error);
         return dateString;
       }
     },
