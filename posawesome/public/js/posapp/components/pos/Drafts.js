@@ -30,6 +30,7 @@ export default {
 
   created() {
     evntBus.on(EVENT_NAMES.OPEN_DRAFTS_DIALOG, (data) => {
+      console.log("[Drafts.js] Opening drafts dialog with", data?.length || 0, "invoices");
       this.draftsDialog = true;
       this.dialog_data = data || [];
       this.selected = null;
@@ -52,10 +53,20 @@ export default {
         return;
       }
 
-      // Emit event to load the selected draft invoice
-      evntBus.emit(EVENT_NAMES.LOAD_DRAFT_INVOICE, this.selected);
+      // Prevent duplicate submission
+      if (this.draftsDialog === false) {
+        return;
+      }
+
+      // Emit event to load the selected draft invoice (only once)
+      const selectedInvoice = this.selected;
       this.draftsDialog = false;
       this.selected = null;
+      
+      // Emit after closing dialog to prevent multiple clicks
+      this.$nextTick(() => {
+        evntBus.emit(EVENT_NAMES.LOAD_DRAFT_INVOICE, selectedInvoice);
+      });
     },
   },
 };
