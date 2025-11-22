@@ -58,9 +58,6 @@ export default {
       totalNonCash: 0,
       // Quick return mode
       quick_return_value: false,
-      // Error sound (preloaded after user interaction)
-      errorSound: null,
-      soundEnabled: false,
       // Connection state tracking
       wasConnectionLost: false,
     };
@@ -433,143 +430,112 @@ export default {
         this.shift_invoice_count = 0;
       }
     },
-    // Enable sound after user interaction (required by browsers)
-    enableSound() {
-      if (this.soundEnabled) return;
-
-      try {
-        const soundUrl =
-          frappe.urllib.get_base_url() + "/assets/posawesome/sounds/error.mp3";
-        this.errorSound = new Audio(soundUrl);
-        this.errorSound.preload = "auto";
-        // Play and immediately pause to "unlock" audio for future use
-        // Note: This may fail if called before user interaction - that's OK, we'll retry
-        this.errorSound
-          .play()
-          .then(() => {
-            this.errorSound.pause();
-            this.errorSound.currentTime = 0;
-            this.soundEnabled = true;
-            console.log("[Navbar.js] Sound enabled");
-          })
-          .catch((err) => {
-            // Silently handle autoplay policy errors - this is expected behavior
-            // The sound will be enabled on the next user interaction
-            if (
-              err.name === "NotAllowedError" ||
-              err.name === "NotSupportedError"
-            ) {
-              // Expected: Browser autoplay policy - will retry on next interaction
-            } else {
-            }
-          });
-      } catch (err) {
-      }
-    },
-    // Play error sound (only if enabled)
-    playErrorSound() {
-      if (this.errorSound && this.soundEnabled) {
-        this.errorSound.currentTime = 0;
-        this.errorSound.play().catch((err) => {
-        });
-      } else {
-        // If sound not enabled yet, try to enable it and play
-        if (!this.soundEnabled) {
-          this.enableSound();
-          // Try to play after a short delay
-          setTimeout(() => {
-            if (this.errorSound && this.soundEnabled) {
-              this.errorSound.currentTime = 0;
-              this.errorSound.play().catch((err) => {
-                // Error playing sound
-              });
-            }
-          }, 100);
-        }
-      }
-    },
     // Ping methods
-    async measurePing() {
-      const startTime = performance.now();
-      let responded = false;
-      let timeoutTriggered = false;
-
-      // Set timeout for 2 seconds - play error sound if no response
-      const timeoutId = setTimeout(() => {
-        if (!responded) {
-          timeoutTriggered = true;
-          this.pingTime = "999";
-          this.playErrorSound();
-          // Mark connection as lost
+    measurePing() {
+      // Check if browser reports offline
+      if (!navigator.onLine) {
+        this.pingTime = "999";
+        if (!this.wasConnectionLost) {
           this.wasConnectionLost = true;
+          this.show_mesage({
+            color: "error",
+            text: "الاتصال بالإنترنت مفصول",
+          });
         }
-      }, 2000); // 2 seconds timeout
-
-      try {
-        await frappe.call({
-          method: "frappe.ping",
-          args: {},
-          callback: () => {
-            if (!timeoutTriggered) {
-              responded = true;
-              clearTimeout(timeoutId);
-              const endTime = performance.now();
-              const ping = Math.round(endTime - startTime);
-              this.pingTime = ping.toString().padStart(3, "0");
-
-              // If connection was lost before and now it's back, reload page
-              if (this.wasConnectionLost) {
-                // Connection restored! Reloading page... (logged to backend only)
-                this.wasConnectionLost = false;
-                // Use clearCacheAndReload if available, otherwise just reload
-                if (window.clearCacheAndReload) {
-                  window.clearCacheAndReload();
-                } else {
-                  location.reload();
-                }
-              }
-            }
-          },
-          error: (err) => {
-            if (!timeoutTriggered) {
-              responded = true;
-              clearTimeout(timeoutId);
-              this.pingTime = "999";
-              // Mark connection as lost
-              this.wasConnectionLost = true;
-            }
-          },
-          freeze: false,
-          show_spinner: false,
-          async: true,
-        });
-      } catch (error) {
-        // Exception happens immediately when connection is lost
-        if (!timeoutTriggered) {
-          this.pingTime = "999";
-          // Play sound immediately on exception (connection lost)
-          this.playErrorSound();
-          // Mark connection as lost
-          this.wasConnectionLost = true;
-        }
+        return;
       }
+
+      const startTime = performance.now();
+      let timeoutId = null;
+      let isResolved = false;
+
+      // Timeout: 1 second to detect no response
+      timeoutId = setTimeout(() => {
+        if (!isResolved) {
+          isResolved = true;
+          this.pingTime = "999";
+          
+          if (!this.wasConnectionLost) {
+            this.wasConnectionLost = true;
+            this.show_mesage({
+              color: "error",
+              text: "الاتصال بالإنترنت مفصول",
+            });
+          }
+        }
+      }, 1000);
+
+      frappe.call({
+        method: API_MAP.POSAWESOME.PING,
+        args: {},
+        callback: (r) => {
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+          
+          if (isResolved) return;
+          isResolved = true;
+
+          const endTime = performance.now();
+          const ping = Math.round(endTime - startTime);
+          this.pingTime = ping.toString().padStart(3, "0");
+
+          // If ping > 1000ms, show weak connection message
+          if (ping > 1000) {
+            this.show_mesage({
+              color: "warning",
+              text: "الاتصال بالإنترنت ضعيف جدا",
+            });
+          }
+
+          // If connection was lost before and now it's back
+          if (this.wasConnectionLost) {
+            this.wasConnectionLost = false;
+            this.show_mesage({
+              color: "success",
+              text: "تم رجوع الاتصال بالإنترنت",
+            });
+          }
+        },
+        error: (err) => {
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+          
+          if (isResolved) return;
+          isResolved = true;
+
+          this.pingTime = "999";
+          
+          if (!this.wasConnectionLost) {
+            this.wasConnectionLost = true;
+            this.show_mesage({
+              color: "error",
+              text: "الاتصال بالإنترنت مفصول",
+            });
+          }
+        },
+        freeze: false,
+        show_spinner: false,
+        async: true,
+      });
     },
     startPingMonitoring() {
-      // Safety check - if already monitoring, don't start another interval
       if (this.pingInterval) {
         return;
       }
 
-      // Track that we're running (for visibility change handler)
       this._wasRunningBeforeHidden = true;
 
       // Initial ping
       this.measurePing();
 
-      // Set up interval for continuous monitoring (every 5 seconds)
+      // Ping every 2 seconds
       this.pingInterval = setInterval(() => {
         this.measurePing();
-      }, 5000);
+      }, 2000);
     },
     stopPingMonitoring() {
       if (this.pingInterval) {
@@ -625,27 +591,6 @@ export default {
   created: function () {
     this.$nextTick(function () {
       try {
-        // Enable sound on first user interaction
-        // Note: We try to enable immediately, but it may fail due to autoplay policy
-        // The event listeners will retry on actual user interaction
-        const enableSoundOnce = (event) => {
-          // Only enable if we haven't already
-          if (!this.soundEnabled) {
-            this.enableSound();
-          }
-          document.removeEventListener("click", enableSoundOnce);
-          document.removeEventListener("touchstart", enableSoundOnce);
-          document.removeEventListener("keydown", enableSoundOnce);
-        };
-        // Try to enable immediately (may fail silently due to autoplay policy)
-        this.enableSound();
-        // Also listen for user interactions to ensure sound is enabled
-        document.addEventListener("click", enableSoundOnce, { once: true });
-        document.addEventListener("touchstart", enableSoundOnce, {
-          once: true,
-        });
-        document.addEventListener("keydown", enableSoundOnce, { once: true });
-
         // Check if ping monitoring should be enabled
         // We can add a global setting to control this
         const enablePingMonitoring =
@@ -674,6 +619,38 @@ export default {
           "visibilitychange",
           this.handleVisibilityChange
         );
+
+        // Listen to online/offline events for immediate response
+        this.handleOnline = () => {
+          if (this.wasConnectionLost) {
+            this.wasConnectionLost = false;
+            this.show_mesage({
+              color: "success",
+              text: "تم رجوع الاتصال بالإنترنت",
+            });
+          }
+          // Restart ping monitoring if it stopped
+          if (!this.pingInterval) {
+            this.startPingMonitoring();
+          } else {
+            // Trigger immediate ping
+            this.measurePing();
+          }
+        };
+
+        this.handleOffline = () => {
+          this.pingTime = "999";
+          if (!this.wasConnectionLost) {
+            this.wasConnectionLost = true;
+            this.show_mesage({
+              color: "error",
+              text: "الاتصال بالإنترنت مفصول",
+            });
+          }
+        };
+
+        window.addEventListener("online", this.handleOnline);
+        window.addEventListener("offline", this.handleOffline);
 
         evntBus.on("show_mesage", (data) => {
           this.show_mesage(data);
@@ -753,6 +730,14 @@ export default {
       "visibilitychange",
       this.handleVisibilityChange
     );
+
+    // Clean up online/offline listeners
+    if (this.handleOnline) {
+      window.removeEventListener("online", this.handleOnline);
+    }
+    if (this.handleOffline) {
+      window.removeEventListener("offline", this.handleOffline);
+    }
 
     // Clean up payment totals interval
     if (this.cashUpdateInterval) {
