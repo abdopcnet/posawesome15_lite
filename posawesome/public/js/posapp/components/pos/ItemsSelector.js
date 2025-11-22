@@ -252,9 +252,7 @@ export default {
       this.process_barcode(this.barcode_search.trim());
       this.barcode_search = "";
 
-      const barcodeInput = document.querySelector(
-        'input[placeholder*="Barcode"]'
-      );
+      const barcodeInput = document.querySelector("#barcode-input");
       if (barcodeInput) barcodeInput.value = "";
     },
 
@@ -352,11 +350,6 @@ export default {
         gr = vm.item_group.toLowerCase();
       }
 
-      console.info(
-        "ItemsSelector.js",
-        `get_items called - pos_profile: ${vm.pos_profile?.name}, item_group: ${gr}, search: ${sr}, customer: ${vm.customer}`
-      );
-
       // FRAPPE API CALL PATTERN:
       // - frappe.call() automatically serializes JavaScript objects to JSON
       // - pos_profile object contains only loaded fields (23 fields from register_pos_profile event)
@@ -372,11 +365,6 @@ export default {
           customer: vm.customer,
         },
         callback: function (r) {
-          console.info(
-            "ItemsSelector.js",
-            `get_items response - items count: ${r.message?.length || 0}`
-          );
-
           if (r.message) {
             vm.items = (r.message || []).map((it) => ({
               item_code: it.item_code,
@@ -396,25 +384,15 @@ export default {
               batch_no_data: [],
             }));
 
-            console.info(
-              "ItemsSelector.js",
-              `get_items: mapped ${vm.items.length} items successfully`
-            );
-
             vm._buildItemsMap();
             evntBus.emit("set_all_items", vm.items);
             vm.loading = false;
             vm.search_loading = false;
             vm.scheduleScrollHeightUpdate();
-          } else {
-            console.warn(
-              "ItemsSelector.js",
-              "get_items: response.message is empty/null"
-            );
           }
         },
         error: function (err) {
-          console.error("ItemsSelector.js", "get_items error", err);
+          console.log("[ItemsSelector.js] get_items error:", err);
         },
       });
     },
@@ -433,29 +411,13 @@ export default {
 
     get_items_groups() {
       if (!this.pos_profile) {
-        console.warn(
-          "ItemsSelector.js",
-          "get_items_groups: pos_profile is null/undefined"
-        );
         return;
       }
-
-      console.info(
-        "ItemsSelector.js",
-        `get_items_groups: pos_profile.item_groups = ${JSON.stringify(
-          this.pos_profile.item_groups
-        )}`
-      );
 
       if (
         this.pos_profile.item_groups &&
         this.pos_profile.item_groups.length > 0
       ) {
-        console.info(
-          "ItemsSelector.js",
-          `get_items_groups: Using ${this.pos_profile.item_groups.length} groups from POS Profile`
-        );
-
         this.pos_profile.item_groups.forEach((element) => {
           // Handle both formats: string (new) or object with item_group property (old)
           const groupName =
@@ -464,47 +426,20 @@ export default {
             this.items_group.push(groupName);
           }
         });
-
-        console.info(
-          "ItemsSelector.js",
-          `get_items_groups: Loaded ${
-            this.items_group.length
-          } item groups: ${this.items_group.join(", ")}`
-        );
       } else {
-        console.info(
-          "ItemsSelector.js",
-          "get_items_groups: No item_groups in POS Profile - fetching from database"
-        );
-
         const vm = this;
         frappe.call({
           method: API_MAP.ITEM.GET_ITEMS_GROUPS,
           args: {},
           callback: function (r) {
             if (r.message) {
-              console.info(
-                "ItemsSelector.js",
-                `get_items_groups: Received ${r.message.length} groups from database`
-              );
-
               r.message.forEach((element) => {
                 vm.items_group.push(element.name);
               });
-
-              console.info(
-                "ItemsSelector.js",
-                `get_items_groups: Loaded ${vm.items_group.length} item groups from DB`
-              );
-            } else {
-              console.warn(
-                "ItemsSelector.js",
-                "get_items_groups: Database returned empty result"
-              );
             }
           },
           error: function (err) {
-            console.error("ItemsSelector.js", "get_items_groups error", err);
+            console.log("[ItemsSelector.js] get_items_groups error:", err);
           },
         });
       }
@@ -621,11 +556,6 @@ export default {
 
       // If it looks like a barcode, try get_barcode_item first
       if (isBarcode) {
-        console.info(
-          "ItemsSelector.js",
-          `performLiveSearch: Detected barcode format, calling get_barcode_item: ${trimmedSearch}`
-        );
-
         frappe.call({
           method: API_MAP.ITEM.GET_BARCODE_ITEM,
           args: {
@@ -637,30 +567,17 @@ export default {
 
             if (r?.message?.item_code) {
               // Barcode found - add item directly to cart
-              console.info(
-                "ItemsSelector.js",
-                `performLiveSearch: Barcode item found - adding to cart: ${r.message.item_code}`
-              );
               vm.add_item_to_cart(r.message);
               // Clear search field after successful barcode scan
               vm.debounce_search = "";
               vm.first_search = "";
             } else {
               // Barcode not found - fall back to normal search
-              console.info(
-                "ItemsSelector.js",
-                `performLiveSearch: Barcode not found, falling back to get_items: ${trimmedSearch}`
-              );
               vm._performNormalSearch(trimmedSearch);
             }
           },
           error: function (err) {
             vm.search_loading = false;
-            console.error(
-              "ItemsSelector.js",
-              "performLiveSearch: get_barcode_item error",
-              err
-            );
             // Fall back to normal search on error
             vm._performNormalSearch(trimmedSearch);
           },
@@ -716,7 +633,7 @@ export default {
         error: function (err) {
           // Stop search progress bar
           vm.search_loading = false;
-          console.error("ItemsSelector.js", "_performNormalSearch error", err);
+          console.log("[ItemsSelector.js] _performNormalSearch error:", err);
         },
       });
     },
@@ -738,7 +655,7 @@ export default {
           onScan.detachFrom(document);
         }
       } catch (e) {
-        console.error("ItemsSelector.js", "scan_barcode detachFrom error", e);
+        console.log("[ItemsSelector.js] scan_barcode detachFrom error:", e);
       }
 
       onScan.attachTo(document, {
@@ -872,7 +789,8 @@ export default {
         onScan.detachFrom(document);
       }
     } catch (e) {
-      console.error("ItemsSelector.js", "beforeUnmount detachFrom error", e);
+      // Note: beforeUnmount doesn't have access to this.pos_profile
+      // This is a cleanup error, so we can skip logging
     }
 
     // Clean up event listeners
