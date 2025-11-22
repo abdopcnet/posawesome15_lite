@@ -108,11 +108,6 @@ export default {
         flt(this.invoice_doc.grand_total);
       const cash_mode = this.pos_profile?.posa_cash_mode_of_payment;
 
-      console.info(
-        "Payments.js",
-        `change_amount computed - paid_total: ${paid_total}, target_amount: ${target_amount}, cash_mode: ${cash_mode}`
-      );
-
       // Only calculate change_amount if paid_total > grand_total
       if (paid_total > target_amount) {
         // If cash_mode is defined, verify that excess is from cash payment
@@ -145,16 +140,8 @@ export default {
               paid_total - target_amount,
               this.currency_precision
             );
-            console.info(
-              "Payments.js",
-              `change_amount calculated: ${change}, cash_payment: ${cash_payment?.mode_of_payment}, cash_amount: ${cash_payment?.amount}, other_totals: ${other_totals}, target_amount: ${target_amount}`
-            );
             return change;
           } else {
-            console.info(
-              "Payments.js",
-              `change_amount blocked - cash_payment: ${cash_payment?.mode_of_payment}, cash_amount: ${cash_payment?.amount}, other_totals: ${other_totals}, target_amount: ${target_amount}`
-            );
             return 0;
           }
         } else {
@@ -164,19 +151,11 @@ export default {
             paid_total - target_amount,
             this.currency_precision
           );
-          console.info(
-            "Payments.js",
-            `change_amount calculated (no cash_mode): ${change}`
-          );
           return change;
         }
       }
 
       // No change amount (paid_total <= grand_total)
-      console.info(
-        "Payments.js",
-        "change_amount = 0 (paid_total <= target_amount)"
-      );
       return 0;
     },
 
@@ -274,7 +253,7 @@ export default {
       try {
         await this.refreshInvoiceDoc();
       } catch (error) {
-        console.error("Payments.js", "submit error", error);
+        console.log("[Payments.js] submit error:", error);
       }
 
       if (this.invoice_doc?.docstatus === 1) {
@@ -518,16 +497,15 @@ export default {
                 this.submit_invoice(print, autoMode, true);
               })
               .catch((err) => {
-                console.error("Payments.js", "refreshInvoiceDoc error", err);
+                console.log("[Payments.js] refreshInvoiceDoc error:", err);
                 this.showMessage(
                   "Invoice was modified elsewhere, please try again",
-                  "warning"
+                  "error"
                 );
               });
-            return;
+          } else {
+            this.showMessage(err?.message || "Failed to submit invoice", "error");
           }
-
-          this.showMessage(err?.message || "Failed to submit invoice", "error");
         },
       });
     },
@@ -664,21 +642,10 @@ export default {
             this.$forceUpdate();
           });
 
-          console.info(
-            "Payments.js",
-            `set_full_amount: idx: ${idx}, mode_of_payment: ${payment.mode_of_payment}, amount: ${target_amount}, quick_return: ${isQuickReturn}`
-          );
-
-          // Log payment summary
-          console.info(
-            "Payments.js",
-            `Payment Summary - paid_amount (إجمالي المدفوعات): ${this.paid_amount}, outstanding_amount (المبلغ المتأخر): ${this.outstanding_amount}, change_amount (المتبقي للعميل): ${this.change_amount}, إجمالي الفاتورة: ${invoice_total}`
-          );
-
           delete this.set_full_amount_timeouts[idx];
         }, 150); // 150ms debounce per payment
       } catch (error) {
-        console.error("Payments.js", "set_full_amount error", error);
+        console.log("[Payments.js] set_full_amount error:", error);
         if (this.set_full_amount_timeouts[idx]) {
           delete this.set_full_amount_timeouts[idx];
         }
@@ -760,23 +727,13 @@ export default {
           JSON.parse(JSON.stringify(this.invoice_doc.payments))
         );
 
-        console.info(
-          "Payments.js",
-          `set_rest_amount: idx: ${idx}, mode_of_payment: ${payment.mode_of_payment}, remaining: ${remaining}, amount: ${amount}, quick_return: ${isQuickReturn}`
-        );
-
         // Force update to recalculate computed properties
         this.$nextTick(() => {
           this.$forceUpdate();
         });
 
-        // Log payment summary
-        console.info(
-          "Payments.js",
-          `Payment Summary - paid_amount (إجمالي المدفوعات): ${this.paid_amount}, outstanding_amount (المبلغ المتأخر): ${this.outstanding_amount}, change_amount (المتبقي للعميل): ${this.change_amount}, إجمالي الفاتورة: ${invoice_total}`
-        );
       } catch (error) {
-        console.error("Payments.js", "set_rest_amount error", error);
+        console.log("[Payments.js] set_rest_amount error:", error);
       }
     },
 
@@ -845,9 +802,6 @@ export default {
         // إذا كانت القيمة المدخلة موجبة، نحولها إلى سالبة
         if (this.quick_return && value > 0) {
           value = -Math.abs(value);
-          console.log(
-            `[Payments.js] Quick return mode: converted ${_value} to ${value}`
-          );
         }
         // إذا كانت القيمة المدخلة سالبة بالفعل، نتركها كما هي
         // إذا كانت القيمة صفر، نتركها كما هي
@@ -857,10 +811,6 @@ export default {
         if (payment.base_amount !== undefined) {
           payment.base_amount = payment.amount;
         }
-
-        console.log(
-          `[Payments.js] Payment amount changed: idx=${payment.idx}, mode=${payment.mode_of_payment}, amount=${payment.amount}, quick_return=${this.quick_return}`
-        );
 
         // Emit payment update event
         evntBus.emit(
@@ -873,7 +823,7 @@ export default {
           this.$forceUpdate();
         });
       } catch (e) {
-        console.error("[Payments.js] handlePaymentAmountChange error:", e);
+        console.log("[Payments.js] handlePaymentAmountChange error:", e);
         payment.amount = 0;
       }
     },
@@ -887,12 +837,6 @@ export default {
       const cash_mode = this.pos_profile?.posa_cash_mode_of_payment;
       const isQuickReturn = !!this.quick_return;
 
-      // Log payment change
-      console.info(
-        "Payments.js",
-        `Payment Input Changed - idx: ${payment.idx}, mode_of_payment: ${payment.mode_of_payment}, amount: ${payment_amount}, quick_return: ${isQuickReturn}`
-      );
-
       // Calculate change_amount manually to ensure it's calculated
       const paid_total = this.paid_amount;
       const change_amt =
@@ -902,12 +846,6 @@ export default {
       this.$nextTick(() => {
         this.$forceUpdate();
       });
-
-      // Log payment summary
-      console.info(
-        "Payments.js",
-        `Payment Summary - paid_amount (إجمالي المدفوعات): ${this.paid_amount}, outstanding_amount (المبلغ المتأخر): ${this.outstanding_amount}, change_amount (المتبقي للعميل): ${this.change_amount}, change_amount (manual): ${change_amt}, إجمالي الفاتورة: ${target_amount}`
-      );
 
       // For non-cash payments, check if amount exceeds invoice total
       if (cash_mode && payment.mode_of_payment !== cash_mode) {
@@ -926,14 +864,8 @@ export default {
               payment.base_amount = payment.amount;
             }
             this.showMessage(
-              `لا يمكن إدخال مبلغ أعلى من إجمالي الفاتورة (${this.formatCurrency(
-                target_amount
-              )})`,
+              "المبلغ الزائد مسموح فقط لطريقة الدفع النقدي",
               "error"
-            );
-            evntBus.emit(
-              EVENT_NAMES.PAYMENTS_UPDATED,
-              JSON.parse(JSON.stringify(this.invoice_doc.payments))
             );
             return false;
           }
@@ -946,14 +878,8 @@ export default {
               payment.base_amount = payment.amount;
             }
             this.showMessage(
-              `لا يمكن إدخال مبلغ أعلى من إجمالي الفاتورة (${this.formatCurrency(
-                target_amount
-              )})`,
+              "المبلغ الزائد مسموح فقط لطريقة الدفع النقدي",
               "error"
-            );
-            evntBus.emit(
-              EVENT_NAMES.PAYMENTS_UPDATED,
-              JSON.parse(JSON.stringify(this.invoice_doc.payments))
             );
             return false;
           }
@@ -1071,12 +997,6 @@ export default {
       });
 
       evntBus.on(EVENT_NAMES.SEND_INVOICE_DOC_PAYMENT, (invoice_doc) => {
-        // DEBUG: Log received invoice totals
-        console.info(
-          "Payments.js",
-          `SEND_INVOICE_DOC_PAYMENT: rounded_total: ${invoice_doc.rounded_total}, grand_total: ${invoice_doc.grand_total}`
-        );
-
         this.invoice_doc = invoice_doc;
 
         if (!Array.isArray(this.invoice_doc.payments)) {
@@ -1107,9 +1027,6 @@ export default {
           // الفرق: في quick return لا يوجد return_against، في المرتجع العادي يوجد return_against
           // لكن في كلا الحالتين نريد تمكين الإدخال والقيم السالبة
           this.quick_return = true;
-          console.log(
-            "[Payments.js] Return invoice loaded, quick_return enabled for input"
-          );
 
           const total = invoice_doc.rounded_total || invoice_doc.grand_total;
 
