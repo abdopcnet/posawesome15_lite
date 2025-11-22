@@ -14,6 +14,8 @@ const API_MAP = {
     DELETE: "posawesome.api.sales_invoice.delete_invoice",
     GET_INVOICES_FOR_RETURN:
       "posawesome.api.sales_invoice.get_invoices_for_return",
+    SAVE_DRAFT: "posawesome.api.sales_invoice.save_draft_invoice",
+    GET_DRAFTS: "posawesome.api.sales_invoice.get_draft_invoices",
   },
 
   // Customer APIs (from Customer.vue, UpdateCustomer.vue, Payments.vue, NewAddress.vue)
