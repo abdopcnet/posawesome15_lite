@@ -289,6 +289,15 @@ def create_and_submit_invoice(invoice_doc):
         if doc.is_return and doc.return_against:
             validate_return_limits(doc)
 
+        # Fix: Convert negative payment amounts to positive for return invoices
+        # ERPNext requires positive amounts in payment table, even for returns
+        if doc.is_return and doc.payments:
+            for payment in doc.payments:
+                if payment.amount < 0:
+                    payment.amount = abs(payment.amount)
+                    if hasattr(payment, 'base_amount') and payment.base_amount < 0:
+                        payment.base_amount = abs(payment.base_amount)
+
         # Step 1: Use ERPNext native set_missing_values() - fills all default values
         # This is called from SellingController and sets customer, warehouse, etc.
         doc.set_missing_values()
