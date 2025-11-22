@@ -156,6 +156,24 @@ export default {
 
   // ===== COMPUTED =====
   computed: {
+    // Check if there's excess payment in non-cash methods
+    hasExcessNonCashPayment() {
+      if (!this.invoice_doc?.payments || !this.pos_profile) {
+        return false;
+      }
+      
+      const targetAmount = this.flt(this.invoice_doc.rounded_total || this.invoice_doc.grand_total || 0);
+      const cash_mode = this.pos_profile?.posa_cash_mode_of_payment || "Cash";
+      
+      // Check each non-cash payment
+      for (const payment of this.invoice_doc.payments) {
+        if (payment.mode_of_payment !== cash_mode && this.flt(payment.amount || 0) > targetAmount) {
+          return true;
+        }
+      }
+      
+      return false;
+    },
     itemsScrollStyle() {
       if (!this.itemsScrollHeight) {
         return {};
@@ -2516,6 +2534,11 @@ export default {
   },
 
   created() {
+    // Listen for payment amount changes to update computed property
+    evntBus.on("payment_amount_changed", () => {
+      this.$forceUpdate();
+    });
+    
     // Register event listeners in created() to avoid duplicate registrations
 
     evntBus.on("register_pos_profile", (data) => {
