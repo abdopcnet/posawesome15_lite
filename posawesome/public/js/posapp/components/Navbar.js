@@ -66,19 +66,13 @@ export default {
   },
   computed: {
     invoiceNumberText() {
-      if (!this.invoice_doc || !this.invoice_doc.name) {
-        // Prefer quick return mode when active
-        if (this.quick_return_value) {
-          return "Quick_Return";
-        }
-        if (this.invoice_doc?.is_return) {
-          return "Return_Invoice";
-        }
-        return "Sales_Mode";
+      // Simple logic: check what's active
+      if (this.invoice_doc?.is_return && this.invoice_doc?.return_against) {
+        return "Return_Invoice";
       }
-      // When an invoice exists, still reflect mode by flags
-      if (this.quick_return_value) return "Quick_Return";
-      if (this.invoice_doc?.is_return) return "Return_Invoice";
+      if (this.quick_return_value) {
+        return "Quick_Return";
+      }
       return "Sales_Mode";
     },
     invoiceNumberClass() {
