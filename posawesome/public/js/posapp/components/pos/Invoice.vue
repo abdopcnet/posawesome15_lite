@@ -1267,6 +1267,50 @@
           <span style="font-size: 0.85rem;">مرتجع سريع</span>
         </button>
 
+        <!-- Smart Draft Button: تكملة فاتورة / حفظ الفاتورة -->
+        <button
+          @click="handleDraftButton"
+          :style="
+            hasItems
+              ? {
+                  flex: 1,
+                  padding: '8px 4px',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
+                  color: 'white',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  transition: 'all 0.2s',
+                }
+              : {
+                  flex: 1,
+                  padding: '8px 4px',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  background: 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)',
+                  color: 'white',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  transition: 'all 0.2s',
+                }
+          "
+          type="button"
+        >
+          <i :class="hasItems ? 'mdi mdi-content-save' : 'mdi mdi-file-document-edit'" style="font-size: 16px"></i>
+          <span style="font-size: 0.85rem;">{{ hasItems ? "حفظ الفاتورة" : "تكملة فاتورة" }}</span>
+        </button>
+
         <!-- Cancel Button -->
         <button
           @click="cancel_invoice"
