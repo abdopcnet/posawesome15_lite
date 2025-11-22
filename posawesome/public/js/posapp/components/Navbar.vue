@@ -48,8 +48,12 @@
           :style="
             invoiceNumberClass === 'regular-invoice'
               ? 'border-color: rgba(8, 86, 152, 0.85); background: linear-gradient(135deg, #d4e8ff 0%, #93b9ff 100%); color: #043a8b; box-shadow: 0 8px 24px rgba(8,86,152,0.12); transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
-              : invoiceNumberClass === 'return-invoice'
-              ? 'border-color: rgba(183, 28, 28, 0.85); background: linear-gradient(135deg, #ffe8e8 0%, #ffb3b3 100%); color: #8b1111; box-shadow: 0 8px 24px rgba(183,28,28,0.12); transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
+              : invoiceNumberClass === 'return-invoice' || invoiceNumberClass === 'return-invoice-mode'
+              ? `border-color: ${invoiceIconColor}; background: ${invoiceIconColor}; color: white; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;`
+              : invoiceNumberClass === 'quick-return-mode'
+              ? `border-color: ${invoiceIconColor}; background: ${invoiceIconColor}; color: white; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;`
+              : invoiceNumberClass === 'sales-invoice-mode'
+              ? `border-color: ${invoiceIconColor}; background: ${invoiceIconColor}; color: white; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;`
               : 'border-color: rgba(63, 81, 181, 0.75); background: linear-gradient(135deg, #eef3ff 0%, #d9e4ff 100%); color: #22314f; font-style: normal; box-shadow: 0 6px 18px rgba(34,49,79,0.06); transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
           "
           style="
