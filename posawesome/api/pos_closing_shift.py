@@ -174,13 +174,12 @@ def get_payments_entries(pos_opening_shift):
 
 
 @frappe.whitelist()
-def get_current_cash_total(pos_profile=None, user=None):
+def get_payment_totals(pos_profile=None, user=None):
     """
-    GET - Get current cash total for shift (used in POS frontend Navbar)
+    GET - Get both cash and non-cash totals in one call (optimized for performance)
+    Returns: {cash_total: float, non_cash_total: float}
     """
     try:
-        frappe.log_error(f"[[pos_closing_shift.py]] get_current_cash_total: user={user}, pos_profile={pos_profile}")
-        
         # Use session user if not specified
         if not user:
             user = frappe.session.user
@@ -200,8 +199,7 @@ def get_current_cash_total(pos_profile=None, user=None):
         )
 
         if not open_shift:
-            frappe.log_error(f"[[pos_closing_shift.py]] get_current_cash_total: No open shift found")
-            return {"total": 0.0}
+            return {"cash_total": 0.0, "non_cash_total": 0.0}
 
         shift_name = open_shift[0].name
         pos_profile_name = open_shift[0].pos_profile
@@ -214,19 +212,35 @@ def get_current_cash_total(pos_profile=None, user=None):
         )
         if not cash_mode_of_payment:
             cash_mode_of_payment = "Cash"
-        
-        frappe.log_error(f"[[pos_closing_shift.py]] get_current_cash_total: Cash mode = {cash_mode_of_payment}")
 
         # Calculate payment totals using helper (returns dict: {mode_of_payment: amount})
         payment_totals = _calculate_payment_totals(shift_name, pos_profile_name)
 
-        # Get cash total from dict (payment_totals is a dict, not a list!)
+        # Get cash total from dict
         cash_total = flt(payment_totals.get(cash_mode_of_payment, 0.0))
         
-        frappe.log_error(f"[[pos_closing_shift.py]] get_current_cash_total: Cash total = {cash_total}")
+        # Sum all non-cash payments
+        non_cash_total = 0.0
+        for mode_of_payment, amount in payment_totals.items():
+            if mode_of_payment != cash_mode_of_payment:
+                non_cash_total += flt(amount)
 
-        return {"total": cash_total}
+        return {"cash_total": cash_total, "non_cash_total": non_cash_total}
 
+    except Exception as e:
+        frappe.log_error(f"[[pos_closing_shift.py]] get_payment_totals: {str(e)}")
+        return {"cash_total": 0.0, "non_cash_total": 0.0}
+
+
+@frappe.whitelist()
+def get_current_cash_total(pos_profile=None, user=None):
+    """
+    GET - Get current cash total for shift (used in POS frontend Navbar)
+    DEPRECATED: Use get_payment_totals instead for better performance
+    """
+    try:
+        result = get_payment_totals(pos_profile, user)
+        return {"total": result.get("cash_total", 0.0)}
     except Exception as e:
         frappe.log_error(f"[[pos_closing_shift.py]] get_current_cash_total: {str(e)}")
         return {"total": 0.0}
@@ -236,59 +250,11 @@ def get_current_cash_total(pos_profile=None, user=None):
 def get_current_non_cash_total(pos_profile=None, user=None):
     """
     GET - Get current non-cash total for shift (used in POS frontend Navbar)
+    DEPRECATED: Use get_payment_totals instead for better performance
     """
     try:
-        frappe.log_error(f"[[pos_closing_shift.py]] get_current_non_cash_total: user={user}, pos_profile={pos_profile}")
-        
-        # Use session user if not specified
-        if not user:
-            user = frappe.session.user
-
-        # Find current open shift for user
-        open_shift = frappe.get_all(
-            "POS Opening Shift",
-            filters={
-                "user": user,
-                "pos_profile": pos_profile,
-                "docstatus": 1,
-                "status": "Open"
-            },
-            fields=["name", "pos_profile"],
-            order_by="period_start_date desc",
-            limit=1
-        )
-
-        if not open_shift:
-            frappe.log_error(f"[[pos_closing_shift.py]] get_current_non_cash_total: No open shift found")
-            return {"total": 0.0}
-
-        shift_name = open_shift[0].name
-        pos_profile_name = open_shift[0].pos_profile
-
-        # Get cash mode of payment from POS Profile
-        cash_mode_of_payment = frappe.get_value(
-            "POS Profile",
-            pos_profile_name,
-            "posa_cash_mode_of_payment",
-        )
-        if not cash_mode_of_payment:
-            cash_mode_of_payment = "Cash"
-        
-        frappe.log_error(f"[[pos_closing_shift.py]] get_current_non_cash_total: Cash mode = {cash_mode_of_payment}")
-
-        # Calculate payment totals using helper (returns dict: {mode_of_payment: amount})
-        payment_totals = _calculate_payment_totals(shift_name, pos_profile_name)
-
-        # Sum all non-cash payments (payment_totals is a dict, not a list!)
-        non_cash_total = 0.0
-        for mode_of_payment, amount in payment_totals.items():
-            if mode_of_payment != cash_mode_of_payment:
-                non_cash_total += flt(amount)
-        
-        frappe.log_error(f"[[pos_closing_shift.py]] get_current_non_cash_total: Non-cash total = {non_cash_total}")
-
-        return {"total": non_cash_total}
-
+        result = get_payment_totals(pos_profile, user)
+        return {"total": result.get("non_cash_total", 0.0)}
     except Exception as e:
         frappe.log_error(f"[[pos_closing_shift.py]] get_current_non_cash_total: {str(e)}")
         return {"total": 0.0}
@@ -609,8 +575,6 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
     }
     """
     try:
-        frappe.log_error(f"[[pos_closing_shift.py]] _calculate_payment_totals: Calculating for shift {pos_opening_shift}, profile {pos_profile}")
-        
         invoices = _get_pos_invoices_helper(pos_opening_shift)
         payments = {}
 
@@ -628,16 +592,12 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
         )
         if not cash_mode_of_payment:
             cash_mode_of_payment = "Cash"
-        
-        frappe.log_error(f"[[pos_closing_shift.py]] _calculate_payment_totals: Cash mode of payment = {cash_mode_of_payment}")
 
         # Process Sales Invoice Payments (matches Sales Register logic)
         for d in invoices:
-            invoice_name = d.get("name", "Unknown")
             invoice_payments = d.get("payments", [])
             
             if not invoice_payments:
-                frappe.log_error(f"[[pos_closing_shift.py]] _calculate_payment_totals: Invoice {invoice_name} has no payments")
                 continue
             
             # Use base_* fields for company currency (matches Sales Register)
@@ -653,15 +613,12 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
                 # يجب طرحه من المبلغ المتوقع في المصالحة النقدية
                 if mode_of_payment == cash_mode_of_payment:
                     amount = amount - change_amount
-                    frappe.log_error(f"[[pos_closing_shift.py]] Cash payment for {invoice_name}: base_amount={p.get('base_amount') or p.get('amount')}, change={change_amount}, final={amount}")
 
                 # Add to payments dict
                 if mode_of_payment in payments:
                     payments[mode_of_payment] += amount
                 else:
                     payments[mode_of_payment] = amount
-                
-                frappe.log_error(f"[[pos_closing_shift.py]] Payment {mode_of_payment}: added {amount}, total={payments[mode_of_payment]}")
 
         # Process Payment Entries
         pos_payments = _get_payments_entries_helper(pos_opening_shift)
@@ -674,10 +631,7 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
                 payments[mode_of_payment] += paid_amount
             else:
                 payments[mode_of_payment] = paid_amount
-            
-            frappe.log_error(f"[[pos_closing_shift.py]] Payment Entry {mode_of_payment}: added {paid_amount}, total={payments[mode_of_payment]}")
 
-        frappe.log_error(f"[[pos_closing_shift.py]] _calculate_payment_totals: {len(payments)} modes")
         return payments
 
     except Exception as e:
@@ -743,8 +697,6 @@ def _get_pos_invoices_helper(pos_opening_shift):
     Returns full documents matching Sales Register report data structure.
     """
     try:
-        frappe.log_error(f"[[pos_closing_shift.py]] _get_pos_invoices_helper: Fetching invoices for shift {pos_opening_shift}")
-        
         # Get invoice names first (same query as Sales Register)
         invoice_names = frappe.get_all(
             "Sales Invoice",
@@ -756,33 +708,18 @@ def _get_pos_invoices_helper(pos_opening_shift):
             order_by="posting_date, posting_time"
         )
         
-        frappe.log_error(f"[[pos_closing_shift.py]] _get_pos_invoices_helper: Found {len(invoice_names)} invoice names")
-        
         # Return full documents with all child tables (payments, taxes, etc.)
         # This matches exactly what Sales Register report uses
         invoices = []
-        grand_total_sum = 0.0
-        net_total_sum = 0.0
         
         for inv in invoice_names:
             try:
                 doc = frappe.get_doc("Sales Invoice", inv.name)
                 invoice_dict = doc.as_dict()
-                
-                # Log invoice totals for debugging
-                base_grand = flt(invoice_dict.get("base_grand_total") or invoice_dict.get("grand_total") or 0)
-                base_net = flt(invoice_dict.get("base_net_total") or invoice_dict.get("net_total") or 0)
-                grand_total_sum += base_grand
-                net_total_sum += base_net
-                
-                frappe.log_error(f"[[pos_closing_shift.py]] Invoice {inv.name}: grand_total={base_grand}")
-                
                 invoices.append(invoice_dict)
             except Exception as e:
-                frappe.log_error(f"[[pos_closing_shift.py]] _get_pos_invoices_helper: Error loading invoice {inv.name}: {str(e)}")
+                frappe.log_error(f"[[pos_closing_shift.py]] Error loading invoice {inv.name}: {str(e)}")
                 continue
-        
-        frappe.log_error(f"[[pos_closing_shift.py]] _get_pos_invoices_helper: {len(invoices)} invoices, total={grand_total_sum}")
         
         return invoices
     except Exception as e:
@@ -797,8 +734,6 @@ def _get_payments_entries_helper(pos_opening_shift):
     Returns list of payment entries with base_paid_amount for company currency.
     """
     try:
-        frappe.log_error(f"[[pos_closing_shift.py]] _get_payments_entries_helper: Fetching payment entries for shift {pos_opening_shift}")
-        
         # Query Payment Entries that reference Sales Invoices from this shift
         # Calculate base_paid_amount using allocated_amount * exchange_rate (matches Sales Register)
         payment_entries = frappe.db.sql("""
@@ -819,8 +754,6 @@ def _get_payments_entries_helper(pos_opening_shift):
             AND si.posa_pos_opening_shift = %s
             ORDER BY pe.posting_date
         """, (pos_opening_shift,), as_dict=1)
-
-        frappe.log_error(f"[[pos_closing_shift.py]] _get_payments_entries_helper: Found {len(payment_entries)} payment entries")
         
         return payment_entries
     except Exception as e:
