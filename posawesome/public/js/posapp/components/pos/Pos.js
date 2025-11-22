@@ -104,10 +104,6 @@ export default {
           allShiftsResponse.message.count > 1
         ) {
           // User has MULTIPLE open shifts - show warning component
-          console.info(
-            "Pos.js",
-            `check_opening_entry: multiple shifts found: ${allShiftsResponse.message.count}`
-          );
           this.openShifts = allShiftsResponse.message.shifts;
           this.showOpenShiftsWarning = true;
           return;
@@ -119,23 +115,11 @@ export default {
         });
 
         if (response.message.success && response.message.data) {
-          // Active shift exists - use profile data from shift response
-          console.info(
-            "Pos.js",
-            `check_opening_entry: shift found: ${response.message.data.name}, profile: ${response.message.data.pos_profile}`
-          );
-
           // POS Profile data is already included in shift response
           const shift_data = response.message.data;
           const pos_profile = shift_data.pos_profile_data;
 
           if (!pos_profile) {
-            // Profile data not available - show error
-            console.error(
-              "Pos.js",
-              "check_opening_entry: pos_profile_data is null/undefined",
-              shift_data
-            );
             this.show_message("فشل تحميل بيانات الملف الشخصي", "error");
             return;
           }
@@ -150,17 +134,7 @@ export default {
             user: shift_data.user,
           };
 
-          // Log important fields for debugging
-          console.info(
-            "Pos.js",
-            `POS Profile loaded: posa_allow_return=${
-              pos_profile.posa_allow_return
-            }, payments=${pos_profile.payments?.length || 0}`,
-            {
-              warehouse: pos_profile.warehouse,
-              price_list: pos_profile.selling_price_list,
-            }
-          );
+          console.log("[Pos.js] POS Profile loaded:", pos_profile.name);
 
           // Prepare data for event bus
           const event_data = {
@@ -178,11 +152,10 @@ export default {
           evntBus.emit(EVENTS.SET_POS_OPENING_SHIFT, this.pos_opening_shift);
         } else {
           // No active shift - show opening dialog
-          console.info("Pos.js", "check_opening_entry: no active shift");
           this.create_opening_voucher();
         }
       } catch (error) {
-        console.error("Pos.js", "check_opening_entry error", error);
+        console.log("[Pos.js] check_opening_entry error:", error);
         this.show_message("فشل التحقق من إدخال الافتتاح", "error");
       }
     },
@@ -202,7 +175,7 @@ export default {
         const doc = await frappe.db.get_doc("POS Settings", undefined);
         evntBus.emit(EVENTS.SET_POS_SETTINGS, doc);
       } catch (error) {
-        console.error("Pos.js", "get_pos_setting error", error);
+        console.log("[Pos.js] get_pos_setting error:", error);
       }
     },
 
@@ -236,7 +209,7 @@ export default {
           this.show_message("فشل تحميل العروض", "error");
         }
       } catch (error) {
-        console.error("Pos.js", "get_offers error", error);
+        console.log("[Pos.js] get_offers error:", error);
         this.show_message("فشل تحميل العروض", "error");
       }
     },
@@ -253,10 +226,6 @@ export default {
           return;
         }
 
-        console.log(
-          `[Pos.js] get_closing_data: Fetching closing shift data for opening shift: ${opening_shift_name}`
-        );
-
         const response = await frappe.call({
           method: API_MAP.POS_CLOSING_SHIFT.MAKE_CLOSING_SHIFT,
           args: {
@@ -265,50 +234,20 @@ export default {
         });
 
         if (response.message) {
-          console.log(
-            `[Pos.js] get_closing_data: Received closing shift data:`,
-            response.message.name
-          );
-          console.log(
-            `[Pos.js] get_closing_data: Payment reconciliation:`,
-            response.message.payment_reconciliation?.map((p) => ({
-              mode: p.mode_of_payment,
-              opening: p.opening_amount,
-              expected: p.expected_amount,
-            }))
-          );
+          console.log("[Pos.js] get_closing_data:", response.message.name);
           evntBus.emit(EVENTS.OPEN_CLOSING_DIALOG_EMIT, response.message);
         } else {
           // Failed to load closing data
-          console.error(
-            `[Pos.js] get_closing_data: No data received from backend`
-          );
           this.show_message("فشل تحميل بيانات الإغلاق", "error");
         }
       } catch (error) {
-        console.error("[Pos.js] get_closing_data error:", error);
+        console.log("[Pos.js] get_closing_data error:", error);
         this.show_message("فشل تحميل بيانات الإغلاق", "error");
       }
     },
 
     async submit_closing_pos(data) {
       try {
-        console.log(
-          "[Pos.js] submit_closing_pos: Submitting closing shift with data:",
-          {
-            name: data.name,
-            payment_reconciliation_count:
-              data.payment_reconciliation?.length || 0,
-            payment_reconciliation: data.payment_reconciliation?.map((p) => ({
-              mode: p.mode_of_payment,
-              opening: p.opening_amount,
-              expected: p.expected_amount,
-              closing: p.closing_amount, // ✅ User input
-              difference: p.difference,
-            })),
-          }
-        );
-
         const response = await frappe.call({
           method: API_MAP.POS_CLOSING_SHIFT.SUBMIT_CLOSING_SHIFT,
           args: {
@@ -317,22 +256,15 @@ export default {
         });
 
         if (response.message) {
-          console.log(
-            "[Pos.js] submit_closing_pos: Successfully submitted closing shift:",
-            response.message.name
-          );
-          // Cashier shift closed successfully
+          console.log("[Pos.js] submit_closing_pos:", response.message.name);
           this.show_message("تم إغلاق نوبة الصراف بنجاح", "success");
           await this.check_opening_entry();
         } else {
           // Failed to close cashier shift
-          console.error(
-            "[Pos.js] submit_closing_pos: No response message from backend"
-          );
           this.show_message("فشل إغلاق نوبة الصراف", "error");
         }
       } catch (error) {
-        console.error("[Pos.js] submit_closing_pos error:", error);
+        console.log("[Pos.js] submit_closing_pos error:", error);
         this.show_message("فشل إغلاق نوبة الصراف", "error");
       }
     },
