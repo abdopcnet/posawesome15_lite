@@ -7,5 +7,6 @@ dist
 __pycache__
 plan.md
 posawesome/public/node_modules
-# Ignore npm internal files inside node_modules
+# node_modules is tracked in Git (small, app-specific, offline-ready)
+# Ignore npm internal files
 node_modules/.package-lock.json
