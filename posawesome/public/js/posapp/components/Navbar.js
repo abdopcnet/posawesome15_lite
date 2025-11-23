@@ -248,10 +248,10 @@ export default {
       // Fetch initial totals
       this.fetchPaymentTotals();
 
-      // Set up interval to update totals (every 30 seconds for real-time accuracy)
+      // Set up interval to update totals (every 10 seconds - optimized with backend caching)
       this.cashUpdateInterval = setInterval(() => {
         this.fetchPaymentTotals();
-      }, 30000); // 30 seconds in milliseconds
+      }, 10000); // 10 seconds (backend caches for 5 seconds, so this is optimal)
     },
 
     changePage(key) {
