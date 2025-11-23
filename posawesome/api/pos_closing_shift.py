@@ -141,8 +141,10 @@ def check_closing_time_allowed(pos_profile):
 def get_cashiers(doctype, txt, searchfield, start, page_len, filters):
     """
     GET - Get cashiers for filters (used in Link field queries)
+    Frontend needs: user field only
     """
     try:
+        # FRAPPE STANDARD: Simple query - only user field needed for frontend
         return frappe.db.sql("""SELECT DISTINCT user FROM `tabPOS Opening Shift` WHERE docstatus = 1""")
     except Exception as e:
         frappe.log_error(f"[[pos_closing_shift.py]] get_cashiers: {str(e)}")
@@ -177,20 +179,28 @@ def get_payments_entries(pos_opening_shift):
 def get_payment_totals(pos_profile=None, user=None):
     """
     GET - Get both cash and non-cash totals in one call (optimized for performance)
-    Uses caching to reduce database queries.
     Returns: {cash_total: float, non_cash_total: float}
+    
+    FRAPPE STANDARD: pos_profile can be dict or string (Frappe auto-parses JSON to dict)
     """
     try:
+        # FRAPPE STANDARD: Handle string or dict parameter
+        if isinstance(pos_profile, dict):
+            pos_profile_name = pos_profile.get('name')
+        else:
+            pos_profile_name = pos_profile
+        
         # Use session user if not specified
         if not user:
             user = frappe.session.user
 
+        # FRAPPE STANDARD: Re-fetch document from database if needed
         # Find current open shift for user
         open_shift = frappe.get_all(
             "POS Opening Shift",
             filters={
                 "user": user,
-                "pos_profile": pos_profile,
+                "pos_profile": pos_profile_name,
                 "docstatus": 1,
                 "status": "Open"
             },
@@ -204,14 +214,6 @@ def get_payment_totals(pos_profile=None, user=None):
 
         shift_name = open_shift[0].name
         pos_profile_name = open_shift[0].pos_profile
-
-        # OPTIMIZED: Use cache key for this shift
-        cache_key = f"payment_totals_{shift_name}"
-        cached_result = frappe.cache().get(cache_key)
-        
-        # Return cached result if available (cache for 5 seconds to reduce DB load)
-        if cached_result:
-            return cached_result
 
         # Get cash mode of payment from POS Profile
         cash_mode_of_payment = frappe.get_value(
@@ -236,13 +238,12 @@ def get_payment_totals(pos_profile=None, user=None):
 
         result = {"cash_total": cash_total, "non_cash_total": non_cash_total}
         
-        # Cache result for 5 seconds
-        frappe.cache().setex(cache_key, 5, result)
-        
         return result
 
     except Exception as e:
-        frappe.log_error(f"[[pos_closing_shift.py]] get_payment_totals: {str(e)}")
+        # FRAPPE STANDARD: Short error message (max 140 chars for Error Log title field)
+        error_msg = str(e)[:100] if len(str(e)) > 100 else str(e)
+        frappe.log_error(f"get_payment_totals: {error_msg}", "POS Closing Shift")
         return {"cash_total": 0.0, "non_cash_total": 0.0}
 
 
@@ -281,40 +282,27 @@ def make_closing_shift_from_opening(opening_shift):
     Returns: closing shift document as dict
     """
     try:
-        frappe.log_error(f"[[pos_closing_shift.py]] Creating closing shift from opening: {opening_shift}")
-
-        # Handle string and dict formats only (no JSON parsing)
+        # FRAPPE STANDARD: Handle string and dict formats (Frappe auto-parses JSON to dict)
         if isinstance(opening_shift, str):
             # String = document name directly
             opening_shift_name = opening_shift
-            frappe.log_error(f"[[pos_closing_shift.py]] Using string as document name: {opening_shift_name}")
         elif isinstance(opening_shift, dict):
-            # Dict = extract 'name' field
+            # Dict = extract 'name' field (Frappe sends dict from frontend)
             opening_shift_name = opening_shift.get("name")
             if not opening_shift_name:
-                frappe.log_error(f"[[pos_closing_shift.py]] make_closing_shift_from_opening: opening_shift dict has no 'name' field")
                 frappe.throw(_("Invalid opening shift data: missing 'name' field"))
-            frappe.log_error(f"[[pos_closing_shift.py]] Using name from dict: {opening_shift_name}")
         else:
-            frappe.log_error(f"[[pos_closing_shift.py]] make_closing_shift_from_opening: opening_shift is neither string nor dict, type: {type(opening_shift)}")
             frappe.throw(_("Invalid opening shift data: must be string or dict"))
 
         if not opening_shift_name:
-            frappe.log_error(f"[[pos_closing_shift.py]] make_closing_shift_from_opening: Could not extract opening_shift_name")
             frappe.throw(_("Invalid opening shift data: could not determine shift name"))
 
-        frappe.log_error(f"[[pos_closing_shift.py]] Using opening shift name: {opening_shift_name}")
-
-        # Get opening shift document
+        # FRAPPE STANDARD: Re-fetch document from database to get all fields
         opening = frappe.get_doc("POS Opening Shift", opening_shift_name)
         
         # Ensure balance_details is loaded (reload if needed)
         if not hasattr(opening, 'balance_details') or not opening.balance_details:
-            frappe.log_error(f"[[pos_closing_shift.py]] balance_details not loaded, reloading")
             opening.reload()
-        
-        if opening.balance_details:
-            frappe.log_error(f"[[pos_closing_shift.py]] balance_details: {len(opening.balance_details)} rows")
 
         # Check if opening shift is valid
         if opening.docstatus != 1:
@@ -335,14 +323,11 @@ def make_closing_shift_from_opening(opening_shift):
 
         if existing_closing:
             # Update existing closing shift with recalculated payment totals, taxes, and totals
-            frappe.log_error(f"[[pos_closing_shift.py]] Updating existing closing shift: {existing_closing}")
             closing = frappe.get_doc("POS Closing Shift", existing_closing)
 
             # Recalculate payment totals using unified helper (ensures consistency)
             payment_totals = _calculate_payment_totals(
                 opening.name, opening.pos_profile)
-        
-            frappe.log_error(f"[[pos_closing_shift.py]] Recalculated payment totals: {len(payment_totals)} modes")
             
             # Get opening amounts from opening shift balance_details
             opening_amounts = {}
@@ -353,11 +338,6 @@ def make_closing_shift_from_opening(opening_shift):
                     amount = flt(getattr(detail, 'amount', 0) or 0)
                     if mode:
                         opening_amounts[mode] = amount
-                        frappe.log_error(f"[[pos_closing_shift.py]] Opening amount for {mode}: {amount} (from balance_details)")
-                    else:
-                        frappe.log_error(f"[[pos_closing_shift.py]] balance_details row missing mode_of_payment")
-            else:
-                frappe.log_error(f"[[pos_closing_shift.py]] Opening shift {opening.name} has no balance_details")
             
             # Update payment_reconciliation with recalculated expected_amount
             # Clear existing rows and add new ones with correct calculations
@@ -372,7 +352,6 @@ def make_closing_shift_from_opening(opening_shift):
                     "closing_amount": 0.0,  # User needs to fill manually (0 means empty in UI)
                     "difference": 0.0,  # Initially no difference
                 })
-                frappe.log_error(f"[[pos_closing_shift.py]] Updated payment reconciliation: {mode_of_payment}, opening={opening_amount}, expected={expected_amount}")
             
             # Recalculate totals and taxes from invoices
             pos_transactions = _get_pos_invoices_helper(opening.name)
@@ -403,8 +382,6 @@ def make_closing_shift_from_opening(opening_shift):
                 closing.net_total += base_net_total
                 closing.total_quantity += total_qty
                 
-                frappe.log_error(f"[[pos_closing_shift.py]] Invoice {invoice.get('name')}: grand_total={base_grand_total}")
-                
                 # Process taxes
                 invoice_taxes = invoice.get("taxes", [])
                 for tax in invoice_taxes:
@@ -419,12 +396,28 @@ def make_closing_shift_from_opening(opening_shift):
                     else:
                         taxes_dict[tax_key] = base_tax_amount
                 
-                # Add to pos_transactions
+                # FRAPPE STANDARD: Ensure all required fields are present before appending
+                # Sales Invoice Reference requires: sales_invoice (reqd), posting_date (reqd), customer (reqd), grand_total (reqd)
+                invoice_name = invoice.get("name")
+                posting_date = invoice.get("posting_date")
+                customer = invoice.get("customer")
+                
+                # Validate required fields (following Frappe framework validation logic)
+                if not invoice_name:
+                    continue  # Skip if no invoice name
+                if not posting_date:
+                    # Use opening shift posting_date as fallback (following Frappe set_missing_values pattern)
+                    posting_date = opening.posting_date or frappe.utils.today()
+                if not customer:
+                    # Use default customer or skip (following Frappe validation pattern)
+                    customer = opening.customer or ""
+                
+                # Add to pos_transactions (all required fields now present)
                 closing.append("pos_transactions", {
-                    "sales_invoice": invoice.get("name"),
-                    "posting_date": invoice.get("posting_date"),
-                    "grand_total": base_grand_total,  # Use base value
-                    "customer": invoice.get("customer")
+                    "sales_invoice": invoice_name,
+                    "posting_date": posting_date,
+                    "grand_total": base_grand_total,
+                    "customer": customer
                 })
             
             # Add taxes to closing shift
@@ -435,13 +428,10 @@ def make_closing_shift_from_opening(opening_shift):
                     "amount": amount
                 })
             
-            frappe.log_error(f"[[pos_closing_shift.py]] Updated closing shift: grand_total={closing.grand_total}")
-            
             # Save the updated closing shift
             closing.save(ignore_permissions=True)
             frappe.db.commit()
             
-            frappe.log_error(f"[[pos_closing_shift.py]] Updated existing closing shift with recalculated amounts")
             return closing.as_dict()
 
         # Create new closing shift
@@ -461,8 +451,6 @@ def make_closing_shift_from_opening(opening_shift):
         # Get payment totals using centralized helper (returns dict: {mode_of_payment: amount})
         payment_totals = _calculate_payment_totals(
             opening.name, opening.pos_profile)
-        
-        frappe.log_error(f"[[pos_closing_shift.py]] Payment totals: {len(payment_totals)} modes")
 
         # Get opening amounts from opening shift balance_details
         opening_amounts = {}
@@ -473,11 +461,6 @@ def make_closing_shift_from_opening(opening_shift):
                 amount = flt(getattr(detail, 'amount', 0) or 0)
                 if mode:
                     opening_amounts[mode] = amount
-                    frappe.log_error(f"[[pos_closing_shift.py]] Opening amount for {mode}: {amount} (from balance_details)")
-                else:
-                    frappe.log_error(f"[[pos_closing_shift.py]] balance_details row missing mode_of_payment")
-        else:
-            frappe.log_error(f"[[pos_closing_shift.py]] Opening shift {opening.name} has no balance_details")
 
         # Add payment reconciliation rows (payment_totals is a dict, not a list!)
         for mode_of_payment, expected_amount in payment_totals.items():
@@ -490,7 +473,6 @@ def make_closing_shift_from_opening(opening_shift):
                 "closing_amount": 0.0,  # User needs to fill manually (0 means empty in UI)
                 "difference": 0.0,  # Initially no difference
             })
-            frappe.log_error(f"[[pos_closing_shift.py]] Added payment reconciliation: {mode_of_payment}, opening={opening_amount}, expected={expected_amount}")
 
         # Get POS invoices using helper
         pos_transactions = _get_pos_invoices_helper(opening.name)
@@ -499,8 +481,8 @@ def make_closing_shift_from_opening(opening_shift):
         taxes_dict = {}  # Key: (account_head, rate), Value: amount
         
         for invoice in pos_transactions:
-            # Get conversion rate for this invoice
-            conversion_rate = invoice.get("conversion_rate") or invoice.get("exchange_rate") or invoice.get("target_exchange_rate") or 1.0
+            # Get conversion rate for this invoice (single currency - conversion_rate only)
+            conversion_rate = invoice.get("conversion_rate") or 1.0
             
             # Use base_* fields for company currency (matches Sales Register)
             base_grand_total = flt(invoice.get("base_grand_total") or invoice.get("grand_total") or 0)
@@ -511,8 +493,6 @@ def make_closing_shift_from_opening(opening_shift):
             closing.grand_total += base_grand_total
             closing.net_total += base_net_total
             closing.total_quantity += total_qty
-            
-            frappe.log_error(f"[[pos_closing_shift.py]] Invoice {invoice.get('name')}: grand_total={base_grand_total}")
             
             # Process taxes
             invoice_taxes = invoice.get("taxes", [])
@@ -527,15 +507,29 @@ def make_closing_shift_from_opening(opening_shift):
                     taxes_dict[tax_key] += base_tax_amount
                 else:
                     taxes_dict[tax_key] = base_tax_amount
-                
-                frappe.log_error(f"[[pos_closing_shift.py]] Tax {account_head} @ {rate}%: base_tax_amount={base_tax_amount}")
             
-            # Add to pos_transactions
+            # FRAPPE STANDARD: Ensure all required fields are present before appending
+            # Sales Invoice Reference requires: sales_invoice (reqd), posting_date (reqd), customer (reqd), grand_total (reqd)
+            invoice_name = invoice.get("name")
+            posting_date = invoice.get("posting_date")
+            customer = invoice.get("customer")
+            
+            # Validate required fields (following Frappe framework validation logic)
+            if not invoice_name:
+                continue  # Skip if no invoice name
+            if not posting_date:
+                # Use opening shift posting_date as fallback (following Frappe set_missing_values pattern)
+                posting_date = opening.posting_date or frappe.utils.today()
+            if not customer:
+                # Use default customer or skip (following Frappe validation pattern)
+                customer = opening.customer or ""
+            
+            # Add to pos_transactions (all required fields now present)
             closing.append("pos_transactions", {
-                "sales_invoice": invoice.get("name"),  # ← Field name is 'sales_invoice' not 'pos_invoice'
-                "posting_date": invoice.get("posting_date"),
-                "grand_total": base_grand_total,  # Use base value
-                "customer": invoice.get("customer")
+                "sales_invoice": invoice_name,
+                "posting_date": posting_date,
+                "grand_total": base_grand_total,
+                "customer": customer
             })
         
         # Add taxes to closing shift
@@ -545,9 +539,6 @@ def make_closing_shift_from_opening(opening_shift):
                 "rate": rate,
                 "amount": amount
             })
-            frappe.log_error(f"[[pos_closing_shift.py]] Added tax: {account_head} @ {rate}% = {amount}")
-        
-        frappe.log_error(f"[[pos_closing_shift.py]] make_closing_shift_from_opening: grand_total={closing.grand_total}")
 
         # Get payment entries using helper
         payment_entries = _get_payments_entries_helper(opening.name)
@@ -563,12 +554,12 @@ def make_closing_shift_from_opening(opening_shift):
         closing.insert(ignore_permissions=True)
         frappe.db.commit()
 
-        frappe.log_error(f"[[pos_closing_shift.py]] Created closing shift: {closing.name}")
-
         return closing.as_dict()
 
     except Exception as e:
-        frappe.log_error(f"[[pos_closing_shift.py]] make_closing_shift_from_opening: {str(e)}")
+        # FRAPPE STANDARD: Short error message (max 140 chars for Error Log title field)
+        error_msg = str(e)[:100] if len(str(e)) > 100 else str(e)
+        frappe.log_error(f"make_closing_shift_from_opening: {error_msg}", "POS Closing Shift")
         frappe.throw(_("Error creating closing shift"))
 
 
@@ -649,7 +640,9 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
         return payments
 
     except Exception as e:
-        frappe.log_error(f"[[pos_closing_shift.py]] Error in _calculate_payment_totals: {str(e)}")
+        # FRAPPE STANDARD: Short error message (max 140 chars for Error Log title field)
+        error_msg = str(e)[:100] if len(str(e)) > 100 else str(e)
+        frappe.log_error(f"_calculate_payment_totals: {error_msg}", "POS Closing Shift")
         return {}
 
 
@@ -707,53 +700,118 @@ def _submit_printed_invoices(pos_opening_shift):
 
 def _get_pos_invoices_helper(pos_opening_shift):
     """
-    Helper function to get POS invoices with payments data (OPTIMIZED for performance).
-    Uses SQL query instead of loading full documents to improve speed.
-    Returns list of invoice dicts with payments and change_amount.
+    Helper function to get Sales Invoice documents (is_pos=1) with all required fields.
+    POS Awesome uses Sales Invoice doctype (not POS Invoice).
+    Uses SQL queries to fetch only needed data instead of loading full documents (OPTIMIZED).
+    Following Frappe framework logic: fetch from database directly.
     """
     try:
-        # OPTIMIZED: Use SQL query to get only needed data (much faster than loading full docs)
+        # FRAPPE STANDARD: Fetch only required fields for frontend (optimized)
+        # Single currency: Only conversion_rate exists (exchange_rate/target_exchange_rate don't exist)
+        # Frontend needs: name, posting_date, customer, grand_total, base_grand_total, 
+        # net_total, base_net_total, total_qty, base_change_amount, change_amount, conversion_rate
         invoices_data = frappe.db.sql("""
             SELECT 
                 si.name,
+                si.posting_date,
+                si.customer,
+                si.grand_total,
+                si.base_grand_total,
+                si.net_total,
+                si.base_net_total,
+                si.total_qty,
                 si.base_change_amount,
                 si.change_amount,
-                sip.mode_of_payment,
-                sip.base_amount,
-                sip.amount
+                si.conversion_rate
             FROM `tabSales Invoice` si
-            LEFT JOIN `tabSales Invoice Payment` sip ON sip.parent = si.name
             WHERE si.posa_pos_opening_shift = %s
             AND si.docstatus = 1
-            ORDER BY si.posting_date, si.posting_time, si.name
+            ORDER BY si.posting_date, COALESCE(si.posting_time, '00:00:00'), si.name
         """, (pos_opening_shift,), as_dict=1)
         
-        # Group payments by invoice
-        invoices_dict = {}
-        for row in invoices_data:
-            invoice_name = row.name
-            if invoice_name not in invoices_dict:
-                invoices_dict[invoice_name] = {
-                    "name": invoice_name,
-                    "base_change_amount": row.base_change_amount or row.change_amount or 0,
-                    "change_amount": row.change_amount or 0,
-                    "payments": []
-                }
-            
-            # Add payment if exists
-            if row.mode_of_payment:
-                invoices_dict[invoice_name]["payments"].append({
-                    "mode_of_payment": row.mode_of_payment,
-                    "base_amount": row.base_amount or row.amount or 0,
-                    "amount": row.amount or 0
-                })
+        # Get payments for all invoices (only fields needed for frontend)
+        invoice_names = [inv.name for inv in invoices_data]
+        payments_data = []
+        if invoice_names:
+            # FRAPPE STANDARD: Use safe SQL with placeholders (prevents SQL injection)
+            # Frontend needs: parent, mode_of_payment, base_amount, amount
+            placeholders = ','.join(['%s'] * len(invoice_names))
+            payments_data = frappe.db.sql(f"""
+                SELECT 
+                    parent,
+                    mode_of_payment,
+                    base_amount,
+                    amount
+                FROM `tabSales Invoice Payment`
+                WHERE parent IN ({placeholders})
+            """, tuple(invoice_names), as_dict=1)
         
-        # Convert to list format
-        invoices = list(invoices_dict.values())
+        # Get taxes for all invoices (only fields needed for frontend)
+        taxes_data = []
+        if invoice_names:
+            # FRAPPE STANDARD: Use safe SQL with placeholders (prevents SQL injection)
+            # Frontend needs: parent, account_head, rate, base_tax_amount, tax_amount
+            placeholders = ','.join(['%s'] * len(invoice_names))
+            taxes_data = frappe.db.sql(f"""
+                SELECT 
+                    parent,
+                    account_head,
+                    rate,
+                    base_tax_amount,
+                    tax_amount
+                FROM `tabSales Taxes and Charges`
+                WHERE parent IN ({placeholders})
+            """, tuple(invoice_names), as_dict=1)
+        
+        # Group payments and taxes by invoice
+        payments_dict = {}
+        for payment in payments_data:
+            parent = payment.parent
+            if parent not in payments_dict:
+                payments_dict[parent] = []
+            payments_dict[parent].append({
+                "mode_of_payment": payment.mode_of_payment,
+                "base_amount": flt(payment.base_amount or payment.amount or 0),
+                "amount": flt(payment.amount or 0)
+            })
+        
+        taxes_dict = {}
+        for tax in taxes_data:
+            parent = tax.parent
+            if parent not in taxes_dict:
+                taxes_dict[parent] = []
+            taxes_dict[parent].append({
+                "account_head": tax.account_head,
+                "rate": flt(tax.rate or 0),
+                "base_tax_amount": flt(tax.base_tax_amount or tax.tax_amount or 0),
+                "tax_amount": flt(tax.tax_amount or 0)
+            })
+        
+        # Build invoice dicts with all required fields
+        invoices = []
+        for invoice_row in invoices_data:
+            invoice_name = invoice_row.name
+            invoice_dict = {
+                "name": invoice_name,
+                "posting_date": invoice_row.posting_date,  # Required for Sales Invoice Reference
+                "customer": invoice_row.customer,  # Required for Sales Invoice Reference
+                "grand_total": flt(invoice_row.grand_total or 0),
+                "base_grand_total": flt(invoice_row.base_grand_total or invoice_row.grand_total or 0),
+                "net_total": flt(invoice_row.net_total or 0),
+                "base_net_total": flt(invoice_row.base_net_total or invoice_row.net_total or 0),
+                "total_qty": flt(invoice_row.total_qty or 0),
+                "base_change_amount": flt(invoice_row.base_change_amount or invoice_row.change_amount or 0),
+                "change_amount": flt(invoice_row.change_amount or 0),
+                "conversion_rate": flt(invoice_row.conversion_rate or 1.0),
+                "payments": payments_dict.get(invoice_name, []),
+                "taxes": taxes_dict.get(invoice_name, [])
+            }
+            invoices.append(invoice_dict)
+        
         return invoices
         
     except Exception as e:
-        frappe.log_error(f"[[pos_closing_shift.py]] _get_pos_invoices_helper: {str(e)}")
+        frappe.log_error(f"_get_pos_invoices_helper: {str(e)[:100]}", "POS Closing Shift")
         return []
 
 
@@ -765,7 +823,8 @@ def _get_payments_entries_helper(pos_opening_shift):
     """
     try:
         # Query Payment Entries that reference Sales Invoices from this shift
-        # Calculate base_paid_amount using allocated_amount * exchange_rate (matches Sales Register)
+        # Single currency: exchange_rate is usually 1.0, but we use COALESCE for safety
+        # Frontend needs: name, mode_of_payment, paid_amount, base_paid_amount, posting_date, party, reference_name
         payment_entries = frappe.db.sql("""
             SELECT DISTINCT
                 pe.name,
