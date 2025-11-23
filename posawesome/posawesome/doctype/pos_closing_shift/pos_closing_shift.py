@@ -142,21 +142,18 @@ class POSClosingShift(Document):
 
     def on_submit(self):
         try:
-            frappe.log_error(f"[[pos_closing_shift.py]] POS Closing Shift {self.name} submitted by {self.user}")
             opening_entry = frappe.get_doc(
                 "POS Opening Shift", self.pos_opening_shift)
             opening_entry.pos_closing_shift = self.name
             opening_entry.set_status()
             self.delete_draft_invoices()
             opening_entry.save()
-            frappe.log_error(f"[[pos_closing_shift.py]] POS Closing Shift {self.name} submitted successfully")
         except Exception as e:
             frappe.log_error(f"[[pos_closing_shift.py]] Error submitting POS Closing Shift {self.name}: {str(e)}")
             raise
 
     def on_cancel(self):
         try:
-            frappe.log_error(f"[[pos_closing_shift.py]] POS Closing Shift {self.name} cancelled by {frappe.session.user}")
             if frappe.db.exists("POS Opening Shift", self.pos_opening_shift):
                 opening_entry = frappe.get_doc(
                     "POS Opening Shift", self.pos_opening_shift)
@@ -164,7 +161,6 @@ class POSClosingShift(Document):
                     opening_entry.pos_closing_shift = ""
                     opening_entry.set_status()
                 opening_entry.save()
-            frappe.log_error(f"[[pos_closing_shift.py]] POS Closing Shift {self.name} cancelled successfully")
         except Exception as e:
             frappe.log_error(f"[[pos_closing_shift.py]] Error cancelling POS Closing Shift {self.name}: {str(e)}")
             raise
@@ -182,10 +178,7 @@ class POSClosingShift(Document):
         """Delete draft invoices for this shift if auto-delete is enabled in POS Profile."""
         try:
             if not frappe.get_value("POS Profile", self.pos_profile, "posa_auto_delete_draft_invoices"):
-                frappe.log_error(f"[[pos_closing_shift.py]] Auto-delete draft invoices disabled for POS Profile {self.pos_profile}")
                 return
-
-            frappe.log_error(f"[[pos_closing_shift.py]] Deleting draft invoices for POS Closing Shift {self.name}")
 
             # Find draft invoices for this shift
             draft_invoices = frappe.get_all(
@@ -197,21 +190,14 @@ class POSClosingShift(Document):
                 fields=["name"]
             )
 
-            frappe.log_error(f"[[pos_closing_shift.py]] Found {len(draft_invoices)} draft invoices to delete")
-
             # Delete each draft invoice
-            deleted_count = 0
             for invoice in draft_invoices:
                 try:
                     frappe.delete_doc("Sales Invoice", invoice.name,
                                       force=1, ignore_permissions=True)
-                    deleted_count += 1
-                    frappe.log_error(f"[[pos_closing_shift.py]] Deleted draft invoice {invoice.name}")
                 except Exception as e:
                     frappe.log_error(f"[[pos_closing_shift.py]] Error deleting draft invoice {invoice.name}: {str(e)}")
                     continue
-            
-            frappe.log_error(f"[[pos_closing_shift.py]] Successfully deleted {deleted_count} draft invoices")
         except Exception as e:
             frappe.log_error(f"[[pos_closing_shift.py]] Error in delete_draft_invoices: {str(e)}")
             # Don't raise - allow closing shift to complete even if draft deletion fails
