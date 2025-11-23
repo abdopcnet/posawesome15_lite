@@ -7,3 +7,5 @@ dist
 __pycache__
 plan.md
 posawesome/public/node_modules
+# Ignore npm internal files inside node_modules
+node_modules/.package-lock.json
