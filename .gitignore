@@ -6,3 +6,4 @@ tags
 dist
 __pycache__
 plan.md
+posawesome/public/node_modules
