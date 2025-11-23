@@ -62,6 +62,11 @@ export default {
       wasConnectionLost: false,
       // Shift monitoring
       shiftMonitoringInterval: null,
+      // Print dialog
+      printDialog: false,
+      printInvoicesList: [],
+      selectedPrintInvoice: null,
+      isLoadingInvoices: false,
     };
   },
   computed: {
@@ -298,10 +303,83 @@ export default {
         },
       });
     },
-    print_last_invoice() {
-      if (!this.last_invoice) {
+    async openPrintDialog() {
+      if (!this.pos_profile || !this.pos_profile.name) {
+        this.show_mesage({
+          color: "error",
+          text: "لا يوجد بروفايل POS محدد",
+        });
         return;
       }
+
+      // Open dialog
+      this.printDialog = true;
+      this.selectedPrintInvoice = null;
+      this.isLoadingInvoices = true;
+
+      try {
+        // Get submitted invoices for current user and POS profile
+        const response = await frappe.call({
+          method: "frappe.client.get_list",
+          args: {
+            doctype: "Sales Invoice",
+            filters: {
+              is_pos: 1,
+              pos_profile: this.pos_profile.name,
+              owner: frappe.session.user,
+              docstatus: 1, // Only submitted invoices
+            },
+            fields: [
+              "name",
+              "customer",
+              "posting_date",
+              "posting_time",
+              "grand_total",
+              "currency",
+            ],
+            order_by: "creation desc",
+            limit: 50,
+          },
+        });
+
+        if (response.message && response.message.length > 0) {
+          // Get customer names
+          const invoices = await Promise.all(
+            response.message.map(async (invoice) => {
+              if (invoice.customer) {
+                try {
+                  const customer = await frappe.db.get_doc(
+                    "Customer",
+                    invoice.customer
+                  );
+                  invoice.customer_name = customer.customer_name;
+                } catch (e) {
+                  invoice.customer_name = invoice.customer;
+                }
+              }
+              return invoice;
+            })
+          );
+          this.printInvoicesList = invoices;
+        } else {
+          this.printInvoicesList = [];
+        }
+      } catch (error) {
+        this.show_mesage({
+          color: "error",
+          text: "خطأ في جلب الفواتير: " + (error.message || "خطأ غير معروف"),
+        });
+        this.printInvoicesList = [];
+      } finally {
+        this.isLoadingInvoices = false;
+      }
+    },
+    printSelectedInvoice() {
+      if (!this.selectedPrintInvoice) {
+        return;
+      }
+
+      const invoice_name = this.selectedPrintInvoice.name;
       const print_format =
         this.pos_profile.print_format_for_online ||
         this.pos_profile.posa_print_format;
@@ -309,7 +387,7 @@ export default {
       const url =
         frappe.urllib.get_base_url() +
         "/printview?doctype=Sales%20Invoice&name=" +
-        this.last_invoice +
+        invoice_name +
         "&trigger_print=1" +
         "&format=" +
         print_format +
@@ -323,6 +401,10 @@ export default {
         },
         true
       );
+
+      // Close dialog after printing
+      this.printDialog = false;
+      this.selectedPrintInvoice = null;
     },
     fetch_company_info() {
       if (this.pos_profile && this.pos_profile.company) {
