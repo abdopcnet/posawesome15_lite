@@ -177,6 +177,7 @@ def get_payments_entries(pos_opening_shift):
 def get_payment_totals(pos_profile=None, user=None):
     """
     GET - Get both cash and non-cash totals in one call (optimized for performance)
+    Uses caching to reduce database queries.
     Returns: {cash_total: float, non_cash_total: float}
     """
     try:
@@ -204,6 +205,14 @@ def get_payment_totals(pos_profile=None, user=None):
         shift_name = open_shift[0].name
         pos_profile_name = open_shift[0].pos_profile
 
+        # OPTIMIZED: Use cache key for this shift
+        cache_key = f"payment_totals_{shift_name}"
+        cached_result = frappe.cache().get(cache_key)
+        
+        # Return cached result if available (cache for 5 seconds to reduce DB load)
+        if cached_result:
+            return cached_result
+
         # Get cash mode of payment from POS Profile
         cash_mode_of_payment = frappe.get_value(
             "POS Profile",
@@ -225,7 +234,12 @@ def get_payment_totals(pos_profile=None, user=None):
             if mode_of_payment != cash_mode_of_payment:
                 non_cash_total += flt(amount)
 
-        return {"cash_total": cash_total, "non_cash_total": non_cash_total}
+        result = {"cash_total": cash_total, "non_cash_total": non_cash_total}
+        
+        # Cache result for 5 seconds
+        frappe.cache().setex(cache_key, 5, result)
+        
+        return result
 
     except Exception as e:
         frappe.log_error(f"[[pos_closing_shift.py]] get_payment_totals: {str(e)}")
@@ -693,35 +707,51 @@ def _submit_printed_invoices(pos_opening_shift):
 
 def _get_pos_invoices_helper(pos_opening_shift):
     """
-    Helper function to get POS invoices with full document data including payments and taxes.
-    Returns full documents matching Sales Register report data structure.
+    Helper function to get POS invoices with payments data (OPTIMIZED for performance).
+    Uses SQL query instead of loading full documents to improve speed.
+    Returns list of invoice dicts with payments and change_amount.
     """
     try:
-        # Get invoice names first (same query as Sales Register)
-        invoice_names = frappe.get_all(
-            "Sales Invoice",
-            filters={
-                "posa_pos_opening_shift": pos_opening_shift,
-                "docstatus": 1
-            },
-            fields=["name"],
-            order_by="posting_date, posting_time"
-        )
+        # OPTIMIZED: Use SQL query to get only needed data (much faster than loading full docs)
+        invoices_data = frappe.db.sql("""
+            SELECT 
+                si.name,
+                si.base_change_amount,
+                si.change_amount,
+                sip.mode_of_payment,
+                sip.base_amount,
+                sip.amount
+            FROM `tabSales Invoice` si
+            LEFT JOIN `tabSales Invoice Payment` sip ON sip.parent = si.name
+            WHERE si.posa_pos_opening_shift = %s
+            AND si.docstatus = 1
+            ORDER BY si.posting_date, si.posting_time, si.name
+        """, (pos_opening_shift,), as_dict=1)
         
-        # Return full documents with all child tables (payments, taxes, etc.)
-        # This matches exactly what Sales Register report uses
-        invoices = []
+        # Group payments by invoice
+        invoices_dict = {}
+        for row in invoices_data:
+            invoice_name = row.name
+            if invoice_name not in invoices_dict:
+                invoices_dict[invoice_name] = {
+                    "name": invoice_name,
+                    "base_change_amount": row.base_change_amount or row.change_amount or 0,
+                    "change_amount": row.change_amount or 0,
+                    "payments": []
+                }
+            
+            # Add payment if exists
+            if row.mode_of_payment:
+                invoices_dict[invoice_name]["payments"].append({
+                    "mode_of_payment": row.mode_of_payment,
+                    "base_amount": row.base_amount or row.amount or 0,
+                    "amount": row.amount or 0
+                })
         
-        for inv in invoice_names:
-            try:
-                doc = frappe.get_doc("Sales Invoice", inv.name)
-                invoice_dict = doc.as_dict()
-                invoices.append(invoice_dict)
-            except Exception as e:
-                frappe.log_error(f"[[pos_closing_shift.py]] Error loading invoice {inv.name}: {str(e)}")
-                continue
-        
+        # Convert to list format
+        invoices = list(invoices_dict.values())
         return invoices
+        
     except Exception as e:
         frappe.log_error(f"[[pos_closing_shift.py]] _get_pos_invoices_helper: {str(e)}")
         return []
