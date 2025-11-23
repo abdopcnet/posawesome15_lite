@@ -49,7 +49,6 @@ def save_draft_invoice(invoice_doc):
         # Save as draft
         doc.save()
 
-        frappe.log_error(f"[[sales_invoice.py]] save_draft_invoice: {doc.name}")
         return doc.as_dict()
 
     except Exception as e:
@@ -63,8 +62,6 @@ def get_draft_invoices(pos_opening_shift=None):
     Get all draft invoices (docstatus = 0) for the current POS opening shift.
     """
     try:
-        frappe.log_error(f"[[sales_invoice.py]] get_draft_invoices called: pos_opening_shift={pos_opening_shift}")
-        
         filters = {
             "is_pos": 1,
             "docstatus": 0,
@@ -81,8 +78,6 @@ def get_draft_invoices(pos_opening_shift=None):
             limit=50
         )
 
-        frappe.log_error(f"[[sales_invoice.py]] get_draft_invoices: Found {len(invoices_list)} draft invoices")
-
         # Get full invoice data
         data = []
         for invoice in invoices_list:
@@ -95,7 +90,6 @@ def get_draft_invoices(pos_opening_shift=None):
                 frappe.log_error(f"[[sales_invoice.py]] get_draft_invoices: Error loading {invoice['name']}: {str(e)}")
                 continue
 
-        frappe.log_error(f"[[sales_invoice.py]] get_draft_invoices: Returning {len(data)} invoices")
         return data
 
     except Exception as e:
@@ -386,15 +380,12 @@ def create_and_submit_invoice(invoice_doc):
             if doc.docstatus == 0:
                 # Update existing draft (Frappe's update() replaces child tables when passed as list)
                 doc.update(invoice_doc)
-                frappe.log_error(f"[[sales_invoice.py]] Updated draft: {invoice_name}, type: {invoice_type}")
             else:
                 # If already submitted, create new invoice (don't update submitted invoices)
                 doc = frappe.get_doc(invoice_doc)
-                frappe.log_error(f"[[sales_invoice.py]] Creating new (existing submitted), type: {invoice_type}")
         else:
             # Create new document from dict - using ERPNext native method
             doc = frappe.get_doc(invoice_doc)
-            frappe.log_error(f"[[sales_invoice.py]] Creating new invoice, type: {invoice_type}")
 
         # Set POS flags (following POS-Awesome-V15 pattern)
         doc.is_pos = 1
@@ -414,9 +405,6 @@ def create_and_submit_invoice(invoice_doc):
         # ERPNext's verify_payment_amount_is_negative() requires negative amounts for return invoices
         if doc.is_return and doc.payments:
             for payment in doc.payments:
-                # Log before conversion for debugging
-                if payment.amount != 0:
-                    frappe.log_error(f"[[sales_invoice.py]] Payment before: {payment.mode_of_payment}, amount: {payment.amount}, base: {payment.base_amount}")
                 # Convert positive amounts to negative (skip zero amounts)
                 if payment.amount > 0:
                     payment.amount = -abs(payment.amount)
@@ -439,7 +427,6 @@ def create_and_submit_invoice(invoice_doc):
             if hasattr(doc, 'base_paid_amount'):
                 base_amounts = [flt(p.base_amount) if p.base_amount is not None else 0 for p in doc.payments]
                 doc.base_paid_amount = flt(sum(base_amounts))
-            frappe.log_error(f"[[sales_invoice.py]] Return invoice: {len(doc.payments)} payments, total: {doc.paid_amount}")
 
         # Step 2: Use ERPNext native validate() - full validation
         # This validates customer, items, taxes, payments, etc.
@@ -455,18 +442,15 @@ def create_and_submit_invoice(invoice_doc):
             # Following POS-Awesome-V15: doc.update() already handled child tables
             doc.save()
             invoice_name = doc.name
-            frappe.log_error(f"[[sales_invoice.py]] Saved draft: {invoice_name}")
         else:
             # For new invoice, use insert() - save draft
             # This saves the document and sets docstatus = 0
             doc.insert()
             invoice_name = doc.name
-            frappe.log_error(f"[[sales_invoice.py]] Inserted new: {invoice_name}")
 
         # Step 4: Use ERPNext native submit() - submit document
         # This runs before_submit() then on_submit() hooks
         doc.submit()
-        frappe.log_error(f"[[sales_invoice.py]] Submitted: {invoice_name}")
 
         # Return the submitted document
         return doc.as_dict()
