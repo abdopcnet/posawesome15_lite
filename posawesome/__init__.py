@@ -5,7 +5,7 @@ POS Awesome
 from __future__ import unicode_literals
 import frappe
 
-__version__ = "23.11.2025"
+__version__ = "24.11.2025"
 
 
 def console(*data):
