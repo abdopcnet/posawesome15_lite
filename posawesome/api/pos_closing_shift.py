@@ -369,17 +369,15 @@ def make_closing_shift_from_opening(opening_shift):
             closing.set("taxes", [])
             
             for invoice in pos_transactions:
-                # Get conversion rate for this invoice
-                conversion_rate = invoice.get("conversion_rate") or invoice.get("exchange_rate") or invoice.get("target_exchange_rate") or 1.0
-                
-                # Use base_* fields for company currency (matches Sales Register)
-                base_grand_total = flt(invoice.get("base_grand_total") or invoice.get("grand_total") or 0)
-                base_net_total = flt(invoice.get("base_net_total") or invoice.get("net_total") or 0)
+                # Single currency: POS Profile.currency only - no conversion needed
+                # Use grand_total directly (same as base_grand_total for single currency)
+                grand_total = flt(invoice.get("grand_total") or 0)
+                net_total = flt(invoice.get("net_total") or 0)
                 total_qty = flt(invoice.get("total_qty") or 0)
                 
                 # Add to totals
-                closing.grand_total += base_grand_total
-                closing.net_total += base_net_total
+                closing.grand_total += grand_total
+                closing.net_total += net_total
                 closing.total_quantity += total_qty
                 
                 # Process taxes
@@ -387,14 +385,14 @@ def make_closing_shift_from_opening(opening_shift):
                 for tax in invoice_taxes:
                     account_head = tax.get("account_head")
                     rate = flt(tax.get("rate") or 0)
-                    # Use base_tax_amount for company currency
-                    base_tax_amount = flt(tax.get("base_tax_amount") or tax.get("tax_amount") or 0)
+                    # Single currency: tax_amount equals base_tax_amount
+                    tax_amount = flt(tax.get("tax_amount") or 0)
                     
                     tax_key = (account_head, rate)
                     if tax_key in taxes_dict:
-                        taxes_dict[tax_key] += base_tax_amount
+                        taxes_dict[tax_key] += tax_amount
                     else:
-                        taxes_dict[tax_key] = base_tax_amount
+                        taxes_dict[tax_key] = tax_amount
                 
                 # FRAPPE STANDARD: Ensure all required fields are present before appending
                 # Sales Invoice Reference requires: sales_invoice (reqd), posting_date (reqd), customer (reqd), grand_total (reqd)
@@ -416,7 +414,7 @@ def make_closing_shift_from_opening(opening_shift):
                 closing.append("pos_transactions", {
                     "sales_invoice": invoice_name,
                     "posting_date": posting_date,
-                    "grand_total": base_grand_total,
+                    "grand_total": grand_total,
                     "customer": customer
                 })
             
@@ -481,17 +479,15 @@ def make_closing_shift_from_opening(opening_shift):
         taxes_dict = {}  # Key: (account_head, rate), Value: amount
         
         for invoice in pos_transactions:
-            # Get conversion rate for this invoice (single currency - conversion_rate only)
-            conversion_rate = invoice.get("conversion_rate") or 1.0
-            
-            # Use base_* fields for company currency (matches Sales Register)
-            base_grand_total = flt(invoice.get("base_grand_total") or invoice.get("grand_total") or 0)
-            base_net_total = flt(invoice.get("base_net_total") or invoice.get("net_total") or 0)
+            # Single currency: POS Profile.currency only - no conversion needed
+            # Use grand_total directly (same as base_grand_total for single currency)
+            grand_total = flt(invoice.get("grand_total") or 0)
+            net_total = flt(invoice.get("net_total") or 0)
             total_qty = flt(invoice.get("total_qty") or 0)
             
             # Add to totals
-            closing.grand_total += base_grand_total
-            closing.net_total += base_net_total
+            closing.grand_total += grand_total
+            closing.net_total += net_total
             closing.total_quantity += total_qty
             
             # Process taxes
@@ -499,14 +495,14 @@ def make_closing_shift_from_opening(opening_shift):
             for tax in invoice_taxes:
                 account_head = tax.get("account_head")
                 rate = flt(tax.get("rate") or 0)
-                # Use base_tax_amount for company currency
-                base_tax_amount = flt(tax.get("base_tax_amount") or tax.get("tax_amount") or 0)
+                # Single currency: tax_amount equals base_tax_amount
+                tax_amount = flt(tax.get("tax_amount") or 0)
                 
                 tax_key = (account_head, rate)
                 if tax_key in taxes_dict:
-                    taxes_dict[tax_key] += base_tax_amount
+                    taxes_dict[tax_key] += tax_amount
                 else:
-                    taxes_dict[tax_key] = base_tax_amount
+                    taxes_dict[tax_key] = tax_amount
             
             # FRAPPE STANDARD: Ensure all required fields are present before appending
             # Sales Invoice Reference requires: sales_invoice (reqd), posting_date (reqd), customer (reqd), grand_total (reqd)
@@ -524,13 +520,13 @@ def make_closing_shift_from_opening(opening_shift):
                 # Use default customer or skip (following Frappe validation pattern)
                 customer = opening.customer or ""
             
-            # Add to pos_transactions (all required fields now present)
-            closing.append("pos_transactions", {
-                "sales_invoice": invoice_name,
-                "posting_date": posting_date,
-                "grand_total": base_grand_total,
-                "customer": customer
-            })
+                # Add to pos_transactions (all required fields now present)
+                closing.append("pos_transactions", {
+                    "sales_invoice": invoice_name,
+                    "posting_date": posting_date,
+                    "grand_total": grand_total,
+                    "customer": customer
+                })
         
         # Add taxes to closing shift
         for (account_head, rate), amount in taxes_dict.items():
@@ -605,12 +601,12 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
             if not invoice_payments:
                 continue
             
-            # Use base_* fields for company currency (matches Sales Register)
-            change_amount = flt(d.get("base_change_amount") or d.get("change_amount") or 0)
+            # Single currency: change_amount equals base_change_amount
+            change_amount = flt(d.get("change_amount") or 0)
             
             for p in invoice_payments:
-                # Use base_amount for company currency (matches Sales Register)
-                amount = flt(p.get("base_amount") or p.get("amount") or 0)
+                # Single currency: amount equals base_amount
+                amount = flt(p.get("amount") or 0)
                 mode_of_payment = p.get("mode_of_payment")
 
                 # ✅ طرح change_amount من المبلغ النقدي فقط (matches Sales Register)
@@ -629,8 +625,8 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
         pos_payments = _get_payments_entries_helper(pos_opening_shift)
         for py in pos_payments:
             mode_of_payment = py.get("mode_of_payment")
-            # Use base_paid_amount for company currency
-            paid_amount = flt(py.get("base_paid_amount") or py.get("paid_amount") or 0)
+            # Single currency: paid_amount equals base_paid_amount
+            paid_amount = flt(py.get("paid_amount") or 0)
             
             if mode_of_payment in payments:
                 payments[mode_of_payment] += paid_amount
@@ -707,22 +703,17 @@ def _get_pos_invoices_helper(pos_opening_shift):
     """
     try:
         # FRAPPE STANDARD: Fetch only required fields for frontend (optimized)
-        # Single currency: Only conversion_rate exists (exchange_rate/target_exchange_rate don't exist)
-        # Frontend needs: name, posting_date, customer, grand_total, base_grand_total, 
-        # net_total, base_net_total, total_qty, base_change_amount, change_amount, conversion_rate
+        # Single currency: POS Profile.currency only - no base_* fields needed
+        # Frontend needs: name, posting_date, customer, grand_total, net_total, total_qty, change_amount
         invoices_data = frappe.db.sql("""
             SELECT 
                 si.name,
                 si.posting_date,
                 si.customer,
                 si.grand_total,
-                si.base_grand_total,
                 si.net_total,
-                si.base_net_total,
                 si.total_qty,
-                si.base_change_amount,
-                si.change_amount,
-                si.conversion_rate
+                si.change_amount
             FROM `tabSales Invoice` si
             WHERE si.posa_pos_opening_shift = %s
             AND si.docstatus = 1
@@ -734,13 +725,12 @@ def _get_pos_invoices_helper(pos_opening_shift):
         payments_data = []
         if invoice_names:
             # FRAPPE STANDARD: Use safe SQL with placeholders (prevents SQL injection)
-            # Frontend needs: parent, mode_of_payment, base_amount, amount
+            # Single currency: Frontend needs: parent, mode_of_payment, amount only
             placeholders = ','.join(['%s'] * len(invoice_names))
             payments_data = frappe.db.sql(f"""
                 SELECT 
                     parent,
                     mode_of_payment,
-                    base_amount,
                     amount
                 FROM `tabSales Invoice Payment`
                 WHERE parent IN ({placeholders})
@@ -750,14 +740,13 @@ def _get_pos_invoices_helper(pos_opening_shift):
         taxes_data = []
         if invoice_names:
             # FRAPPE STANDARD: Use safe SQL with placeholders (prevents SQL injection)
-            # Frontend needs: parent, account_head, rate, base_tax_amount, tax_amount
+            # Single currency: Frontend needs: parent, account_head, rate, tax_amount only
             placeholders = ','.join(['%s'] * len(invoice_names))
             taxes_data = frappe.db.sql(f"""
                 SELECT 
                     parent,
                     account_head,
                     rate,
-                    base_tax_amount,
                     tax_amount
                 FROM `tabSales Taxes and Charges`
                 WHERE parent IN ({placeholders})
@@ -771,7 +760,6 @@ def _get_pos_invoices_helper(pos_opening_shift):
                 payments_dict[parent] = []
             payments_dict[parent].append({
                 "mode_of_payment": payment.mode_of_payment,
-                "base_amount": flt(payment.base_amount or payment.amount or 0),
                 "amount": flt(payment.amount or 0)
             })
         
@@ -783,11 +771,11 @@ def _get_pos_invoices_helper(pos_opening_shift):
             taxes_dict[parent].append({
                 "account_head": tax.account_head,
                 "rate": flt(tax.rate or 0),
-                "base_tax_amount": flt(tax.base_tax_amount or tax.tax_amount or 0),
                 "tax_amount": flt(tax.tax_amount or 0)
             })
         
         # Build invoice dicts with all required fields
+        # Single currency: POS Profile.currency only - no base_* or conversion_rate needed
         invoices = []
         for invoice_row in invoices_data:
             invoice_name = invoice_row.name
@@ -796,13 +784,9 @@ def _get_pos_invoices_helper(pos_opening_shift):
                 "posting_date": invoice_row.posting_date,  # Required for Sales Invoice Reference
                 "customer": invoice_row.customer,  # Required for Sales Invoice Reference
                 "grand_total": flt(invoice_row.grand_total or 0),
-                "base_grand_total": flt(invoice_row.base_grand_total or invoice_row.grand_total or 0),
                 "net_total": flt(invoice_row.net_total or 0),
-                "base_net_total": flt(invoice_row.base_net_total or invoice_row.net_total or 0),
                 "total_qty": flt(invoice_row.total_qty or 0),
-                "base_change_amount": flt(invoice_row.base_change_amount or invoice_row.change_amount or 0),
                 "change_amount": flt(invoice_row.change_amount or 0),
-                "conversion_rate": flt(invoice_row.conversion_rate or 1.0),
                 "payments": payments_dict.get(invoice_name, []),
                 "taxes": taxes_dict.get(invoice_name, [])
             }
@@ -815,6 +799,53 @@ def _get_pos_invoices_helper(pos_opening_shift):
         return []
 
 
+def _get_invoice_type(invoice, pos_profile_name, pos_opening_shift_name, user):
+    """
+    Helper: Determine invoice type based on Frappe framework logic
+    Returns: "مبيعات", "مرتجع فاتورة", "مرتجع سريع", or "غير معروف"
+    """
+    try:
+        # Check if invoice matches current shift, profile, and user
+        matches_current_shift = (
+            pos_opening_shift_name and 
+            invoice.get("posa_pos_opening_shift") == pos_opening_shift_name
+        ) or (not pos_opening_shift_name)
+        
+        matches_current_profile = invoice.get("pos_profile") == pos_profile_name
+        matches_current_user = invoice.get("owner") == user
+        
+        # All invoices must match current profile and user
+        if not matches_current_profile or not matches_current_user:
+            return "غير معروف"
+        
+        # If shift filter is provided, invoice must match it
+        if pos_opening_shift_name and not matches_current_shift:
+            return "غير معروف"
+        
+        is_pos = invoice.get("is_pos", 0)
+        is_return = invoice.get("is_return", 0)
+        grand_total = flt(invoice.get("grand_total") or 0)
+        return_against = invoice.get("return_against")
+        
+        # مبيعات: is_pos=1, is_return=0
+        if is_pos == 1 and is_return == 0:
+            return "مبيعات"
+        
+        # مرتجع: is_pos=1, is_return=1, grand_total < 0
+        if is_pos == 1 and is_return == 1 and grand_total < 0:
+            # مرتجع فاتورة: return_against is not empty or null
+            if return_against and str(return_against).strip() != "":
+                return "مرتجع فاتورة"
+            # مرتجع سريع: return_against is empty or null
+            return "مرتجع سريع"
+        
+        return "غير معروف"
+        
+    except Exception as e:
+        frappe.log_error(f"_get_invoice_type: {str(e)[:100]}", "POS Closing Shift")
+        return "غير معروف"
+
+
 def _get_payments_entries_helper(pos_opening_shift):
     """
     Helper: Get payment entries for POS Opening Shift
@@ -823,14 +854,13 @@ def _get_payments_entries_helper(pos_opening_shift):
     """
     try:
         # Query Payment Entries that reference Sales Invoices from this shift
-        # Single currency: exchange_rate is usually 1.0, but we use COALESCE for safety
-        # Frontend needs: name, mode_of_payment, paid_amount, base_paid_amount, posting_date, party, reference_name
+        # Single currency: POS Profile.currency only - paid_amount equals base_paid_amount
+        # Frontend needs: name, mode_of_payment, paid_amount, posting_date, party, reference_name
         payment_entries = frappe.db.sql("""
             SELECT DISTINCT
                 pe.name,
                 pe.mode_of_payment,
                 per.allocated_amount as paid_amount,
-                (per.allocated_amount * COALESCE(per.exchange_rate, pe.target_exchange_rate, pe.source_exchange_rate, 1)) as base_paid_amount,
                 pe.posting_date,
                 pe.party,
                 per.reference_name
