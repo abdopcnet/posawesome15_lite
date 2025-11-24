@@ -318,49 +318,19 @@ export default {
       this.isLoadingInvoices = true;
 
       try {
-        // Get submitted invoices for current user and POS profile
+        // Get submitted invoices with invoice type from backend (single query)
+        // FRAPPE STANDARD: Use backend API to fetch invoices with type determination
         const response = await frappe.call({
-          method: "frappe.client.get_list",
+          method: API_MAP.SALES_INVOICE.GET_PRINT_INVOICES,
           args: {
-            doctype: "Sales Invoice",
-            filters: {
-              is_pos: 1,
-              pos_profile: this.pos_profile.name,
-              owner: frappe.session.user,
-              docstatus: 1, // Only submitted invoices
-            },
-            fields: [
-              "name",
-              "customer",
-              "posting_date",
-              "posting_time",
-              "grand_total",
-              "currency",
-            ],
-            order_by: "creation desc",
-            limit: 50,
+            pos_profile: this.pos_profile.name,
+            pos_opening_shift: this.pos_opening_shift?.name || null,
+            user: frappe.session.user,
           },
         });
 
-        if (response.message && response.message.length > 0) {
-          // Get customer names
-          const invoices = await Promise.all(
-            response.message.map(async (invoice) => {
-              if (invoice.customer) {
-                try {
-                  const customer = await frappe.db.get_doc(
-                    "Customer",
-                    invoice.customer
-                  );
-                  invoice.customer_name = customer.customer_name;
-                } catch (e) {
-                  invoice.customer_name = invoice.customer;
-                }
-              }
-              return invoice;
-            })
-          );
-          this.printInvoicesList = invoices;
+        if (response.message && Array.isArray(response.message)) {
+          this.printInvoicesList = response.message;
         } else {
           this.printInvoicesList = [];
         }
