@@ -330,6 +330,156 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
         return []
 
 
+# ===== PRINT INVOICES =====
+
+@frappe.whitelist()
+def get_print_invoices(pos_profile=None, pos_opening_shift=None, user=None):
+    """
+    GET - Get submitted invoices for print dialog with invoice type
+    Returns list of invoices with invoice_type field (مبيعات, مرتجع فاتورة, مرتجع سريع)
+    
+    FRAPPE STANDARD: pos_profile and pos_opening_shift can be dict or string
+    """
+    try:
+        # FRAPPE STANDARD: Handle string or dict parameters
+        if isinstance(pos_profile, dict):
+            pos_profile_name = pos_profile.get('name')
+        else:
+            pos_profile_name = pos_profile
+            
+        if isinstance(pos_opening_shift, dict):
+            pos_opening_shift_name = pos_opening_shift.get('name')
+        else:
+            pos_opening_shift_name = pos_opening_shift
+        
+        # Use session user if not specified
+        if not user:
+            user = frappe.session.user
+        
+        if not pos_profile_name:
+            return []
+        
+        # Build filters
+        filters = {
+            "is_pos": 1,
+            "pos_profile": pos_profile_name,
+            "owner": user,
+            "docstatus": 1,  # Only submitted invoices
+        }
+        
+        # Add pos_opening_shift filter if provided
+        if pos_opening_shift_name:
+            filters["posa_pos_opening_shift"] = pos_opening_shift_name
+        
+        # FRAPPE STANDARD: Fetch invoices with all required fields
+        invoices = frappe.get_all(
+            "Sales Invoice",
+            filters=filters,
+            fields=[
+                "name",
+                "customer",
+                "posting_date",
+                "posting_time",
+                "grand_total",
+                "currency",
+                "is_return",
+                "return_against",
+                "posa_pos_opening_shift",
+                "pos_profile",
+                "owner",
+            ],
+            order_by="creation desc",
+            limit=50,
+        )
+        
+        # Get customer names and determine invoice type
+        result = []
+        for invoice in invoices:
+            # Get customer name
+            customer_name = invoice.customer
+            if invoice.customer:
+                try:
+                    customer_name = frappe.get_value("Customer", invoice.customer, "customer_name") or invoice.customer
+                except:
+                    customer_name = invoice.customer
+            
+            # Determine invoice type based on Frappe framework logic
+            invoice_type = _get_invoice_type(
+                invoice,
+                pos_profile_name,
+                pos_opening_shift_name,
+                user
+            )
+            
+            result.append({
+                "name": invoice.name,
+                "customer": invoice.customer,
+                "customer_name": customer_name,
+                "posting_date": invoice.posting_date,
+                "posting_time": invoice.posting_time,
+                "grand_total": flt(invoice.grand_total or 0),
+                "currency": invoice.currency,
+                "invoice_type": invoice_type,
+            })
+        
+        return result
+        
+    except Exception as e:
+        # FRAPPE STANDARD: Short error message (max 140 chars for Error Log title field)
+        error_msg = str(e)[:100] if len(str(e)) > 100 else str(e)
+        frappe.log_error(f"get_print_invoices: {error_msg}", "Sales Invoice")
+        return []
+
+
+def _get_invoice_type(invoice, pos_profile_name, pos_opening_shift_name, user):
+    """
+    Helper: Determine invoice type based on Frappe framework logic
+    Returns: "مبيعات", "مرتجع فاتورة", "مرتجع سريع", or "غير معروف"
+    """
+    try:
+        # FRAPPE STANDARD: Get values from invoice dict
+        # Frappe returns is_pos and is_return as int (0 or 1), not boolean
+        is_pos = invoice.get("is_pos", 0)
+        is_return = invoice.get("is_return", 0)
+        grand_total = flt(invoice.get("grand_total") or 0)
+        return_against = invoice.get("return_against")
+        
+        # Check if invoice matches current shift, profile, and user
+        # Only check if filters were provided (if not provided, accept all)
+        if pos_profile_name:
+            matches_current_profile = invoice.get("pos_profile") == pos_profile_name
+            if not matches_current_profile:
+                return "غير معروف"
+        
+        if user:
+            matches_current_user = invoice.get("owner") == user
+            if not matches_current_user:
+                return "غير معروف"
+        
+        if pos_opening_shift_name:
+            matches_current_shift = invoice.get("posa_pos_opening_shift") == pos_opening_shift_name
+            if not matches_current_shift:
+                return "غير معروف"
+        
+        # مبيعات: is_pos=1, is_return=0
+        if is_pos == 1 and is_return == 0:
+            return "مبيعات"
+        
+        # مرتجع: is_pos=1, is_return=1, grand_total < 0
+        if is_pos == 1 and is_return == 1 and grand_total < 0:
+            # مرتجع فاتورة: return_against is not empty or null
+            if return_against and str(return_against).strip() != "":
+                return "مرتجع فاتورة"
+            # مرتجع سريع: return_against is empty or null
+            return "مرتجع سريع"
+        
+        return "غير معروف"
+        
+    except Exception as e:
+        frappe.log_error(f"_get_invoice_type: {str(e)[:100]}", "Sales Invoice")
+        return "غير معروف"
+
+
 # ===== CREATE AND SUBMIT OPERATION =====
 # This is the ONLY method used for creating POS invoices
 # Following ERPNext native workflow: __islocal -> insert() -> submit()
