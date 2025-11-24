@@ -1834,8 +1834,9 @@ export default {
         this.getPrecision("discount_amount")
       );
 
+      // Single currency: POS Profile.currency only - base_discount_amount equals discount_amount
       doc.base_discount_amount = flt(
-        doc.discount_amount * (doc.conversion_rate || 1),
+        doc.discount_amount || 0,
         this.getPrecision("base_discount_amount")
       );
     },
