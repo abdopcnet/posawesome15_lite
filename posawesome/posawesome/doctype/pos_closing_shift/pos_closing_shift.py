@@ -364,15 +364,14 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
             invoice_payments = d.get("payments", [])
             
             if not invoice_payments:
-                frappe.log_error(f"[[pos_closing_shift.py]] _calculate_payment_totals: Invoice {invoice_name} has no payments")
                 continue
             
-            # Use base_* fields for company currency (matches Sales Register)
-            change_amount = flt(d.get("base_change_amount") or d.get("change_amount") or 0)
+            # Single currency: change_amount equals base_change_amount
+            change_amount = flt(d.get("change_amount") or 0)
             
             for p in invoice_payments:
-                # Use base_amount for company currency (matches Sales Register)
-                amount = flt(p.get("base_amount") or p.get("amount") or 0)
+                # Single currency: amount equals base_amount
+                amount = flt(p.get("amount") or 0)
                 mode_of_payment = p.get("mode_of_payment")
 
                 # ✅ طرح change_amount من المبلغ النقدي فقط (matches Sales Register)
@@ -380,31 +379,25 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
                 # يجب طرحه من المبلغ المتوقع في المصالحة النقدية
                 if mode_of_payment == cash_mode_of_payment:
                     amount = amount - change_amount
-                    frappe.log_error(f"[[pos_closing_shift.py]] Cash payment for {invoice_name}: base_amount={p.get('base_amount') or p.get('amount')}, change={change_amount}, final={amount}")
 
                 # Add to payments dict
                 if mode_of_payment in payments:
                     payments[mode_of_payment] += amount
                 else:
                     payments[mode_of_payment] = amount
-                
-                frappe.log_error(f"[[pos_closing_shift.py]] Payment {mode_of_payment}: added {amount}, total={payments[mode_of_payment]}")
 
         # Process Payment Entries
         pos_payments = _get_payments_entries_helper(pos_opening_shift)
         for py in pos_payments:
             mode_of_payment = py.get("mode_of_payment")
-            # Use base_paid_amount for company currency
-            paid_amount = flt(py.get("base_paid_amount") or py.get("paid_amount") or 0)
+            # Single currency: paid_amount equals base_paid_amount
+            paid_amount = flt(py.get("paid_amount") or 0)
             
             if mode_of_payment in payments:
                 payments[mode_of_payment] += paid_amount
             else:
                 payments[mode_of_payment] = paid_amount
-            
-            frappe.log_error(f"[[pos_closing_shift.py]] Payment Entry {mode_of_payment}: added {paid_amount}, total={payments[mode_of_payment]}")
 
-        frappe.log_error(f"[[pos_closing_shift.py]] _calculate_payment_totals: Final totals: {payments}")
         return payments
 
     except Exception as e:
@@ -482,19 +475,20 @@ def _get_pos_invoices_helper(pos_opening_shift):
                 invoice_dict = doc.as_dict()
                 
                 # Log invoice totals for debugging
-                base_grand = flt(invoice_dict.get("base_grand_total") or invoice_dict.get("grand_total") or 0)
-                base_net = flt(invoice_dict.get("base_net_total") or invoice_dict.get("net_total") or 0)
-                grand_total_sum += base_grand
-                net_total_sum += base_net
+                # Single currency: grand_total equals base_grand_total
+                grand = flt(invoice_dict.get("grand_total") or 0)
+                net = flt(invoice_dict.get("net_total") or 0)
+                grand_total_sum += grand
+                net_total_sum += net
                 
-                frappe.log_error(f"[[pos_closing_shift.py]] Invoice {d.name}: base_grand_total={base_grand}, base_net_total={base_net}, payments_count={len(invoice_dict.get('payments', []))}, taxes_count={len(invoice_dict.get('taxes', []))}")
+                frappe.log_error(f"[[pos_closing_shift.py]] Invoice {d.name}: grand_total={grand}, net_total={net}, payments_count={len(invoice_dict.get('payments', []))}, taxes_count={len(invoice_dict.get('taxes', []))}")
                 
                 invoices.append(invoice_dict)
             except Exception as e:
                 frappe.log_error(f"[[pos_closing_shift.py]] _get_pos_invoices_helper: Error loading invoice {d.name}: {str(e)}")
                 continue
         
-        frappe.log_error(f"[[pos_closing_shift.py]] _get_pos_invoices_helper: Processed {len(invoices)} invoices, total base_grand_total={grand_total_sum}, total base_net_total={net_total_sum}")
+        frappe.log_error(f"[[pos_closing_shift.py]] _get_pos_invoices_helper: Processed {len(invoices)} invoices, total grand_total={grand_total_sum}, total net_total={net_total_sum}")
         
         return invoices
     except Exception as e:
