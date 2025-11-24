@@ -668,6 +668,16 @@
                     <th
                       style="
                         padding: 12px;
+                        text-align: center;
+                        font-weight: 600;
+                        color: white;
+                      "
+                    >
+                      النوع
+                    </th>
+                    <th
+                      style="
+                        padding: 12px;
                         text-align: left;
                         font-weight: 600;
                         color: white;
@@ -711,6 +721,9 @@
                     </td>
                     <td style="padding: 12px; text-align: right; font-weight: 600">
                       {{ invoice.name }}
+                    </td>
+                    <td style="padding: 12px; text-align: center; font-weight: 600">
+                      {{ invoice.invoice_type || "غير معروف" }}
                     </td>
                     <td style="padding: 12px; text-align: left; font-weight: 600">
                       {{ formatCurrency(invoice.grand_total || 0) }}
