@@ -118,22 +118,12 @@ async function set_form_data(data, frm) {
 
   for (const d of data) {
     add_to_pos_transaction(d, frm);
-    const conversion_rate = get_conversion_rate(d);
-    frm.doc.grand_total += get_base_value(
-      d,
-      "grand_total",
-      "base_grand_total",
-      conversion_rate
-    );
-    frm.doc.net_total += get_base_value(
-      d,
-      "net_total",
-      "base_net_total",
-      conversion_rate
-    );
+    // Single currency: POS Profile.currency only - no conversion needed
+    frm.doc.grand_total += flt(d.grand_total || 0);
+    frm.doc.net_total += flt(d.net_total || 0);
     frm.doc.total_quantity += flt(d.total_qty);
-    await add_to_payments(d, frm, conversion_rate);
-    add_to_taxes(d, frm, conversion_rate);
+    await add_to_payments(d, frm);
+    add_to_taxes(d, frm);
   }
 }
 
@@ -144,9 +134,9 @@ function set_form_data_invoices_only(data, frm) {
   );
 
   data.forEach((d) => {
-    // Use base_* fields for company currency totals (matches Sales Register)
-    const grand_total = flt(d.base_grand_total || d.grand_total || 0);
-    const net_total = flt(d.base_net_total || d.net_total || 0);
+    // Single currency: POS Profile.currency only - grand_total equals base_grand_total
+    const grand_total = flt(d.grand_total || 0);
+    const net_total = flt(d.net_total || 0);
     const total_qty = flt(d.total_qty || 0);
 
     console.log(
@@ -182,17 +172,12 @@ function set_form_payments_data(data, frm) {
 }
 
 function add_to_pos_transaction(d, frm) {
-  const conversion_rate = get_conversion_rate(d);
+  // Single currency: POS Profile.currency only - no conversion needed
   const child = {
     posting_date: d.posting_date,
-    grand_total: get_base_value(
-      d,
-      "grand_total",
-      "base_grand_total",
-      conversion_rate
-    ),
+    grand_total: flt(d.grand_total || 0),
     transaction_currency: d.currency,
-    transaction_amount: flt(d.grand_total),
+    transaction_amount: flt(d.grand_total || 0),
     customer: d.customer,
   };
   if (d.doctype === "POS Invoice") {
@@ -213,7 +198,7 @@ function add_to_pos_payments(d, frm) {
   });
 }
 
-async function add_to_payments(d, frm, conversion_rate) {
+async function add_to_payments(d, frm) {
   const payments = Array.isArray(d.payments) ? d.payments : [];
   const cash_mode_of_payment = await get_cash_mode_of_payment(frm);
 
@@ -222,29 +207,23 @@ async function add_to_payments(d, frm, conversion_rate) {
       (pay) => pay.mode_of_payment === p.mode_of_payment
     );
     if (payment) {
-      let amount = get_base_value(p, "amount", "base_amount", conversion_rate);
+      // Single currency: amount equals base_amount
+      let amount = flt(p.amount || 0);
 
       if (payment.mode_of_payment === cash_mode_of_payment) {
-        amount -= get_base_value(
-          d,
-          "change_amount",
-          "base_change_amount",
-          conversion_rate
-        );
+        // Single currency: change_amount equals base_change_amount
+        amount -= flt(d.change_amount || 0);
       }
       payment.expected_amount += flt(amount);
       // Recalculate difference (closing_amount is filled by user)
       payment.difference =
         flt(payment.closing_amount || 0) - flt(payment.expected_amount);
     } else {
-      let amount = get_base_value(p, "amount", "base_amount", conversion_rate);
+      // Single currency: amount equals base_amount
+      let amount = flt(p.amount || 0);
       if (p.mode_of_payment === cash_mode_of_payment) {
-        amount -= get_base_value(
-          d,
-          "change_amount",
-          "base_change_amount",
-          conversion_rate
-        );
+        // Single currency: change_amount equals base_change_amount
+        amount -= flt(d.change_amount || 0);
       }
       frm.add_child("payment_reconciliation", {
         mode_of_payment: p.mode_of_payment,
@@ -279,7 +258,7 @@ function add_pos_payment_to_payments(p, frm) {
   }
 }
 
-function add_to_taxes(d, frm, conversion_rate) {
+function add_to_taxes(d, frm) {
   if (!d.taxes || !Array.isArray(d.taxes)) {
     return;
   }
@@ -289,19 +268,14 @@ function add_to_taxes(d, frm, conversion_rate) {
       (tx) => tx.account_head === t.account_head && tx.rate === t.rate
     );
     if (tax) {
-      tax.amount += flt(
-        get_base_value(t, "tax_amount", "base_tax_amount", conversion_rate)
-      );
+      // Single currency: tax_amount equals base_tax_amount
+      tax.amount += flt(t.tax_amount || 0);
     } else {
       frm.add_child("taxes", {
         account_head: t.account_head,
         rate: t.rate,
-        amount: get_base_value(
-          t,
-          "tax_amount",
-          "base_tax_amount",
-          conversion_rate
-        ),
+        // Single currency: tax_amount equals base_tax_amount
+        amount: flt(t.tax_amount || 0),
       });
     }
   });
@@ -409,33 +383,6 @@ const get_cash_mode_of_payment = async (frm) => {
   return frm.__cashModeCache.value;
 };
 
-const get_conversion_rate = (doc) =>
-  doc.conversion_rate ||
-  doc.exchange_rate ||
-  doc.target_exchange_rate ||
-  doc.plc_conversion_rate ||
-  1;
-
-const get_base_value = (doc, field, base_field, conversion_rate) => {
-  const base_fieldname = base_field || `base_${field}`;
-  const base_value = doc[base_fieldname];
-  if (base_value !== undefined && base_value !== null && base_value !== "") {
-    return flt(base_value);
-  }
-
-  const value = doc[field];
-  if (value === undefined || value === null || value === "") {
-    return 0;
-  }
-
-  if (!conversion_rate) {
-    conversion_rate =
-      doc.conversion_rate ||
-      doc.exchange_rate ||
-      doc.target_exchange_rate ||
-      doc.plc_conversion_rate ||
-      1;
-  }
-
-  return flt(value) * flt(conversion_rate || 1);
-};
+// Single currency: POS Profile.currency only
+// Removed get_conversion_rate and get_base_value functions
+// All values are in the same currency, no conversion needed
