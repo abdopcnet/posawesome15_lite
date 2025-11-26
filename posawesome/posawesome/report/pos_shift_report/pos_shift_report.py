@@ -79,18 +79,18 @@ def get_payment_modes(filters):
     if user_pos_profiles:
         profile_list = "(" + ",".join(["'" + profile.replace("'", "''") + "'" for profile in user_pos_profiles]) + ")"
         if "WHERE" in where_clause:
-            where_clause += f" AND pos_open.pos_profile IN {profile_list}"
+            where_clause += f" AND `tabPOS Opening Shift`.pos_profile IN {profile_list}"
         else:
-            where_clause = f"WHERE pos_open.pos_profile IN {profile_list}"
+            where_clause = f"WHERE `tabPOS Opening Shift`.pos_profile IN {profile_list}"
 
     query = """
-		SELECT DISTINCT pcd.mode_of_payment
-		FROM `tabPOS Opening Shift` pos_open
-		LEFT JOIN `tabPOS Closing Shift` pos_close ON pos_close.name = pos_open.pos_closing_shift
-		LEFT JOIN `tabPOS Closing Shift Detail` pcd ON pcd.parent = pos_close.name
+		SELECT DISTINCT `tabPOS Closing Shift Detail`.mode_of_payment
+		FROM `tabPOS Opening Shift`
+		LEFT JOIN `tabPOS Closing Shift` ON `tabPOS Closing Shift`.name = `tabPOS Opening Shift`.pos_closing_shift
+		LEFT JOIN `tabPOS Closing Shift Detail` ON `tabPOS Closing Shift Detail`.parent = `tabPOS Closing Shift`.name
 		{conditions}
-		AND pcd.mode_of_payment IS NOT NULL
-		ORDER BY pcd.mode_of_payment
+		AND `tabPOS Closing Shift Detail`.mode_of_payment IS NOT NULL
+		ORDER BY `tabPOS Closing Shift Detail`.mode_of_payment
 	""".format(conditions=where_clause)
 
     modes = frappe.db.sql(query, filters, as_dict=0)
@@ -128,9 +128,9 @@ def get_data(filters, payment_modes):
     if user_pos_profiles:
         profile_list = "(" + ",".join(["'" + profile.replace("'", "''") + "'" for profile in user_pos_profiles]) + ")"
         if conditions:
-            conditions += f" AND pos_open.pos_profile IN {profile_list}"
+            conditions += f" AND `tabPOS Opening Shift`.pos_profile IN {profile_list}"
         else:
-            conditions = f"WHERE pos_open.pos_profile IN {profile_list}"
+            conditions = f"WHERE `tabPOS Opening Shift`.pos_profile IN {profile_list}"
 
     payment_mode_cases = []
     for mode in payment_modes:
@@ -139,7 +139,7 @@ def get_data(filters, payment_modes):
         case_sql = f"""
 			(SELECT SUM(closing_amount)
 			 FROM `tabPOS Closing Shift Detail`
-			 WHERE parent = pos_close.name AND mode_of_payment = '{safe_mode}'
+			 WHERE parent = `tabPOS Closing Shift`.name AND mode_of_payment = '{safe_mode}'
 			) AS {field_name}
 		"""
         payment_mode_cases.append(case_sql)
@@ -151,29 +151,29 @@ def get_data(filters, payment_modes):
 
     query = """
 		SELECT
-			pos_open.user AS user,
-			pos_open.pos_profile AS pos_profile,
-			pos_open.name AS pos_opening_shift,
-			DATE_FORMAT(pos_open.period_start_date, '%%d-%%m-%%Y %%H:%%i:%%s') AS period_start_date,
-			pos_open.pos_closing_shift AS pos_closing_shift,
-			DATE_FORMAT(pos_close.period_end_date, '%%d-%%m-%%Y %%H:%%i:%%s') AS period_end_date,
-			SUM(si.grand_total) AS grand_total,
-			SUM(si.paid_amount - si.change_amount) AS paid_amount,
-			SUM(si.discount_amount) AS discount_amount,
-			SUM(si.outstanding_amount) AS outstanding_amount,
-			(SELECT SUM(opening_amount) FROM `tabPOS Closing Shift Detail` WHERE parent = pos_close.name) AS opening_amount,
-			(SELECT SUM(closing_amount) FROM `tabPOS Closing Shift Detail` WHERE parent = pos_close.name) AS closing_amount,
-			(SELECT SUM(expected_amount) FROM `tabPOS Closing Shift Detail` WHERE parent = pos_close.name) AS expected_amount,
-			(SELECT SUM(difference) FROM `tabPOS Closing Shift Detail` WHERE parent = pos_close.name) AS difference{payment_mode_sql}
-		FROM `tabPOS Opening Shift` pos_open
-		LEFT JOIN `tabSales Invoice` si
-			ON si.posa_pos_opening_shift = pos_open.name
-			AND si.docstatus = 1
-			AND si.status NOT IN ('Draft', 'Cancelled')
-		LEFT JOIN `tabPOS Closing Shift` pos_close ON pos_close.name = pos_open.pos_closing_shift
+			`tabPOS Opening Shift`.user AS user,
+			`tabPOS Opening Shift`.pos_profile AS pos_profile,
+			`tabPOS Opening Shift`.name AS pos_opening_shift,
+			DATE_FORMAT(`tabPOS Opening Shift`.period_start_date, '%%d-%%m-%%Y %%H:%%i:%%s') AS period_start_date,
+			`tabPOS Opening Shift`.pos_closing_shift AS pos_closing_shift,
+			DATE_FORMAT(`tabPOS Closing Shift`.period_end_date, '%%d-%%m-%%Y %%H:%%i:%%s') AS period_end_date,
+			SUM(`tabSales Invoice`.grand_total) AS grand_total,
+			SUM(`tabSales Invoice`.paid_amount - `tabSales Invoice`.change_amount) AS paid_amount,
+			SUM(`tabSales Invoice`.discount_amount) AS discount_amount,
+			SUM(`tabSales Invoice`.outstanding_amount) AS outstanding_amount,
+			(SELECT SUM(opening_amount) FROM `tabPOS Closing Shift Detail` WHERE parent = `tabPOS Closing Shift`.name) AS opening_amount,
+			(SELECT SUM(closing_amount) FROM `tabPOS Closing Shift Detail` WHERE parent = `tabPOS Closing Shift`.name) AS closing_amount,
+			(SELECT SUM(expected_amount) FROM `tabPOS Closing Shift Detail` WHERE parent = `tabPOS Closing Shift`.name) AS expected_amount,
+			(SELECT SUM(difference) FROM `tabPOS Closing Shift Detail` WHERE parent = `tabPOS Closing Shift`.name) AS difference{payment_mode_sql}
+		FROM `tabPOS Opening Shift`
+		LEFT JOIN `tabSales Invoice`
+			ON `tabSales Invoice`.posa_pos_opening_shift = `tabPOS Opening Shift`.name
+			AND `tabSales Invoice`.docstatus = 1
+			AND `tabSales Invoice`.status NOT IN ('Draft', 'Cancelled')
+		LEFT JOIN `tabPOS Closing Shift` ON `tabPOS Closing Shift`.name = `tabPOS Opening Shift`.pos_closing_shift
 		{conditions}
-		GROUP BY pos_open.name
-		ORDER BY pos_open.period_start_date DESC
+		GROUP BY `tabPOS Opening Shift`.name
+		ORDER BY `tabPOS Opening Shift`.period_start_date DESC
 	""".format(conditions=conditions, payment_mode_sql=payment_mode_sql)
 
     data = frappe.db.sql(query, filters, as_dict=1)
@@ -184,14 +184,14 @@ def get_conditions(filters):
     """Build WHERE conditions based on filters."""
     conditions = []
     if filters.get("user"):
-        conditions.append("pos_open.user = %(user)s")
+        conditions.append("`tabPOS Opening Shift`.user = %(user)s")
     if filters.get("from_date") and filters.get("to_date"):
         conditions.append(
-            "pos_open.period_start_date BETWEEN %(from_date)s AND %(to_date)s")
+            "`tabPOS Opening Shift`.period_start_date BETWEEN %(from_date)s AND %(to_date)s")
     if filters.get("pos_profile"):
-        conditions.append("pos_open.pos_profile = %(pos_profile)s")
+        conditions.append("`tabPOS Opening Shift`.pos_profile = %(pos_profile)s")
     if filters.get("pos_opening_shift"):
-        conditions.append("pos_open.name = %(pos_opening_shift)s")
+        conditions.append("`tabPOS Opening Shift`.name = %(pos_opening_shift)s")
     if filters.get("pos_closing_shift"):
-        conditions.append("pos_open.pos_closing_shift = %(pos_closing_shift)s")
+        conditions.append("`tabPOS Opening Shift`.pos_closing_shift = %(pos_closing_shift)s")
     return "WHERE " + " AND ".join(conditions) if conditions else ""
