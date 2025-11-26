@@ -1,125 +1,261 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>نظام إدارة المبيعات</title>
-  </head>
-  <body>
-    <div class="container py-4">
-      <div class="row text-center">
-        <!-- نقطة البيع -->
-        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-          <a href="/app/posapp" target="_blank" class="shortcut">
-            <img
-              src="/assets/posawesome/images/shortcuts/open.png"
-              alt="نقطة البيع"
-              class="shortcut-icon"
-            />
-            <p class="shortcut-title">نقطة البيع</p>
-          </a>
-        </div>
+<div class="container py-4">
+	<div class="row text-center">
+		<!-- نقطة البيع -->
+		<div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+			<a
+				href="/app/posapp"
+				target="_blank"
+				style="
+					text-decoration: none;
+					display: block;
+					background: #f9f9f9;
+					border-radius: 10px;
+					padding: 20px;
+					box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+					transition: transform 0.3s ease, box-shadow 0.3s ease;
+				"
+				onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 6px 8px rgba(0, 0, 0, 0.15)'; this.querySelector('img').style.filter='brightness(1.2)'"
+				onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)'; this.querySelector('img').style.filter='brightness(1)'"
+			>
+				<img
+					src="/assets/posawesome/images/shortcuts/open.png"
+					alt="نقطة البيع"
+					style="
+						width: 70px;
+						height: 70px;
+						margin-bottom: 10px;
+						transition: all 0.3s ease;
+					"
+				/>
+				<p style="font-size: 16px; font-weight: bold; color: #333; margin: 0">
+					نقطة البيع
+				</p>
+			</a>
+		</div>
 
-        <!-- العملاء -->
-        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-          <a href="/app/customer" target="_blank" class="shortcut">
-            <img
-              src="/assets/posawesome/images/shortcuts/social-care-2.png"
-              alt="العملاء"
-              class="shortcut-icon"
-            />
-            <p class="shortcut-title">العملاء</p>
-          </a>
-        </div>
+		<!-- العملاء -->
+		<div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+			<a
+				href="/app/customer"
+				target="_blank"
+				style="
+					text-decoration: none;
+					display: block;
+					background: #f9f9f9;
+					border-radius: 10px;
+					padding: 20px;
+					box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+					transition: transform 0.3s ease, box-shadow 0.3s ease;
+				"
+				onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 6px 8px rgba(0, 0, 0, 0.15)'; this.querySelector('img').style.filter='brightness(1.2)'"
+				onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)'; this.querySelector('img').style.filter='brightness(1)'"
+			>
+				<img
+					src="/assets/posawesome/images/shortcuts/social-care-2.png"
+					alt="العملاء"
+					style="
+						width: 70px;
+						height: 70px;
+						margin-bottom: 10px;
+						transition: all 0.3s ease;
+					"
+				/>
+				<p style="font-size: 16px; font-weight: bold; color: #333; margin: 0">العملاء</p>
+			</a>
+		</div>
 
-        <!-- الأصناف -->
-        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-          <a href="/app/item" target="_blank" class="shortcut">
-            <img
-              src="/assets/posawesome/images/shortcuts/items.png"
-              alt="الأصناف"
-              class="shortcut-icon"
-            />
-            <p class="shortcut-title">الأصناف</p>
-          </a>
-        </div>
+		<!-- الأصناف -->
+		<div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+			<a
+				href="/app/item"
+				target="_blank"
+				style="
+					text-decoration: none;
+					display: block;
+					background: #f9f9f9;
+					border-radius: 10px;
+					padding: 20px;
+					box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+					transition: transform 0.3s ease, box-shadow 0.3s ease;
+				"
+				onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 6px 8px rgba(0, 0, 0, 0.15)'; this.querySelector('img').style.filter='brightness(1.2)'"
+				onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)'; this.querySelector('img').style.filter='brightness(1)'"
+			>
+				<img
+					src="/assets/posawesome/images/shortcuts/items.png"
+					alt="الأصناف"
+					style="
+						width: 70px;
+						height: 70px;
+						margin-bottom: 10px;
+						transition: all 0.3s ease;
+					"
+				/>
+				<p style="font-size: 16px; font-weight: bold; color: #333; margin: 0">الأصناف</p>
+			</a>
+		</div>
 
-        <!-- فواتير الموظفين -->
-        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-          <a href="/app/sales-invoice" target="_blank" class="shortcut">
-            <img
-              src="/assets/posawesome/images/shortcuts/cheque.png"
-              alt="فواتير الموظفين"
-              class="shortcut-icon"
-            />
-            <p class="shortcut-title">فواتيري</p>
-          </a>
-        </div>
+		<!-- فواتير الموظفين -->
+		<div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+			<a
+				href="/app/sales-invoice"
+				target="_blank"
+				style="
+					text-decoration: none;
+					display: block;
+					background: #f9f9f9;
+					border-radius: 10px;
+					padding: 20px;
+					box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+					transition: transform 0.3s ease, box-shadow 0.3s ease;
+				"
+				onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 6px 8px rgba(0, 0, 0, 0.15)'; this.querySelector('img').style.filter='brightness(1.2)'"
+				onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)'; this.querySelector('img').style.filter='brightness(1)'"
+			>
+				<img
+					src="/assets/posawesome/images/shortcuts/cheque.png"
+					alt="فواتير الموظفين"
+					style="
+						width: 70px;
+						height: 70px;
+						margin-bottom: 10px;
+						transition: all 0.3s ease;
+					"
+				/>
+				<p style="font-size: 16px; font-weight: bold; color: #333; margin: 0">فواتيري</p>
+			</a>
+		</div>
 
-        <!-- كل فواتير البيع -->
-        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-          <a
-            href="/app/sales-invoice/view/list?is_pos=1"
-            target="_blank"
-            class="shortcut"
-          >
-            <img
-              src="/assets/posawesome/images/shortcuts/cheque.png"
-              alt="كل فواتير البيع"
-              class="shortcut-icon"
-            />
-            <p class="shortcut-title">كل الفواتير</p>
-          </a>
-        </div>
+		<!-- كل فواتير البيع -->
+		<div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+			<a
+				href="/app/sales-invoice/view/list?is_pos=1"
+				target="_blank"
+				style="
+					text-decoration: none;
+					display: block;
+					background: #f9f9f9;
+					border-radius: 10px;
+					padding: 20px;
+					box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+					transition: transform 0.3s ease, box-shadow 0.3s ease;
+				"
+				onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 6px 8px rgba(0, 0, 0, 0.15)'; this.querySelector('img').style.filter='brightness(1.2)'"
+				onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)'; this.querySelector('img').style.filter='brightness(1)'"
+			>
+				<img
+					src="/assets/posawesome/images/shortcuts/cheque.png"
+					alt="كل فواتير البيع"
+					style="
+						width: 70px;
+						height: 70px;
+						margin-bottom: 10px;
+						transition: all 0.3s ease;
+					"
+				/>
+				<p style="font-size: 16px; font-weight: bold; color: #333; margin: 0">
+					كل الفواتير
+				</p>
+			</a>
+		</div>
 
-        <!-- فواتير البيع المسودة -->
-        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-          <a
-            href="/app/sales-invoice/view/list?is_pos=1&status=Draft"
-            target="_blank"
-            class="shortcut"
-          >
-            <img
-              src="/assets/posawesome/images/shortcuts/draft.png"
-              alt="فواتير البيع المسودة"
-              class="shortcut-icon"
-            />
-            <p class="shortcut-title">فواتير المسودة</p>
-          </a>
-        </div>
+		<!-- فواتير البيع المسودة -->
+		<div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+			<a
+				href="/app/sales-invoice/view/list?is_pos=1&status=Draft"
+				target="_blank"
+				style="
+					text-decoration: none;
+					display: block;
+					background: #f9f9f9;
+					border-radius: 10px;
+					padding: 20px;
+					box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+					transition: transform 0.3s ease, box-shadow 0.3s ease;
+				"
+				onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 6px 8px rgba(0, 0, 0, 0.15)'; this.querySelector('img').style.filter='brightness(1.2)'"
+				onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)'; this.querySelector('img').style.filter='brightness(1)'"
+			>
+				<img
+					src="/assets/posawesome/images/shortcuts/draft.png"
+					alt="فواتير البيع المسودة"
+					style="
+						width: 70px;
+						height: 70px;
+						margin-bottom: 10px;
+						transition: all 0.3s ease;
+					"
+				/>
+				<p style="font-size: 16px; font-weight: bold; color: #333; margin: 0">
+					فواتير المسودة
+				</p>
+			</a>
+		</div>
 
-        <!-- مستندات فتح نقطة البيع -->
-        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-          <a
-            href="/app/pos-opening-shift/view/list?status=Open"
-            target="_blank"
-            class="shortcut"
-          >
-            <img
-              src="/assets/posawesome/images/shortcuts/open.png"
-              alt="فتح الوردية"
-              class="shortcut-icon"
-            />
-            <p class="shortcut-title">فتح الوردية</p>
-          </a>
-        </div>
+		<!-- مستندات فتح نقطة البيع -->
+		<div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+			<a
+				href="/app/pos-opening-shift/view/list?status=Open"
+				target="_blank"
+				style="
+					text-decoration: none;
+					display: block;
+					background: #f9f9f9;
+					border-radius: 10px;
+					padding: 20px;
+					box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+					transition: transform 0.3s ease, box-shadow 0.3s ease;
+				"
+				onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 6px 8px rgba(0, 0, 0, 0.15)'; this.querySelector('img').style.filter='brightness(1.2)'"
+				onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)'; this.querySelector('img').style.filter='brightness(1)'"
+			>
+				<img
+					src="/assets/posawesome/images/shortcuts/open.png"
+					alt="فتح الوردية"
+					style="
+						width: 70px;
+						height: 70px;
+						margin-bottom: 10px;
+						transition: all 0.3s ease;
+					"
+				/>
+				<p style="font-size: 16px; font-weight: bold; color: #333; margin: 0">
+					فتح الوردية
+				</p>
+			</a>
+		</div>
 
-        <!-- مستندات إغلاق نقطة البيع -->
-        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-          <a
-            href="/app/pos-closing-shift/view/list?docstatus=1"
-            target="_blank"
-            class="shortcut"
-          >
-            <img
-              src="/assets/posawesome/images/shortcuts/close.png"
-              alt="إغلاق الوردية"
-              class="shortcut-icon"
-            />
-            <p class="shortcut-title">إغلاق الوردية</p>
-          </a>
-        </div>
-      </div>
-    </div>
-  </body>
-</html>
+		<!-- مستندات إغلاق نقطة البيع -->
+		<div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+			<a
+				href="/app/pos-closing-shift/view/list?docstatus=1"
+				target="_blank"
+				style="
+					text-decoration: none;
+					display: block;
+					background: #f9f9f9;
+					border-radius: 10px;
+					padding: 20px;
+					box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+					transition: transform 0.3s ease, box-shadow 0.3s ease;
+				"
+				onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 6px 8px rgba(0, 0, 0, 0.15)'; this.querySelector('img').style.filter='brightness(1.2)'"
+				onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)'; this.querySelector('img').style.filter='brightness(1)'"
+			>
+				<img
+					src="/assets/posawesome/images/shortcuts/close.png"
+					alt="إغلاق الوردية"
+					style="
+						width: 70px;
+						height: 70px;
+						margin-bottom: 10px;
+						transition: all 0.3s ease;
+					"
+				/>
+				<p style="font-size: 16px; font-weight: bold; color: #333; margin: 0">
+					إغلاق الوردية
+				</p>
+			</a>
+		</div>
+	</div>
+</div>
