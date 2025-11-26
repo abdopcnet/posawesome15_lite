@@ -285,17 +285,26 @@ def get_current_shift_name():
 
 
 @frappe.whitelist()
-def get_all_open_shifts():
+def get_all_open_shifts(user=None):
     """
-    GET - Get all open shifts
+    GET - Get all open shifts for the current user (or specified user)
+    
+    FRAPPE STANDARD: Filters by frappe.session.user by default
     """
     try:
+        # FRAPPE STANDARD: Use session user if not specified
+        if not user:
+            user = frappe.session.user
+        
+        # Filter shifts by user and status
         shifts = frappe.db.sql("""
             SELECT name, pos_profile, company, period_start_date, user
             FROM `tabPOS Opening Shift`
-            WHERE status = 'Open'
+            WHERE user = %s
+            AND status = 'Open'
+            AND docstatus = 1
             ORDER BY period_start_date DESC
-        """, as_dict=True)
+        """, (user,), as_dict=True)
 
         # Make dates JSON-serializable
         for shift in shifts:
