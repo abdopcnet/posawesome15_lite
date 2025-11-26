@@ -139,14 +139,15 @@ def get_payment_modes(filters):
 
     # Get payment modes from Sales Invoice Payment
     query1 = """
-        SELECT DISTINCT sip.mode_of_payment
-        FROM `tabSales Invoice Payment` sip
-        INNER JOIN `tabSales Invoice` si ON sip.parent = si.name
+        SELECT DISTINCT `tabSales Invoice Payment`.mode_of_payment
+        FROM `tabSales Invoice Payment`
+        INNER JOIN `tabSales Invoice` ON `tabSales Invoice Payment`.parent = `tabSales Invoice`.name
+        INNER JOIN `tabPOS Opening Shift` ON `tabPOS Opening Shift`.name = `tabSales Invoice`.posa_pos_opening_shift
         {conditions}
-        {and_or_where} si.is_pos = 1
-        AND si.docstatus = 1
-        AND sip.mode_of_payment IS NOT NULL
-        AND sip.mode_of_payment != ''
+        {and_or_where} `tabSales Invoice`.is_pos = 1
+        AND `tabSales Invoice`.docstatus = 1
+        AND `tabSales Invoice Payment`.mode_of_payment IS NOT NULL
+        AND `tabSales Invoice Payment`.mode_of_payment != ''
     """.format(
         conditions=conditions,
         and_or_where="AND" if conditions else "WHERE"
@@ -154,17 +155,18 @@ def get_payment_modes(filters):
 
     # Get payment modes from Payment Entry
     query2 = """
-        SELECT DISTINCT pe.mode_of_payment
-        FROM `tabPayment Entry` pe
-        INNER JOIN `tabPayment Entry Reference` per ON per.parent = pe.name
-        INNER JOIN `tabSales Invoice` si ON per.reference_name = si.name
+        SELECT DISTINCT `tabPayment Entry`.mode_of_payment
+        FROM `tabPayment Entry`
+        INNER JOIN `tabPayment Entry Reference` ON `tabPayment Entry Reference`.parent = `tabPayment Entry`.name
+        INNER JOIN `tabSales Invoice` ON `tabPayment Entry Reference`.reference_name = `tabSales Invoice`.name
+        INNER JOIN `tabPOS Opening Shift` ON `tabPOS Opening Shift`.name = `tabSales Invoice`.posa_pos_opening_shift
         {conditions}
-        {and_or_where} si.is_pos = 1
-        AND si.docstatus = 1
-        AND pe.docstatus = 1
-        AND per.reference_doctype = 'Sales Invoice'
-        AND pe.mode_of_payment IS NOT NULL
-        AND pe.mode_of_payment != ''
+        {and_or_where} `tabSales Invoice`.is_pos = 1
+        AND `tabSales Invoice`.docstatus = 1
+        AND `tabPayment Entry`.docstatus = 1
+        AND `tabPayment Entry Reference`.reference_doctype = 'Sales Invoice'
+        AND `tabPayment Entry`.mode_of_payment IS NOT NULL
+        AND `tabPayment Entry`.mode_of_payment != ''
     """.format(
         conditions=conditions,
         and_or_where="AND" if conditions else "WHERE"
@@ -194,7 +196,7 @@ def get_data(filters, payment_modes):
         case_sql = f"""
             (SELECT SUM(amount)
              FROM `tabSales Invoice Payment`
-             WHERE parent = si.name AND mode_of_payment = '{safe_mode}'
+             WHERE parent = `tabSales Invoice`.name AND mode_of_payment = '{safe_mode}'
             ) AS {field_name}
         """
         payment_mode_cases.append(case_sql)
@@ -206,25 +208,26 @@ def get_data(filters, payment_modes):
 
     query = """
         SELECT
-            si.owner AS user,
-            si.posting_date AS posting_date,
-            si.name AS name,
-            si.pos_profile AS pos_profile,
-            si.posa_pos_opening_shift AS posa_pos_opening_shift,
-            si.posting_time AS posting_time,
-            si.grand_total AS grand_total,
-            si.paid_amount AS paid_amount,
-            si.change_amount AS change_amount,
-            (si.paid_amount - si.change_amount) AS actual_amount,
-            si.outstanding_amount AS outstanding_amount,
-            si.discount_amount AS discount_amount,
-            si.posa_item_discount_total AS posa_item_discount_total{payment_mode_sql}
-        FROM `tabSales Invoice` si
+            `tabSales Invoice`.owner AS user,
+            `tabSales Invoice`.posting_date AS posting_date,
+            `tabSales Invoice`.name AS name,
+            `tabSales Invoice`.pos_profile AS pos_profile,
+            `tabSales Invoice`.posa_pos_opening_shift AS posa_pos_opening_shift,
+            `tabSales Invoice`.posting_time AS posting_time,
+            `tabSales Invoice`.grand_total AS grand_total,
+            `tabSales Invoice`.paid_amount AS paid_amount,
+            `tabSales Invoice`.change_amount AS change_amount,
+            (`tabSales Invoice`.paid_amount - `tabSales Invoice`.change_amount) AS actual_amount,
+            `tabSales Invoice`.outstanding_amount AS outstanding_amount,
+            `tabSales Invoice`.discount_amount AS discount_amount,
+            `tabSales Invoice`.posa_item_discount_total AS posa_item_discount_total{payment_mode_sql}
+        FROM `tabSales Invoice`
+        INNER JOIN `tabPOS Opening Shift` ON `tabPOS Opening Shift`.name = `tabSales Invoice`.posa_pos_opening_shift
         {conditions}
-        {and_or_where} si.is_pos = 1
-        AND si.docstatus = 1
-        AND si.status NOT IN ('Draft', 'Cancelled')
-        ORDER BY si.posting_date DESC, si.posting_time DESC
+        {and_or_where} `tabSales Invoice`.is_pos = 1
+        AND `tabSales Invoice`.docstatus = 1
+        AND `tabSales Invoice`.status NOT IN ('Draft', 'Cancelled')
+        ORDER BY `tabSales Invoice`.posting_date DESC, `tabSales Invoice`.posting_time DESC
     """.format(
         conditions=conditions,
         payment_mode_sql=payment_mode_sql,
@@ -281,16 +284,16 @@ def get_conditions(filters):
     """Build WHERE conditions based on filters."""
     conditions = []
     if filters.get("user"):
-        conditions.append("si.owner = %(user)s")
+        conditions.append("`tabSales Invoice`.owner = %(user)s")
     if filters.get("from_date") and filters.get("to_date"):
         conditions.append(
-            "si.posting_date BETWEEN %(from_date)s AND %(to_date)s")
+            "`tabPOS Opening Shift`.period_start_date BETWEEN %(from_date)s AND %(to_date)s")
     if filters.get("pos_profile"):
-        conditions.append("si.pos_profile = %(pos_profile)s")
+        conditions.append("`tabSales Invoice`.pos_profile = %(pos_profile)s")
     if filters.get("posa_pos_opening_shift"):
         conditions.append(
-            "si.posa_pos_opening_shift = %(posa_pos_opening_shift)s")
+            "`tabSales Invoice`.posa_pos_opening_shift = %(posa_pos_opening_shift)s")
     if filters.get("posa_pos_closing_shift"):
         conditions.append(
-            "si.posa_pos_opening_shift IN (SELECT name FROM `tabPOS Opening Shift` WHERE pos_closing_shift = %(posa_pos_closing_shift)s)")
+            "`tabSales Invoice`.posa_pos_opening_shift IN (SELECT name FROM `tabPOS Opening Shift` WHERE pos_closing_shift = %(posa_pos_closing_shift)s)")
     return "WHERE " + " AND ".join(conditions) if conditions else ""
