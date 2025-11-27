@@ -19,7 +19,6 @@
         align-items: center;
         justify-content: center;
         z-index: 1000;
-        animation: modal-fade-in 0.2s ease;
       "
     >
       <!-- Modal -->
@@ -33,7 +32,6 @@
           width: 90%;
           max-height: 90vh;
           overflow: hidden;
-          animation: modal-slide-in 0.3s ease;
         "
       >
         <!-- Card -->
@@ -77,7 +75,6 @@
                 align-items: center;
                 justify-content: center;
                 border-radius: 50%;
-                transition: all 0.2s ease;
               "
             >
               ×
@@ -124,7 +121,6 @@
                       border: 1px solid #d0d0d0;
                       border-radius: 6px;
                       outline: none;
-                      transition: all 0.2s ease;
                     "
                   />
                 </div>
@@ -165,7 +161,6 @@
                       border: 1px solid #d0d0d0;
                       border-radius: 6px;
                       outline: none;
-                      transition: all 0.2s ease;
                     "
                   />
                 </div>
@@ -206,7 +201,6 @@
                       border: 1px solid #d0d0d0;
                       border-radius: 6px;
                       outline: none;
-                      transition: all 0.2s ease;
                     "
                   />
                 </div>
@@ -255,7 +249,6 @@
                         border: 1px solid #d0d0d0;
                         border-radius: 6px;
                         outline: none;
-                        transition: all 0.2s ease;
                       "
                     />
                   </div>
@@ -302,7 +295,6 @@
                         border: 1px solid #d0d0d0;
                         border-radius: 6px;
                         outline: none;
-                        transition: all 0.2s ease;
                       "
                     />
                   </div>
@@ -339,7 +331,6 @@
                 font-weight: 500;
                 cursor: pointer;
                 border: 1px solid #9e9e9e;
-                transition: all 0.2s ease;
                 line-height: 1.5;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 background: white;
@@ -365,7 +356,6 @@
                 font-weight: 500;
                 cursor: pointer;
                 border: 1px solid #1565c0;
-                transition: all 0.2s ease;
                 line-height: 1.5;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 background: linear-gradient(135deg, #1976d2 0%, #1e88e5 100%);
