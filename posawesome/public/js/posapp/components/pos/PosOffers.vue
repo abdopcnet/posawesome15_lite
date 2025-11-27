@@ -401,7 +401,6 @@
                     bottom: 0;
                     background-color: #ccc;
                     border-radius: 20px;
-                    transition: 0.3s;
                   "
                 >
                   <span
@@ -415,7 +414,6 @@
                       background-color: white;
                       border-radius: 50%;
                       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-                      transition: 0.3s;
                     "
                     :style="
                       offer.offer_applied
