@@ -20,7 +20,6 @@
         justify-content: center;
         padding-top: 5vh;
         z-index: 1050 !important;
-        animation: modal-fade-in 0.2s ease;
       "
     >
       <!-- Dialog -->
@@ -34,7 +33,6 @@
           max-width: 95vw;
           min-width: 700px;
           width: auto;
-          animation: dialogSlideIn 0.3s ease-out;
           border: 1px solid rgba(255, 152, 0, 0.1);
         "
       >
@@ -98,7 +96,6 @@
               align-items: center;
               justify-content: center;
               cursor: pointer;
-              transition: all 0.2s ease;
             "
           >
             <i class="mdi mdi-close" style="color: white; font-size: 14px"></i>
@@ -215,7 +212,6 @@
                   display: grid;
                   grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
                   border-bottom: 1px solid #f1f5f9;
-                  transition: background-color 0.1s ease;
                 "
                 :style="index % 2 === 0 ? '' : 'background: #fafbfc'"
               >
@@ -332,7 +328,6 @@
                       cursor: pointer;
                       padding: 4px 8px;
                       border-radius: 4px;
-                      transition: all 0.1s ease;
                       background: #f0f9ff;
                       border: 1px solid #e0e7ff;
                       min-width: 100px;
@@ -372,7 +367,6 @@
                       class="mdi mdi-pencil"
                       style="
                         opacity: 0;
-                        transition: opacity 0.1s ease;
                         color: #6366f1;
                         margin-left: 4px;
                         font-size: 12px;
@@ -528,7 +522,6 @@
               font-size: 14px;
               font-weight: 500;
               cursor: pointer;
-              transition: all 0.2s ease;
               border: 1px solid #cbd5e1;
               background: #f1f5f9;
               color: #475569;
@@ -552,7 +545,6 @@
               font-size: 14px;
               font-weight: 500;
               cursor: pointer;
-              transition: all 0.2s ease;
               border: none;
               background: #10b981;
               color: white;
