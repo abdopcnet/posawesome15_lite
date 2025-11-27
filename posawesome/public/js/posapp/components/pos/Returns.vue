@@ -270,15 +270,6 @@
 													: 'cursor: pointer;'
 											"
 											style="border-bottom: 1px solid #e0e0e0"
-											@mouseenter="
-												$event.currentTarget.style.background = '#f5f5f5'
-											"
-											@mouseleave="
-												$event.currentTarget.style.background =
-													selected && selected.name === item.name
-														? '#e3f2fd'
-														: 'transparent'
-											"
 										>
 											<!-- Customer -->
 											<td
@@ -320,16 +311,6 @@
 														font-size: 12px;
 														font-family: 'Courier New', monospace;
 														text-decoration: none;
-													"
-													@mouseenter="
-														$event.target.style.color = '#2563eb';
-														$event.target.style.textDecoration =
-															'underline';
-													"
-													@mouseleave="
-														$event.target.style.color = '#3b82f6';
-														$event.target.style.textDecoration =
-															'none';
 													"
 												>
 													{{ item.name }}
