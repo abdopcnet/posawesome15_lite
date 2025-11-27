@@ -92,7 +92,6 @@
               align-items: center;
               justify-content: center;
               cursor: pointer;
-              transition: all 0.2s ease;
             "
             @click="handleClose"
           >
@@ -215,15 +214,6 @@
                         font-size: 12px;
                         font-family: 'Courier New', monospace;
                         text-decoration: none;
-                        transition: all 0.2s;
-                      "
-                      @mouseenter="
-                        $event.target.style.color = '#2563eb';
-                        $event.target.style.textDecoration = 'underline';
-                      "
-                      @mouseleave="
-                        $event.target.style.color = '#3b82f6';
-                        $event.target.style.textDecoration = 'none';
                       "
                     >
                       {{ shift.name }}
@@ -278,10 +268,7 @@
               font-size: 13px;
               font-weight: 500;
               cursor: pointer;
-              transition: all 0.2s ease;
             "
-            @mouseenter="$event.target.style.background = '#e5e7eb'"
-            @mouseleave="$event.target.style.background = '#f3f4f6'"
           >
             <i class="mdi mdi-arrow-left" style="margin-right: 4px"></i>
             Go to Desk
@@ -297,18 +284,17 @@
               font-size: 13px;
               font-weight: 600;
               cursor: pointer;
-              transition: all 0.2s ease;
               box-shadow: 0 2px 4px rgba(255, 152, 0, 0.2);
             "
             @mouseenter="
-              $event.target.style.transform = 'translateY(-1px)';
-              $event.target.style.boxShadow =
-                '0 4px 8px rgba(255, 152, 0, 0.3)';
+              $event.target.style.background = '#ff9800';
+              $event.target.style.borderColor = '#f57c00';
+              $event.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
             "
             @mouseleave="
-              $event.target.style.transform = 'translateY(0)';
-              $event.target.style.boxShadow =
-                '0 2px 4px rgba(255, 152, 0, 0.2)';
+              $event.target.style.background = 'linear-gradient(135deg, #ff6f00 0%, #ff9800 100%)';
+              $event.target.style.borderColor = '';
+              $event.target.style.boxShadow = '0 2px 4px rgba(255, 152, 0, 0.2)';
             "
           >
             <i class="mdi mdi-refresh" style="margin-right: 4px"></i>
