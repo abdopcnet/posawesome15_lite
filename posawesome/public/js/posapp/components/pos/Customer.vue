@@ -66,8 +66,22 @@
 						:disabled="readonly"
 						title="Edit Customer"
 						type="button"
-						@mouseenter="buttonHoverEnter"
-						@mouseleave="buttonHoverLeave"
+						@mouseenter="
+							if (!readonly) {
+								$event.currentTarget.style.background = 'rgba(25, 118, 210, 0.1)';
+								$event.currentTarget.style.border =
+									'1px solid rgba(25, 118, 210, 0.3)';
+								$event.currentTarget.style.boxShadow =
+									'0 2px 4px rgba(0, 0, 0, 0.1)';
+							}
+						"
+						@mouseleave="
+							if (!readonly) {
+								$event.currentTarget.style.background = 'transparent';
+								$event.currentTarget.style.border = 'none';
+								$event.currentTarget.style.boxShadow = '';
+							}
+						"
 						style="
               background: transparent;
               border: none;
@@ -94,8 +108,22 @@
 						:disabled="readonly"
 						title="New Customer"
 						type="button"
-						@mouseenter="buttonHoverEnter"
-						@mouseleave="buttonHoverLeave"
+						@mouseenter="
+							if (!readonly) {
+								$event.currentTarget.style.background = 'rgba(25, 118, 210, 0.1)';
+								$event.currentTarget.style.border =
+									'1px solid rgba(25, 118, 210, 0.3)';
+								$event.currentTarget.style.boxShadow =
+									'0 2px 4px rgba(0, 0, 0, 0.1)';
+							}
+						"
+						@mouseleave="
+							if (!readonly) {
+								$event.currentTarget.style.background = 'transparent';
+								$event.currentTarget.style.border = 'none';
+								$event.currentTarget.style.boxShadow = '';
+							}
+						"
 						style="
               background: transparent;
               border: none;
@@ -346,41 +374,6 @@ comp.methods = {
 
 	avatarTextColor() {
 		return '#0f172a';
-	},
-
-	// Inline hover handlers for the two action buttons.
-	// Fast: mutate a few inline properties only (background, color, boxShadow) and restore on leave.
-	buttonHoverEnter(e) {
-		try {
-			const el = e.currentTarget;
-			if (el.disabled) return;
-			// store originals for restore
-			el.dataset._origBg = el.style.background || '';
-			el.dataset._origColor = el.style.color || '';
-			el.dataset._origBox = el.style.boxShadow || '';
-			// modern visible hover
-			el.style.background =
-				'linear-gradient(90deg, rgba(25,118,210,0.12), rgba(30,136,229,0.06))';
-			el.style.color = '#0b66d1';
-			el.style.boxShadow = '0 8px 22px rgba(11,102,209,0.12)';
-		} catch (err) {
-			// Silent fallback
-		}
-	},
-
-	buttonHoverLeave(e) {
-		try {
-			const el = e.currentTarget;
-			if (el.disabled) return;
-			el.style.background = el.dataset._origBg || '';
-			el.style.color = el.dataset._origColor || '';
-			el.style.boxShadow = el.dataset._origBox || '';
-			delete el.dataset._origBg;
-			delete el.dataset._origColor;
-			delete el.dataset._origBox;
-		} catch (err) {
-			// Silent fallback
-		}
 	},
 };
 
