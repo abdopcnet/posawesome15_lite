@@ -209,7 +209,10 @@ export default {
   methods: {
     scheduleScrollHeightUpdate() {
       this.$nextTick(() => {
-        this.updateScrollableHeight();
+        // Use requestAnimationFrame to avoid forced reflow
+        requestAnimationFrame(() => {
+          this.updateScrollableHeight();
+        });
       });
     },
 
@@ -228,15 +231,18 @@ export default {
         return;
       }
 
-      const rect = scrollEl.getBoundingClientRect();
-      const available = viewportHeight - rect.top - UI_CONFIG.BOTTOM_PADDING;
+      // Use requestAnimationFrame again to ensure DOM has finished layout
+      requestAnimationFrame(() => {
+        const rect = scrollEl.getBoundingClientRect();
+        const available = viewportHeight - rect.top - UI_CONFIG.BOTTOM_PADDING;
 
-      if (Number.isFinite(available)) {
-        this.itemsScrollHeight = Math.max(
-          UI_CONFIG.MIN_PANEL_HEIGHT,
-          Math.floor(available)
-        );
-      }
+        if (Number.isFinite(available)) {
+          this.itemsScrollHeight = Math.max(
+            UI_CONFIG.MIN_PANEL_HEIGHT,
+            Math.floor(available)
+          );
+        }
+      });
     },
 
     handle_barcode_input() {
