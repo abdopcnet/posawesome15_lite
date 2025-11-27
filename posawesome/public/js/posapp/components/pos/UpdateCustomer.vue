@@ -19,7 +19,6 @@
         align-items: center;
         justify-content: center;
         z-index: 1000;
-        animation: modal-fade-in 0.2s ease;
       "
     >
       <!-- Modal -->
@@ -33,7 +32,6 @@
           width: 90%;
           max-height: 90vh;
           overflow: hidden;
-          animation: modal-slide-in 0.3s ease;
         "
       >
         <!-- Modal Content -->
@@ -72,7 +70,6 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                transition: background 0.2s;
               "
             >
               <i
@@ -104,7 +101,6 @@
                   font-size: 12px;
                   color: #1f2937;
                   background: #fff;
-                  transition: all 0.2s;
                   outline: none;
                   height: 28px;
                 "
@@ -130,7 +126,6 @@
                     font-size: 12px;
                     color: #1f2937;
                     background: #fff;
-                    transition: all 0.2s;
                     outline: none;
                     height: 28px;
                   "
@@ -153,7 +148,6 @@
                     font-size: 12px;
                     color: #1f2937;
                     background: #fff;
-                    transition: all 0.2s;
                     outline: none;
                     height: 28px;
                   "
@@ -180,7 +174,6 @@
                     font-size: 12px;
                     color: #1f2937;
                     background: #fff;
-                    transition: all 0.2s;
                     outline: none;
                     height: 28px;
                   "
@@ -201,7 +194,6 @@
                     font-size: 12px;
                     color: #1f2937;
                     background: #fff;
-                    transition: all 0.2s;
                     outline: none;
                     height: 28px;
                     cursor: pointer;
@@ -238,7 +230,6 @@
                     font-size: 12px;
                     color: #1f2937;
                     background: #fff;
-                    transition: all 0.2s;
                     outline: none;
                     height: 28px;
                   "
@@ -264,7 +255,6 @@
                     font-size: 12px;
                     color: #1f2937;
                     background: #fff;
-                    transition: all 0.2s;
                     outline: none;
                     height: 28px;
                   "
@@ -290,7 +280,6 @@
                     font-size: 12px;
                     color: #1f2937;
                     background: #fff;
-                    transition: all 0.2s;
                     outline: none;
                     height: 28px;
                     cursor: pointer;
@@ -322,7 +311,6 @@
                     font-size: 12px;
                     color: #1f2937;
                     background: #fff;
-                    transition: all 0.2s;
                     outline: none;
                     height: 28px;
                     cursor: pointer;
@@ -359,7 +347,6 @@
                     font-size: 12px;
                     background: #f9fafb;
                     color: #6b7280;
-                    transition: all 0.2s;
                     outline: none;
                     height: 28px;
                     cursor: not-allowed;
@@ -383,7 +370,6 @@
                     font-size: 12px;
                     background: #f9fafb;
                     color: #6b7280;
-                    transition: all 0.2s;
                     outline: none;
                     height: 28px;
                     cursor: not-allowed;
