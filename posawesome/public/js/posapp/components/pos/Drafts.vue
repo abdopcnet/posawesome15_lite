@@ -191,13 +191,6 @@
 											: 'cursor: pointer;'
 									"
 									style="border-bottom: 1px solid #e0e0e0"
-									@mouseenter="$event.currentTarget.style.background = '#f5f5f5'"
-									@mouseleave="
-										$event.currentTarget.style.background =
-											selected && selected.name === invoice.name
-												? '#e3f2fd'
-												: 'transparent'
-									"
 								>
 									<td style="padding: 12px; text-align: right">
 										{{ invoice.customer_name || invoice.customer || '-' }}
