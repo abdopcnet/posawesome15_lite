@@ -137,7 +137,6 @@
           style="
             height: 100%;
             background: #1976d2;
-            animation: progress-indeterminate 1.5s infinite linear;
             transform-origin: 0% 50%;
           "
         ></div>
@@ -268,7 +267,6 @@
                 style="
                   height: 100%;
                   background: #1976d2;
-                  animation: progress-indeterminate 1.5s infinite linear;
                   transform-origin: 0% 50%;
                 "
               ></div>
@@ -386,7 +384,6 @@
                 boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)',
                 cursor: is_return_invoice ? 'not-allowed' : 'pointer',
                 userSelect: 'none',
-                transition: 'transform 0.2s ease',
                 overflow: 'hidden',
                 background: 'white',
                 display: 'flex',
@@ -396,14 +393,6 @@
                 opacity: is_return_invoice ? 0.5 : 1,
                 filter: is_return_invoice ? 'grayscale(50%)' : 'none',
               }"
-              @mouseenter="
-                !is_return_invoice &&
-                  ($event.currentTarget.style.transform = 'scale(1.02)')
-              "
-              @mouseleave="
-                !is_return_invoice &&
-                  ($event.currentTarget.style.transform = 'scale(1)')
-              "
             >
               <!-- Quantity Pill -->
               <div
@@ -578,22 +567,9 @@
                       ? 'Cannot add items in return mode'
                       : item.item_name
                   "
-                  @mouseenter="
-                    !is_return_invoice &&
-                      ($event.currentTarget.style.background =
-                        'rgba(16,24,40,0.09)');
-                    $event.currentTarget.style.transition =
-                      'background-color 160ms ease';
-                  "
-                  @mouseleave="
-                    $event.currentTarget.style.background = '';
-                    $event.currentTarget.style.transition =
-                      'background-color 160ms ease';
-                  "
                   :style="{
                     borderBottom: '1px solid #f0f0f0',
                     cursor: is_return_invoice ? 'not-allowed' : 'pointer',
-                    transition: 'background-color 0.2s ease',
                     opacity: is_return_invoice ? 0.5 : 1,
                   }"
                 >
