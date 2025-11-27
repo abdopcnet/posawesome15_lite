@@ -31,7 +31,6 @@
 					padding: 4px 8px;
 					cursor: pointer;
 					border-radius: 4px;
-					transition: background 0.2s;
 				"
 				title="Go to Desk"
 			>
@@ -55,19 +54,17 @@
 				"
 			>
 				<div
-					@mouseenter="badgeMouseEnter"
-					@mouseleave="badgeMouseLeave"
 					:style="
 						invoiceNumberClass === 'regular-invoice'
-							? 'border-color: rgba(8, 86, 152, 0.85); background: linear-gradient(135deg, #d4e8ff 0%, #93b9ff 100%); color: #043a8b; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
+							? 'border-color: rgba(8, 86, 152, 0.85); background: linear-gradient(135deg, #d4e8ff 0%, #93b9ff 100%); color: #043a8b;'
 							: invoiceNumberClass === 'return-invoice' ||
 							  invoiceNumberClass === 'return-invoice-mode'
-							? `border-color: ${invoiceIconColor}; background: ${invoiceIconColor}; color: white; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;`
+							? `border-color: ${invoiceIconColor}; background: ${invoiceIconColor}; color: white;`
 							: invoiceNumberClass === 'quick-return-mode'
-							? `border-color: ${invoiceIconColor}; background: ${invoiceIconColor}; color: white; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;`
+							? `border-color: ${invoiceIconColor}; background: ${invoiceIconColor}; color: white;`
 							: invoiceNumberClass === 'sales-invoice-mode'
-							? `border-color: ${invoiceIconColor}; background: ${invoiceIconColor}; color: white; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;`
-							: 'border-color: rgba(63, 81, 181, 0.75); background: linear-gradient(135deg, #eef3ff 0%, #d9e4ff 100%); color: #22314f; font-style: normal; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
+							? `border-color: ${invoiceIconColor}; background: ${invoiceIconColor}; color: white;`
+							: 'border-color: rgba(63, 81, 181, 0.75); background: linear-gradient(135deg, #eef3ff 0%, #d9e4ff 100%); color: #22314f; font-style: normal;'
 					"
 					style="
 						display: inline-flex;
@@ -91,14 +88,12 @@
 
 				<!-- Shift Badge -->
 				<div
-					@mouseenter="badgeMouseEnter"
-					@mouseleave="badgeMouseLeave"
 					:style="
 						shiftNumberClass === 'open-shift'
-							? 'border-color: rgba(76, 175, 80, 0.50); background: linear-gradient(135deg, #eefbe7 0%, #def2da 100%); color: #2e7d32; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
+							? 'border-color: rgba(76, 175, 80, 0.50); background: linear-gradient(135deg, #eefbe7 0%, #def2da 100%); color: #2e7d32;'
 							: shiftNumberClass === 'closed-shift'
-							? 'border-color: rgba(255, 152, 0, 0.30); background: linear-gradient(135deg, #fffaf3 0%, #fff0d6 100%); color: #000000b0; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
-							: 'border-color: rgba(189, 189, 189, 0.65); background: #f9f9f9; color: #757575; font-style: italic; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
+							? 'border-color: rgba(255, 152, 0, 0.30); background: linear-gradient(135deg, #fffaf3 0%, #fff0d6 100%); color: #000000b0;'
+							: 'border-color: rgba(189, 189, 189, 0.65); background: #f9f9f9; color: #757575; font-style: italic;'
 					"
 					style="
 						display: inline-flex;
@@ -125,8 +120,6 @@
 
 				<!-- User Badge -->
 				<div
-					@mouseenter="badgeMouseEnter"
-					@mouseleave="badgeMouseLeave"
 					style="
 						display: inline-flex;
 						align-items: center;
@@ -141,8 +134,6 @@
 						white-space: nowrap;
 						line-height: 1;
 						height: 22px;
-						transition: box-shadow 140ms ease, filter 120ms ease,
-							background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 						box-sizing: border-box;
 					"
 				>
@@ -152,12 +143,10 @@
 
 				<!-- Shift Start Badge -->
 				<div
-					@mouseenter="badgeMouseEnter"
-					@mouseleave="badgeMouseLeave"
 					:style="
 						shiftStartClass === 'shift-active'
-							? 'border-color: rgba(76, 175, 80, 0.50); background: linear-gradient(135deg, #eefbe7 0%, #def2da 100%); color: #2e7d32; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
-							: 'border-color: rgba(189, 189, 189, 0.65); background: #f9f9f9; color: #757575; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
+							? 'border-color: rgba(76, 175, 80, 0.50); background: linear-gradient(135deg, #eefbe7 0%, #def2da 100%); color: #2e7d32;'
+							: 'border-color: rgba(189, 189, 189, 0.65); background: #f9f9f9; color: #757575;'
 					"
 					style="
 						display: inline-flex;
@@ -184,8 +173,6 @@
 
 				<!-- Totals Badge -->
 				<div
-					@mouseenter="badgeMouseEnter"
-					@mouseleave="badgeMouseLeave"
 					style="
 						display: inline-flex;
 						align-items: center;
@@ -200,8 +187,6 @@
 						white-space: nowrap;
 						line-height: 1;
 						height: 22px;
-						transition: box-shadow 140ms ease, filter 120ms ease,
-							background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 						box-sizing: border-box;
 					"
 				>
@@ -211,8 +196,6 @@
 
 				<!-- Cash Badge -->
 				<div
-					@mouseenter="badgeMouseEnter"
-					@mouseleave="badgeMouseLeave"
 					style="
 						display: inline-flex;
 						align-items: center;
@@ -227,8 +210,6 @@
 						white-space: nowrap;
 						line-height: 1;
 						height: 22px;
-						transition: box-shadow 140ms ease, filter 120ms ease,
-							background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 						box-sizing: border-box;
 					"
 				>
@@ -241,8 +222,6 @@
 
 				<!-- Card Badge -->
 				<div
-					@mouseenter="badgeMouseEnter"
-					@mouseleave="badgeMouseLeave"
 					style="
 						display: inline-flex;
 						align-items: center;
@@ -257,8 +236,6 @@
 						white-space: nowrap;
 						line-height: 1;
 						height: 22px;
-						transition: box-shadow 140ms ease, filter 120ms ease,
-							background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 						box-sizing: border-box;
 					"
 				>
@@ -271,16 +248,14 @@
 
 				<!-- Ping Badge -->
 				<div
-					@mouseenter="badgeMouseEnter"
-					@mouseleave="badgeMouseLeave"
 					:style="
 						pingClass === 'ping-excellent'
-							? 'border-color: rgba(76, 175, 80, 0.50); background: linear-gradient(135deg, #eefbe7 0%, #def2da 100%); color: #2e7d32; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
+							? 'border-color: rgba(76, 175, 80, 0.50); background: linear-gradient(135deg, #eefbe7 0%, #def2da 100%); color: #2e7d32;'
 							: pingClass === 'ping-good'
-							? 'border-color: rgba(33, 150, 243, 0.50); background: linear-gradient(135deg, #eaf4ff 0%, #dbeeff 100%); color: #1976d2; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
+							? 'border-color: rgba(33, 150, 243, 0.50); background: linear-gradient(135deg, #eaf4ff 0%, #dbeeff 100%); color: #1976d2;'
 							: pingClass === 'ping-fair'
-							? 'border-color: rgba(255, 152, 0, 0.50); background: linear-gradient(135deg, #fff9ed 0%, #fff1d6 100%); color: #f57c00; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
-							: 'border-color: rgba(244, 67, 54, 0.50); background: linear-gradient(135deg, #fff6f6 0%, #ffe6e6 100%); color: #d32f2f; transition: box-shadow 140ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;'
+							? 'border-color: rgba(255, 152, 0, 0.50); background: linear-gradient(135deg, #fff9ed 0%, #fff1d6 100%); color: #f57c00;'
+							: 'border-color: rgba(244, 67, 54, 0.50); background: linear-gradient(135deg, #fff6f6 0%, #ffe6e6 100%); color: #d32f2f;'
 					"
 					style="
 						display: inline-flex;
@@ -307,8 +282,6 @@
 
 				<!-- Profile Badge -->
 				<div
-					@mouseenter="badgeMouseEnter"
-					@mouseleave="badgeMouseLeave"
 					style="
 						display: inline-flex;
 						align-items: center;
@@ -323,8 +296,6 @@
 						white-space: nowrap;
 						line-height: 1;
 						height: 22px;
-						transition: box-shadow 140ms ease, filter 120ms ease,
-							background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 						box-sizing: border-box;
 					"
 				>
@@ -361,32 +332,23 @@
 						font-weight: 600;
 						height: 24px;
 						min-width: 24px;
-						transition: all 140ms ease;
 						box-sizing: border-box;
 						cursor: pointer;
 					"
 					@mouseenter="
-						$event.currentTarget.style.boxShadow = '0 8px 24px rgba(14,50,100,0.08)';
-						$event.currentTarget.style.background =
-							'linear-gradient(90deg, rgba(25,118,210,0.24), rgba(30,136,229,0.22))';
-						$event.currentTarget.style.border = '3px solid #4caf50';
+						$event.currentTarget.style.background = 'rgba(25, 118, 210, 0.2)';
+						$event.currentTarget.style.borderColor = 'rgba(25, 118, 210, 0.3)';
+						$event.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
 					"
 					@mouseleave="
-						$event.currentTarget.style.boxShadow = '';
 						$event.currentTarget.style.background =
-							'linear-gradient(90deg, rgba(25,118,210,0.12), rgba(30,136,229,0.08))';
-						$event.currentTarget.style.border = '1px solid rgba(25, 118, 210, 0.12)';
+							'linear-gradient(90deg, rgba(25, 118, 210, 0.12), rgba(30, 136, 229, 0.08))';
+						$event.currentTarget.style.borderColor = 'rgba(25, 118, 210, 0.12)';
+						$event.currentTarget.style.boxShadow = '';
 					"
 					aria-label="Print last receipt"
 				>
-					<i
-						class="mdi mdi-printer"
-						style="
-							font-size: 19px;
-							color: #1565c0;
-							filter: drop-shadow(0 6px 14px rgba(21, 101, 192, 0.15));
-						"
-					></i>
+					<i class="mdi mdi-printer" style="font-size: 19px; color: #1565c0"></i>
 				</button>
 
 				<!-- Cache Button: Clear Cache -->
@@ -411,29 +373,22 @@
 						font-weight: 600;
 						height: 24px;
 						min-width: 24px;
-						transition: all 140ms ease;
 						box-sizing: border-box;
 					"
 					@mouseenter="
-						$event.currentTarget.style.boxShadow = '0 8px 24px rgba(80,40,0,0.06)';
-						$event.currentTarget.style.background =
-							'linear-gradient(90deg, rgba(255,193,7,0.36), rgba(255,152,0,0.24))';
+						$event.currentTarget.style.background = 'rgba(255, 193, 7, 0.25)';
+						$event.currentTarget.style.borderColor = 'rgba(255, 152, 0, 0.3)';
+						$event.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
 					"
 					@mouseleave="
-						$event.currentTarget.style.boxShadow = '';
 						$event.currentTarget.style.background =
-							'linear-gradient(90deg, rgba(255,193,7,0.18), rgba(255,152,0,0.12))';
+							'linear-gradient(90deg, rgba(255, 193, 7, 0.18), rgba(255, 152, 0, 0.12))';
+						$event.currentTarget.style.borderColor = 'rgba(255, 160, 0, 0.1)';
+						$event.currentTarget.style.boxShadow = '';
 					"
 					aria-label="Clear cache"
 				>
-					<i
-						class="mdi mdi-cached"
-						style="
-							font-size: 19px;
-							color: #2264d4;
-							filter: drop-shadow(0 6px 14px rgba(255, 152, 0, 0.12));
-						"
-					></i>
+					<i class="mdi mdi-cached" style="font-size: 19px; color: #2264d4"></i>
 				</button>
 
 				<!-- Close Shift Button: Close Shift -->
@@ -459,29 +414,22 @@
 						font-weight: 600;
 						height: 24px;
 						min-width: 24px;
-						transition: all 140ms ease;
 						box-sizing: border-box;
 					"
 					@mouseenter="
-						$event.currentTarget.style.boxShadow = '0 8px 24px rgba(244,67,54,0.15)';
-						$event.currentTarget.style.background =
-							'linear-gradient(90deg, rgba(244,67,54,0.25), rgba(211,47,47,0.2))';
+						$event.currentTarget.style.background = 'rgba(244, 67, 54, 0.25)';
+						$event.currentTarget.style.borderColor = 'rgba(244, 67, 54, 0.4)';
+						$event.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
 					"
 					@mouseleave="
-						$event.currentTarget.style.boxShadow = '';
 						$event.currentTarget.style.background =
-							'linear-gradient(90deg, rgba(244,67,54,0.15), rgba(211,47,47,0.1))';
+							'linear-gradient(90deg, rgba(244, 67, 54, 0.15), rgba(211, 47, 47, 0.1))';
+						$event.currentTarget.style.borderColor = 'rgba(244, 67, 54, 0.2)';
+						$event.currentTarget.style.boxShadow = '';
 					"
 					aria-label="Close shift"
 				>
-					<i
-						class="mdi mdi-close-circle"
-						style="
-							font-size: 19px;
-							color: #d32f2f;
-							filter: drop-shadow(0 6px 14px rgba(244, 67, 54, 0.15));
-						"
-					></i>
+					<i class="mdi mdi-close-circle" style="font-size: 19px; color: #d32f2f"></i>
 				</button>
 			</div>
 		</div>
@@ -514,7 +462,6 @@
 				z-index: 2000;
 				cursor: pointer;
 				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-				animation: slideDown 0.3s ease-out;
 				text-align: center;
 			"
 		>
@@ -852,6 +799,18 @@
 									background: linear-gradient(135deg, #f44336 0%, #e53935 100%);
 									color: white;
 								"
+								@mouseenter="
+									$event.currentTarget.style.background = '#e53935';
+									$event.currentTarget.style.borderColor = '#c62828';
+									$event.currentTarget.style.boxShadow =
+										'0 2px 4px rgba(0, 0, 0, 0.1)';
+								"
+								@mouseleave="
+									$event.currentTarget.style.background =
+										'linear-gradient(135deg, #f44336 0%, #e53935 100%)';
+									$event.currentTarget.style.borderColor = '#d32f2f';
+									$event.currentTarget.style.boxShadow = '';
+								"
 							>
 								إغلاق
 							</button>
@@ -877,6 +836,22 @@
 									!selectedPrintInvoice
 										? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; border-color: #e0e0e0'
 										: ''
+								"
+								@mouseenter="
+									if (selectedPrintInvoice) {
+										$event.currentTarget.style.background = '#1976d2';
+										$event.currentTarget.style.borderColor = '#0d47a1';
+										$event.currentTarget.style.boxShadow =
+											'0 2px 4px rgba(0, 0, 0, 0.1)';
+									}
+								"
+								@mouseleave="
+									if (selectedPrintInvoice) {
+										$event.currentTarget.style.background =
+											'linear-gradient(135deg, #1565c0 0%, #1976d2 100%)';
+										$event.currentTarget.style.borderColor = '#1565c0';
+										$event.currentTarget.style.boxShadow = '';
+									}
 								"
 							>
 								<i class="mdi mdi-printer" style="margin-left: 4px"></i>
