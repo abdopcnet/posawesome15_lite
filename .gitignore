@@ -6,8 +6,8 @@ tags
 dist
 __pycache__
 plan.md
-posawesome/public/node_modules
-# node_modules is tracked in Git (offline-ready, no npm install needed)
-# Ignore npm internal files only
-node_modules/.package-lock.json
-node_modules/.yarn-integrity
+# node_modules - not needed (libraries bundled/included locally)
+node_modules
+# Lock files (may be created by npm/yarn even with empty dependencies)
+yarn.lock
+package-lock.json
