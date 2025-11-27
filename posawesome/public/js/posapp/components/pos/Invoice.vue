@@ -26,7 +26,6 @@
                 marginBottom: '0',
                 border: '3px solid #9c27b0',
                 borderRadius: '8px',
-                transition: 'border 0.3s ease',
               }
             : invoice_doc?.is_return
             ? {
@@ -35,7 +34,6 @@
                 marginBottom: '0',
                 border: '3px solid #607d8b',
                 borderRadius: '8px',
-                transition: 'border 0.3s ease',
               }
             : {
                 padding: '4px 6px',
@@ -43,7 +41,6 @@
                 marginBottom: '0',
                 border: '3px solid #4caf50',
                 borderRadius: '8px',
-                transition: 'border 0.3s ease',
               }
         "
       >
@@ -114,16 +111,6 @@
             <tr
               v-for="item in items"
               :key="item.posa_row_id"
-              @mouseenter="
-                $event.currentTarget.style.background = 'rgba(16,24,40,0.09)';
-                $event.currentTarget.style.transition =
-                  'background-color 160ms ease';
-              "
-              @mouseleave="
-                $event.currentTarget.style.background = '';
-                $event.currentTarget.style.transition =
-                  'background-color 160ms ease';
-              "
               :style="{
                 borderBottom: '1px solid #f1f1f1',
                 borderLeft:
@@ -690,25 +677,21 @@
                     "
                     :style="
                       item.posa_is_offer || item.posa_is_replace
-                        ? 'width:18px;height:18px;padding:0;border-radius:6px;border:none;background:#f3f3f3;color:#9e9e9e;display:flex;align-items:center;justify-content:center;cursor:not-allowed;opacity:0.6;transition:transform 140ms ease,box-shadow 140ms ease,background 140ms ease'
-                        : 'width:18px;height:18px;padding:0;border-radius:6px;border:none;background:linear-gradient(180deg,#fff5f5,#ffffff);color:#c62828;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform 140ms ease,box-shadow 140ms ease,background 140ms ease'
+                        ? 'width:18px;height:18px;padding:0;border-radius:6px;border:none;background:#f3f3f3;color:#9e9e9e;display:flex;align-items:center;justify-content:center;cursor:not-allowed;opacity:0.6;'
+                        : 'width:18px;height:18px;padding:0;border-radius:6px;border:none;background:linear-gradient(180deg,#fff5f5,#ffffff);color:#c62828;display:flex;align-items:center;justify-content:center;cursor:pointer;'
                     "
                     @mouseenter="
                       if (!$event.currentTarget.disabled) {
-                        $event.currentTarget.style.transform =
-                          'translateY(-2px)';
-                        $event.currentTarget.style.boxShadow =
-                          '0 10px 30px rgba(198,40,40,0.12)';
-                        $event.currentTarget.style.background =
-                          'linear-gradient(180deg,#ffebee,#ffcdd2)';
+                        $event.currentTarget.style.background = '#ffcdd2';
+                        $event.currentTarget.style.border = '1px solid #ef5350';
+                        $event.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
                       }
                     "
                     @mouseleave="
                       if (!$event.currentTarget.disabled) {
-                        $event.currentTarget.style.transform = '';
+                        $event.currentTarget.style.background = 'linear-gradient(180deg,#fff5f5,#ffffff)';
+                        $event.currentTarget.style.border = 'none';
                         $event.currentTarget.style.boxShadow = '';
-                        $event.currentTarget.style.background =
-                          'linear-gradient(180deg,#fff5f5,#ffffff)';
                       }
                     "
                     @click.stop="remove_item(item)"
@@ -1135,7 +1118,6 @@
             align-items: center;
             justify-content: center;
             gap: 4px;
-            transition: all 0.2s;
           "
           :style="
             !hasItems || isPrinting || !hasValidPayments()
@@ -1189,7 +1171,6 @@
             align-items: center;
             justify-content: center;
             gap: 4px;
-            transition: all 0.2s;
           "
           :style="
             !hasItems || is_payment || isUpdatingTotals
@@ -1221,7 +1202,6 @@
             align-items: center;
             justify-content: center;
             gap: 4px;
-            transition: all 0.2s;
           "
           :style="
             !pos_profile?.posa_allow_return
@@ -1253,7 +1233,6 @@
             align-items: center;
             justify-content: center;
             gap: 4px;
-            transition: all 0.2s;
           "
           :style="
             !pos_profile?.posa_allow_quick_return
@@ -1286,7 +1265,6 @@
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '4px',
-                  transition: 'all 0.2s',
                 }
               : {
                   flex: 1,
@@ -1302,7 +1280,6 @@
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '4px',
-                  transition: 'all 0.2s',
                 }
           "
           type="button"
@@ -1328,7 +1305,6 @@
             align-items: center;
             justify-content: center;
             gap: 4px;
-            transition: all 0.2s;
           "
           type="button"
         >
