@@ -1,16 +1,19 @@
 {
-  "name": "posawesome",
-  "version": "1.0.0",
-  "private": true,
-  "description": "POS Awesome - Minimal node_modules for app only",
-  "dependencies": {
-    "@vue/runtime-dom": "3.5.24",
-    "@vue/shared": "3.5.24",
-    "entities": "^2.2.0",
-    "mitt": "^3.0.1",
-    "vue": "^3.4.21"
-  },
-  "engines": {
-    "node": ">=14.0.0"
-  }
+	"name": "posawesome",
+	"version": "1.0.0",
+	"private": true,
+	"description": "POS Awesome - Minimal node_modules for app only",
+	"dependencies": {
+		"@vue/runtime-dom": "3.5.24",
+		"@vue/shared": "3.5.24",
+		"entities": "^2.2.0",
+		"mitt": "^3.0.1",
+		"vue": "^3.4.21"
+	},
+	"engines": {
+		"node": ">=14.0.0"
+	},
+	"scripts": {
+		"install": "exit 0"
+	}
 }
