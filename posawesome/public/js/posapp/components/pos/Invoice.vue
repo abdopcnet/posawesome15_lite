@@ -26,6 +26,10 @@
 								marginBottom: '0',
 								border: '3px solid #9c27b0',
 								borderRadius: '8px',
+								borderTopWidth: '2px',
+								paddingTop: '2px',
+								borderBottomWidth: '2px',
+								paddingBottom: '3px',
 						  }
 						: invoice_doc?.is_return
 						? {
@@ -34,6 +38,10 @@
 								marginBottom: '0',
 								border: '3px solid #607d8b',
 								borderRadius: '8px',
+								borderTopWidth: '2px',
+								paddingTop: '2px',
+								borderBottomWidth: '2px',
+								paddingBottom: '3px',
 						  }
 						: {
 								padding: '4px 6px',
@@ -41,6 +49,10 @@
 								marginBottom: '0',
 								border: '3px solid #4caf50',
 								borderRadius: '8px',
+								borderTopWidth: '2px',
+								paddingTop: '2px',
+								borderBottomWidth: '2px',
+								paddingBottom: '3px',
 						  }
 				"
 			>
