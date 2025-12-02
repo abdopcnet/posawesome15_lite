@@ -73,10 +73,10 @@
 					v-if="invoice_doc"
 					style="display: flex; flex-direction: column; gap: 3px; margin-bottom: 2px"
 				>
-					<!-- Summary Row 1: Three Separate Fields -->
+					<!-- Summary Row 1: Four Separate Fields -->
 					<div style="display: flex; gap: 3px; align-items: flex-start">
 						<!-- paid_amount: إجمالي المدفوعات -->
-						<div style="flex: 1.4; display: flex; flex-direction: column; gap: 2px">
+						<div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
 							<label
 								style="
 									font-size: 0.75rem;
@@ -124,7 +124,7 @@
 						</div>
 
 						<!-- change_amount: المبلغ المتبقي للعميل -->
-						<div style="flex: 1.4; display: flex; flex-direction: column; gap: 2px">
+						<div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
 							<label
 								style="
 									font-size: 0.75rem;
@@ -181,7 +181,7 @@
 						</div>
 
 						<!-- outstanding_amount: المبلغ المتأخر على الفاتورة -->
-						<div style="flex: 1.4; display: flex; flex-direction: column; gap: 2px">
+						<div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
 							<label
 								style="
 									font-size: 0.75rem;
@@ -233,6 +233,71 @@
 								>
 									{{ invoice_doc ? currencySymbol(invoice_doc.currency) : ''
 									}}{{ formatCurrency(outstanding_amount) }}
+								</span>
+							</div>
+						</div>
+
+						<!-- customer_outstanding_display: رصيد العميل المتأخر -->
+						<div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+							<label
+								style="
+									font-size: 0.75rem;
+									font-weight: 700;
+									color: #555;
+									text-transform: uppercase;
+									letter-spacing: 0.5px;
+									margin: 0;
+									padding: 2px 4px;
+									line-height: 1.2;
+									text-align: center;
+									display: block;
+								"
+							>
+								رصيد العميل المتأخر
+							</label>
+							<div
+								:style="{
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									padding: '12px 8px',
+									borderRadius: '4px',
+									border:
+										customer_outstanding_display > 0
+											? '1.5px solid #d32f2f'
+											: '1.5px solid #e0e0e0',
+									background:
+										customer_outstanding_display > 0
+											? 'linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%)'
+											: 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)',
+									minHeight: '45px',
+									boxShadow:
+										customer_outstanding_display > 0
+											? '0 1px 3px rgba(211, 47, 47, 0.3)'
+											: '0 1px 3px rgba(0, 0, 0, 0.1)',
+								}"
+							>
+								<span
+									:style="{
+										fontSize: '1.1rem',
+										fontWeight: '800',
+										color:
+											customer_outstanding_display > 0
+												? '#c62828'
+												: '#9e9e9e',
+										textAlign: 'center',
+										width: '100%',
+										display: 'block',
+										letterSpacing: '0.3px',
+									}"
+								>
+									{{
+										invoice_doc && customer_outstanding_currency
+											? currencySymbol(customer_outstanding_currency)
+											: invoice_doc
+											? currencySymbol(invoice_doc.currency)
+											: ''
+									}}{{ formatCurrency(customer_outstanding_display) }}
 								</span>
 							</div>
 						</div>
@@ -335,21 +400,39 @@
 									type="text"
 									:value="formatCurrency(payment.amount)"
 									@change="
-										if (!is_credit_sale) {
+										if (
+											!is_credit_sale &&
+											!(is_return && is_original_invoice_unpaid)
+										) {
 											handlePaymentAmountChange(payment, $event);
 											validate_payment_amount(payment);
 										}
 									"
-									@focus="if (!is_credit_sale) set_rest_amount(payment.idx);"
-									@click="if (!is_credit_sale) set_rest_amount(payment.idx);"
+									@focus="
+										if (
+											!is_credit_sale &&
+											!(is_return && is_original_invoice_unpaid)
+										)
+											set_rest_amount(payment.idx);
+									"
+									@click="
+										if (
+											!is_credit_sale &&
+											!(is_return && is_original_invoice_unpaid)
+										)
+											set_rest_amount(payment.idx);
+									"
 									:readonly="
 										(invoice_doc && invoice_doc.is_return && !quick_return) ||
-										is_credit_sale
+										is_credit_sale ||
+										(is_return && is_original_invoice_unpaid)
 									"
-									:disabled="is_credit_sale"
+									:disabled="
+										is_credit_sale || (is_return && is_original_invoice_unpaid)
+									"
 									placeholder="0.00"
 									:style="
-										is_credit_sale
+										is_credit_sale || (is_return && is_original_invoice_unpaid)
 											? {
 													flex: '1',
 													border: 'none',
@@ -386,9 +469,9 @@
 						<button
 							:id="`mode_of_payment_button_${payment.idx || 0}`"
 							:ref="`mode_of_payment_button_${payment.idx || 0}`"
-							:disabled="is_credit_sale"
+							:disabled="is_credit_sale || (is_return && is_original_invoice_unpaid)"
 							:style="
-								is_credit_sale
+								is_credit_sale || (is_return && is_original_invoice_unpaid)
 									? {
 											flex:
 												payment.type == 'Phone' &&
@@ -435,7 +518,10 @@
 											padding: '0 4px',
 									  }
 							"
-							@click.stop="if (!is_credit_sale) set_full_amount(payment.idx);"
+							@click.stop="
+								if (!is_credit_sale && !(is_return && is_original_invoice_unpaid))
+									set_full_amount(payment.idx);
+							"
 						>
 							{{ payment.mode_of_payment }}
 						</button>
