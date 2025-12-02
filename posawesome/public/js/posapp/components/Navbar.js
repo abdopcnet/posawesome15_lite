@@ -611,7 +611,10 @@ export default {
 				},
 				error: (err) => {
 					// On error, don't reload - might be network issue
-					console.log('[Navbar.js] checkShiftStatus error:', err);
+					// Only log if err is actually an error object with useful info
+					if (err && err.message) {
+						console.error('[Navbar.js] checkShiftStatus error:', err.message);
+					}
 				},
 				freeze: false,
 				show_spinner: false,
