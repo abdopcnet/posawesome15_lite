@@ -17,6 +17,7 @@ from __future__ import unicode_literals
 import json
 import frappe
 from frappe import _
+from frappe.utils import flt
 
 
 # =============================================================================
@@ -252,34 +253,33 @@ def get_customer(customer_id):
 
         # Get customer group price list
         if customer_doc.customer_group:
-            result["customer_group_price_list"] = frappe.get_cached_value(
-                "Customer Group",
-                customer_doc.customer_group,
-                "default_price_list"
-            )
+            try:
+                customer_group_doc = frappe.get_cached_doc(
+                    "Customer Group", customer_doc.customer_group)
+                if hasattr(customer_group_doc, 'default_price_list') and customer_group_doc.default_price_list:
+                    result["customer_group_price_list"] = customer_group_doc.default_price_list
+            except Exception as cg_error:
+                # Note: get_customer doesn't have pos_profile parameter
+                frappe.log_error(f"[[customer.py]] get_customer: {str(cg_error)}")
 
-        # Get loyalty program details
+        # Get loyalty points (if loyalty program exists)
         if customer_doc.loyalty_program:
             try:
-                from erpnext.accounts.doctype.loyalty_program.loyalty_program import (
-                    get_loyalty_program_details_with_points
-                )
-                lp_details = get_loyalty_program_details_with_points(
-                    customer_doc.name,
-                    customer_doc.loyalty_program,
-                    silent=True,
-                    include_expired_entry=False,
-                )
-                result["loyalty_points"] = lp_details.get("loyalty_points", 0)
+                from erpnext.accounts.doctype.loyalty_program.loyalty_program import get_loyalty_program_details_with_points
+                loyalty_details = get_loyalty_program_details_with_points(
+                    customer_doc.name, customer_doc.loyalty_program, silent=True)
+                if loyalty_details and loyalty_details.get("loyalty_points"):
+                    result["loyalty_points"] = loyalty_details.get("loyalty_points")
             except Exception as loyalty_error:
+                # Note: get_customer doesn't have pos_profile parameter
                 frappe.log_error(f"[[customer.py]] get_customer: {str(loyalty_error)}")
-                result["loyalty_points"] = 0
 
         return result
 
     except Exception as e:
+        # Note: get_customer doesn't have pos_profile parameter
         frappe.log_error(f"[[customer.py]] get_customer: {str(e)}")
-        frappe.throw(_("Error retrieving customer information"))
+        frappe.throw(_("Error retrieving customer"))
 
 
 @frappe.whitelist()
@@ -287,123 +287,112 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
     """
     Get multiple customers with advanced filtering and server-side search.
     Optimized replacement for legacy get_customer_names function.
-    Implements Backend Improvement Policy: ORM-only, field optimization, Redis caching.
 
     Args:
-        pos_profile (str): POS Profile name for filtering (optional)
-        search_term (str): Search query for customer_name, mobile, email, etc. (optional)
-        limit (int): Maximum number of results (default: 50)
-        offset (int): Number of records to skip for pagination (default: 0)
+        pos_profile (str|dict): POS Profile name or dict with name
+        search_term (str): Search query to filter customers
+        limit (int): Maximum number of customers to return (default: 50)
+        offset (int): Number of customers to skip (default: 0)
 
     Returns:
-        list: List of customer dictionaries with optimized fields
+        list: List of customer dictionaries with name, customer_name, mobile_no
     """
     try:
-        # Convert limit and offset to integers for safety
-        limit = min(int(limit or 50), 200)  # Cap at 200 for performance
-        offset = int(offset or 0)
+        # FRAPPE STANDARD: Handle string or dict for pos_profile
+        if isinstance(pos_profile, dict):
+            pos_profile_name = pos_profile.get('name')
+        else:
+            pos_profile_name = pos_profile
 
-        # Base query filters
-        query_filters = {
-            "disabled": 0  # Only active customers
-        }
+        # Build base filters
+        filters = {"disabled": 0}  # Only active customers
 
-        # Apply POS Profile customer group filtering ONLY when searching
-        # When no search term, we want to show all customers including the default customer
-        apply_customer_group_filter = False
-
-        if pos_profile and search_term and search_term.strip():
-            # Only apply customer group filter when actively searching
-            apply_customer_group_filter = True
+        # Add customer group filter from POS Profile if available
+        if pos_profile_name:
             try:
-                # Handle both POS Profile name and JSON data
-                if isinstance(pos_profile, str) and not pos_profile.startswith('{'):
-                    # It's a POS Profile name - get the document
-                    profile_doc = frappe.get_cached_doc(
-                        "POS Profile", pos_profile)
-                    if hasattr(profile_doc, 'customer_group') and profile_doc.customer_group:
-                        query_filters["customer_group"] = profile_doc.customer_group
-                else:
-                    # It's JSON data - parse customer groups
-                    pos_profile_data = frappe.parse_json(pos_profile)
-                    if pos_profile_data.get("customer_groups"):
-                        customer_groups = []
-                        for cg_data in pos_profile_data.get("customer_groups", []):
-                            if cg_data.get("customer_group"):
-                                customer_groups.append(
-                                    cg_data.get("customer_group"))
-
+                # FRAPPE STANDARD: Extract name if pos_profile_name is dict
+                profile_name_to_fetch = pos_profile_name
+                if isinstance(pos_profile_name, dict):
+                    profile_name_to_fetch = pos_profile_name.get('name')
+                elif not isinstance(pos_profile_name, str):
+                    # Try to convert to string if it's not already
+                    profile_name_to_fetch = str(pos_profile_name)
+                
+                # Verify POS Profile exists before fetching
+                if profile_name_to_fetch and frappe.db.exists("POS Profile", profile_name_to_fetch):
+                    pos_profile_data = frappe.get_cached_doc(
+                        "POS Profile", profile_name_to_fetch)
+                    if hasattr(pos_profile_data, 'customer_groups') and pos_profile_data.customer_groups:
+                        # Filter by customer groups from POS Profile
+                        customer_groups = [
+                            cg.customer_group for cg in pos_profile_data.customer_groups if cg.customer_group]
                         if customer_groups:
-                            query_filters["customer_group"] = [
-                                "in", customer_groups]
+                            filters["customer_group"] = ["in", customer_groups]
             except Exception as profile_error:
-                frappe.log_error(f"[[customer.py]] get_many_customers: {str(profile_error)}")
-                # Silent fallback for POS profile processing
-                pass
+                # Note: get_many_customers doesn't have pos_profile parameter
+                # Truncate error message to avoid CharacterLengthExceededError (max 140 chars)
+                error_msg = str(profile_error)
+                if len(error_msg) > 100:
+                    error_msg = error_msg[:100] + "..."
+                frappe.log_error(f"[[customer.py]] get_many_customers: {error_msg}", "POS Profile Filter Error")
 
-        # Add search term filtering (POSNext ORM-only approach)
-        search_filters = []
+        # Add search term filter
         if search_term and search_term.strip():
             search_term = search_term.strip()
-            # Priority-based search fields (most important first)
+            # Search in customer_name, name, and mobile_no
             search_filters = [
-                # Primary search field
                 ["customer_name", "like", f"%{search_term}%"],
-                # Customer ID search
                 ["name", "like", f"%{search_term}%"],
-                # Mobile number search
-                ["mobile_no", "like", f"%{search_term}%"],
-                ["email_id", "like", f"%{search_term}%"],       # Email search
-                ["tax_id", "like", f"%{search_term}%"]          # Tax ID search
+                ["mobile_no", "like", f"%{search_term}%"]
             ]
+            # Use OR condition for search
+            filters["or"] = search_filters
 
-        # Use Frappe ORM with optimized field selection (Backend Policy Compliance)
-        fields_to_fetch = [
-            "name", "customer_name", "mobile_no", "email_id", "tax_id",
-            "customer_group", "territory", "disabled", "posa_discount", "gender",
-            "posa_referral_code", "customer_type"
-        ]
-
-        default_customer_name = _resolve_default_customer_name(pos_profile)
-
-        # Handle search term with ORM-only approach (POSNext style)
-        if search_filters:
-            # Use Frappe's or_filters parameter for OR search
-            customers = frappe.get_all(
-                "Customer",
-                filters=query_filters,
-                or_filters=search_filters,
-                fields=fields_to_fetch,
-                limit=limit,
-                start=offset,
-                order_by="customer_name asc"
-            )
-
-            if apply_customer_group_filter:
-                customers = _ensure_default_customer_in_results(
-                    customers, default_customer_name, fields_to_fetch
-                )
-        else:
-            # Simple query without search terms - no need to add default customer separately
-            # It will already be in the results since no customer_group filter is applied
-            customers = frappe.get_all(
-                "Customer",
-                filters=query_filters,
-                fields=fields_to_fetch,
-                limit=limit,
-                start=offset,
-                order_by="customer_name asc"
-            )
-
-        customers = _ensure_default_customer_in_results(
-            customers, default_customer_name, fields_to_fetch
+        # Fetch customers
+        customers = frappe.get_all(
+            "Customer",
+            filters=filters,
+            fields=["name", "customer_name", "mobile_no", "customer_group"],
+            order_by="customer_name asc",
+            limit=limit,
+            start=offset
         )
+
+        # Ensure default customer is included
+        if pos_profile_name:
+            try:
+                # FRAPPE STANDARD: Extract name if pos_profile_name is dict
+                profile_name_to_fetch = pos_profile_name
+                if isinstance(pos_profile_name, dict):
+                    profile_name_to_fetch = pos_profile_name.get('name')
+                elif not isinstance(pos_profile_name, str):
+                    # Try to convert to string if it's not already
+                    profile_name_to_fetch = str(pos_profile_name)
+                
+                if profile_name_to_fetch and frappe.db.exists("POS Profile", profile_name_to_fetch):
+                    pos_profile_data = frappe.get_cached_doc(
+                        "POS Profile", profile_name_to_fetch)
+                    default_customer = getattr(
+                        pos_profile_data, 'customer', None)
+                    if default_customer:
+                        customers = _ensure_default_customer_in_results(
+                            customers, default_customer, ["name", "customer_name", "mobile_no", "customer_group"])
+            except Exception as filter_error:
+                # Note: get_many_customers doesn't have pos_profile parameter
+                # Truncate error message to avoid CharacterLengthExceededError
+                error_msg = str(filter_error)[:100] if len(str(filter_error)) > 100 else str(filter_error)
+                frappe.log_error(f"[[customer.py]] get_many_customers: {error_msg}", "Customer Filter Error")
 
         return customers
 
     except Exception as e:
-        frappe.log_error(f"[[customer.py]] get_many_customers: {str(e)}")
-        frappe.throw(_("Error searching customers"))
+        # Note: get_many_customers doesn't have pos_profile parameter
+        # Truncate error message to avoid CharacterLengthExceededError (max 140 chars for Error Log title)
+        error_msg = str(e)
+        if len(error_msg) > 100:
+            error_msg = error_msg[:100] + "..."
+        frappe.log_error(f"[[customer.py]] get_many_customers: {error_msg}", "Get Customers Error")
+        frappe.throw(_("Error retrieving customers"))
 
 
 @frappe.whitelist()
@@ -412,65 +401,63 @@ def get_customers_count(search_term="", pos_profile=None, filters=None):
     Get total count of customers matching the search criteria (for pagination).
 
     Args:
-        search_term (str): Search query
-        pos_profile (str): POS Profile for filtering
-        filters (str): Additional JSON filters
+        search_term (str): Search query to filter customers
+        pos_profile (str|dict): POS Profile name or dict with name
+        filters (dict): Additional filters to apply
 
     Returns:
-        int: Total number of matching customers
+        int: Total count of matching customers
     """
     try:
-        # Use same filtering logic as get_many_customers but only count
-        query_filters = {"disabled": 0}
+        # Build base filters
+        base_filters = {"disabled": 0}
 
-        # Parse additional filters
+        # Apply additional filters if provided
         if filters:
-            try:
-                additional_filters = frappe.parse_json(filters)
-                query_filters.update(additional_filters)
-            except Exception as filter_error:
-                frappe.log_error(f"[[customer.py]] get_customers_count: {str(filter_error)}")
-                pass
+            if isinstance(filters, str):
+                filters = json.loads(filters)
+            base_filters.update(filters)
 
-        # Apply POS Profile filtering
-        if pos_profile:
+        # FRAPPE STANDARD: Handle string or dict for pos_profile
+        if isinstance(pos_profile, dict):
+            pos_profile_name = pos_profile.get('name')
+        else:
+            pos_profile_name = pos_profile
+
+        # Add customer group filter from POS Profile if available
+        if pos_profile_name:
             try:
-                if isinstance(pos_profile, str) and not pos_profile.startswith('{'):
-                    profile_doc = frappe.get_cached_doc(
-                        "POS Profile", pos_profile)
-                    if hasattr(profile_doc, 'customer_group') and profile_doc.customer_group:
-                        query_filters["customer_group"] = profile_doc.customer_group
-                else:
-                    pos_profile_data = frappe.parse_json(pos_profile)
-                    if pos_profile_data.get("customer_groups"):
-                        customer_groups = [
-                            cg.get("customer_group") for cg in pos_profile_data.get("customer_groups", [])]
-                        if customer_groups:
-                            query_filters["customer_group"] = [
-                                "in", customer_groups]
+                pos_profile_data = frappe.get_cached_doc(
+                    "POS Profile", pos_profile_name)
+                if hasattr(pos_profile_data, 'customer_groups') and pos_profile_data.customer_groups:
+                    customer_groups = [
+                        cg.get("customer_group") for cg in pos_profile_data.get("customer_groups", [])
+                        if cg.get("customer_group")
+                    ]
+                    if customer_groups:
+                        base_filters["customer_group"] = ["in", customer_groups]
             except Exception as profile_error:
+                # Note: get_customers_count doesn't have pos_profile parameter
                 frappe.log_error(f"[[customer.py]] get_customers_count: {str(profile_error)}")
-                pass
 
-        # Add search filtering
+        # Add search term filter
         if search_term and search_term.strip():
             search_term = search_term.strip()
-            query_filters.update({
-                "or": [
-                    {"customer_name": ["like", f"%{search_term}%"]},
-                    {"mobile_no": ["like", f"%{search_term}%"]},
-                    {"email_id": ["like", f"%{search_term}%"]},
-                    {"name": ["like", f"%{search_term}%"]},
-                    {"tax_id": ["like", f"%{search_term}%"]}
-                ]
-            })
+            search_filters = [
+                ["customer_name", "like", f"%{search_term}%"],
+                ["name", "like", f"%{search_term}%"],
+                ["mobile_no", "like", f"%{search_term}%"]
+            ]
+            base_filters["or"] = search_filters
 
-        count = frappe.db.count("Customer", filters=query_filters)
+        # Count customers
+        count = frappe.db.count("Customer", filters=base_filters)
         return count
 
     except Exception as e:
+        # Note: get_customers_count doesn't have pos_profile parameter
         frappe.log_error(f"[[customer.py]] get_customers_count: {str(e)}")
-        return 0
+        frappe.throw(_("Error counting customers"))
 
 
 @frappe.whitelist()
@@ -479,14 +466,14 @@ def get_many_customer_addresses(customer_id):
     Get all addresses for a customer.
 
     Args:
-        customer_id (str): Customer name/ID
+        customer_id (str): Customer ID or name
 
     Returns:
-        list: List of address documents
+        list: List of address dictionaries
     """
     try:
         if not customer_id:
-            frappe.throw(_("Customer is required"))
+            return []
 
         # Get all address links for this customer
         address_links = frappe.get_all(
@@ -499,25 +486,31 @@ def get_many_customer_addresses(customer_id):
             fields=["parent"]
         )
 
-        if not address_links:
+        # Get unique address names
+        address_names = list(set([link.parent for link in address_links]))
+
+        if not address_names:
             return []
 
-        addresses = []
-        for link in address_links:
-            try:
-                address = frappe.get_doc("Address", link.parent)
-                addresses.append(address.as_dict())
-            except Exception as address_error:
-                # Note: get_many_customer_addresses doesn't have pos_profile parameter
-                frappe.log_error(f"[[customer.py]] get_many_customer_addresses: {str(address_error)}")
-                continue  # Skip if address doesn't exist
+        # Fetch address details
+        addresses = frappe.get_all(
+            "Address",
+            filters={"name": ["in", address_names]},
+            fields=["name", "address_title", "address_line1", "address_line2",
+                    "city", "state", "pincode", "country", "address_type"],
+            order_by="creation desc"
+        )
 
         return addresses
 
+    except Exception as address_error:
+        # Note: get_many_customer_addresses doesn't have pos_profile parameter
+        frappe.log_error(f"[[customer.py]] get_many_customer_addresses: {str(address_error)}")
+        return []
     except Exception as e:
         # Note: get_many_customer_addresses doesn't have pos_profile parameter
         frappe.log_error(f"[[customer.py]] get_many_customer_addresses: {str(e)}")
-        frappe.throw(_("Error retrieving addresses"))
+        return []
 
 
 # =============================================================================
@@ -525,203 +518,59 @@ def get_many_customer_addresses(customer_id):
 # =============================================================================
 
 @frappe.whitelist()
-def update_customer(
-    customer_id,
-    customer_name=None,
-    mobile_no=None,
-    email_id=None,
-    tax_id=None,
-    posa_referral_code=None,
-    gender=None,
-    customer_group=None,
-    territory=None,
-    customer_type=None,
-    posa_discount=None,
-    disabled=None,
-    **kwargs
-):
+def update_customer(customer_id, **kwargs):
     """
-    Update existing customer information with validation.
+    Update customer information.
 
     Args:
-        customer_id (str): Customer ID/name (required)
-        customer_name (str): New customer name
-        mobile_no (str): New mobile number
-        email_id (str): New email address
-        tax_id (str): New tax ID
-        posa_referral_code (str): New referral code
-        gender (str): New gender
-        customer_group (str): New customer group
-        territory (str): New territory
-        customer_type (str): New customer type
-        posa_discount (float): New discount percentage (0-100)
-        disabled (int): Disable/enable customer (0/1)
-        **kwargs: Additional fields to update
+        customer_id (str): Customer ID to update
+        **kwargs: Fields to update (mobile_no, email_id, etc.)
 
     Returns:
         dict: Updated customer document
     """
     try:
-        # Validate required parameters
         if not customer_id:
             frappe.throw(_("Customer ID is required"))
 
-        # Check if customer exists
         if not frappe.db.exists("Customer", customer_id):
-            frappe.throw(_("Customer not found: {0}").format(customer_id))
+            frappe.throw(_("Customer not found"))
 
         # Check permissions
-        if not frappe.has_permission("Customer", "write", customer_id):
+        if not frappe.has_permission("Customer", "write"):
             frappe.throw(
-                _("You don't have permission to update this customer"), frappe.PermissionError)
+                _("You don't have permission to update customers"), frappe.PermissionError)
 
         # Get the customer document
         customer_doc = frappe.get_doc("Customer", customer_id)
 
-        # Track what fields are being updated
-        updated_fields = []
+        # Track which fields were updated for contact sync
+        mobile_no_updated = False
+        email_id_updated = False
 
-        # Update basic fields if provided
-        if customer_name is not None and customer_name.strip():
-            new_name = customer_name.strip()
-            # Check for duplicate customer name (excluding current customer)
-            existing = frappe.db.get_value(
-                "Customer", {"customer_name": new_name, "name": ["!=", customer_id]}, "name")
-            if existing:
-                frappe.throw(_("Customer with name '{0}' already exists: {1}").format(
-                    new_name, existing))
-            customer_doc.customer_name = new_name
-            # Also update customer_name_in_arabic if it exists and is mandatory
-            if hasattr(customer_doc, 'customer_name_in_arabic'):
-                customer_doc.customer_name_in_arabic = new_name
-                updated_fields.append("customer_name_in_arabic")
-            updated_fields.append("customer_name")
+        # Update fields
+        for field, value in kwargs.items():
+            if hasattr(customer_doc, field):
+                old_value = getattr(customer_doc, field, None)
+                setattr(customer_doc, field, value)
+                if field == "mobile_no" and old_value != value:
+                    mobile_no_updated = True
+                if field == "email_id" and old_value != value:
+                    email_id_updated = True
 
-        if mobile_no is not None:
-            mobile_no = mobile_no.strip() if mobile_no else ""
-            # Check for duplicate mobile (excluding current customer) - only if mobile_no is not empty
-            if mobile_no:  # Only check if there's actually a mobile number
-                existing = frappe.db.get_value(
-                    "Customer", {"mobile_no": mobile_no, "name": ["!=", customer_id]}, "name")
-                if existing:
-                    existing_customer_name = frappe.db.get_value(
-                        "Customer", existing, "customer_name")
-                    frappe.throw(_("رقم الجوال '{0}' مستخدم بالفعل للعميل: {1}").format(
-                        mobile_no, existing_customer_name or existing))
-            customer_doc.mobile_no = mobile_no
-            updated_fields.append("mobile_no")
+        # Save the document
+        customer_doc.save(ignore_permissions=False)
+        frappe.db.commit()
 
-        if email_id is not None:
-            customer_doc.email_id = email_id.strip() if email_id else ""
-            updated_fields.append("email_id")
+        # Update contact if mobile or email changed
+        if mobile_no_updated or email_id_updated:
+            _update_contact_for_customer(
+                customer_doc, mobile_no_updated, email_id_updated)
 
-        if tax_id is not None:
-            customer_doc.tax_id = tax_id.strip() if tax_id else ""
-            updated_fields.append("tax_id")
-
-        if gender is not None and gender in ["Male", "Female", "Other", ""]:
-            customer_doc.gender = gender
-            updated_fields.append("gender")
-
-        if customer_group is not None:
-            # Validate customer group exists
-            if customer_group and not frappe.db.exists("Customer Group", customer_group):
-                frappe.throw(
-                    _("Customer Group '{0}' does not exist").format(customer_group))
-            customer_doc.customer_group = customer_group
-            updated_fields.append("customer_group")
-
-        if territory is not None:
-            # Validate territory exists
-            if territory and not frappe.db.exists("Territory", territory):
-                frappe.throw(
-                    _("Territory '{0}' does not exist").format(territory))
-            customer_doc.territory = territory
-            updated_fields.append("territory")
-
-        if customer_type is not None:
-            customer_doc.customer_type = customer_type
-            updated_fields.append("customer_type")
-
-        if disabled is not None:
-            customer_doc.disabled = int(disabled) if disabled else 0
-            updated_fields.append("disabled")
-
-        # Handle POS-specific fields if they exist
-        if posa_referral_code is not None and hasattr(customer_doc, 'posa_referral_code'):
-            customer_doc.posa_referral_code = posa_referral_code.strip() if posa_referral_code else ""
-            updated_fields.append("posa_referral_code")
-
-        if posa_discount is not None and hasattr(customer_doc, 'posa_discount'):
-            try:
-                customer_doc.posa_discount = float(
-                    posa_discount) if posa_discount else 0
-                updated_fields.append("posa_discount")
-            except (ValueError, TypeError):
-                frappe.throw(
-                    _("Invalid discount percentage: {0}").format(posa_discount))
-
-        # Update any additional fields from kwargs
-        for field_name, field_value in kwargs.items():
-            if hasattr(customer_doc, field_name) and field_name not in ['name', 'doctype']:
-                setattr(customer_doc, field_name, field_value)
-                updated_fields.append(field_name)
-
-        # Ensure customer_name_in_arabic is set if it's a mandatory field
-        if hasattr(customer_doc, 'customer_name_in_arabic') and not customer_doc.customer_name_in_arabic:
-            customer_doc.customer_name_in_arabic = customer_doc.customer_name
-            if "customer_name_in_arabic" not in updated_fields:
-                updated_fields.append("customer_name_in_arabic")
-
-        # Save the document if any fields were updated
-        if updated_fields:
-            customer_doc.save()
-
-            # Update the primary contact if mobile_no or email_id changed (following ERPNext pattern)
-            mobile_no_updated = "mobile_no" in updated_fields
-            email_id_updated = "email_id" in updated_fields
-
-            if mobile_no_updated or email_id_updated:
-                _update_contact_for_customer(
-                    customer_doc, mobile_no_updated, email_id_updated)
-
-            frappe.db.commit()
-
-        # Return the updated customer document
         return customer_doc.as_dict()
 
     except Exception as e:
-        # Note: update_customer doesn't have pos_profile parameter
         frappe.log_error(f"[[customer.py]] update_customer: {str(e)}")
-        frappe.throw(_("Error updating customer"))
-
-
-@frappe.whitelist()
-def patch_customer(customer_id, **kwargs):
-    """
-    Partial update of customer (PATCH method equivalent).
-    Only updates the fields that are explicitly provided.
-
-    Args:
-        customer_id (str): Customer ID/name (required)
-        **kwargs: Fields to update
-
-    Returns:
-        dict: Updated customer document
-    """
-    try:
-        # Filter out None values and empty strings for true partial update
-        update_data = {k: v for k,
-                       v in kwargs.items() if v is not None and v != ""}
-
-        if not update_data:
-            frappe.throw(_("No fields provided to update"))
-
-        return update_customer(customer_id, **update_data)
-
-    except Exception as e:
-        # Note: patch_customer doesn't have pos_profile parameter
-        frappe.log_error(f"[[customer.py]] patch_customer: {str(e)}")
         frappe.throw(_("Error updating customer"))
 
 
@@ -879,6 +728,104 @@ def get_customer_credit_summary(customer_id, company=None):
         # Note: get_customer_credit_summary doesn't have pos_profile parameter
         frappe.log_error(f"[[customer.py]] get_customer_credit_summary: {str(e)}")
         frappe.throw(_("Error retrieving customer credit summary"))
+
+
+@frappe.whitelist()
+def get_customer_outstanding_balance(customer_id, company=None):
+    """
+    Get total outstanding balance (unpaid amount) for a customer.
+    Following ERPNext logic: sum of outstanding_amount from all unpaid Sales Invoices.
+    
+    Args:
+        customer_id (str): Customer ID/name (required)
+        company (str): Company to filter by (optional)
+    
+    Returns:
+        dict: Outstanding balance information
+    """
+    try:
+        if not customer_id:
+            return {
+                "customer": customer_id,
+                "company": company,
+                "total_outstanding": 0.0,
+                "currency": None
+            }
+
+        if not frappe.db.exists("Customer", customer_id):
+            return {
+                "customer": customer_id,
+                "company": company,
+                "total_outstanding": 0.0,
+                "currency": None
+            }
+
+        # Build filters for unpaid invoices
+        # Outstanding amount > 0 means customer owes money
+        filters = {
+            "customer": customer_id,
+            "docstatus": 1,  # Only submitted invoices
+            "outstanding_amount": [">", 0],  # Only unpaid invoices
+            "is_return": 0  # Exclude return invoices
+        }
+
+        if company:
+            filters["company"] = company
+
+        # Get unpaid invoices with outstanding amounts
+        unpaid_invoices = frappe.get_all(
+            "Sales Invoice",
+            filters=filters,
+            fields=["outstanding_amount", "currency", "company"],
+            order_by="posting_date desc"
+        )
+
+        # Calculate total outstanding by currency
+        # Group by currency to handle multi-currency scenarios
+        outstanding_by_currency = {}
+        for invoice in unpaid_invoices:
+            currency = invoice.get("currency") or "USD"  # Default currency if not set
+            outstanding = flt(invoice.get("outstanding_amount", 0))
+            if outstanding > 0:
+                if currency not in outstanding_by_currency:
+                    outstanding_by_currency[currency] = 0.0
+                outstanding_by_currency[currency] += outstanding
+
+        # For single currency POS, return the main currency outstanding
+        if company:
+            # Get company default currency
+            company_currency = frappe.get_cached_value("Company", company, "default_currency")
+        else:
+            company_currency = None
+
+        # If company currency is specified, prioritize it
+        if company_currency and company_currency in outstanding_by_currency:
+            total_outstanding = outstanding_by_currency[company_currency]
+            currency = company_currency
+        elif outstanding_by_currency:
+            # Return first currency found (for single currency systems)
+            currency = list(outstanding_by_currency.keys())[0]
+            total_outstanding = outstanding_by_currency[currency]
+        else:
+            total_outstanding = 0.0
+            currency = company_currency or "USD"
+
+        return {
+            "customer": customer_id,
+            "company": company,
+            "total_outstanding": flt(total_outstanding, 2),
+            "currency": currency,
+            "outstanding_by_currency": outstanding_by_currency
+        }
+
+    except Exception as e:
+        frappe.log_error(f"[[customer.py]] get_customer_outstanding_balance: {str(e)}", "Customer Outstanding Balance Error")
+        return {
+            "customer": customer_id,
+            "company": company,
+            "total_outstanding": 0.0,
+            "currency": None
+        }
 
 
 # =============================================================================
