@@ -760,55 +760,73 @@ def get_customer_outstanding_balance(customer_id, company=None):
                 "currency": None
             }
 
-        # Build filters for unpaid invoices
-        # Outstanding amount > 0 means customer owes money
-        filters = {
-            "customer": customer_id,
-            "docstatus": 1,  # Only submitted invoices
-            "outstanding_amount": [">", 0],  # Only unpaid invoices
-            "is_return": 0  # Exclude return invoices
-        }
-
+        # Use ERPNext standard logic: Calculate from GL Entry (General Ledger)
+        # This matches exactly how ERPNext calculates "Total Unpaid" in dashboard
+        # Reference: erpnext/erpnext/accounts/party.py get_dashboard_info()
+        
+        # Build SQL query parameters
+        party_type = "Customer"
+        party = customer_id
+        
+        # SQL query to get outstanding balance from GL Entry
+        # Formula: sum(debit_in_account_currency) - sum(credit_in_account_currency)
+        # This gives the actual accounting balance, not just invoice outstanding
+        sql_query = """
+            SELECT company, 
+                   SUM(debit_in_account_currency) - SUM(credit_in_account_currency) as outstanding
+            FROM `tabGL Entry`
+            WHERE party_type = %s AND party = %s
+            AND is_cancelled = 0
+        """
+        params = [party_type, party]
+        
+        # Add company filter if provided
         if company:
-            filters["company"] = company
-
-        # Get unpaid invoices with outstanding amounts
-        unpaid_invoices = frappe.get_all(
-            "Sales Invoice",
-            filters=filters,
-            fields=["outstanding_amount", "currency", "company"],
-            order_by="posting_date desc"
-        )
-
-        # Calculate total outstanding by currency
-        # Group by currency to handle multi-currency scenarios
-        outstanding_by_currency = {}
-        for invoice in unpaid_invoices:
-            currency = invoice.get("currency") or "USD"  # Default currency if not set
-            outstanding = flt(invoice.get("outstanding_amount", 0))
-            if outstanding > 0:
-                if currency not in outstanding_by_currency:
-                    outstanding_by_currency[currency] = 0.0
-                outstanding_by_currency[currency] += outstanding
-
-        # For single currency POS, return the main currency outstanding
+            sql_query += " AND company = %s"
+            params.append(company)
+        
+        sql_query += " GROUP BY company"
+        
+        # Execute query
+        gl_entries = frappe.db.sql(sql_query, tuple(params), as_dict=True)
+        
+        # Calculate total outstanding
+        total_outstanding = 0.0
+        outstanding_by_company = {}
+        
+        for entry in gl_entries:
+            outstanding = flt(entry.get("outstanding", 0))
+            if outstanding > 0:  # Only positive outstanding (customer owes money)
+                outstanding_by_company[entry.company] = outstanding
+                total_outstanding += outstanding
+        
+        # Get currency for the company
         if company:
             # Get company default currency
             company_currency = frappe.get_cached_value("Company", company, "default_currency")
+            # Get party account currency (may differ from company currency)
+            try:
+                from erpnext.accounts.party import get_party_account_currency
+                currency = get_party_account_currency(party_type, party, company)
+            except:
+                currency = company_currency or "SAR"
         else:
-            company_currency = None
-
-        # If company currency is specified, prioritize it
-        if company_currency and company_currency in outstanding_by_currency:
-            total_outstanding = outstanding_by_currency[company_currency]
-            currency = company_currency
-        elif outstanding_by_currency:
-            # Return first currency found (for single currency systems)
-            currency = list(outstanding_by_currency.keys())[0]
-            total_outstanding = outstanding_by_currency[currency]
-        else:
-            total_outstanding = 0.0
-            currency = company_currency or "USD"
+            # If no company specified, use first company's currency
+            if outstanding_by_company:
+                first_company = list(outstanding_by_company.keys())[0]
+                company_currency = frappe.get_cached_value("Company", first_company, "default_currency")
+                try:
+                    from erpnext.accounts.party import get_party_account_currency
+                    currency = get_party_account_currency(party_type, party, first_company)
+                except:
+                    currency = company_currency or "SAR"
+            else:
+                currency = "SAR"
+        
+        # Build outstanding_by_currency dict for compatibility
+        outstanding_by_currency = {}
+        if currency:
+            outstanding_by_currency[currency] = total_outstanding
 
         return {
             "customer": customer_id,
