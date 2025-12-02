@@ -251,13 +251,34 @@ export default {
 			return defaultRow ? defaultRow.mode_of_payment : null;
 		},
 		canPrintInvoice() {
-			if (this.readonly || !this.items?.length) return false;
+			// Check items first - must have items to print
+			if (!this.items?.length) return false;
+
+			// For return invoices: check if original invoice was unpaid
+			// If unpaid, payments will be 0 and disabled, but printing should still be allowed
+			// The amount will be deducted from customer outstanding balance automatically
+			// This check must come BEFORE readonly check
+			if (this.invoice_doc?.is_return && this.invoice_doc?._original_invoice_payment_info) {
+				const origPaid = Math.abs(
+					this.flt(this.invoice_doc._original_invoice_payment_info.paid_amount || 0),
+				);
+				// If original invoice was unpaid (paid_amount <= 0.01), allow printing without payments
+				if (origPaid <= 0.01) {
+					return true;
+				}
+			}
+
+			// Check readonly after checking return invoice unpaid case
+			// For return invoices that were paid, still allow if readonly but has valid payments
+			if (this.readonly && !this.invoice_doc?.is_return) return false;
+
 			// Allow printing if credit sale is enabled, otherwise check for valid payments
 			const isCreditSale =
 				this.invoice_doc?.is_credit_sale === true || this.invoice_doc?.is_credit_sale == 1;
 			if (isCreditSale) {
 				return true;
 			}
+
 			// Requires valid payments only - defaultPaymentMode is not enough
 			return this.hasValidPayments();
 		},
