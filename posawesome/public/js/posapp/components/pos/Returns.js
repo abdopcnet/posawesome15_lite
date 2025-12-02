@@ -13,7 +13,9 @@ const EVENT_NAMES = {
 const TABLE_HEADERS = [
 	{ title: 'العميل', key: 'customer', align: 'start', sortable: true },
 	{ title: 'التاريخ', key: 'posting_date', align: 'start', sortable: true },
+	{ title: 'الوقت', key: 'posting_time', align: 'center', sortable: false },
 	{ title: 'رقم الفاتورة', key: 'name', align: 'start', sortable: true },
+	{ title: 'النوع', key: 'invoice_status', align: 'center', sortable: false },
 	{ title: 'المبلغ', key: 'grand_total', align: 'end', sortable: false },
 ];
 
@@ -108,11 +110,14 @@ export default {
 									name: item.name,
 									customer: item.customer,
 									posting_date: item.posting_date,
+									posting_time: item.posting_time || null,
 									grand_total: item.grand_total,
 									outstanding_amount: item.outstanding_amount || 0,
 									paid_amount: item.paid_amount || 0,
 									currency: item.currency,
 									items: item.items || [],
+									invoice_status: item.invoice_status || item.status || '-',
+									status: item.status || '-',
 							  }))
 							: [];
 
