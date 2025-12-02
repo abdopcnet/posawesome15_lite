@@ -28,6 +28,8 @@ const API_MAP = {
 		CREATE_CUSTOMER_ADDRESS: 'posawesome.api.customer.create_customer_address',
 		GET_CUSTOMER_CREDIT: 'posawesome.api.customer.get_customer_credit',
 		GET_ADDRESSES: 'posawesome.api.customer.get_many_customer_addresses',
+		GET_CUSTOMER_OUTSTANDING_BALANCE:
+			'posawesome.api.customer.get_customer_outstanding_balance',
 	},
 
 	// POS Profile APIs (from Invoice.vue)
