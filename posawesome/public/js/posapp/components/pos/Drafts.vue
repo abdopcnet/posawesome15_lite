@@ -171,6 +171,16 @@
 									<th
 										style="
 											padding: 12px;
+											text-align: center;
+											font-weight: 600;
+											color: white;
+										"
+									>
+										النوع
+									</th>
+									<th
+										style="
+											padding: 12px;
 											text-align: left;
 											font-weight: 600;
 											color: white;
@@ -207,6 +217,25 @@
 									</td>
 									<td style="padding: 12px; text-align: right; font-weight: 600">
 										{{ invoice.name }}
+									</td>
+									<td style="padding: 12px; text-align: center">
+										<span
+											:style="{
+												display: 'inline-block',
+												padding: '4px 12px',
+												borderRadius: '12px',
+												fontSize: '0.75rem',
+												fontWeight: '600',
+												whiteSpace: 'nowrap',
+												backgroundColor: '#e3f2fd',
+												color: '#1976d2',
+												border: '1px solid #2196f3',
+											}"
+										>
+											{{
+												invoice.invoice_status || invoice.status || 'Draft'
+											}}
+										</span>
 									</td>
 									<td style="padding: 12px; text-align: left; font-weight: 600">
 										{{ currencySymbol(invoice.currency || 'SAR')
