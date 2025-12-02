@@ -230,12 +230,13 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
     - Only from current POS profile
     - Only submitted invoices (docstatus=1)
     - Not already returns (is_return=0)
-    - Only paid or partly paid (outstanding_amount < grand_total)
+    - Include all invoices (paid, partly paid, or unpaid) with remaining returnable amount > 0
 
-    Note: Does NOT filter by "Credit Note Issued" status because:
+    Note: 
+    - Unpaid invoices (outstanding_amount == grand_total) are allowed for return
     - Partial returns are allowed (ERPNext native behavior)
-    - Invoice may have status "Paid" or "Partly Paid" with remaining returnable amount
-    - We filter by remaining_returnable_amount > 0 instead
+    - Invoice may have status "Paid", "Partly Paid", or "Unpaid" with remaining returnable amount
+    - Final filter is remaining_returnable_amount > 0 (which includes unpaid invoices)
     """
     try:
         # Build filters
@@ -275,21 +276,12 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
             limit=50
         )
 
-        # Filter to only paid or partly paid invoices
-        # (outstanding_amount < grand_total means at least partially paid)
-        paid_invoices = []
-        for invoice in invoices:
-            outstanding = flt(invoice.get("outstanding_amount", 0))
-            grand_total = flt(invoice.get("grand_total", 0))
-
-            # Include if paid or partly paid (outstanding < grand_total)
-            if outstanding < grand_total:
-                paid_invoices.append(invoice)
-
-        # Get items data and return stats for each paid invoice
+        # FRAPPE FRAMEWORK STANDARD: Process all invoices (paid, partly paid, or unpaid)
+        # Filter by remaining_returnable_amount > 0 instead of payment status
+        # This allows returning unpaid invoices (credit sales) as well
         returnable_invoices = []
 
-        for invoice in paid_invoices:
+        for invoice in invoices:
             # Calculate return stats
             return_stats = calculate_return_stats(invoice["name"])
 
