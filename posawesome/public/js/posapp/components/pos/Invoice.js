@@ -92,7 +92,15 @@ export default {
 					align: 'start',
 					sortable: true,
 					key: 'item_name',
-					width: '42%',
+					width: '35%',
+				},
+				{
+					// Item Code
+					title: 'كود الصنف',
+					align: 'center',
+					sortable: true,
+					key: 'item_code',
+					width: '12%',
 				},
 				{
 					// Qty
