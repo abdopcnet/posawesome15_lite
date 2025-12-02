@@ -269,7 +269,7 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
             filters=filters,
             fields=[
                 "name", "customer", "grand_total",
-                "outstanding_amount", "posting_date", "currency",
+                "outstanding_amount", "paid_amount", "posting_date", "currency",
                 "status", "pos_profile"
             ],
             order_by="posting_date desc, creation desc",
