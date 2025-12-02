@@ -1,9 +1,16 @@
 // ===== SECTION 1: IMPORTS =====
+// This section imports required dependencies for the Payments component
+// - evntBus: Event bus for inter-component communication
+// - format: Mixin for formatting numbers and currency
+// - API_MAP: Maps API method names to their endpoints
 import { evntBus } from '../../bus';
 import format from '../../format';
 import { API_MAP } from '../../api_mapper.js';
 // Frontend logging: Use console.log/error/warn directly
 
+// ===== EVENT NAMES CONSTANTS =====
+// All event names used for inter-component communication
+// These events are emitted and listened to via the event bus
 const EVENT_NAMES = {
 	SHOW_PAYMENT: 'show_payment',
 	SET_CUSTOMER_READONLY: 'set_customer_readonly',
@@ -32,34 +39,88 @@ export default {
 	mixins: [format],
 
 	// ===== DATA =====
+	// Component's reactive data properties
+	// These properties are used throughout the component to manage state
 	data() {
 		return {
+			// UI state
+			// Loading indicator state
 			loading: false,
-			pos_profile: '',
-			invoice_doc: null,
-			customer: '',
-			loyalty_amount: 0,
-			is_credit_sale: false,
-			is_write_off_change: 0,
-			addresses: [],
-			change_amount_rules: [],
-			is_return: false,
-			is_cashback: true,
-			redeem_customer_credit: false,
-			customer_credit_dict: [],
+			// Phone payment dialog visibility
 			phone_dialog: false,
+
+			// POS configuration
+			// Current POS profile configuration
+			pos_profile: '',
+			// POS system settings
 			pos_settings: '',
+
+			// Invoice data
+			// Current invoice document object
+			invoice_doc: null,
+			// Selected customer ID
+			customer: '',
+			// Customer details and information
 			customer_info: '',
+
+			// Payment amounts
+			// Loyalty points amount to redeem
+			loyalty_amount: 0,
+			// Whether to use customer credit
+			redeem_customer_credit: false,
+
+			// Invoice flags
+			// Whether this is a credit sale (unpaid invoice)
+			is_credit_sale: false,
+			// Whether this is a return invoice
+			is_return: false,
+			// Quick return mode (no original invoice reference)
 			quick_return: false,
+			// Write-off amount flag
+			is_write_off_change: 0,
+
+			// Customer credit
+			// Available customer credit sources
+			customer_credit_dict: [],
+			// Cashback feature flag
+			is_cashback: true,
+
+			// Address management
+			// Customer addresses list
+			addresses: [],
+
+			// Payment management
+			// Rules for calculating change amount
+			change_amount_rules: [],
+			// Selected payment method index for returns
 			selected_return_payment_idx: null,
+			// Timeouts for debouncing payment amount changes
 			set_full_amount_timeouts: {},
-			saved_payments_before_credit_sale: null, // Store payment values before enabling credit sale
+
+			// Credit sale state management
+			// Store payment values before enabling credit sale
+			// This allows restoring payments when credit sale is disabled
+			saved_payments_before_credit_sale: null,
+
+			// Return invoice state management
+			// Track if original invoice is unpaid (for return invoices)
+			// If unpaid, payment fields should be disabled
+			is_original_invoice_unpaid: false,
+
+			// Customer outstanding balance
+			// Total unpaid amount for the customer (from all unpaid invoices)
+			customer_outstanding_balance: 0.0,
+			// Currency for customer outstanding balance
+			customer_outstanding_currency: null,
 		};
 	},
 
-	// ===== COMPUTED =====
+	// ===== COMPUTED PROPERTIES =====
+	// These properties are automatically recalculated when their dependencies change
+	// They provide derived values based on the component's data
 	computed: {
 		// Minimum date for due date input (today's date)
+		// Used to prevent selecting past dates for credit sale due dates
 		min_date() {
 			if (typeof frappe !== 'undefined' && frappe.datetime) {
 				return frappe.datetime.now_date();
@@ -69,30 +130,39 @@ export default {
 			return today.toISOString().split('T')[0];
 		},
 
-		// paid_amount: إجمالي المدفوعات (من جميع طرق الدفع)
+		// Calculate total paid amount
+		// Sums all payment methods, loyalty points, and customer credit
+		// This is the total amount the customer has paid so far
 		paid_amount() {
 			if (!this.invoice_doc) return 0;
 
+			// Start with loyalty points amount
 			let total = parseFloat(this.invoice_doc.loyalty_amount || 0);
 
+			// Add all payment method amounts
 			if (this.invoice_doc?.payments) {
 				this.invoice_doc.payments.forEach((payment) => {
 					total += this.flt(payment.amount || 0);
 				});
 			}
 
+			// Add redeemed customer credit
 			total += this.flt(this.redeemed_customer_credit || 0);
 
-			// ✅ تم إزالة سويتش is_cashback - المرتجع دائماً نقدي
+			// Return formatted total with currency precision
 			return this.flt(total, this.currency_precision);
 		},
 
-		// outstanding_amount: المبلغ المتأخر على الفاتورة (ما لم يُدفع بعد)
+		// Calculate outstanding amount (amount still owed by customer)
+		// Formula: outstanding = grand_total - paid_amount - write_off_amount
+		// This follows ERPNext's standard calculation logic
 		outstanding_amount() {
 			if (!this.invoice_doc) return 0;
 
+			// Get invoice total (rounded_total or grand_total)
 			const target_amount =
 				flt(this.invoice_doc.rounded_total) || flt(this.invoice_doc.grand_total);
+			// Get write-off amount if any
 			const write_off_amount = flt(this.invoice_doc.write_off_amount || 0);
 
 			// Following ERPNext logic: outstanding_amount = grand_total - paid_amount - write_off_amount
@@ -102,14 +172,18 @@ export default {
 			);
 
 			// Return only positive values (what's still owed)
+			// Negative values mean customer overpaid (handled by change_amount)
 			return outstanding > 0 ? outstanding : 0;
 		},
 
-		// change_amount: المبلغ المتبقي للعميل (الباقي إذا دفع أكثر من المطلوب)
+		// Calculate change amount (excess payment to return to customer)
+		// This is the amount customer overpaid that should be returned
+		// Only calculated when paid_total > grand_total and payment includes cash
 		change_amount() {
 			if (!this.invoice_doc) return 0;
 
 			// Calculate paid_amount directly (not using computed property to avoid dependency issues)
+			// This prevents circular dependency problems
 			let paid_total = parseFloat(this.invoice_doc.loyalty_amount || 0);
 			if (this.invoice_doc?.payments) {
 				this.invoice_doc.payments.forEach((payment) => {
@@ -117,14 +191,16 @@ export default {
 				});
 			}
 			paid_total += this.flt(this.redeemed_customer_credit || 0);
-			// ✅ تم إزالة سويتش is_cashback - المرتجع دائماً نقدي
 			paid_total = this.flt(paid_total, this.currency_precision);
 
+			// Get invoice total
 			const target_amount =
 				flt(this.invoice_doc.rounded_total) || flt(this.invoice_doc.grand_total);
+			// Get cash payment mode from POS profile
 			const cash_mode = this.pos_profile?.posa_cash_mode_of_payment;
 
-			// Only calculate change_amount if paid_total > grand_total
+			// Only calculate change_amount if customer overpaid
+			// Change can only be given if excess payment is from cash
 			if (paid_total > target_amount) {
 				// If cash_mode is defined, verify that excess is from cash payment
 				if (cash_mode) {
@@ -172,29 +248,40 @@ export default {
 			return 0;
 		},
 
+		// Backward compatibility: alias for paid_amount
 		// Keep total_payments for backward compatibility
+		// Some components may still reference this property
 		total_payments() {
 			return this.paid_amount;
 		},
 
+		// Backward compatibility: deprecated property
 		// Keep diff_payment for backward compatibility (deprecated, use outstanding_amount and change_amount)
+		// Returns positive outstanding or negative change amount
 		diff_payment() {
 			// Return outstanding_amount (positive) or negative change_amount
 			if (this.change_amount > 0) {
-				return -this.change_amount; // Negative to indicate excess
+				// Negative to indicate excess
+				return -this.change_amount;
 			}
-			return this.outstanding_amount; // Positive to indicate remaining
+			// Positive to indicate remaining
+			return this.outstanding_amount;
 		},
 
+		// Get available loyalty points for current customer
 		available_pioints_amount() {
 			if (!this.customer_info?.loyalty_points) return 0;
 			return this.customer_info.loyalty_points;
 		},
 
+		// Calculate total available customer credit
+		// Sums all credit sources (advance payments, credit notes, etc.)
 		available_customer_credit() {
 			return this.customer_credit_dict.reduce((total, row) => total + row.total_credit, 0);
 		},
 
+		// Calculate total redeemed customer credit
+		// Sums the credit_to_redeem amount from all credit sources
 		redeemed_customer_credit() {
 			return this.customer_credit_dict.reduce((total, row) => {
 				const credit = flt(row.credit_to_redeem);
@@ -203,31 +290,49 @@ export default {
 			}, 0);
 		},
 
+		// Validate if payment data exists
+		// Returns true if invoice_doc or payments array is missing
 		vaildatPayment() {
 			return !this.invoice_doc || !this.invoice_doc.payments;
 		},
 
+		// Check if any payment method is of type 'Phone'
+		// Used to show/hide phone payment request button
 		request_payment_field() {
 			return (
 				this.invoice_doc?.payments?.some((payment) => payment.type === 'Phone') || false
 			);
 		},
+
+		// Get customer outstanding balance (total unpaid amount)
+		// This is the total amount the customer owes across all unpaid invoices
+		customer_outstanding_display() {
+			return this.flt(this.customer_outstanding_balance || 0, this.currency_precision);
+		},
 	},
 
 	// ===== METHODS =====
+	// All component methods for handling business logic and user interactions
 	methods: {
+		// Display a message to the user via event bus
+		// Used for success, error, and warning notifications
 		showMessage(text, color) {
 			evntBus.emit(EVENT_NAMES.SHOW_MESSAGE, { text, color });
 		},
 
+		// Emit print request event to parent component
 		emitPrintRequest() {
 			this.$emit('request-print');
 		},
 
+		// Expose submit method with default parameters
+		// Used for programmatic invoice submission
 		exposeSubmit(print = true, autoMode = false) {
 			this.submit(undefined, autoMode, print);
 		},
 
+		// Automatically pay invoice with default payment method
+		// Used for quick payment scenarios (e.g., auto-pay on item scan)
 		autoPayWithDefault(invoice_doc) {
 			this.invoice_doc = invoice_doc;
 			const defaultPayment = this.getDefaultPayment();
@@ -239,6 +344,8 @@ export default {
 			this.exposeSubmit(true, true);
 		},
 
+		// Get the default payment method from payments array
+		// Returns payment marked as default, or first payment if no default
 		getDefaultPayment() {
 			const payments = Array.isArray(this.invoice_doc?.payments)
 				? this.invoice_doc.payments
@@ -246,21 +353,30 @@ export default {
 			return payments.find((payment) => payment.default == 1) || payments[0] || null;
 		},
 
+		// Navigate back to invoice view
+		// Hides payment dialog and enables customer editing
 		back_to_invoice() {
 			evntBus.emit(EVENT_NAMES.SHOW_PAYMENT, 'false');
 			evntBus.emit(EVENT_NAMES.SET_CUSTOMER_READONLY, false);
 		},
 
+		// Main submit method - entry point for invoice submission
+		// Handles form submission, validation, and delegates to submit_invoice
 		async submit(event, autoMode = false, print = false) {
+			// Prevent default form submission if event is provided
 			if (event && typeof event.preventDefault === 'function') {
 				event.preventDefault();
 			}
+
+			// Refresh invoice document from server to get latest data
+			// This prevents conflicts if invoice was modified elsewhere
 			try {
 				await this.refreshInvoiceDoc();
 			} catch (error) {
 				console.log('[Payments.js] submit error:', error?.message || error);
 			}
 
+			// If invoice is already submitted, just print if requested
 			if (this.invoice_doc?.docstatus === 1) {
 				if (print) {
 					this.load_print_page();
@@ -271,6 +387,7 @@ export default {
 				return;
 			}
 
+			// Auto mode: automatically fill default payment with invoice total
 			if (autoMode) {
 				const defaultPayment = this.getDefaultPayment();
 				if (!defaultPayment) {
@@ -283,13 +400,20 @@ export default {
 				defaultPayment.amount = this.flt(total, this.currency_precision);
 			}
 
+			// Delegate to submit_invoice for actual submission logic
 			this.submit_invoice(print, autoMode);
 		},
 
+		// Core invoice submission logic
+		// Handles quick return mode, payment calculations, and server submission
 		submit_invoice(print, autoMode, retrying = false) {
+			// Handle quick return mode (return without original invoice reference)
+			// In quick return, all item quantities and amounts must be negative
 			if (this.quick_return) {
 				this.invoice_doc.is_return = 1;
 
+				// Make all item quantities and amounts negative
+				// This is required by ERPNext for return invoices
 				let total = 0;
 				this.invoice_doc.items.forEach((item) => {
 					item.qty = -1 * Math.abs(item.qty);
@@ -299,6 +423,7 @@ export default {
 					total += item.amount;
 				});
 
+				// Update all invoice totals to negative values
 				this.invoice_doc.total = total;
 				this.invoice_doc.net_total = total;
 				this.invoice_doc.grand_total = total;
@@ -307,6 +432,7 @@ export default {
 				this.invoice_doc.base_net_total = total;
 				this.invoice_doc.base_grand_total = total;
 
+				// Set payment amount for selected payment method or first payment
 				if (typeof this.selected_return_payment_idx === 'number') {
 					this.invoice_doc.payments.forEach((payment) => {
 						payment.amount =
@@ -318,6 +444,7 @@ export default {
 					}
 				}
 
+				// Reset quick return flag after processing
 				this.quick_return = false;
 			}
 
@@ -385,7 +512,6 @@ export default {
 			const data = {
 				redeemed_customer_credit: this.redeemed_customer_credit,
 				customer_credit_dict: this.customer_credit_dict,
-				// ✅ تم إزالة is_cashback - الـ backend لا يستخدمه ولا حاجة لإرساله
 			};
 
 			if (autoMode) {
@@ -466,12 +592,18 @@ export default {
 			});
 		},
 
+		// Refresh invoice document from server
+		// Merges local payment changes with server data to prevent data loss
+		// Used before submission to ensure we have latest invoice data
 		refreshInvoiceDoc() {
 			if (!this.invoice_doc?.name) {
 				return Promise.resolve();
 			}
 
+			// Only merge payments if invoice is still a draft (docstatus = 0)
+			// Submitted invoices should not have local payment modifications
 			const shouldMergeLocalPayments = this.invoice_doc.docstatus === 0;
+			// Save local payment values before fetching from server
 			const localPayments =
 				shouldMergeLocalPayments && this.invoice_doc.payments
 					? this.invoice_doc.payments.map((payment) => ({ ...payment }))
@@ -541,15 +673,20 @@ export default {
 			});
 		},
 
+		// Set payment amount to full invoice total
+		// Called when user clicks on a payment method button
+		// Uses debouncing to prevent rapid successive calls
 		set_full_amount(idx) {
 			try {
 				// Clear any pending timeout for this specific payment
+				// This prevents multiple rapid calls from overwriting each other
 				if (this.set_full_amount_timeouts[idx]) {
 					clearTimeout(this.set_full_amount_timeouts[idx]);
 					delete this.set_full_amount_timeouts[idx];
 				}
 
 				// Debounce to prevent multiple rapid calls for the same payment
+				// Wait 150ms before executing to batch rapid clicks
 				this.set_full_amount_timeouts[idx] = setTimeout(() => {
 					const isQuickReturn = !!this.quick_return;
 
@@ -574,7 +711,7 @@ export default {
 						flt(this.invoice_doc.rounded_total) || flt(this.invoice_doc.grand_total);
 
 					// Fill with full invoice amount when clicking the payment method button
-					// ✅ في حالة المرتجع السريع (quick_return)، نفس منطق sales_mode ولكن بالقيم السالبة
+					// For quick_return mode, same logic as sales_mode but with negative values
 					const amount = this.flt(invoice_total, this.currency_precision);
 					const target_amount = isQuickReturn ? -Math.abs(amount) : amount;
 
@@ -608,16 +745,21 @@ export default {
 			}
 		},
 
+		// Set payment amount to remaining balance
+		// Called when user focuses/clicks on payment amount input field
+		// Calculates remaining amount after other payments and fills it in
 		set_rest_amount(idx) {
 			try {
 				const isQuickReturn = !!this.quick_return;
 				const invoice_total =
 					flt(this.invoice_doc.rounded_total) || flt(this.invoice_doc.grand_total);
 
+				// Find the payment method being edited
 				const payment = this.invoice_doc.payments.find((p) => p.idx === idx);
 				if (!payment) return;
 
 				// Calculate current total payments excluding this payment
+				// This gives us the amount already covered by other payment methods
 				const other_payments =
 					this.invoice_doc.payments
 						?.filter((p) => p.idx !== idx)
@@ -640,7 +782,7 @@ export default {
 				// For non-cash payments, limit to remaining amount (cannot exceed invoice total)
 				if (cash_mode && payment.mode_of_payment !== cash_mode) {
 					// Non-cash: fill with remaining amount, but not more than invoice total
-					// ✅ في حالة المرتجع السريع (quick_return)، نستخدم القيمة المطلقة للمقارنة
+					// For quick_return mode, use absolute values for comparison
 					if (isQuickReturn) {
 						// Quick return mode: use absolute values for comparison
 						const abs_remaining = Math.abs(remaining);
@@ -656,8 +798,8 @@ export default {
 					amount = remaining;
 				}
 
-				// ✅ في حالة المرتجع السريع (quick_return)، التأكد من أن القيمة سالبة
-				// إذا كانت القيمة موجبة، نحولها إلى سالبة (مثل sales_mode ولكن بالسالب)
+				// For quick_return mode, ensure value is negative
+				// If positive, convert to negative (same as sales_mode but negative)
 				if (isQuickReturn && amount > 0) {
 					amount = -Math.abs(amount);
 				}
@@ -686,12 +828,16 @@ export default {
 			}
 		},
 
+		// Clear all payment amounts to zero
+		// Used when resetting payment form or switching payment methods
 		clear_all_amounts() {
 			this.invoice_doc.payments.forEach((payment) => {
 				payment.amount = 0;
 			});
 		},
 
+		// Open print preview window for current invoice
+		// Uses POS profile print format and letterhead settings
 		load_print_page() {
 			const print_format =
 				this.pos_profile.print_format_for_online || this.pos_profile.posa_print_format;
@@ -711,11 +857,14 @@ export default {
 			);
 		},
 
+		// Validate due date is not in the past
+		// For credit sales, due date must be today or future
 		validate_due_date() {
 			const today = frappe.datetime.now_date();
 			const parse_today = Date.parse(today);
 			const new_date = Date.parse(this.invoice_doc.due_date);
 
+			// If due date is in the past, reset to today
 			if (new_date < parse_today) {
 				setTimeout(() => {
 					this.invoice_doc.due_date = today;
@@ -723,6 +872,7 @@ export default {
 			}
 		},
 
+		// Keyboard shortcut handler: Ctrl+X or Cmd+X to submit
 		shortPay(e) {
 			if (e.key === 'x' && (e.ctrlKey || e.metaKey)) {
 				e.preventDefault();
@@ -737,22 +887,24 @@ export default {
 			this.change_amount_rules = [];
 		},
 
+		// Handle user input in payment amount field
+		// Automatically converts positive values to negative in quick return mode
 		handlePaymentAmountChange(payment, $event) {
 			// Handle payment amount change - make negative automatically for quick_return mode
 			let value = 0;
 			try {
+				// Parse input value from text field
 				let _value = parseFloat($event.target.value);
 				if (!isNaN(_value)) {
 					value = _value;
 				}
 
-				// ✅ في حالة المرتجع السريع (quick_return)، جعل القيمة سالبة تلقائياً
-				// إذا كانت القيمة المدخلة موجبة، نحولها إلى سالبة
+				// For quick_return mode, make value negative automatically
+				// Return invoices require negative payment amounts
+				// If input value is positive, convert to negative
 				if (this.quick_return && value > 0) {
 					value = -Math.abs(value);
 				}
-				// إذا كانت القيمة المدخلة سالبة بالفعل، نتركها كما هي
-				// إذا كانت القيمة صفر، نتركها كما هي
 
 				// Set the payment amount (use flt directly, don't format as currency string)
 				payment.amount = this.flt(value);
@@ -776,11 +928,14 @@ export default {
 			}
 		},
 
+		// Validate payment amount and notify other components
+		// Actual validation logic is in Invoice.js component
 		validate_payment_amount(payment) {
 			// Emit event to update Invoice component (validation happens in Invoice.js)
 			evntBus.emit('payment_amount_changed');
 
 			// Force update to recalculate computed properties
+			// This ensures outstanding_amount and change_amount are updated
 			this.$nextTick(() => {
 				this.$forceUpdate();
 			});
@@ -788,6 +943,8 @@ export default {
 			return true;
 		},
 
+		// Fetch available customer credit from server
+		// Used when customer credit redemption feature is enabled
 		get_available_credit(e) {
 			this.clear_all_amounts();
 
@@ -828,6 +985,8 @@ export default {
 			});
 		},
 
+		// Fetch customer addresses from server
+		// Used for shipping and billing address selection
 		get_addresses() {
 			const customer = this.invoice_doc?.customer || this.customer;
 
@@ -846,6 +1005,43 @@ export default {
 			});
 		},
 
+		// Fetch customer outstanding balance from server
+		// Gets total unpaid amount for the customer across all unpaid invoices
+		get_customer_outstanding_balance() {
+			const customer = this.invoice_doc?.customer || this.customer;
+			const company = this.pos_profile?.company;
+
+			if (!customer) {
+				this.customer_outstanding_balance = 0.0;
+				this.customer_outstanding_currency = null;
+				return;
+			}
+
+			frappe.call({
+				method: API_MAP.CUSTOMER.GET_CUSTOMER_OUTSTANDING_BALANCE,
+				args: {
+					customer_id: customer,
+					company: company,
+				},
+				async: true,
+				callback: (r) => {
+					if (r.exc) {
+						this.customer_outstanding_balance = 0.0;
+						this.customer_outstanding_currency = null;
+						return;
+					}
+
+					const data = r.message || {};
+					this.customer_outstanding_balance = this.flt(
+						data.total_outstanding || 0,
+						this.currency_precision,
+					);
+					this.customer_outstanding_currency = data.currency || null;
+				},
+			});
+		},
+
+		// Filter addresses for autocomplete/search functionality
 		addressFilter(item, queryText) {
 			const searchText = queryText.toLowerCase();
 			const fields = [
@@ -886,12 +1082,17 @@ export default {
 	},
 
 	// ===== LIFECYCLE HOOKS =====
+	// Vue.js lifecycle methods for component initialization and cleanup
 	mounted() {
+		// Wait for DOM to be ready before setting up event listeners
 		this.$nextTick(() => {
+			// Listen for quick return mode toggle
 			evntBus.on(EVENT_NAMES.TOGGLE_QUICK_RETURN, (value) => {
 				this.quick_return = value;
 			});
 
+			// Listen for invoice document updates from Invoice component
+			// This is the main event that loads invoice data into Payments component
 			evntBus.on(EVENT_NAMES.SEND_INVOICE_DOC_PAYMENT, (invoice_doc) => {
 				this.invoice_doc = invoice_doc;
 
@@ -923,6 +1124,13 @@ export default {
 				// Reset saved payments when receiving a new invoice_doc
 				this.saved_payments_before_credit_sale = null;
 				this.is_write_off_change = 0;
+				// Reset for new invoice
+				this.is_original_invoice_unpaid = false;
+
+				// Fetch customer outstanding balance when invoice_doc is received
+				if (invoice_doc?.customer) {
+					this.get_customer_outstanding_balance();
+				}
 
 				if (default_payment && !invoice_doc.is_return) {
 					const total =
@@ -932,27 +1140,67 @@ export default {
 
 				if (invoice_doc.is_return) {
 					this.is_return = true;
-					// ✅ في حالة المرتجع (سواء quick return أو عادي)، تفعيل quick_return لتمكين الإدخال
-					// الفرق: في quick return لا يوجد return_against، في المرتجع العادي يوجد return_against
-					// لكن في كلا الحالتين نريد تمكين الإدخال والقيم السالبة
+					// Enable quick_return for all return invoices (quick return or normal)
+					// Difference: quick return has no return_against, normal return has return_against
+					// Both need input enabled and negative values
 					this.quick_return = true;
 
 					const total = invoice_doc.rounded_total || invoice_doc.grand_total;
+					const absTotal = Math.abs(total);
 
+					// Reset all payments to zero first
 					invoice_doc.payments.forEach((payment) => {
 						payment.amount = 0;
 						if (payment.base_amount !== undefined) payment.base_amount = 0;
 					});
 
-					// ✅ في حالة المرتجع، تعبئة المبلغ الافتراضي بقيمة سالبة (مثل sales_mode)
-					if (default_payment) {
-						const neg = -Math.abs(total);
+					// Calculate refundable amount based on original invoice payment status
+					// If unpaid: no payments (payments = 0 and disabled)
+					// If paid (partly or fully): refundable = (paid_amount / grand_total) × return_amount
+					// Check if original invoice is unpaid
+					this.is_original_invoice_unpaid = false;
+					// Default: no refund (unpaid invoice)
+					let refundableAmount = 0;
+
+					if (invoice_doc._original_invoice_payment_info) {
+						const orig = invoice_doc._original_invoice_payment_info;
+						const origPaid = Math.abs(this.flt(orig.paid_amount || 0));
+						const origGrand = Math.abs(this.flt(orig.grand_total || 0));
+
+						// Check if original invoice is unpaid (paid_amount = 0 or very close to 0)
+						if (origPaid <= 0.01) {
+							// Original invoice is unpaid - no payments should be made
+							this.is_original_invoice_unpaid = true;
+							refundableAmount = 0;
+						} else if (origGrand > 0) {
+							// Original invoice was paid (partly or fully)
+							// Calculate refundable amount based on what was actually paid
+							// refundable = (paid_amount / grand_total) × return_amount
+							const paymentRatio = origPaid / origGrand;
+							refundableAmount = absTotal * paymentRatio;
+							this.is_original_invoice_unpaid = false;
+						} else {
+							// Original invoice had zero total, no refund
+							this.is_original_invoice_unpaid = true;
+							refundableAmount = 0;
+						}
+					} else {
+						// No payment info available - assume unpaid (safe default)
+						this.is_original_invoice_unpaid = true;
+						refundableAmount = 0;
+					}
+
+					// Fill default payment with negative refundable amount
+					// Only if there is a refundable amount (i.e., original invoice was paid)
+					if (default_payment && refundableAmount > 0.01) {
+						const neg = -this.flt(refundableAmount, this.currency_precision);
 						default_payment.amount = neg;
 						if (default_payment.base_amount !== undefined)
 							default_payment.base_amount = neg;
 					}
+					// If refundableAmount = 0, payments remain 0 (already reset above)
 				} else {
-					// ✅ إعادة تعيين quick_return إذا لم تكن فاتورة مرتجع
+					// Reset quick_return if not a return invoice
 					this.quick_return = false;
 				}
 
@@ -980,6 +1228,11 @@ export default {
 				this.redeem_customer_credit = false;
 				this.is_cashback = true;
 			}
+			this.customer = customer;
+			// Fetch customer outstanding balance when customer changes
+			if (customer) {
+				this.get_customer_outstanding_balance();
+			}
 		});
 
 		evntBus.on(EVENT_NAMES.SET_POS_SETTINGS, (data) => {
@@ -997,12 +1250,18 @@ export default {
 		});
 	},
 
+	// Component created hook
+	// Sets up keyboard shortcuts when component is created
 	created() {
 		document.addEventListener('keydown', this.shortPay.bind(this));
 	},
 
+	// Component beforeUnmount hook
+	// Cleans up all timeouts and event listeners before component is destroyed
+	// Prevents memory leaks and orphaned event handlers
 	beforeUnmount() {
 		// Clean up all timeouts
+		// Prevents pending debounce timers from executing after component destruction
 		Object.keys(this.set_full_amount_timeouts || {}).forEach((idx) => {
 			if (this.set_full_amount_timeouts[idx]) {
 				clearTimeout(this.set_full_amount_timeouts[idx]);
@@ -1011,6 +1270,7 @@ export default {
 		this.set_full_amount_timeouts = {};
 
 		// Clean up all event listeners
+		// Removes all event bus listeners to prevent memory leaks
 		const events = [
 			EVENT_NAMES.TOGGLE_QUICK_RETURN,
 			EVENT_NAMES.SEND_INVOICE_DOC_PAYMENT,
@@ -1026,12 +1286,18 @@ export default {
 		events.forEach((event) => evntBus.$off(event));
 	},
 
+	// Component destroyed hook
+	// Final cleanup when component is completely destroyed
 	destroyed() {
 		document.removeEventListener('keydown', this.shortPay);
 	},
 
 	// ===== WATCHERS =====
+	// Vue.js watchers that react to data property changes
+	// These automatically execute when watched properties change
 	watch: {
+		// Watch loyalty amount changes
+		// Validates that loyalty points don't exceed available balance
 		loyalty_amount(value) {
 			if (value > this.available_pioints_amount) {
 				this.invoice_doc.loyalty_amount = 0;
@@ -1048,6 +1314,9 @@ export default {
 			}
 		},
 
+		// Watch credit sale toggle changes
+		// When enabled: saves current payments, clears all payment amounts
+		// When disabled: restores saved payments or sets default cash payment
 		is_credit_sale(value) {
 			if (!this.invoice_doc) {
 				return;
@@ -1057,9 +1326,11 @@ export default {
 			this.invoice_doc.is_credit_sale = value ? true : false;
 
 			// Emit event to notify Invoice component about credit sale status
+			// This allows Invoice component to update its validation logic
 			evntBus.emit(EVENT_NAMES.IS_CREDIT_SALE_CHANGED, value);
 
 			if (value) {
+				// Credit sale is being enabled
 				// If credit sale is enabled:
 				// 1. Initialize due_date if not set
 				if (!this.invoice_doc.due_date) {
@@ -1089,7 +1360,7 @@ export default {
 					});
 				}
 			} else {
-				// If credit sale is disabled:
+				// Credit sale is being disabled
 				// Restore previous payment values if they were saved
 				if (Array.isArray(this.invoice_doc.payments)) {
 					if (this.saved_payments_before_credit_sale) {
@@ -1135,6 +1406,9 @@ export default {
 			});
 		},
 
+		// Watch write-off toggle changes
+		// When enabled: sets write_off_amount to outstanding_amount
+		// When disabled: clears write_off_amount
 		is_write_off_change(value) {
 			if (value == 1) {
 				this.invoice_doc.write_off_amount = this.outstanding_amount;
@@ -1145,7 +1419,8 @@ export default {
 			}
 		},
 
-		// Watch payments array to force recalculation of change_amount
+		// Watch payments array for deep changes
+		// Forces recalculation of change_amount when any payment amount changes
 		'invoice_doc.payments': {
 			handler() {
 				// Force update to recalculate computed properties
@@ -1156,6 +1431,8 @@ export default {
 			deep: true,
 		},
 
+		// Watch redeemed customer credit amount
+		// Validates that redeemed amount doesn't exceed available credit
 		redeemed_customer_credit(value) {
 			if (value > this.available_customer_credit) {
 				this.showMessage(
