@@ -187,112 +187,112 @@ def get_current_shift_name():
                     # Following Frappe pattern: specify exact fields needed (optimized query)
                     # Only fetch fields that exist in database (verified against tabPOS Profile structure)
                     pos_profile_list = frappe.get_all(
-                        "POS Profile",
-                        filters={"name": pos_profile_name},
-                        fields=[
+                    "POS Profile",
+                    filters={"name": pos_profile_name},
+                    fields=[
                             # Standard Frappe fields (always exist in DocType)
-                            "name",
-                            "company",
-                            "customer",
-                            "currency",
-                            "warehouse",
-                            "selling_price_list",
-                            "letter_head",
-                            "apply_discount_on",
+                        "name",
+                        "company",
+                        "customer",
+                        "currency",
+                        "warehouse",
+                        "selling_price_list",
+                        "letter_head",
+                        "apply_discount_on",
                             # POS Awesome custom fields (verified in database)
-                            # Print settings
-                            "posa_print_format",
-                            # Cash settings
-                            "posa_cash_mode_of_payment",
-                            # Return settings
-                            "posa_allow_return",
-                            "posa_allow_quick_return",
-                            # Credit settings
-                            "posa_allow_credit_sale",
-                            "posa_use_cashback",
-                            # Offers settings
-                            "posa_auto_fetch_offers",
-                            "posa_fetch_zero_qty",
-                            # Display settings
-                            "posa_default_card_view",
-                            "posa_hide_expected_amount",
-                            "posa_hide_closing_shift",
-                            "posa_hide_zero_price_items",
-                            "posa_display_discount_percentage",
-                            "posa_display_discount_amount",
-                            # Discount settings
-                            "posa_allow_user_to_edit_item_discount",
-                            "posa_allow_user_to_edit_additional_discount",
-                            "posa_item_max_discount_allowed",
-                            "posa_invoice_max_discount_allowed",
-                            # Tax fields
-                            "posa_apply_tax",
-                            "posa_tax_type",
-                            "posa_tax_percent",
-                        ],
-                        limit=1,
-                        ignore_permissions=True
+                        # Print settings
+                        "posa_print_format",
+                        # Cash settings
+                        "posa_cash_mode_of_payment",
+                        # Return settings
+                        "posa_allow_return",
+                        "posa_allow_quick_return",
+                        # Credit settings
+                        "posa_allow_credit_sale",
+                        "posa_use_cashback",
+                        # Offers settings
+                        "posa_auto_fetch_offers",
+                        "posa_fetch_zero_qty",
+                        # Display settings
+                        "posa_default_card_view",
+                        "posa_hide_expected_amount",
+                        "posa_hide_closing_shift",
+                        "posa_hide_zero_price_items",
+                        "posa_display_discount_percentage",
+                        "posa_display_discount_amount",
+                        # Discount settings
+                        "posa_allow_user_to_edit_item_discount",
+                        "posa_allow_user_to_edit_additional_discount",
+                        "posa_item_max_discount_allowed",
+                        "posa_invoice_max_discount_allowed",
+                        # Tax fields
+                        "posa_apply_tax",
+                        "posa_tax_type",
+                        "posa_tax_percent",
+                    ],
+                    limit=1,
+                    ignore_permissions=True
                     )
 
-                if pos_profile_list and len(pos_profile_list) > 0:
-                    pos_profile_data = pos_profile_list[0]
+                    if pos_profile_list and len(pos_profile_list) > 0:
+                        pos_profile_data = pos_profile_list[0]
 
-                    # FRAPPE FRAMEWORK STANDARD: Fetch child table data using SQL
-                    # Child tables are not DocTypes, so we query them directly from database
-                    # Following Frappe pattern: use parameterized queries to prevent SQL injection
-                    try:
-                        # Fetch item_groups child table (tabPOS Item Group)
-                        item_groups_result = frappe.db.sql("""
-                            SELECT item_group
-                            FROM `tabPOS Item Group`
-                            WHERE parent = %s
-                            AND parentfield = 'item_groups'
-                            AND parenttype = 'POS Profile'
-                            ORDER BY idx
-                        """, (pos_profile_name,), as_dict=True)
-                        pos_profile_data["item_groups"] = [
-                            ig.item_group for ig in item_groups_result]
-                    except Exception as item_groups_error:
-                        # FRAPPE STANDARD: Log error but continue (graceful degradation)
+                        # FRAPPE FRAMEWORK STANDARD: Fetch child table data using SQL
+                        # Child tables are not DocTypes, so we query them directly from database
+                        # Following Frappe pattern: use parameterized queries to prevent SQL injection
+                        try:
+                            # Fetch item_groups child table (tabPOS Item Group)
+                            item_groups_result = frappe.db.sql("""
+                                SELECT item_group
+                                FROM `tabPOS Item Group`
+                                WHERE parent = %s
+                                AND parentfield = 'item_groups'
+                                AND parenttype = 'POS Profile'
+                                ORDER BY idx
+                            """, (pos_profile_name,), as_dict=True)
+                            pos_profile_data["item_groups"] = [
+                                ig.item_group for ig in item_groups_result]
+                        except Exception as item_groups_error:
+                            # FRAPPE STANDARD: Log error but continue (graceful degradation)
+                            frappe.log_error(
+                                f"[[pos_opening_shift.py]] get_current_shift_name: item_groups error: {str(item_groups_error)}",
+                                "POS Item Groups Fetch Error"
+                            )
+                            pos_profile_data["item_groups"] = []
+
+                        # FRAPPE FRAMEWORK STANDARD: Fetch child table data using SQL
+                        try:
+                            # Fetch payments child table (tabPOS Payment Method)
+                            payments_result = frappe.db.sql("""
+                                SELECT 
+                                    mode_of_payment,
+                                    `default`,
+                                    allow_in_returns
+                                FROM `tabPOS Payment Method`
+                                WHERE parent = %s
+                                AND parentfield = 'payments'
+                                AND parenttype = 'POS Profile'
+                                ORDER BY idx
+                            """, (pos_profile_name,), as_dict=True)
+                            pos_profile_data["payments"] = payments_result
+                        except Exception as payments_error:
+                            # FRAPPE STANDARD: Log error but continue (graceful degradation)
+                            frappe.log_error(
+                                f"[[pos_opening_shift.py]] get_current_shift_name: payments error: {str(payments_error)}",
+                                "POS Payment Methods Fetch Error"
+                            )
+                            pos_profile_data["payments"] = []
+
+                        row["pos_profile_data"] = pos_profile_data
+                    else:
+                        # POS Profile exists but frappe.get_all returned empty (permissions issue?)
+                        error_msg = f"لم يتم العثور على بيانات POS Profile '{pos_profile_name}' (قد تكون مشكلة في الصلاحيات)"
                         frappe.log_error(
-                            f"[[pos_opening_shift.py]] get_current_shift_name: item_groups error: {str(item_groups_error)}",
-                            "POS Item Groups Fetch Error"
+                            f"[[pos_opening_shift.py]] get_current_shift_name: POS Profile '{pos_profile_name}' exists but frappe.get_all returned empty list",
+                            "POS Profile Data Not Retrieved"
                         )
-                        pos_profile_data["item_groups"] = []
-
-                    # FRAPPE FRAMEWORK STANDARD: Fetch child table data using SQL
-                    try:
-                        # Fetch payments child table (tabPOS Payment Method)
-                        payments_result = frappe.db.sql("""
-                            SELECT 
-                                mode_of_payment,
-                                `default`,
-                                allow_in_returns
-                            FROM `tabPOS Payment Method`
-                            WHERE parent = %s
-                            AND parentfield = 'payments'
-                            AND parenttype = 'POS Profile'
-                            ORDER BY idx
-                        """, (pos_profile_name,), as_dict=True)
-                        pos_profile_data["payments"] = payments_result
-                    except Exception as payments_error:
-                        # FRAPPE STANDARD: Log error but continue (graceful degradation)
-                        frappe.log_error(
-                            f"[[pos_opening_shift.py]] get_current_shift_name: payments error: {str(payments_error)}",
-                            "POS Payment Methods Fetch Error"
-                        )
-                        pos_profile_data["payments"] = []
-
-                    row["pos_profile_data"] = pos_profile_data
-                else:
-                    # POS Profile exists but frappe.get_all returned empty (permissions issue?)
-                    error_msg = f"لم يتم العثور على بيانات POS Profile '{pos_profile_name}' (قد تكون مشكلة في الصلاحيات)"
-                    frappe.log_error(
-                        f"[[pos_opening_shift.py]] get_current_shift_name: POS Profile '{pos_profile_name}' exists but frappe.get_all returned empty list",
-                        "POS Profile Data Not Retrieved"
-                    )
-                    row["pos_profile_data"] = None
-                    row["pos_profile_error"] = error_msg
+                        row["pos_profile_data"] = None
+                        row["pos_profile_error"] = error_msg
             except Exception as profile_error:
                 # Log error with full details for debugging
                 error_message = f"خطأ في تحميل POS Profile '{pos_profile_name}': {str(profile_error)}"
