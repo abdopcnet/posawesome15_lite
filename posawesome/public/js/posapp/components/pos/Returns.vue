@@ -293,6 +293,21 @@
 												{{ item.posting_date }}
 											</td>
 
+											<!-- Posting Time -->
+											<td
+												style="
+													padding: 10px;
+													text-align: center;
+													white-space: nowrap;
+												"
+											>
+												{{
+													item.posting_time
+														? item.posting_time.split('.')[0]
+														: '-'
+												}}
+											</td>
+
 											<!-- Invoice Name -->
 											<td
 												style="
@@ -319,6 +334,85 @@
 														style="font-size: 10px; margin-left: 4px"
 													></i>
 												</a>
+											</td>
+
+											<!-- Invoice Status -->
+											<td
+												style="
+													padding: 10px;
+													text-align: center;
+													white-space: nowrap;
+												"
+											>
+												<span
+													:style="{
+														display: 'inline-block',
+														padding: '4px 12px',
+														borderRadius: '12px',
+														fontSize: '0.75rem',
+														fontWeight: '600',
+														whiteSpace: 'nowrap',
+														backgroundColor:
+															(item.invoice_status ||
+																item.status) === 'Paid'
+																? '#e8f5e9'
+																: (item.invoice_status ||
+																		item.status) === 'Unpaid'
+																? '#ffebee'
+																: (item.invoice_status ||
+																		item.status) ===
+																  'Partly Paid'
+																? '#fff3e0'
+																: (item.invoice_status ||
+																		item.status) === 'Return'
+																? '#f3e5f5'
+																: (item.invoice_status ||
+																		item.status) ===
+																  'Credit Note Issued'
+																? '#e1bee7'
+																: '#f5f5f5',
+														color:
+															(item.invoice_status ||
+																item.status) === 'Paid'
+																? '#2e7d32'
+																: (item.invoice_status ||
+																		item.status) === 'Unpaid'
+																? '#c62828'
+																: (item.invoice_status ||
+																		item.status) ===
+																  'Partly Paid'
+																? '#e65100'
+																: (item.invoice_status ||
+																		item.status) === 'Return'
+																? '#6a1b9a'
+																: (item.invoice_status ||
+																		item.status) ===
+																  'Credit Note Issued'
+																? '#7b1fa2'
+																: '#616161',
+														border:
+															(item.invoice_status ||
+																item.status) === 'Paid'
+																? '1px solid #4caf50'
+																: (item.invoice_status ||
+																		item.status) === 'Unpaid'
+																? '1px solid #ef5350'
+																: (item.invoice_status ||
+																		item.status) ===
+																  'Partly Paid'
+																? '1px solid #ff9800'
+																: (item.invoice_status ||
+																		item.status) === 'Return'
+																? '1px solid #9c27b0'
+																: (item.invoice_status ||
+																		item.status) ===
+																  'Credit Note Issued'
+																? '1px solid #ab47bc'
+																: '1px solid #9e9e9e',
+													}"
+												>
+													{{ item.invoice_status || item.status || '-' }}
+												</span>
 											</td>
 
 											<!-- Grand Total -->
