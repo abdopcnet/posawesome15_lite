@@ -159,6 +159,33 @@
 								<!-- </div> -->
 							</td>
 
+							<!-- ITEM CODE COLUMN -->
+							<td
+								v-if="dynamicHeaders.find((h) => h.key === 'item_code')"
+								style="
+									padding: 12px 0px;
+									vertical-align: middle;
+									white-space: nowrap;
+									overflow: hidden;
+									text-overflow: ellipsis;
+									min-width: 0;
+									text-align: center;
+								"
+							>
+								<p
+									style="
+										margin-bottom: 0;
+										white-space: nowrap;
+										overflow: hidden;
+										text-overflow: ellipsis;
+										font-size: 0.7rem !important;
+									"
+									:title="item.item_code"
+								>
+									{{ item.item_code }}
+								</p>
+							</td>
+
 							<!-- QUANTITY COLUMN -->
 							<td
 								v-if="dynamicHeaders.find((h) => h.key === 'qty')"
