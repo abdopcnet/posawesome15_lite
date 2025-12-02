@@ -402,7 +402,8 @@
 									@change="
 										if (
 											!is_credit_sale &&
-											!(is_return && is_original_invoice_unpaid)
+											!(is_return && is_original_invoice_unpaid) &&
+											!return_from_customer_credit
 										) {
 											handlePaymentAmountChange(payment, $event);
 											validate_payment_amount(payment);
@@ -411,28 +412,31 @@
 									@focus="
 										if (
 											!is_credit_sale &&
-											!(is_return && is_original_invoice_unpaid)
+											!(is_return && is_original_invoice_unpaid) &&
+											!return_from_customer_credit
 										)
 											set_rest_amount(payment.idx);
 									"
 									@click="
 										if (
 											!is_credit_sale &&
-											!(is_return && is_original_invoice_unpaid)
+											!(is_return && is_original_invoice_unpaid) &&
+											!return_from_customer_credit
 										)
 											set_rest_amount(payment.idx);
 									"
 									:readonly="
 										(invoice_doc && invoice_doc.is_return && !quick_return) ||
 										is_credit_sale ||
-										(is_return && is_original_invoice_unpaid)
+										(is_return && is_original_invoice_unpaid) ||
+										return_from_customer_credit
 									"
 									:disabled="
-										is_credit_sale || (is_return && is_original_invoice_unpaid)
+										is_credit_sale || (is_return && is_original_invoice_unpaid) || return_from_customer_credit
 									"
 									placeholder="0.00"
 									:style="
-										is_credit_sale || (is_return && is_original_invoice_unpaid)
+										is_credit_sale || (is_return && is_original_invoice_unpaid) || return_from_customer_credit
 											? {
 													flex: '1',
 													border: 'none',
@@ -469,9 +473,9 @@
 						<button
 							:id="`mode_of_payment_button_${payment.idx || 0}`"
 							:ref="`mode_of_payment_button_${payment.idx || 0}`"
-							:disabled="is_credit_sale || (is_return && is_original_invoice_unpaid)"
+							:disabled="is_credit_sale || (is_return && is_original_invoice_unpaid) || return_from_customer_credit"
 							:style="
-								is_credit_sale || (is_return && is_original_invoice_unpaid)
+								is_credit_sale || (is_return && is_original_invoice_unpaid) || return_from_customer_credit
 									? {
 											flex:
 												payment.type == 'Phone' &&
@@ -519,7 +523,7 @@
 									  }
 							"
 							@click.stop="
-								if (!is_credit_sale && !(is_return && is_original_invoice_unpaid))
+								if (!is_credit_sale && !(is_return && is_original_invoice_unpaid) && !return_from_customer_credit)
 									set_full_amount(payment.idx);
 							"
 						>
@@ -799,6 +803,80 @@
 							<span style="font-size: 0.85rem; color: #333; font-weight: 500">
 								<!-- Is Credit Sale? -->
 								هل هو بيع آجل؟
+							</span>
+						</label>
+					</div>
+
+					<!-- Return from Customer Credit Switch -->
+					<div
+						v-if="
+							invoice_doc &&
+							invoice_doc.is_return &&
+							pos_profile &&
+							pos_profile.posa_use_customer_credit == 1
+						"
+						style="flex: 1 1 calc(50% - 2px); min-width: 130px"
+					>
+						<label
+							style="
+								display: flex;
+								align-items: center;
+								cursor: pointer;
+								user-select: none;
+								gap: 12px;
+							"
+						>
+							<input
+								type="checkbox"
+								v-model="return_from_customer_credit"
+								style="position: absolute; opacity: 0; width: 0; height: 0"
+							/>
+							<span
+								style="
+									position: relative;
+									display: inline-block;
+									width: 44px;
+									height: 24px;
+									background: #ccc;
+									border-radius: 24px;
+									flex-shrink: 0;
+								"
+							>
+								<span
+									style="
+										content: '';
+										position: absolute;
+										height: 18px;
+										width: 18px;
+										left: 3px;
+										bottom: 3px;
+										background: white;
+										border-radius: 50%;
+										box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+									"
+									:style="
+										return_from_customer_credit
+											? 'transform: translateX(20px); background: white'
+											: ''
+									"
+								></span>
+								<span
+									v-if="return_from_customer_credit"
+									style="
+										position: absolute;
+										top: 0;
+										left: 0;
+										right: 0;
+										bottom: 0;
+										background: #9c27b0;
+										border-radius: 24px;
+										pointer-events: none;
+									"
+								></span>
+							</span>
+							<span style="font-size: 0.85rem; color: #333; font-weight: 500">
+								<!-- Return from Customer Credit -->
+								إرجاع من حساب العميل الآجل
 							</span>
 						</label>
 					</div>
