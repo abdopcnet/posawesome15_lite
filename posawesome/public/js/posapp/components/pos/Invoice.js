@@ -61,6 +61,7 @@ export default {
 			invoice_posting_date: false,
 			posting_date: frappe.datetime.nowdate(),
 			quick_return_value: false,
+			return_from_customer_credit: false,
 
 			isUpdatingTotals: false,
 			isPrinting: false, // Flag to prevent double-click on print button
@@ -262,10 +263,16 @@ export default {
 			// Check items first - must have items to print
 			if (!this.items?.length) return false;
 
-			// For return invoices: check if original invoice was unpaid
-			// If unpaid, payments will be 0 and disabled, but printing should still be allowed
+			// For return invoices: check if "return from customer credit" is enabled
+			// This switch allows printing return invoices without payments when original invoice was unpaid
 			// The amount will be deducted from customer outstanding balance automatically
 			// This check must come BEFORE readonly check
+			if (this.invoice_doc?.is_return && this.return_from_customer_credit) {
+				return true;
+			}
+
+			// For return invoices: check if original invoice was unpaid (fallback check)
+			// If unpaid, payments will be 0 and disabled, but printing should still be allowed
 			if (this.invoice_doc?.is_return && this.invoice_doc?._original_invoice_payment_info) {
 				const origPaid = Math.abs(
 					this.flt(this.invoice_doc._original_invoice_payment_info.paid_amount || 0),
@@ -2855,6 +2862,15 @@ export default {
 				});
 			}
 		});
+
+		// Listen for return from customer credit status changes from Payments component
+		evntBus.on('return_from_customer_credit_changed', (value) => {
+			this.return_from_customer_credit = value ? true : false;
+			// Force Vue to react to the change
+			this.$nextTick(() => {
+				this.$forceUpdate();
+			});
+		});
 	},
 	mounted() {
 		// DOM-related initialization (keyboard shortcuts)
@@ -2905,6 +2921,7 @@ export default {
 		evntBus.off('request_invoice_print');
 		evntBus.off('payment_amount_changed');
 		evntBus.off('is_credit_sale_changed');
+		evntBus.off('return_from_customer_credit_changed');
 
 		// Clear ALL timers to prevent memory leaks
 		if (this._itemOperationTimer) {
