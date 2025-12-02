@@ -258,7 +258,7 @@ export default {
 			if (isCreditSale) {
 				return true;
 			}
-			// يتطلب مدفوعات صالحة فقط - لا يكفي وجود defaultPaymentMode
+			// Requires valid payments only - defaultPaymentMode is not enough
 			return this.hasValidPayments();
 		},
 		hasItems() {
@@ -488,7 +488,7 @@ export default {
 			if (index >= 0) {
 				this.items.splice(index, 1);
 				this.updateInvoiceDocLocally();
-				// في نهج __islocal: إذا لم يبقى أصناف، نعيد تعيين الجلسة
+				// In __islocal approach: if no items remain, reset the session
 				if (this.items.length === 0) {
 					this.reset_invoice_session();
 				} else {
@@ -635,6 +635,18 @@ export default {
 			// Check for both boolean (true) and number (1) formats for compatibility
 			if (doc?.is_credit_sale === true || doc?.is_credit_sale == 1) {
 				return true;
+			}
+
+			// For return invoices: check if original invoice was unpaid
+			// If unpaid, payments will be 0 and disabled, but printing should still be allowed
+			if (doc?.is_return && doc?._original_invoice_payment_info) {
+				const origPaid = Math.abs(
+					this.flt(doc._original_invoice_payment_info.paid_amount || 0),
+				);
+				// If original invoice was unpaid (paid_amount <= 0.01), allow printing without payments
+				if (origPaid <= 0.01) {
+					return true;
+				}
 			}
 
 			const hasValid = doc?.payments?.some((p) => Math.abs(this.flt(p.amount)) > 0) || false;
@@ -1021,7 +1033,7 @@ export default {
 		get_payments() {
 			let payments = [];
 
-			// إذا كانت هناك مدفوعات موجودة في الفاتورة الحالية
+			// If there are existing payments in the current invoice
 			if (
 				this.invoice_doc &&
 				Array.isArray(this.invoice_doc?.payments) &&
@@ -1154,7 +1166,7 @@ export default {
 			// Calculate totals locally
 			this.calculateTotalsLocally(doc);
 
-			// نسخ الإجماليات إلى invoice_doc للاحتفاظ بها
+			// Copy totals to invoice_doc to preserve them
 			if (!this.invoice_doc) {
 				this.invoice_doc = {};
 			}
@@ -1212,7 +1224,7 @@ export default {
 							];
 							// Default payment added
 
-							// في نهج __islocal: لا نحفظ على السيرفر
+							// In __islocal approach: do not save on server
 							// Payment stays local until Print
 						}
 					} catch (error) {
@@ -2503,7 +2515,7 @@ export default {
 			// Print button clicked (logged to backend only)
 			if (!this.invoice_doc || this.isPrinting) return;
 
-			// التحقق من وجود مدفوعات صالحة - إذا لم توجد، لا تفعل شيء
+			// Check for valid payments - if none, do nothing
 			const doc = this.get_invoice_doc('print');
 			this.calculateTotalsLocally(doc);
 
@@ -2512,8 +2524,13 @@ export default {
 			// Allow printing if credit sale is enabled, otherwise check for valid payments
 			// Check for both boolean (true) and number (1) formats for compatibility
 			const isCreditSale = doc.is_credit_sale === true || doc.is_credit_sale == 1;
-			if (!isCreditSale && !this.hasValidPayments(doc)) {
-				// لا تفتح نافذة الدفع - فقط أظهر رسالة تحذير
+			// For return invoices with unpaid original invoices, allow printing without payments
+			const isReturnUnpaid =
+				doc?.is_return &&
+				doc?._original_invoice_payment_info &&
+				Math.abs(this.flt(doc._original_invoice_payment_info.paid_amount || 0)) <= 0.01;
+			if (!isCreditSale && !isReturnUnpaid && !this.hasValidPayments(doc)) {
+				// Do not open payment window - just show warning message
 				evntBus.emit('show_mesage', {
 					text: "يجب اختيار طريقة دفع أولاً عن طريق الضغط على زر 'دفع'",
 					color: 'warning',
@@ -2707,6 +2724,12 @@ export default {
 			});
 		});
 		evntBus.on('load_return_invoice', (data) => {
+			// Attach original invoice payment info to invoice_doc for Payments.js to use
+			if (data.original_invoice_payment_info) {
+				data.invoice_doc._original_invoice_payment_info =
+					data.original_invoice_payment_info;
+			}
+
 			this.new_invoice(data.invoice_doc);
 
 			// Simple: if it's a regular return invoice (has return_against), disable quick_return
