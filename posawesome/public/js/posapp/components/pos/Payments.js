@@ -76,6 +76,8 @@ export default {
 			is_return: false,
 			// Quick return mode (no original invoice reference)
 			quick_return: false,
+			// Return from customer credit (for unpaid return invoices)
+			return_from_customer_credit: false,
 			// Write-off amount flag
 			is_write_off_change: 0,
 
@@ -1162,6 +1164,9 @@ export default {
 					// Default: no refund (unpaid invoice)
 					let refundableAmount = 0;
 
+					// Check if POS Profile has posa_use_customer_credit enabled
+					const useCustomerCredit = this.pos_profile?.posa_use_customer_credit == 1;
+
 					if (invoice_doc._original_invoice_payment_info) {
 						const orig = invoice_doc._original_invoice_payment_info;
 						const origPaid = Math.abs(this.flt(orig.paid_amount || 0));
@@ -1172,6 +1177,8 @@ export default {
 							// Original invoice is unpaid - no payments should be made
 							this.is_original_invoice_unpaid = true;
 							refundableAmount = 0;
+							// Auto-enable return from customer credit for unpaid invoices
+							this.return_from_customer_credit = true;
 						} else if (origGrand > 0) {
 							// Original invoice was paid (partly or fully)
 							// Calculate refundable amount based on what was actually paid
@@ -1183,9 +1190,20 @@ export default {
 							// Original invoice had zero total, no refund
 							this.is_original_invoice_unpaid = true;
 							refundableAmount = 0;
+							// Auto-enable return from customer credit for zero total invoices
+							this.return_from_customer_credit = true;
 						}
 					} else {
 						// No payment info available - assume unpaid (safe default)
+						this.is_original_invoice_unpaid = true;
+						refundableAmount = 0;
+					}
+
+					// Check if POS Profile has posa_use_customer_credit enabled
+					// If enabled, auto-enable return from customer credit for all return invoices
+					if (useCustomerCredit) {
+						this.return_from_customer_credit = true;
+						// Mark as unpaid to disable payments
 						this.is_original_invoice_unpaid = true;
 						refundableAmount = 0;
 					}
@@ -1440,6 +1458,17 @@ export default {
 					'error',
 				);
 			}
+		},
+
+		// Watch return from customer credit toggle
+		// When enabled: allows printing return invoice without payments (deducted from customer outstanding balance)
+		// Emits event to notify Invoice component
+		return_from_customer_credit(value) {
+			evntBus.emit('return_from_customer_credit_changed', value);
+			// Force update to recalculate computed properties
+			this.$nextTick(() => {
+				this.$forceUpdate();
+			});
 		},
 	},
 };
