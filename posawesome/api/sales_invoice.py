@@ -85,6 +85,11 @@ def get_draft_invoices(pos_opening_shift=None):
                 doc = frappe.get_cached_doc("Sales Invoice", invoice["name"])
                 invoice_dict = doc.as_dict()
                 invoice_dict["customer_name"] = frappe.get_value("Customer", invoice["customer"], "customer_name") if invoice["customer"] else ""
+                
+                # Use ERPNext native status field
+                # Draft invoices (docstatus=0) have status "Draft"
+                invoice_dict["invoice_status"] = invoice_dict.get("status", "Draft")
+                
                 data.append(invoice_dict)
             except Exception as e:
                 frappe.log_error(f"[[sales_invoice.py]] get_draft_invoices: Error loading {invoice['name']}: {str(e)}")
@@ -269,7 +274,7 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
             filters=filters,
             fields=[
                 "name", "customer", "grand_total",
-                "outstanding_amount", "paid_amount", "posting_date", "currency",
+                "outstanding_amount", "paid_amount", "posting_date", "posting_time", "currency",
                 "status", "pos_profile"
             ],
             order_by="posting_date desc, creation desc",
@@ -311,6 +316,38 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
                 invoice["remaining_returnable_amount"] = return_stats["remaining_returnable_amount"]
                 invoice["total_returned_amount"] = return_stats["total_returned_amount"]
                 invoice["original_amount"] = return_stats["original_amount"]
+                
+                # Use ERPNext native status field if available, otherwise calculate it
+                # Following ERPNext sales_invoice.py set_status() logic exactly
+                # Reference: erpnext/erpnext/accounts/doctype/sales_invoice/sales_invoice.py:1907-1948
+                if invoice.get("status"):
+                    # Use existing status from database (already set by ERPNext)
+                    invoice["invoice_status"] = invoice.get("status")
+                    invoice["invoice_status_en"] = invoice.get("status")
+                else:
+                    # Calculate status following ERPNext logic
+                    outstanding_amount = flt(invoice.get("outstanding_amount", 0))
+                    grand_total = flt(invoice.get("grand_total", 0))
+                    total_returned = flt(return_stats.get("total_returned_amount", 0))
+                    
+                    # Check if invoice is returned (following ERPNext logic: is_return == 1)
+                    if invoice.get("is_return") == 1:
+                        invoice["invoice_status"] = "Return"
+                        invoice["invoice_status_en"] = "Return"
+                    # Check if invoice has returns against it (Credit Note Issued)
+                    elif abs(total_returned) >= abs(grand_total) * 0.99:  # Fully returned (99% tolerance)
+                        invoice["invoice_status"] = "Credit Note Issued"
+                        invoice["invoice_status_en"] = "Credit Note Issued"
+                    # Check payment status
+                    elif abs(outstanding_amount) <= 0.01:  # Fully paid (0.01 tolerance)
+                        invoice["invoice_status"] = "Paid"
+                        invoice["invoice_status_en"] = "Paid"
+                    elif abs(outstanding_amount) >= abs(grand_total) * 0.99:  # Unpaid
+                        invoice["invoice_status"] = "Unpaid"
+                        invoice["invoice_status_en"] = "Unpaid"
+                    else:  # Partially paid
+                        invoice["invoice_status"] = "Partly Paid"
+                        invoice["invoice_status_en"] = "Partly Paid"
 
                 returnable_invoices.append(invoice)
 
@@ -561,14 +598,27 @@ def create_and_submit_invoice(invoice_doc):
                         payment.base_amount = 0
             
             # Filter out zero-amount payments for return invoices
+            # For return invoices with unpaid original invoices, payments may be empty (0)
+            # This is valid - ERPNext will automatically reduce outstanding_amount of original invoice
             doc.payments = [p for p in doc.payments if p.amount != 0]
             
-            # Update paid amounts (will be negative for returns)
+            # Update paid amounts (will be negative for returns, or 0 if no payments)
             # Handle None values in base_amount to avoid TypeError
-            doc.paid_amount = flt(sum(p.amount for p in doc.payments))
+            # If payments list is empty (return of unpaid invoice), paid_amount = 0
+            # ERPNext will automatically adjust outstanding_amount of original invoice on submission
+            if doc.payments:
+                doc.paid_amount = flt(sum(p.amount for p in doc.payments))
+            else:
+                # Return invoice with no payments (unpaid original invoice)
+                # paid_amount = 0, and ERPNext will reduce original invoice's outstanding_amount
+                doc.paid_amount = 0.0
+            
             if hasattr(doc, 'base_paid_amount'):
-                base_amounts = [flt(p.base_amount) if p.base_amount is not None else 0 for p in doc.payments]
-                doc.base_paid_amount = flt(sum(base_amounts))
+                if doc.payments:
+                    base_amounts = [flt(p.base_amount) if p.base_amount is not None else 0 for p in doc.payments]
+                    doc.base_paid_amount = flt(sum(base_amounts))
+                else:
+                    doc.base_paid_amount = 0.0
 
         # Step 2: Use ERPNext native validate() - full validation
         # This validates customer, items, taxes, payments, etc.
