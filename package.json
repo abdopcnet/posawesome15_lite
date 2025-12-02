@@ -1,13 +1,13 @@
 {
-	"name": "posawesome",
-	"version": "1.0.0",
-	"private": true,
+  "name": "posawesome",
+  "version": "1.0.0",
+  "private": true,
 	"description": "POS Awesome - No node_modules needed. Vue from Frappe, mitt included locally",
 	"dependencies": {},
-	"engines": {
-		"node": ">=14.0.0"
+  "engines": {
+    "node": ">=14.0.0"
 	},
 	"scripts": {
 		"install": "exit 0"
-	}
+  }
 }
