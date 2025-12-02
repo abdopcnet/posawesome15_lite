@@ -211,7 +211,7 @@ export default {
       this.$nextTick(() => {
         // Use requestAnimationFrame to avoid forced reflow
         requestAnimationFrame(() => {
-          this.updateScrollableHeight();
+        this.updateScrollableHeight();
         });
       });
     },
@@ -233,15 +233,15 @@ export default {
 
       // Use requestAnimationFrame again to ensure DOM has finished layout
       requestAnimationFrame(() => {
-        const rect = scrollEl.getBoundingClientRect();
-        const available = viewportHeight - rect.top - UI_CONFIG.BOTTOM_PADDING;
+      const rect = scrollEl.getBoundingClientRect();
+      const available = viewportHeight - rect.top - UI_CONFIG.BOTTOM_PADDING;
 
-        if (Number.isFinite(available)) {
-          this.itemsScrollHeight = Math.max(
-            UI_CONFIG.MIN_PANEL_HEIGHT,
-            Math.floor(available)
-          );
-        }
+      if (Number.isFinite(available)) {
+        this.itemsScrollHeight = Math.max(
+          UI_CONFIG.MIN_PANEL_HEIGHT,
+          Math.floor(available)
+        );
+      }
       });
     },
 
