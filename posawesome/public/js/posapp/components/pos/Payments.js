@@ -1098,6 +1098,9 @@ export default {
 			evntBus.on(EVENT_NAMES.SEND_INVOICE_DOC_PAYMENT, (invoice_doc) => {
 				this.invoice_doc = invoice_doc;
 
+				// Reset return_from_customer_credit when new invoice is loaded
+				this.return_from_customer_credit = false;
+
 				if (!Array.isArray(this.invoice_doc.payments)) {
 					this.showMessage('No payments array in invoice document', 'error');
 					this.invoice_doc.payments = [];
