@@ -31,7 +31,7 @@ const EVENT_NAMES = {
 	SET_POS_SETTINGS: 'set_pos_settings',
 	SET_CUSTOMER_INFO_TO_EDIT: 'set_customer_info_to_edit',
 	UPDATE_DUE_DATE: 'update_due_date',
-	IS_CREDIT_SALE_CHANGED: 'is_credit_sale_changed',
+	POSA_USE_CUSTOMER_CREDIT_SWITCH_CHANGED: 'posa_use_customer_credit_switch_changed',
 };
 
 // ===== SECTION 2: EXPORT DEFAULT =====
@@ -76,12 +76,10 @@ export default {
 			is_return: false,
 			// Quick return mode (no original invoice reference)
 			quick_return: false,
-			// Return from customer credit (for unpaid return invoices)
-			return_from_customer_credit: false,
+			// Use customer credit switch for return invoices
+			posa_use_customer_credit_switch: false,
 			// Write-off amount flag
-			is_write_off_change: 0,
-
-			// Customer credit
+			is_write_off_change: 0, // Customer credit
 			// Available customer credit sources
 			customer_credit_dict: [],
 			// Cashback feature flag
@@ -690,12 +688,11 @@ export default {
 				// Debounce to prevent multiple rapid calls for the same payment
 				// Wait 150ms before executing to batch rapid clicks
 				this.set_full_amount_timeouts[idx] = setTimeout(() => {
-					// Do not allow payment amount changes if return_from_customer_credit is enabled
-					if (this.return_from_customer_credit) {
+					// Do not allow payment amount changes if posa_use_customer_credit_switch is enabled
+					if (this.posa_use_customer_credit_switch) {
 						delete this.set_full_amount_timeouts[idx];
 						return;
 					}
-
 					const isQuickReturn = !!this.quick_return;
 
 					const payment = this.invoice_doc.payments.find((p) => p.idx == idx);
@@ -758,8 +755,8 @@ export default {
 		// Calculates remaining amount after other payments and fills it in
 		set_rest_amount(idx) {
 			try {
-				// Do not allow payment amount changes if return_from_customer_credit is enabled
-				if (this.return_from_customer_credit) {
+				// Do not allow payment amount changes if posa_use_customer_credit_switch is enabled
+				if (this.posa_use_customer_credit_switch) {
 					return;
 				}
 
@@ -903,12 +900,10 @@ export default {
 		// Handle user input in payment amount field
 		// Automatically converts positive values to negative in quick return mode
 		handlePaymentAmountChange(payment, $event) {
-			// Do not allow payment amount changes if return_from_customer_credit is enabled
-			if (this.return_from_customer_credit) {
+			// Do not allow payment amount changes if posa_use_customer_credit_switch is enabled
+			if (this.posa_use_customer_credit_switch) {
 				return;
-			}
-
-			// Handle payment amount change - make negative automatically for quick_return mode
+			} // Handle payment amount change - make negative automatically for quick_return mode
 			let value = 0;
 			try {
 				// Parse input value from text field
@@ -1114,8 +1109,8 @@ export default {
 			evntBus.on(EVENT_NAMES.SEND_INVOICE_DOC_PAYMENT, (invoice_doc) => {
 				this.invoice_doc = invoice_doc;
 
-				// Reset return_from_customer_credit when new invoice is loaded
-				this.return_from_customer_credit = false;
+				// Reset posa_use_customer_credit_switch when new invoice is loaded
+				this.posa_use_customer_credit_switch = false;
 
 				if (!Array.isArray(this.invoice_doc.payments)) {
 					this.showMessage('No payments array in invoice document', 'error');
@@ -1214,27 +1209,22 @@ export default {
 						refundableAmount = 0;
 					}
 
-					// Note: return_from_customer_credit switch is controlled manually by user
-					// It is visible when posa_use_customer_credit=1 and invoice is return
-					// User must enable it manually if they want to use customer credit for return
-					// Do not auto-enable it - let user decide
-					// Reset to false (will be set by user manually if needed)
-					this.return_from_customer_credit = false;
-
-					// Fill default payment with negative refundable amount
-					// Only if there is a refundable amount AND return_from_customer_credit is disabled
-					// If return_from_customer_credit is enabled, payments should remain 0
+					// Reset posa_use_customer_credit_switch to false
+					// User can enable it manually if POS Profile has posa_use_customer_credit=1
+					this.posa_use_customer_credit_switch = false; // Fill default payment with negative refundable amount
+					// Only if there is a refundable amount AND posa_use_customer_credit_switch is disabled
+					// If posa_use_customer_credit_switch is enabled, payments should remain 0
 					if (
 						default_payment &&
 						refundableAmount > 0.01 &&
-						!this.return_from_customer_credit
+						!this.posa_use_customer_credit_switch
 					) {
 						const neg = -this.flt(refundableAmount, this.currency_precision);
 						default_payment.amount = neg;
 						if (default_payment.base_amount !== undefined)
 							default_payment.base_amount = neg;
 					}
-					// If return_from_customer_credit is enabled or refundableAmount = 0, payments remain 0
+					// If posa_use_customer_credit_switch is enabled or refundableAmount = 0, payments remain 0
 				} else {
 					// Reset quick_return if not a return invoice
 					this.quick_return = false;
@@ -1363,7 +1353,8 @@ export default {
 
 			// Emit event to notify Invoice component about credit sale status
 			// This allows Invoice component to update its validation logic
-			evntBus.emit(EVENT_NAMES.IS_CREDIT_SALE_CHANGED, value);
+			// Use posa_use_customer_credit_switch_changed event name (unified event name)
+			evntBus.emit(EVENT_NAMES.POSA_USE_CUSTOMER_CREDIT_SWITCH_CHANGED, value);
 
 			if (value) {
 				// Credit sale is being enabled
@@ -1478,9 +1469,33 @@ export default {
 			}
 		},
 
-		// Watch return from customer credit toggle
-		// When enabled: allows printing return invoice without payments (deducted from customer outstanding balance)
-		// When disabled: allows normal payment methods to be used for return
-		// Emits event to notify Invoice component
+		// Watch posa_use_customer_credit_switch toggle
+		// Simple logic: when ON, clear payments and disable input; when OFF, enable payments
+		posa_use_customer_credit_switch(value) {
+			if (!this.invoice_doc || !this.invoice_doc.is_return) return;
+
+			// When switch is ON: clear all payment amounts (payments = 0)
+			if (value === true && this.invoice_doc.payments) {
+				this.invoice_doc.payments.forEach((payment) => {
+					payment.amount = 0;
+					if (payment.base_amount !== undefined) {
+						payment.base_amount = 0;
+					}
+				});
+				// Emit payments update to notify other components
+				evntBus.emit(
+					EVENT_NAMES.PAYMENTS_UPDATED,
+					JSON.parse(JSON.stringify(this.invoice_doc.payments)),
+				);
+			}
+
+			// Emit event to notify Invoice component
+			// Use posa_use_customer_credit_switch_changed event name (unified event name)
+			evntBus.emit(EVENT_NAMES.POSA_USE_CUSTOMER_CREDIT_SWITCH_CHANGED, value);
+			// Force update to recalculate computed properties
+			this.$nextTick(() => {
+				this.$forceUpdate();
+			});
+		},
 	},
 };
