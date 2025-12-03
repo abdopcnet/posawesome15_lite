@@ -403,7 +403,7 @@
 										if (
 											!is_credit_sale &&
 											!(is_return && is_original_invoice_unpaid) &&
-											!return_from_customer_credit
+											!posa_use_customer_credit_switch
 										) {
 											handlePaymentAmountChange(payment, $event);
 											validate_payment_amount(payment);
@@ -413,7 +413,7 @@
 										if (
 											!is_credit_sale &&
 											!(is_return && is_original_invoice_unpaid) &&
-											!return_from_customer_credit
+											!posa_use_customer_credit_switch
 										)
 											set_rest_amount(payment.idx);
 									"
@@ -421,7 +421,7 @@
 										if (
 											!is_credit_sale &&
 											!(is_return && is_original_invoice_unpaid) &&
-											!return_from_customer_credit
+											!posa_use_customer_credit_switch
 										)
 											set_rest_amount(payment.idx);
 									"
@@ -429,14 +429,18 @@
 										(invoice_doc && invoice_doc.is_return && !quick_return) ||
 										is_credit_sale ||
 										(is_return && is_original_invoice_unpaid) ||
-										return_from_customer_credit
+										posa_use_customer_credit_switch
 									"
 									:disabled="
-										is_credit_sale || (is_return && is_original_invoice_unpaid) || return_from_customer_credit
+										is_credit_sale ||
+										(is_return && is_original_invoice_unpaid) ||
+										posa_use_customer_credit_switch
 									"
 									placeholder="0.00"
 									:style="
-										is_credit_sale || (is_return && is_original_invoice_unpaid) || return_from_customer_credit
+										is_credit_sale ||
+										(is_return && is_original_invoice_unpaid) ||
+										posa_use_customer_credit_switch
 											? {
 													flex: '1',
 													border: 'none',
@@ -473,9 +477,11 @@
 						<button
 							:id="`mode_of_payment_button_${payment.idx || 0}`"
 							:ref="`mode_of_payment_button_${payment.idx || 0}`"
-							:disabled="is_credit_sale || (is_return && is_original_invoice_unpaid) || return_from_customer_credit"
+							:disabled="is_credit_sale || posa_use_customer_credit_switch"
 							:style="
-								is_credit_sale || (is_return && is_original_invoice_unpaid) || return_from_customer_credit
+								is_credit_sale ||
+								(is_return && is_original_invoice_unpaid) ||
+								posa_use_customer_credit_switch
 									? {
 											flex:
 												payment.type == 'Phone' &&
@@ -523,7 +529,11 @@
 									  }
 							"
 							@click.stop="
-								if (!is_credit_sale && !(is_return && is_original_invoice_unpaid) && !return_from_customer_credit)
+								if (
+									!is_credit_sale &&
+									!(is_return && is_original_invoice_unpaid) &&
+									!return_from_customer_credit
+								)
 									set_full_amount(payment.idx);
 							"
 						>
@@ -828,7 +838,7 @@
 						>
 							<input
 								type="checkbox"
-								v-model="return_from_customer_credit"
+								v-model="posa_use_customer_credit_switch"
 								style="position: absolute; opacity: 0; width: 0; height: 0"
 							/>
 							<span
@@ -855,13 +865,13 @@
 										box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 									"
 									:style="
-										return_from_customer_credit
+										posa_use_customer_credit_switch
 											? 'transform: translateX(20px); background: white'
 											: ''
 									"
 								></span>
 								<span
-									v-if="return_from_customer_credit"
+									v-if="posa_use_customer_credit_switch"
 									style="
 										position: absolute;
 										top: 0;
