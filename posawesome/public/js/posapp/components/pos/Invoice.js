@@ -61,7 +61,7 @@ export default {
 			invoice_posting_date: false,
 			posting_date: frappe.datetime.nowdate(),
 			quick_return_value: false,
-			return_from_customer_credit: false,
+			posa_use_customer_credit_switch: false,
 
 			isUpdatingTotals: false,
 			isPrinting: false, // Flag to prevent double-click on print button
@@ -267,7 +267,7 @@ export default {
 			// This switch allows printing return invoices without payments when original invoice was unpaid
 			// The amount will be deducted from customer outstanding balance automatically
 			// This check must come BEFORE readonly check
-			if (this.invoice_doc?.is_return && this.return_from_customer_credit) {
+			if (this.invoice_doc?.is_return && this.posa_use_customer_credit_switch) {
 				return true;
 			}
 
@@ -673,6 +673,13 @@ export default {
 				return true;
 			}
 
+			// For return invoices: check if "return from customer credit" is enabled
+			// This switch allows printing return invoices without payments when original invoice was unpaid
+			// The amount will be deducted from customer outstanding balance automatically
+			if (doc?.is_return && this.posa_use_customer_credit_switch === true) {
+				return true;
+			}
+
 			// For return invoices: check if original invoice was unpaid
 			// If unpaid, payments will be 0 and disabled, but printing should still be allowed
 			if (doc?.is_return && doc?._original_invoice_payment_info) {
@@ -688,7 +695,6 @@ export default {
 			const hasValid = doc?.payments?.some((p) => Math.abs(this.flt(p.amount)) > 0) || false;
 			return hasValid;
 		},
-
 		async create_draft_invoice() {
 			// DISABLED: All operations stay __islocal - no auto-saving
 			this.isUpdatingTotals = false;
@@ -876,6 +882,7 @@ export default {
 
 			this.customer = this.pos_profile?.customer || this.customer;
 			this._lastCustomer = null; // Clear customer cache
+			this.posa_use_customer_credit_switch = false; // Reset switch
 
 			// Recalculate offers for new session with default customer
 			this.calculateAndApplyOffers();
@@ -2565,9 +2572,14 @@ export default {
 				doc?.is_return &&
 				doc?._original_invoice_payment_info &&
 				Math.abs(this.flt(doc._original_invoice_payment_info.paid_amount || 0)) <= 0.01;
-			// Allow printing if return from customer credit is enabled (allows printing without payments)
-			const isReturnFromCredit = this.return_from_customer_credit === true;
-			if (!isCreditSale && !isReturnUnpaid && !isReturnFromCredit && !this.hasValidPayments(doc)) {
+			// Allow printing if posa_use_customer_credit_switch is enabled (allows printing without payments)
+			const isReturnFromCredit = this.posa_use_customer_credit_switch === true;
+			if (
+				!isCreditSale &&
+				!isReturnUnpaid &&
+				!isReturnFromCredit &&
+				!this.hasValidPayments(doc)
+			) {
 				// Do not open payment window - just show warning message
 				evntBus.emit('show_mesage', {
 					text: "يجب اختيار طريقة دفع أولاً عن طريق الضغط على زر 'دفع'",
@@ -2843,11 +2855,9 @@ export default {
 		evntBus.on('request_invoice_print', () => {
 			// Check credit sale status before validation
 			const isCreditSale =
-				this.invoice_doc?.is_credit_sale === true || this.invoice_doc?.is_credit_sale == 1;
-			// Check if return from customer credit is enabled (allows printing without payments)
-			const isReturnFromCredit = this.return_from_customer_credit === true;
-			
-			if (!isCreditSale && !isReturnFromCredit && !this.canPrintInvoice()) {
+			this.invoice_doc?.is_credit_sale === true || this.invoice_doc?.is_credit_sale == 1;
+		// Check if posa_use_customer_credit_switch is enabled (allows printing without payments)
+		const isReturnFromCredit = this.posa_use_customer_credit_switch === true;			if (!isCreditSale && !isReturnFromCredit && !this.canPrintInvoice()) {
 				evntBus.emit('show_mesage', {
 					text: 'Please select a payment method before printing',
 					color: 'warning',
@@ -2857,24 +2867,26 @@ export default {
 			this.printInvoice();
 		});
 
-		// Listen for credit sale status changes from Payments component
-		evntBus.on('is_credit_sale_changed', (value) => {
+		// Listen for credit sale and return from customer credit status changes from Payments component
+		// Unified event name: posa_use_customer_credit_switch_changed
+		evntBus.on('posa_use_customer_credit_switch_changed', (value) => {
 			if (this.invoice_doc) {
+				// Update credit sale status (for is_credit_sale watcher)
 				this.invoice_doc.is_credit_sale = value ? true : false;
+				// Update posa_use_customer_credit_switch (for posa_use_customer_credit_switch watcher)
+				this.posa_use_customer_credit_switch = value ? true : false;
+				// Force Vue to react to the change
+				this.$nextTick(() => {
+					this.$forceUpdate();
+				});
+			} else {
+				// If no invoice_doc, just update posa_use_customer_credit_switch
+				this.posa_use_customer_credit_switch = value ? true : false;
 				// Force Vue to react to the change
 				this.$nextTick(() => {
 					this.$forceUpdate();
 				});
 			}
-		});
-
-		// Listen for return from customer credit status changes from Payments component
-		evntBus.on('return_from_customer_credit_changed', (value) => {
-			this.return_from_customer_credit = value ? true : false;
-			// Force Vue to react to the change
-			this.$nextTick(() => {
-				this.$forceUpdate();
-			});
 		});
 	},
 	mounted() {
@@ -2925,8 +2937,7 @@ export default {
 		evntBus.off('payments_updated');
 		evntBus.off('request_invoice_print');
 		evntBus.off('payment_amount_changed');
-		evntBus.off('is_credit_sale_changed');
-		evntBus.off('return_from_customer_credit_changed');
+		evntBus.off('posa_use_customer_credit_switch_changed');
 
 		// Clear ALL timers to prevent memory leaks
 		if (this._itemOperationTimer) {

@@ -690,6 +690,12 @@ export default {
 				// Debounce to prevent multiple rapid calls for the same payment
 				// Wait 150ms before executing to batch rapid clicks
 				this.set_full_amount_timeouts[idx] = setTimeout(() => {
+					// Do not allow payment amount changes if return_from_customer_credit is enabled
+					if (this.return_from_customer_credit) {
+						delete this.set_full_amount_timeouts[idx];
+						return;
+					}
+
 					const isQuickReturn = !!this.quick_return;
 
 					const payment = this.invoice_doc.payments.find((p) => p.idx == idx);
@@ -752,6 +758,11 @@ export default {
 		// Calculates remaining amount after other payments and fills it in
 		set_rest_amount(idx) {
 			try {
+				// Do not allow payment amount changes if return_from_customer_credit is enabled
+				if (this.return_from_customer_credit) {
+					return;
+				}
+
 				const isQuickReturn = !!this.quick_return;
 				const invoice_total =
 					flt(this.invoice_doc.rounded_total) || flt(this.invoice_doc.grand_total);
@@ -892,6 +903,11 @@ export default {
 		// Handle user input in payment amount field
 		// Automatically converts positive values to negative in quick return mode
 		handlePaymentAmountChange(payment, $event) {
+			// Do not allow payment amount changes if return_from_customer_credit is enabled
+			if (this.return_from_customer_credit) {
+				return;
+			}
+
 			// Handle payment amount change - make negative automatically for quick_return mode
 			let value = 0;
 			try {
@@ -1177,11 +1193,9 @@ export default {
 
 						// Check if original invoice is unpaid (paid_amount = 0 or very close to 0)
 						if (origPaid <= 0.01) {
-							// Original invoice is unpaid - no payments should be made
+							// Original invoice is unpaid
 							this.is_original_invoice_unpaid = true;
 							refundableAmount = 0;
-							// Auto-enable return from customer credit for unpaid invoices
-							this.return_from_customer_credit = true;
 						} else if (origGrand > 0) {
 							// Original invoice was paid (partly or fully)
 							// Calculate refundable amount based on what was actually paid
@@ -1193,8 +1207,6 @@ export default {
 							// Original invoice had zero total, no refund
 							this.is_original_invoice_unpaid = true;
 							refundableAmount = 0;
-							// Auto-enable return from customer credit for zero total invoices
-							this.return_from_customer_credit = true;
 						}
 					} else {
 						// No payment info available - assume unpaid (safe default)
@@ -1202,24 +1214,27 @@ export default {
 						refundableAmount = 0;
 					}
 
-					// Check if POS Profile has posa_use_customer_credit enabled
-					// If enabled, auto-enable return from customer credit for all return invoices
-					if (useCustomerCredit) {
-						this.return_from_customer_credit = true;
-						// Mark as unpaid to disable payments
-						this.is_original_invoice_unpaid = true;
-						refundableAmount = 0;
-					}
+					// Note: return_from_customer_credit switch is controlled manually by user
+					// It is visible when posa_use_customer_credit=1 and invoice is return
+					// User must enable it manually if they want to use customer credit for return
+					// Do not auto-enable it - let user decide
+					// Reset to false (will be set by user manually if needed)
+					this.return_from_customer_credit = false;
 
 					// Fill default payment with negative refundable amount
-					// Only if there is a refundable amount (i.e., original invoice was paid)
-					if (default_payment && refundableAmount > 0.01) {
+					// Only if there is a refundable amount AND return_from_customer_credit is disabled
+					// If return_from_customer_credit is enabled, payments should remain 0
+					if (
+						default_payment &&
+						refundableAmount > 0.01 &&
+						!this.return_from_customer_credit
+					) {
 						const neg = -this.flt(refundableAmount, this.currency_precision);
 						default_payment.amount = neg;
 						if (default_payment.base_amount !== undefined)
 							default_payment.base_amount = neg;
 					}
-					// If refundableAmount = 0, payments remain 0 (already reset above)
+					// If return_from_customer_credit is enabled or refundableAmount = 0, payments remain 0
 				} else {
 					// Reset quick_return if not a return invoice
 					this.quick_return = false;
@@ -1465,13 +1480,7 @@ export default {
 
 		// Watch return from customer credit toggle
 		// When enabled: allows printing return invoice without payments (deducted from customer outstanding balance)
+		// When disabled: allows normal payment methods to be used for return
 		// Emits event to notify Invoice component
-		return_from_customer_credit(value) {
-			evntBus.emit('return_from_customer_credit_changed', value);
-			// Force update to recalculate computed properties
-			this.$nextTick(() => {
-				this.$forceUpdate();
-			});
-		},
 	},
 };
