@@ -1470,27 +1470,55 @@ export default {
 		},
 
 		// Watch posa_use_customer_credit_switch toggle
-		// Simple logic: when ON, clear payments and disable input; when OFF, enable payments
+		// Simple logic based on posa_use_customer_credit_switch only
 		posa_use_customer_credit_switch(value) {
 			if (!this.invoice_doc || !this.invoice_doc.is_return) return;
 
-			// When switch is ON: clear all payment amounts (payments = 0)
-			if (value === true && this.invoice_doc.payments) {
-				this.invoice_doc.payments.forEach((payment) => {
-					payment.amount = 0;
-					if (payment.base_amount !== undefined) {
-						payment.base_amount = 0;
+			if (value === true) {
+				// Switch is ON: clear all payment amounts (payments = 0)
+				if (this.invoice_doc.payments) {
+					this.invoice_doc.payments.forEach((payment) => {
+						payment.amount = 0;
+						if (payment.base_amount !== undefined) {
+							payment.base_amount = 0;
+						}
+					});
+					// Emit payments update to notify other components
+					evntBus.emit(
+						EVENT_NAMES.PAYMENTS_UPDATED,
+						JSON.parse(JSON.stringify(this.invoice_doc.payments)),
+					);
+				}
+			} else {
+				// Switch is OFF: set payment amount to grand_total
+				if (this.invoice_doc.payments && this.invoice_doc.payments.length > 0) {
+					const grandTotal = Math.abs(
+						this.flt(this.invoice_doc.grand_total || this.invoice_doc.rounded_total || 0),
+					);
+					// Set first payment method to grand_total
+					const firstPayment = this.invoice_doc.payments[0];
+					if (firstPayment) {
+						firstPayment.amount = grandTotal;
+						if (firstPayment.base_amount !== undefined) {
+							firstPayment.base_amount = grandTotal;
+						}
+						// Clear other payments
+						for (let i = 1; i < this.invoice_doc.payments.length; i++) {
+							this.invoice_doc.payments[i].amount = 0;
+							if (this.invoice_doc.payments[i].base_amount !== undefined) {
+								this.invoice_doc.payments[i].base_amount = 0;
+							}
+						}
+						// Emit payments update to notify other components
+						evntBus.emit(
+							EVENT_NAMES.PAYMENTS_UPDATED,
+							JSON.parse(JSON.stringify(this.invoice_doc.payments)),
+						);
 					}
-				});
-				// Emit payments update to notify other components
-				evntBus.emit(
-					EVENT_NAMES.PAYMENTS_UPDATED,
-					JSON.parse(JSON.stringify(this.invoice_doc.payments)),
-				);
+				}
 			}
 
 			// Emit event to notify Invoice component
-			// Use posa_use_customer_credit_switch_changed event name (unified event name)
 			evntBus.emit(EVENT_NAMES.POSA_USE_CUSTOMER_CREDIT_SWITCH_CHANGED, value);
 			// Force update to recalculate computed properties
 			this.$nextTick(() => {
