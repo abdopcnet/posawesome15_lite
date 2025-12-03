@@ -400,46 +400,26 @@
 									type="text"
 									:value="formatCurrency(payment.amount)"
 									@change="
-										if (
-											!is_credit_sale &&
-											!(is_return && is_original_invoice_unpaid) &&
-											!posa_use_customer_credit_switch
-										) {
+										if (!posa_use_customer_credit_switch) {
 											handlePaymentAmountChange(payment, $event);
 											validate_payment_amount(payment);
 										}
 									"
 									@focus="
-										if (
-											!is_credit_sale &&
-											!(is_return && is_original_invoice_unpaid) &&
-											!posa_use_customer_credit_switch
-										)
+										if (!posa_use_customer_credit_switch)
 											set_rest_amount(payment.idx);
 									"
 									@click="
-										if (
-											!is_credit_sale &&
-											!(is_return && is_original_invoice_unpaid) &&
-											!posa_use_customer_credit_switch
-										)
+										if (!posa_use_customer_credit_switch)
 											set_rest_amount(payment.idx);
 									"
 									:readonly="
 										(invoice_doc && invoice_doc.is_return && !quick_return) ||
-										is_credit_sale ||
-										(is_return && is_original_invoice_unpaid) ||
 										posa_use_customer_credit_switch
 									"
-									:disabled="
-										is_credit_sale ||
-										(is_return && is_original_invoice_unpaid) ||
-										posa_use_customer_credit_switch
-									"
+									:disabled="posa_use_customer_credit_switch"
 									placeholder="0.00"
 									:style="
-										is_credit_sale ||
-										(is_return && is_original_invoice_unpaid) ||
 										posa_use_customer_credit_switch
 											? {
 													flex: '1',
@@ -477,10 +457,8 @@
 						<button
 							:id="`mode_of_payment_button_${payment.idx || 0}`"
 							:ref="`mode_of_payment_button_${payment.idx || 0}`"
-							:disabled="is_credit_sale || posa_use_customer_credit_switch"
+							:disabled="posa_use_customer_credit_switch"
 							:style="
-								is_credit_sale ||
-								(is_return && is_original_invoice_unpaid) ||
 								posa_use_customer_credit_switch
 									? {
 											flex:
@@ -529,12 +507,7 @@
 									  }
 							"
 							@click.stop="
-								if (
-									!is_credit_sale &&
-									!(is_return && is_original_invoice_unpaid) &&
-									!return_from_customer_credit
-								)
-									set_full_amount(payment.idx);
+								if (!posa_use_customer_credit_switch) set_full_amount(payment.idx);
 							"
 						>
 							{{ payment.mode_of_payment }}
