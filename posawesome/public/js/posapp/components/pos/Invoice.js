@@ -2565,7 +2565,9 @@ export default {
 				doc?.is_return &&
 				doc?._original_invoice_payment_info &&
 				Math.abs(this.flt(doc._original_invoice_payment_info.paid_amount || 0)) <= 0.01;
-			if (!isCreditSale && !isReturnUnpaid && !this.hasValidPayments(doc)) {
+			// Allow printing if return from customer credit is enabled (allows printing without payments)
+			const isReturnFromCredit = this.return_from_customer_credit === true;
+			if (!isCreditSale && !isReturnUnpaid && !isReturnFromCredit && !this.hasValidPayments(doc)) {
 				// Do not open payment window - just show warning message
 				evntBus.emit('show_mesage', {
 					text: "يجب اختيار طريقة دفع أولاً عن طريق الضغط على زر 'دفع'",
@@ -2842,7 +2844,10 @@ export default {
 			// Check credit sale status before validation
 			const isCreditSale =
 				this.invoice_doc?.is_credit_sale === true || this.invoice_doc?.is_credit_sale == 1;
-			if (!isCreditSale && !this.canPrintInvoice()) {
+			// Check if return from customer credit is enabled (allows printing without payments)
+			const isReturnFromCredit = this.return_from_customer_credit === true;
+			
+			if (!isCreditSale && !isReturnFromCredit && !this.canPrintInvoice()) {
 				evntBus.emit('show_mesage', {
 					text: 'Please select a payment method before printing',
 					color: 'warning',
