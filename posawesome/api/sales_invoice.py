@@ -413,6 +413,9 @@ def get_print_invoices(pos_profile=None, pos_opening_shift=None, user=None):
                 "currency",
                 "is_return",
                 "return_against",
+                "outstanding_amount",
+                "paid_amount",
+                "status",
                 "posa_pos_opening_shift",
                 "pos_profile",
                 "owner",
@@ -421,7 +424,7 @@ def get_print_invoices(pos_profile=None, pos_opening_shift=None, user=None):
             limit=50,
         )
         
-        # Get customer names and determine invoice type
+        # Get customer names and determine invoice status
         result = []
         for invoice in invoices:
             # Get customer name
@@ -432,13 +435,23 @@ def get_print_invoices(pos_profile=None, pos_opening_shift=None, user=None):
                 except:
                     customer_name = invoice.customer
             
-            # Determine invoice type based on Frappe framework logic
-            invoice_type = _get_invoice_type(
-                invoice,
-                pos_profile_name,
-                pos_opening_shift_name,
-                user
-            )
+            # Calculate invoice status (like get_invoices_for_return)
+            invoice_status = invoice.get("status")
+            if not invoice_status:
+                # Calculate status following ERPNext logic
+                outstanding_amount = flt(invoice.get("outstanding_amount", 0))
+                grand_total = flt(invoice.get("grand_total", 0))
+                
+                # Check if invoice is returned
+                if invoice.get("is_return") == 1:
+                    invoice_status = "Return"
+                # Check payment status
+                elif abs(outstanding_amount) <= 0.01:  # Fully paid (0.01 tolerance)
+                    invoice_status = "Paid"
+                elif abs(outstanding_amount) >= abs(grand_total) * 0.99:  # Unpaid
+                    invoice_status = "Unpaid"
+                else:  # Partially paid
+                    invoice_status = "Partly Paid"
             
             result.append({
                 "name": invoice.name,
@@ -448,7 +461,7 @@ def get_print_invoices(pos_profile=None, pos_opening_shift=None, user=None):
                 "posting_time": invoice.posting_time,
                 "grand_total": flt(invoice.grand_total or 0),
                 "currency": invoice.currency,
-                "invoice_type": invoice_type,
+                "invoice_status": invoice_status,
             })
         
         return result
