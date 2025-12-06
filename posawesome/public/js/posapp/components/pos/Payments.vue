@@ -398,7 +398,7 @@
 									:id="`mode_of_payment_input_${payment.idx || 0}`"
 									:ref="`mode_of_payment_input_${payment.idx || 0}`"
 									type="text"
-									:value="formatCurrency(payment.amount)"
+									:value="payment.amount || ''"
 									@change="
 										if (!posa_use_customer_credit_switch) {
 											handlePaymentAmountChange(payment, $event);
