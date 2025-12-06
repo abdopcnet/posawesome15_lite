@@ -647,9 +647,19 @@ def create_and_submit_invoice(invoice_doc):
         # Return the submitted document
         return doc.as_dict()
 
-    except Exception as e:
-        frappe.log_error(f"[[sales_invoice.py]] create_and_submit_invoice: {str(e)}")
+    except frappe.ValidationError as e:
+        # Handle validation errors with short titles to avoid Error Log title overflow
+        error_message = str(e)
+        if len(error_message) > 120:
+            error_message = error_message[:120] + "..."
+
+        frappe.log_error(title="create_and_submit_invoice", message=frappe.get_traceback())
+        frappe.throw(_(error_message))
+    except Exception:
+        frappe.log_error(title="create_and_submit_invoice", message=frappe.get_traceback())
         frappe.throw(_("Error creating and submitting invoice"))
+
+
 
 
 def validate_return_limits(return_doc):
