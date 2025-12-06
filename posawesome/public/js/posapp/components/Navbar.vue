@@ -391,11 +391,11 @@
 					<i class="mdi mdi-cached" style="font-size: 19px; color: #2264d4"></i>
 				</button>
 
-				<!-- Close Shift Button: Close Shift -->
+				<!-- Close Shift Button: Close POS -->
 				<button
 					v-if="!pos_profile.posa_hide_closing_shift"
 					@click="close_shift_dialog"
-					title="إغلاق الوردية"
+					title="إغلاق نقطة البيع"
 					style="
 						display: inline-flex;
 						align-items: center;
@@ -427,7 +427,7 @@
 						$event.currentTarget.style.borderColor = 'rgba(244, 67, 54, 0.2)';
 						$event.currentTarget.style.boxShadow = '';
 					"
-					aria-label="Close shift"
+					aria-label="Close POS"
 				>
 					<i class="mdi mdi-close-circle" style="font-size: 19px; color: #d32f2f"></i>
 				</button>
