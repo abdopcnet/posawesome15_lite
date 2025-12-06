@@ -422,7 +422,7 @@
 								>
 									<input
 										type="text"
-										:value="formatCurrency(item.rate)"
+										:value="item.rate || ''"
 										@change="setItemRate(item, $event)"
 										@keyup.enter="setItemRate(item, $event)"
 										@blur="handleRateBlur(item, $event)"
