@@ -222,12 +222,14 @@
   {
    "fieldname": "total_invoice_paid",
    "fieldtype": "Currency",
-   "label": "total_invoice_paid"
+   "label": "total_invoice_paid",
+   "read_only": 1
   },
   {
    "fieldname": "total_payment_entries_paid",
    "fieldtype": "Currency",
-   "label": "total_payment_entries_paid"
+   "label": "total_payment_entries_paid",
+   "read_only": 1
   }
  ],
  "is_submittable": 1,
