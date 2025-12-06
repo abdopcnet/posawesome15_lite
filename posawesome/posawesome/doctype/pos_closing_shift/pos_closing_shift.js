@@ -37,6 +37,11 @@ frappe.ui.form.on('POS Closing Shift', {
 		// Auto-set period_end_date for new documents
 		if (frm.doc.docstatus === 0)
 			frm.set_value('period_end_date', frappe.datetime.now_datetime());
+		
+		// Calculate totals from pos_transactions on form load
+		if (frm.doc.pos_transactions && frm.doc.pos_transactions.length > 0) {
+			calculate_totals_from_transactions(frm);
+		}
 	},
 
 	// ========================================================================
@@ -135,6 +140,33 @@ frappe.ui.form.on('POS Closing Shift Detail', {
 });
 
 // =============================================================================
+// SECTION 2.2: CHILD TABLE EVENT HANDLERS - POS TRANSACTIONS
+// =============================================================================
+// Handles events for Sales Invoice Reference (pos_transactions child table)
+// Recalculates totals when transactions are added, removed, or updated
+// Related to: section_break_3 (pos_transactions), section_break_5 (totals)
+
+frappe.ui.form.on('Sales Invoice Reference', {
+	// Recalculate totals when row is added, removed, or updated
+	pos_transactions_add: (frm) => {
+		calculate_totals_from_transactions(frm);
+	},
+	pos_transactions_remove: (frm) => {
+		calculate_totals_from_transactions(frm);
+	},
+});
+
+// Add event listener to pos_transactions grid for refresh events
+frappe.ui.form.on('POS Closing Shift', {
+	refresh: (frm) => {
+		// Recalculate totals when form is refreshed
+		if (frm.doc.pos_transactions && frm.doc.pos_transactions.length > 0) {
+			calculate_totals_from_transactions(frm);
+		}
+	},
+});
+
+// =============================================================================
 // SECTION 3: DATA PROCESSING FUNCTIONS
 // =============================================================================
 // Core functions for processing invoice data and populating form fields
@@ -153,12 +185,11 @@ async function set_form_data(data, frm) {
 
 	for (const d of data) {
 		add_to_pos_transaction(d, frm);
-		// Single currency: POS Profile.currency only - no conversion needed
-		frm.doc.grand_total += flt(d.grand_total || 0);
-		frm.doc.net_total += flt(d.net_total || 0);
-		frm.doc.total_quantity += flt(d.total_qty);
 		await add_to_payments(d, frm);
 	}
+	
+	// Calculate totals from pos_transactions after adding all rows
+	calculate_totals_from_transactions(frm);
 }
 
 // ========================================================================
@@ -173,24 +204,15 @@ function set_form_data_invoices_only(data, frm) {
 	);
 
 	data.forEach((d) => {
-		// Single currency: POS Profile.currency only - grand_total equals base_grand_total
-		const grand_total = flt(d.grand_total || 0);
-		const net_total = flt(d.net_total || 0);
-		const total_qty = flt(d.total_qty || 0);
-
-		console.log(
-			`[pos_closing_shift.js] Invoice ${d.name}: grand_total=${grand_total}, net_total=${net_total}, qty=${total_qty}`,
-		);
-
 		add_to_pos_transaction(d, frm);
-		frm.doc.grand_total += grand_total;
-		frm.doc.net_total += net_total;
-		frm.doc.total_quantity += total_qty;
 		// Don't call add_to_payments - use existing payment_reconciliation from backend
 	});
 
+	// Calculate totals from pos_transactions after adding all rows
+	calculate_totals_from_transactions(frm);
+	
 	console.log(
-		`[pos_closing_shift.js] Final totals: grand_total=${frm.doc.grand_total}, net_total=${frm.doc.net_total}, qty=${frm.doc.total_quantity}`,
+		`[pos_closing_shift.js] Final totals calculated from pos_transactions`,
 	);
 	console.log(
 		`[pos_closing_shift.js] Payment reconciliation preserved from backend:`,
@@ -324,7 +346,64 @@ async function add_to_payments(d, frm) {
 // Helper functions for form operations
 
 // ========================================================================
-// SECTION 4.1: RESET VALUES
+// SECTION 4.1: CALCULATE TOTALS FROM TRANSACTIONS
+// ========================================================================
+// Calculates all totals from pos_transactions child table
+// Updates: grand_total, net_total, total_quantity, total_taxes, 
+//          total_invoice_additional_discount, total_item_discount,
+//          total_invoice_paid, total_payment_entries_paid
+// Related to: section_break_3 (pos_transactions), section_break_5 (totals)
+function calculate_totals_from_transactions(frm) {
+	if (!frm.doc.pos_transactions || !Array.isArray(frm.doc.pos_transactions)) {
+		// Reset all totals to 0 if no transactions
+		frm.set_value('grand_total', 0);
+		frm.set_value('net_total', 0);
+		frm.set_value('total_quantity', 0);
+		frm.set_value('total_taxes', 0);
+		frm.set_value('total_invoice_additional_discount', 0);
+		frm.set_value('total_item_discount', 0);
+		frm.set_value('total_invoice_paid', 0);
+		frm.set_value('total_payment_entries_paid', 0);
+		return;
+	}
+
+	// Initialize totals
+	let grand_total = 0;
+	let net_total = 0;
+	let total_quantity = 0;
+	let total_taxes = 0;
+	let total_invoice_additional_discount = 0;
+	let total_item_discount = 0;
+	let total_invoice_paid = 0;
+	let total_payment_entries_paid = 0;
+
+	// Sum all values from pos_transactions
+	frm.doc.pos_transactions.forEach((row) => {
+		// All fields in pos_transactions are stored as strings (Data type)
+		// Convert to float for calculation
+		grand_total += flt(row.grand_total || 0);
+		net_total += flt(row.net_total || 0);
+		total_quantity += flt(row.total_qty || 0);
+		total_taxes += flt(row.taxes || 0);
+		total_invoice_additional_discount += flt(row.discount_amount || 0);
+		total_item_discount += flt(row.posa_item_discount_total || 0);
+		total_invoice_paid += flt(row.paid_amount || 0);
+		total_payment_entries_paid += flt(row.payment_entry_paid_amount || 0);
+	});
+
+	// Update form fields
+	frm.set_value('grand_total', grand_total);
+	frm.set_value('net_total', net_total);
+	frm.set_value('total_quantity', total_quantity);
+	frm.set_value('total_taxes', total_taxes);
+	frm.set_value('total_invoice_additional_discount', total_invoice_additional_discount);
+	frm.set_value('total_item_discount', total_item_discount);
+	frm.set_value('total_invoice_paid', total_invoice_paid);
+	frm.set_value('total_payment_entries_paid', total_payment_entries_paid);
+}
+
+// ========================================================================
+// SECTION 4.2: RESET VALUES
 // ========================================================================
 // Clears all form data when opening shift changes
 // Related to: section_break_3, section_break_4, section_break_5
@@ -334,10 +413,15 @@ function reset_values(frm) {
 	frm.set_value('grand_total', 0);
 	frm.set_value('net_total', 0);
 	frm.set_value('total_quantity', 0);
+	frm.set_value('total_taxes', 0);
+	frm.set_value('total_invoice_additional_discount', 0);
+	frm.set_value('total_item_discount', 0);
+	frm.set_value('total_invoice_paid', 0);
+	frm.set_value('total_payment_entries_paid', 0);
 }
 
 // ========================================================================
-// SECTION 4.2: REFRESH FIELDS
+// SECTION 4.3: REFRESH FIELDS
 // ========================================================================
 // Refreshes form fields after data population
 // Related to: section_break_3, section_break_4, section_break_5
@@ -347,10 +431,15 @@ function refresh_fields(frm) {
 	frm.refresh_field('grand_total');
 	frm.refresh_field('net_total');
 	frm.refresh_field('total_quantity');
+	frm.refresh_field('total_taxes');
+	frm.refresh_field('total_invoice_additional_discount');
+	frm.refresh_field('total_item_discount');
+	frm.refresh_field('total_invoice_paid');
+	frm.refresh_field('total_payment_entries_paid');
 }
 
 // ========================================================================
-// SECTION 4.3: AUTO-FILL CLOSING AMOUNTS
+// SECTION 4.4: AUTO-FILL CLOSING AMOUNTS
 // ========================================================================
 // Auto-fills closing_amount with expected_amount for all payment reconciliation rows
 // This matches the previous behavior where closing_amount was auto-filled
@@ -388,7 +477,7 @@ function auto_fill_closing_amounts(frm) {
 }
 
 // ========================================================================
-// SECTION 4.4: GET VALUE HELPER
+// SECTION 4.5: GET VALUE HELPER
 // ========================================================================
 // Generic helper to fetch a single field value from a document
 const get_value = async (doctype, name, field) => {
@@ -406,7 +495,7 @@ const get_value = async (doctype, name, field) => {
 };
 
 // ========================================================================
-// SECTION 4.5: GET CASH MODE OF PAYMENT
+// SECTION 4.6: GET CASH MODE OF PAYMENT
 // ========================================================================
 // Gets the cash mode of payment from POS Profile (cached for performance)
 // Used to identify which payment method is cash (for change_amount calculation)
