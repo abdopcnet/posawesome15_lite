@@ -140,17 +140,19 @@ export default {
 			let total = parseFloat(this.invoice_doc.loyalty_amount || 0);
 
 			// Add all payment method amounts
+			// Use precision = 2 for all currency amounts
 			if (this.invoice_doc?.payments) {
 				this.invoice_doc.payments.forEach((payment) => {
-					total += this.flt(payment.amount || 0);
+					total += this.flt(payment.amount || 0, 2);
 				});
 			}
 
 			// Add redeemed customer credit
-			total += this.flt(this.redeemed_customer_credit || 0);
+			total += this.flt(this.redeemed_customer_credit || 0, 2);
 
-			// Return formatted total with currency precision
-			return this.flt(total, this.currency_precision);
+			// Use precision = 2 for all currency amounts
+			// Following user requirement: all currency amounts should be 2 decimal places
+			return flt(total, 2);
 		},
 
 		// Calculate outstanding amount (amount still owed by customer)
@@ -159,17 +161,16 @@ export default {
 		outstanding_amount() {
 			if (!this.invoice_doc) return 0;
 
-			// Get invoice total (rounded_total or grand_total)
-			const target_amount =
-				flt(this.invoice_doc.rounded_total) || flt(this.invoice_doc.grand_total);
+			// Get invoice total (use grand_total only, no rounding)
+			// Following user requirement: no rounded_total dependency at all
+			// Use precision = 2 for all currency amounts
+			const target_amount = flt(this.invoice_doc.grand_total, 2);
 			// Get write-off amount if any
-			const write_off_amount = flt(this.invoice_doc.write_off_amount || 0);
+			const write_off_amount = flt(this.invoice_doc.write_off_amount || 0, 2);
 
 			// Following ERPNext logic: outstanding_amount = grand_total - paid_amount - write_off_amount
-			const outstanding = this.flt(
-				target_amount - this.paid_amount - write_off_amount,
-				this.currency_precision,
-			);
+			// Use precision = 2 for all currency amounts
+			const outstanding = flt(target_amount - this.paid_amount - write_off_amount, 2);
 
 			// Return only positive values (what's still owed)
 			// Negative values mean customer overpaid (handled by change_amount)
@@ -185,17 +186,20 @@ export default {
 			// Calculate paid_amount directly (not using computed property to avoid dependency issues)
 			// This prevents circular dependency problems
 			let paid_total = parseFloat(this.invoice_doc.loyalty_amount || 0);
+			// Use precision = 2 for all currency amounts
 			if (this.invoice_doc?.payments) {
 				this.invoice_doc.payments.forEach((payment) => {
-					paid_total += this.flt(payment.amount || 0);
+					paid_total += this.flt(payment.amount || 0, 2);
 				});
 			}
-			paid_total += this.flt(this.redeemed_customer_credit || 0);
-			paid_total = this.flt(paid_total, this.currency_precision);
+			paid_total += this.flt(this.redeemed_customer_credit || 0, 2);
+			// Use precision = 2 for all currency amounts
+			paid_total = flt(paid_total, 2);
 
-			// Get invoice total
-			const target_amount =
-				flt(this.invoice_doc.rounded_total) || flt(this.invoice_doc.grand_total);
+			// Get invoice total (use grand_total only, no rounding)
+			// Following user requirement: no rounded_total dependency at all
+			// Use precision = 2 for all currency amounts
+			const target_amount = flt(this.invoice_doc.grand_total, 2);
 			// Get cash payment mode from POS profile
 			const cash_mode = this.pos_profile?.posa_cash_mode_of_payment;
 
@@ -210,13 +214,14 @@ export default {
 					const other_payments_total =
 						this.invoice_doc?.payments
 							?.filter((p) => p.mode_of_payment !== cash_mode)
-							.reduce((sum, p) => sum + this.flt(p.amount || 0), 0) || 0;
+							.reduce((sum, p) => sum + this.flt(p.amount || 0, 2), 0) || 0;
 
-					const other_totals = this.flt(
-						(this.invoice_doc.loyalty_amount || 0) +
-							(this.redeemed_customer_credit || 0) +
+					// Calculate other totals with precision = 2 for all currency amounts
+					const other_totals = flt(
+						flt(this.invoice_doc.loyalty_amount || 0, 2) +
+							flt(this.redeemed_customer_credit || 0, 2) +
 							other_payments_total,
-						this.currency_precision,
+						2,
 					);
 
 					// Only allow excess if:
@@ -228,10 +233,8 @@ export default {
 						other_totals <= target_amount
 					) {
 						// Following ERPNext: change_amount = paid_amount - grand_total (when paid_amount > grand_total)
-						const change = this.flt(
-							paid_total - target_amount,
-							this.currency_precision,
-						);
+						// Use precision = 2 for all currency amounts
+						const change = flt(paid_total - target_amount, 2);
 						return change;
 					} else {
 						return 0;
@@ -239,7 +242,9 @@ export default {
 				} else {
 					// No cash_mode defined, but paid_total > grand_total
 					// Allow change_amount calculation (for backward compatibility)
-					const change = this.flt(paid_total - target_amount, this.currency_precision);
+					// Use exact calculation without rounding to preserve precision
+					// Use precision = 2 for all currency amounts
+					const change = flt(paid_total - target_amount, 2);
 					return change;
 				}
 			}
@@ -307,7 +312,10 @@ export default {
 		// Get customer outstanding balance (total unpaid amount)
 		// This is the total amount the customer owes across all unpaid invoices
 		customer_outstanding_display() {
-			return this.flt(this.customer_outstanding_balance || 0, this.currency_precision);
+			// Return exact value without rounding to preserve precision
+			// Following user requirement: no rounding logic at all
+			// formatCurrency will handle display formatting
+			return flt(this.customer_outstanding_balance || 0);
 		},
 	},
 
@@ -337,9 +345,11 @@ export default {
 			this.invoice_doc = invoice_doc;
 			const defaultPayment = this.getDefaultPayment();
 			if (defaultPayment) {
-				const total =
-					this.flt(invoice_doc.rounded_total) || this.flt(invoice_doc.grand_total);
-				defaultPayment.amount = this.flt(total, this.currency_precision);
+				// Use grand_total with precision = 2 for all currency amounts
+				// Following user requirement: no rounded_total dependency at all
+				const total = flt(invoice_doc.grand_total, 2);
+				// Set payment amount with precision = 2
+				defaultPayment.amount = total;
 			}
 			this.exposeSubmit(true, true);
 		},
@@ -394,10 +404,11 @@ export default {
 					this.showMessage('No default payment method in POS profile', 'error');
 					return;
 				}
-				const total =
-					this.flt(this.invoice_doc.rounded_total) ||
-					this.flt(this.invoice_doc.grand_total);
-				defaultPayment.amount = this.flt(total, this.currency_precision);
+				// Use grand_total with precision = 2 for all currency amounts
+				// Following user requirement: no rounded_total dependency at all
+				const total = flt(this.invoice_doc.grand_total, 2);
+				// Set payment amount with precision = 2
+				defaultPayment.amount = total;
 			}
 
 			// Delegate to submit_invoice for actual submission logic
@@ -427,7 +438,7 @@ export default {
 				this.invoice_doc.total = total;
 				this.invoice_doc.net_total = total;
 				this.invoice_doc.grand_total = total;
-				this.invoice_doc.rounded_total = total;
+				// Do not set rounded_total - following user requirement: no rounded_total dependency
 				this.invoice_doc.base_total = total;
 				this.invoice_doc.base_net_total = total;
 				this.invoice_doc.base_grand_total = total;
@@ -448,21 +459,24 @@ export default {
 				this.quick_return = false;
 			}
 
+			// Calculate total payments with precision = 2 for all currency amounts
 			let totalPayedAmount = 0;
 			this.invoice_doc.payments.forEach((payment) => {
-				payment.amount = flt(payment.amount);
+				// Use precision = 2 for all currency amounts
+				payment.amount = flt(payment.amount, 2);
 				totalPayedAmount += payment.amount;
 			});
 
-			const targetAmount =
-				flt(this.invoice_doc.rounded_total) || flt(this.invoice_doc.grand_total);
+			// Use grand_total with precision = 2 for all currency amounts
+			// Following user requirement: no rounded_total dependency at all
+			const targetAmount = flt(this.invoice_doc.grand_total, 2);
 
-			// Include loyalty and customer credit in total
-			const allPaymentsTotal = this.flt(
+			// Include loyalty and customer credit in total with precision = 2
+			const allPaymentsTotal = flt(
 				totalPayedAmount +
-					(this.invoice_doc.loyalty_amount || 0) +
-					(this.redeemed_customer_credit || 0),
-				this.currency_precision,
+					flt(this.invoice_doc.loyalty_amount || 0, 2) +
+					flt(this.redeemed_customer_credit || 0, 2),
+				2,
 			);
 
 			// Simplified: No validation here - just allow submission
@@ -480,6 +494,7 @@ export default {
 
 			// Calculate paid_amount following ERPNext's set_paid_amount() logic
 			// This matches ERPNext's calculation: sum of all payments.amount
+			// Use exact values without rounding to preserve grand_total precision
 			let paid_amount = 0.0;
 			if (this.invoice_doc?.payments) {
 				this.invoice_doc.payments.forEach((payment) => {
@@ -490,20 +505,24 @@ export default {
 			paid_amount += flt(this.redeemed_customer_credit || 0);
 
 			// Set paid_amount in invoice_doc (ERPNext field name)
-			this.invoice_doc.paid_amount = flt(paid_amount, this.currency_precision);
+			// Use flt without precision to preserve exact decimal values
+			// Use precision = 2 for all currency amounts
+			this.invoice_doc.paid_amount = flt(paid_amount, 2);
 
 			// Calculate change_amount following ERPNext's calculate_change_amount() logic
 			// change_amount = paid_amount - grand_total (when paid_amount > grand_total and has Cash payment)
-			const grand_total =
-				flt(this.invoice_doc.rounded_total) || flt(this.invoice_doc.grand_total);
+			// Use precision = 2 for all currency amounts
+			// Following user requirement: no rounded_total dependency at all
+			const grand_total = flt(this.invoice_doc.grand_total, 2);
 
 			// Check if there's a Cash payment (following ERPNext logic)
 			const has_cash_payment =
 				this.invoice_doc?.payments?.some((p) => p.type === 'Cash') || false;
 
+			// Calculate change_amount with precision = 2 for all currency amounts
 			const calculated_change_amount =
 				!this.invoice_doc.is_return && paid_amount > grand_total && has_cash_payment
-					? flt(paid_amount - grand_total, this.currency_precision)
+					? flt(paid_amount - grand_total, 2)
 					: 0.0;
 
 			// Set change_amount in invoice_doc (ERPNext field name)
@@ -663,6 +682,30 @@ export default {
 							}
 
 							this.invoice_doc = freshDoc;
+
+							// After refreshing from server, ensure default payment amount matches grand_total exactly
+							// This prevents rounded values from server (e.g., 18.37) from overriding exact grand_total (18.38)
+							// Following user requirement: no rounding logic at all
+							if (
+								this.invoice_doc &&
+								!this.invoice_doc.is_return &&
+								this.invoice_doc.docstatus === 0
+							) {
+								const default_payment = this.invoice_doc.payments?.find(
+									(payment) => payment.default == 1,
+								);
+								if (default_payment) {
+									// Use grand_total with precision = 2 for all currency amounts
+									// Following user requirement: no rounded_total dependency at all
+									const total = flt(this.invoice_doc.grand_total, 2);
+									// Set payment amount with precision = 2
+									default_payment.amount = total;
+									if (default_payment.base_amount !== undefined) {
+										default_payment.base_amount = total;
+									}
+								}
+							}
+
 							resolve();
 						} else {
 							reject(new Error('Failed to refresh invoice'));
@@ -712,15 +755,18 @@ export default {
 					});
 
 					// Calculate invoice total
-					const invoice_total =
-						flt(this.invoice_doc.rounded_total) || flt(this.invoice_doc.grand_total);
+					// Use grand_total with precision = 2 for all currency amounts
+					// Following user requirement: no rounded_total dependency
+					const invoice_total = flt(this.invoice_doc.grand_total, 2);
 
 					// Fill with full invoice amount when clicking the payment method button
 					// For quick_return mode, same logic as sales_mode but with negative values
-					const amount = this.flt(invoice_total, this.currency_precision);
+					// Use precision = 2 for all currency amounts
+					const amount = invoice_total;
 					const target_amount = isQuickReturn ? -Math.abs(amount) : amount;
 
-					payment.amount = this.flt(target_amount, this.currency_precision);
+					// Set payment amount with precision = 2
+					payment.amount = target_amount;
 					if (payment.base_amount !== undefined) {
 						payment.base_amount = payment.amount;
 					}
@@ -761,8 +807,10 @@ export default {
 				}
 
 				const isQuickReturn = !!this.quick_return;
-				const invoice_total =
-					flt(this.invoice_doc.rounded_total) || flt(this.invoice_doc.grand_total);
+				// Use grand_total directly without rounding to preserve exact value
+				// Following user requirement: no rounded_total dependency
+				// Use precision = 2 for all currency amounts
+				const invoice_total = flt(this.invoice_doc.grand_total, 2);
 
 				// Find the payment method being edited
 				const payment = this.invoice_doc.payments.find((p) => p.idx === idx);
@@ -770,20 +818,23 @@ export default {
 
 				// Calculate current total payments excluding this payment
 				// This gives us the amount already covered by other payment methods
+				// Use precision = 2 for all currency amounts
 				const other_payments =
 					this.invoice_doc.payments
 						?.filter((p) => p.idx !== idx)
-						.reduce((sum, p) => sum + this.flt(p.amount || 0), 0) || 0;
+						.reduce((sum, p) => sum + flt(p.amount || 0, 2), 0) || 0;
 
-				const other_totals = this.flt(
-					(this.invoice_doc.loyalty_amount || 0) +
-						(this.redeemed_customer_credit || 0) +
+				// Calculate other totals with precision = 2 for all currency amounts
+				const other_totals = flt(
+					flt(this.invoice_doc.loyalty_amount || 0, 2) +
+						flt(this.redeemed_customer_credit || 0, 2) +
 						other_payments,
-					this.currency_precision,
+					2,
 				);
 
 				// Calculate remaining amount (works for both positive and negative values)
-				const remaining = this.flt(invoice_total - other_totals, this.currency_precision);
+				// Use precision = 2 for all currency amounts
+				const remaining = flt(invoice_total - other_totals, 2);
 
 				// Fill with remaining amount (cannot exceed invoice total for non-cash)
 				const cash_mode = this.pos_profile?.posa_cash_mode_of_payment;
@@ -814,7 +865,10 @@ export default {
 					amount = -Math.abs(amount);
 				}
 
-				payment.amount = this.flt(amount, this.currency_precision);
+				// Set payment amount to exact remaining value without rounding
+				// Following user requirement: no rounding logic at all
+				// This ensures payment.amount matches grand_total exactly
+				payment.amount = amount;
 				if (payment.base_amount !== undefined) {
 					payment.base_amount = payment.amount;
 				}
@@ -903,11 +957,14 @@ export default {
 			// Do not allow payment amount changes if posa_use_customer_credit_switch is enabled
 			if (this.posa_use_customer_credit_switch) {
 				return;
-			} // Handle payment amount change - make negative automatically for quick_return mode
+			}
+			// Handle payment amount change - make negative automatically for quick_return mode
 			let value = 0;
 			try {
 				// Parse input value from text field
-				let _value = parseFloat($event.target.value);
+				// Remove commas and parse as float to preserve exact decimal precision
+				let inputValue = $event.target.value.toString().replace(/,/g, '');
+				let _value = parseFloat(inputValue);
 				if (!isNaN(_value)) {
 					value = _value;
 				}
@@ -919,8 +976,10 @@ export default {
 					value = -Math.abs(value);
 				}
 
-				// Set the payment amount (use flt directly, don't format as currency string)
-				payment.amount = this.flt(value);
+				// Set the payment amount without rounding to preserve exact value
+				// Following user requirement: no rounding logic at all
+				// Use parseFloat directly to preserve all decimal places from user input
+				payment.amount = value;
 				if (payment.base_amount !== undefined) {
 					payment.base_amount = payment.amount;
 				}
@@ -1086,8 +1145,9 @@ export default {
 
 			evntBus.emit(EVENT_NAMES.FREEZE, { title: 'Please wait for payment...' });
 
+			// Use precision = 2 for all currency amounts
 			this.invoice_doc.payments.forEach((payment) => {
-				payment.amount = flt(payment.amount);
+				payment.amount = flt(payment.amount, 2);
 			});
 
 			evntBus.emit(EVENT_NAMES.UNFREEZE);
@@ -1149,9 +1209,15 @@ export default {
 				}
 
 				if (default_payment && !invoice_doc.is_return) {
-					const total =
-						this.flt(invoice_doc.rounded_total) || this.flt(invoice_doc.grand_total);
-					default_payment.amount = this.flt(total, this.currency_precision);
+					// Use grand_total with precision = 2 for all currency amounts
+					// Following user requirement: no rounded_total dependency at all
+					// Always set default payment amount from grand_total, even if invoice exists
+					const total = flt(invoice_doc.grand_total, 2);
+					// Set payment amount with precision = 2
+					default_payment.amount = total;
+					if (default_payment.base_amount !== undefined) {
+						default_payment.base_amount = total;
+					}
 				}
 
 				if (invoice_doc.is_return) {
@@ -1161,7 +1227,9 @@ export default {
 					// Both need input enabled and negative values
 					this.quick_return = true;
 
-					const total = invoice_doc.rounded_total || invoice_doc.grand_total;
+					// Use grand_total only, no rounding
+					// Following user requirement: no rounded_total dependency at all
+					const total = invoice_doc.grand_total;
 					const absTotal = Math.abs(total);
 
 					// Reset all payments to zero first
@@ -1183,8 +1251,9 @@ export default {
 
 					if (invoice_doc._original_invoice_payment_info) {
 						const orig = invoice_doc._original_invoice_payment_info;
-						const origPaid = Math.abs(this.flt(orig.paid_amount || 0));
-						const origGrand = Math.abs(this.flt(orig.grand_total || 0));
+						// Use precision = 2 for all currency amounts
+						const origPaid = Math.abs(this.flt(orig.paid_amount || 0, 2));
+						const origGrand = Math.abs(this.flt(orig.grand_total || 0, 2));
 
 						// Check if original invoice is unpaid (paid_amount = 0 or very close to 0)
 						if (origPaid <= 0.01) {
@@ -1219,7 +1288,8 @@ export default {
 						refundableAmount > 0.01 &&
 						!this.posa_use_customer_credit_switch
 					) {
-						const neg = -this.flt(refundableAmount, this.currency_precision);
+						// Set payment amount with precision = 2 for all currency amounts
+						const neg = -flt(refundableAmount, 2);
 						default_payment.amount = neg;
 						if (default_payment.base_amount !== undefined)
 							default_payment.base_amount = neg;
@@ -1410,15 +1480,16 @@ export default {
 						this.saved_payments_before_credit_sale = null;
 					} else {
 						// No saved values - set cash payment to invoice total (default behavior)
-						const invoice_total =
-							this.flt(this.invoice_doc.rounded_total) ||
-							this.flt(this.invoice_doc.grand_total);
+						// Use grand_total with precision = 2 for all currency amounts
+						// Following user requirement: no rounded_total dependency at all
+						const invoice_total = this.flt(this.invoice_doc.grand_total, 2);
 						this.invoice_doc.payments.forEach((payment) => {
 							if (
 								payment.mode_of_payment &&
 								payment.mode_of_payment.toLowerCase() === 'cash'
 							) {
-								payment.amount = this.flt(invoice_total, this.currency_precision);
+								// Set payment amount with precision = 2
+								payment.amount = invoice_total;
 								if (payment.base_amount !== undefined) {
 									payment.base_amount = payment.amount;
 								}
@@ -1492,9 +1563,10 @@ export default {
 			} else {
 				// Switch is OFF: set payment amount to grand_total
 				if (this.invoice_doc.payments && this.invoice_doc.payments.length > 0) {
-					const grandTotal = Math.abs(
-						this.flt(this.invoice_doc.grand_total || this.invoice_doc.rounded_total || 0),
-					);
+					// Use grand_total only, no rounding
+					// Following user requirement: no rounded_total dependency at all
+					// Use precision = 2 for all currency amounts
+					const grandTotal = Math.abs(this.flt(this.invoice_doc.grand_total || 0, 2));
 					// Set first payment method to grand_total
 					const firstPayment = this.invoice_doc.payments[0];
 					if (firstPayment) {
