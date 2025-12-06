@@ -686,7 +686,7 @@
 												color: white;
 											"
 										>
-											النوع
+											الحالة
 										</th>
 										<th
 											style="
@@ -745,14 +745,78 @@
 										>
 											{{ invoice.name }}
 										</td>
-										<td
-											style="
-												padding: 12px;
-												text-align: center;
-												font-weight: 600;
-											"
-										>
-											{{ invoice.invoice_type || 'غير معروف' }}
+										<td style="padding: 12px; text-align: center">
+											<span
+												:style="{
+													display: 'inline-block',
+													padding: '4px 12px',
+													borderRadius: '12px',
+													fontSize: '0.75rem',
+													fontWeight: '600',
+													whiteSpace: 'nowrap',
+													backgroundColor:
+														(invoice.invoice_status ||
+															invoice.status) === 'Paid'
+															? '#e8f5e9'
+															: (invoice.invoice_status ||
+																	invoice.status) === 'Unpaid'
+															? '#ffebee'
+															: (invoice.invoice_status ||
+																	invoice.status) ===
+															  'Partly Paid'
+															? '#fff3e0'
+															: (invoice.invoice_status ||
+																	invoice.status) === 'Return'
+															? '#f3e5f5'
+															: (invoice.invoice_status ||
+																	invoice.status) ===
+															  'Credit Note Issued'
+															? '#e1bee7'
+															: '#f5f5f5',
+													color:
+														(invoice.invoice_status ||
+															invoice.status) === 'Paid'
+															? '#2e7d32'
+															: (invoice.invoice_status ||
+																	invoice.status) === 'Unpaid'
+															? '#c62828'
+															: (invoice.invoice_status ||
+																	invoice.status) ===
+															  'Partly Paid'
+															? '#e65100'
+															: (invoice.invoice_status ||
+																	invoice.status) === 'Return'
+															? '#6a1b9a'
+															: (invoice.invoice_status ||
+																	invoice.status) ===
+															  'Credit Note Issued'
+															? '#7b1fa2'
+															: '#616161',
+													border:
+														(invoice.invoice_status ||
+															invoice.status) === 'Paid'
+															? '1px solid #4caf50'
+															: (invoice.invoice_status ||
+																	invoice.status) === 'Unpaid'
+															? '1px solid #ef5350'
+															: (invoice.invoice_status ||
+																	invoice.status) ===
+															  'Partly Paid'
+															? '1px solid #ff9800'
+															: (invoice.invoice_status ||
+																	invoice.status) === 'Return'
+															? '1px solid #9c27b0'
+															: (invoice.invoice_status ||
+																	invoice.status) ===
+															  'Credit Note Issued'
+															? '1px solid #ab47bc'
+															: '1px solid #9e9e9e',
+												}"
+											>
+												{{
+													invoice.invoice_status || invoice.status || '-'
+												}}
+											</span>
 										</td>
 										<td
 											style="
