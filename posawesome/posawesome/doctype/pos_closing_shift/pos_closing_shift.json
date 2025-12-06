@@ -35,6 +35,8 @@
   "total_taxes",
   "total_invoice_additional_discount",
   "total_item_discount",
+  "total_invoice_paid",
+  "total_payment_entries_paid",
   "section_break_6",
   "column_break_9",
   "amended_from"
@@ -216,11 +218,21 @@
   {
    "fieldname": "column_break_9",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_invoice_paid",
+   "fieldtype": "Currency",
+   "label": "total_invoice_paid"
+  },
+  {
+   "fieldname": "total_payment_entries_paid",
+   "fieldtype": "Currency",
+   "label": "total_payment_entries_paid"
   }
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2025-12-06 11:30:58.640845",
+ "modified": "2025-12-06 12:43:16.686462",
  "modified_by": "Administrator",
  "module": "POSAwesome",
  "name": "POS Closing Shift",
