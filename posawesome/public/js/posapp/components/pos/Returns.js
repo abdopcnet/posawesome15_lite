@@ -15,7 +15,7 @@ const TABLE_HEADERS = [
 	{ title: 'التاريخ', key: 'posting_date', align: 'start', sortable: true },
 	{ title: 'الوقت', key: 'posting_time', align: 'center', sortable: false },
 	{ title: 'رقم الفاتورة', key: 'name', align: 'start', sortable: true },
-	{ title: 'النوع', key: 'invoice_status', align: 'center', sortable: false },
+	{ title: 'الحالة', key: 'invoice_status', align: 'center', sortable: false },
 	{ title: 'المبلغ', key: 'grand_total', align: 'end', sortable: false },
 ];
 
