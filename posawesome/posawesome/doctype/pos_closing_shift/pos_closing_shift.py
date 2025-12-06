@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt
+from frappe.utils import flt, cint
 from datetime import datetime, time as dtime, timedelta
 
 
@@ -93,53 +93,54 @@ class POSClosingShift(Document):
     # ========================================================================
     # SECTION 1.3: VALIDATE SHIFT CLOSING WINDOW (PRIVATE)
     # ========================================================================
-    # Validates if period_end_date is within allowed closing window for POS Profile
+    # Validates if current time is within allowed closing window using POS Closing Shift fields
+    # Uses posting_date + time window (not period_end_date)
     # Checks posa_closing_time_control, posa_closing_time_start, posa_closing_time_end
-    # Related to: section_break_1 (period_end_date), section_break_2 (pos_profile)
+    # Related to: section_break_1 (posting_date), section_break_2 (pos_profile)
     def _validate_shift_closing_window(self):
-        """Validate if period_end_date is within allowed closing window for POS Profile."""
+        """
+        Validate if current time is within allowed closing window using POS Closing Shift fields.
+        Uses posting_date + time window (not period_end_date).
+        Example: posting_date=2025-12-06, time_start=18:00, time_end=20:00
+        Validates if current time is between 2025-12-06 18:00:00 and 2025-12-06 20:00:00
+        """
         try:
-            if not self.pos_profile or not self.period_end_date:
+            if not self.posting_date:
                 return
 
-            # Get POS Profile document
-            # Related to: section_break_2 (pos_profile)
-            profile = frappe.get_doc("POS Profile", self.pos_profile)
-
-            # Check if closing time control is enabled
-            if not profile.get("posa_closing_time_control"):
+            # Check if closing time control is enabled in POS Closing Shift
+            time_control = self.get("posa_closing_time_control")
+            if not cint(time_control):
                 return  # Skip validation if time control is not enabled
 
-            # Get closing time window from POS Profile
-            shift_opening_time = profile.get("posa_closing_time_start")
-            shift_closing_time = profile.get("posa_closing_time_end")
+            # Get closing time window from POS Closing Shift
+            closing_start_time = self.get("posa_closing_time_start")
+            closing_end_time = self.get("posa_closing_time_end")
 
-            if not shift_opening_time or not shift_closing_time:
+            if not closing_start_time or not closing_end_time:
                 return  # No restriction if not configured
 
             # Parse times
-            start_time = self._parse_time(shift_opening_time)
-            end_time = self._parse_time(shift_closing_time)
+            start_time = self._parse_time(closing_start_time)
+            end_time = self._parse_time(closing_end_time)
 
             if not start_time or not end_time:
                 return
 
-            # Get period_end_date as datetime
-            # Related to: section_break_1 (period_end_date)
-            period_end_dt = frappe.utils.get_datetime(self.period_end_date)
+            # Get posting_date and current time
+            posting_date = frappe.utils.getdate(self.posting_date)
+            current_dt = frappe.utils.now_datetime()
 
-            # Create datetime objects for comparison
-            start_dt = period_end_dt.replace(
-                hour=start_time.hour, minute=start_time.minute, second=start_time.second, microsecond=start_time.microsecond)
-            end_dt = period_end_dt.replace(
-                hour=end_time.hour, minute=end_time.minute, second=end_time.second, microsecond=end_time.microsecond)
+            # Create datetime objects for comparison using posting_date
+            start_dt = datetime.combine(posting_date, start_time)
+            end_dt = datetime.combine(posting_date, end_time)
 
             # If start_time > end_time, assume end_time is next day (overnight shift)
             if start_time > end_time:
                 end_dt = end_dt + timedelta(days=1)
 
-            # Check if period_end_dt is within [start_dt, end_dt]
-            allowed = start_dt <= period_end_dt <= end_dt
+            # Check if current_dt is within [start_dt, end_dt]
+            allowed = start_dt <= current_dt <= end_dt
 
             if not allowed:
                 start_str = start_time.strftime("%H:%M")
@@ -147,10 +148,13 @@ class POSClosingShift(Document):
                 if start_time > end_time:
                     end_str += " (next day)"
                 frappe.throw(
-                    _("Closing shift is not allowed at this time. Closing is allowed only between {0} and {1}").format(
-                        start_str, end_str),
+                    _("Closing shift is not allowed at this time. Closing is allowed only between {0} and {1} on {2}").format(
+                        start_str, end_str, frappe.utils.formatdate(posting_date)),
                     title=_("Closing Time Not Allowed")
                 )
+        except frappe.exceptions.ValidationError:
+            # Re-raise validation errors (like frappe.throw)
+            raise
         except Exception as e:
             frappe.log_error(f"[[pos_closing_shift.py]] Error validating shift closing window: {str(e)}")
             raise
