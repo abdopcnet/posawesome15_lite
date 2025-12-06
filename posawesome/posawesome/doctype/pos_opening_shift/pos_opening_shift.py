@@ -96,6 +96,7 @@ class POSOpeningShift(StatusUpdater):
         try:
             self.validate_pos_profile_and_cashier()
             self.validate_pos_shift()
+            self._validate_shift_opening_window()
             self.set_status()
         except Exception as e:
             frappe.log_error(f"[[pos_opening_shift.py]] validate: {str(e)}")
@@ -201,13 +202,80 @@ class POSOpeningShift(StatusUpdater):
 
         try:
             if isinstance(time_value, str):
-                return datetime.strptime(time_value, "%H:%M:%S").time()
+                # Try parsing with microseconds first
+                try:
+                    return datetime.strptime(time_value, "%H:%M:%S.%f").time()
+                except ValueError:
+                    return datetime.strptime(time_value, "%H:%M:%S").time()
             elif hasattr(time_value, 'hour'):  # datetime.time object
                 return time_value
             else:
                 return None
         except (ValueError, TypeError):
             return None
+
+    # Validate if current time is within allowed opening window based on posting_date
+    def _validate_shift_opening_window(self):
+        """
+        Validate if current time is within allowed opening window using POS Opening Shift fields.
+        Uses posting_date + time window (not period_start_date).
+        Example: posting_date=2025-12-06, time_start=08:00, time_end=10:00
+        Validates if current time is between 2025-12-06 08:00:00 and 2025-12-06 10:00:00
+        """
+        try:
+            if not self.posting_date:
+                return
+
+            # Check if opening time control is enabled in POS Opening Shift
+            time_control = self.get("posa_opening_time_control")
+            if not cint(time_control):
+                return  # Skip validation if time control is not enabled
+
+            # Get opening time window from POS Opening Shift
+            opening_start_time = self.get("posa_opening_time_start")
+            opening_end_time = self.get("posa_opening_time_end")
+
+            if not opening_start_time or not opening_end_time:
+                return  # No restriction if not configured
+
+            # Parse times
+            start_time = self._parse_time(opening_start_time)
+            end_time = self._parse_time(opening_end_time)
+
+            if not start_time or not end_time:
+                return
+
+            # Get posting_date and current time
+            posting_date = frappe.utils.getdate(self.posting_date)
+            current_dt = frappe.utils.now_datetime()
+
+            # Create datetime objects for comparison using posting_date
+            start_dt = datetime.combine(posting_date, start_time)
+            end_dt = datetime.combine(posting_date, end_time)
+
+            # If start_time > end_time, assume end_time is next day (overnight shift)
+            if start_time > end_time:
+                end_dt = end_dt + timedelta(days=1)
+
+            # Check if current_dt is within [start_dt, end_dt]
+            allowed = start_dt <= current_dt <= end_dt
+
+            if not allowed:
+                start_str = start_time.strftime("%H:%M")
+                end_str = end_time.strftime("%H:%M")
+                if start_time > end_time:
+                    end_str += " (next day)"
+                frappe.throw(
+                    _("Opening shift is not allowed at this time. Opening is allowed only between {0} and {1} on {2}").format(
+                        start_str, end_str, frappe.utils.formatdate(posting_date)),
+                    title=_("Opening Time Not Allowed")
+                )
+        except frappe.exceptions.ValidationError:
+            # Re-raise validation errors (like frappe.throw)
+            raise
+        except Exception as e:
+            frappe.log_error(f"[[pos_opening_shift.py]] Error validating shift opening window: {str(e)}")
+            raise
 
     # Update status on document submit
     def on_submit(self):
