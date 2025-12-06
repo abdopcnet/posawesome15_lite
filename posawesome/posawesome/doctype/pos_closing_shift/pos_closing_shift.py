@@ -10,14 +10,29 @@ from frappe.utils import flt
 from datetime import datetime, time as dtime, timedelta
 
 
+# =============================================================================
+# SECTION 1: DOCUMENT CLASS - POSClosingShift
+# =============================================================================
+# Main document class for POS Closing Shift
+# Handles document lifecycle: validate, on_submit, on_cancel
+
 class POSClosingShift(Document):
+    # ========================================================================
+    # SECTION 1.1: VALIDATE METHOD
+    # ========================================================================
+    # Validates document before save/submit
+    # Related to: section_break_1 (period_start_date, period_end_date, pos_opening_shift)
+    #             section_break_2 (company, pos_profile, user)
+    #             section_break_4 (payment_reconciliation)
     def validate(self):
         try:
-            frappe.log_error(f"[[pos_closing_shift.py]] Validating POS Closing Shift {self.name}")
-            
             # Validate shift closing allowed time window based on POS Profile settings
+            # Checks if period_end_date is within allowed closing window
+            # Related to: section_break_1 (period_end_date), section_break_2 (pos_profile)
             self._validate_shift_closing_window()
 
+            # Validate no duplicate closing shifts for same user and opening shift
+            # Related to: section_break_2 (user), section_break_1 (pos_opening_shift)
             user = frappe.get_all(
                 "POS Closing Shift",
                 filters={
@@ -29,7 +44,6 @@ class POSClosingShift(Document):
             )
 
             if user:
-                frappe.log_error(f"[[pos_closing_shift.py]] Duplicate closing shift detected for user {self.user}")
                 frappe.throw(
                     _(
                         "POS Closing Shift {} against {} between selected period".format(
@@ -39,20 +53,29 @@ class POSClosingShift(Document):
                     title=_("Invalid Period"),
                 )
 
+            # Validate opening shift is still open
+            # Related to: section_break_1 (pos_opening_shift)
             opening_shift_status = frappe.db.get_value("POS Opening Shift", self.pos_opening_shift, "status")
             if opening_shift_status != "Open":
-                frappe.log_error(f"[[pos_closing_shift.py]] Opening shift {self.pos_opening_shift} status is {opening_shift_status}, expected Open")
                 frappe.throw(
                     _("Selected POS Opening Shift should be open."),
                     title=_("Invalid Opening Entry"),
                 )
             
+            # Update payment reconciliation difference values
+            # Calculates difference = closing_amount - expected_amount for each payment method
+            # Related to: section_break_4 (payment_reconciliation)
             self.update_payment_reconciliation()
-            frappe.log_error(f"[[pos_closing_shift.py]] Validation completed for POS Closing Shift {self.name}")
         except Exception as e:
             frappe.log_error(f"[[pos_closing_shift.py]] Error validating POS Closing Shift {self.name}: {str(e)}")
             raise
 
+    # ========================================================================
+    # SECTION 1.2: PARSE TIME HELPER (PRIVATE)
+    # ========================================================================
+    # Helper method to parse time values to datetime.time object
+    # Used by _validate_shift_closing_window
+    # Related to: section_break_1 (period_end_date), section_break_2 (pos_profile)
     def _parse_time(self, value):
         """Parse a value to datetime.time supporting str and time inputs."""
         if not value:
@@ -67,24 +90,31 @@ class POSClosingShift(Document):
                 continue
         return None
 
+    # ========================================================================
+    # SECTION 1.3: VALIDATE SHIFT CLOSING WINDOW (PRIVATE)
+    # ========================================================================
+    # Validates if period_end_date is within allowed closing window for POS Profile
+    # Checks posa_closing_time_control, posa_closing_time_start, posa_closing_time_end
+    # Related to: section_break_1 (period_end_date), section_break_2 (pos_profile)
     def _validate_shift_closing_window(self):
         """Validate if period_end_date is within allowed closing window for POS Profile."""
         try:
             if not self.pos_profile or not self.period_end_date:
                 return
 
+            # Get POS Profile document
+            # Related to: section_break_2 (pos_profile)
             profile = frappe.get_doc("POS Profile", self.pos_profile)
 
             # Check if closing time control is enabled
             if not profile.get("posa_closing_time_control"):
-                frappe.log_error(f"[[pos_closing_shift.py]] Closing time control disabled for POS Profile {self.pos_profile}")
                 return  # Skip validation if time control is not enabled
 
+            # Get closing time window from POS Profile
             shift_opening_time = profile.get("posa_closing_time_start")
             shift_closing_time = profile.get("posa_closing_time_end")
 
             if not shift_opening_time or not shift_closing_time:
-                frappe.log_error(f"[[pos_closing_shift.py]] Closing time not configured for POS Profile {self.pos_profile}")
                 return  # No restriction if not configured
 
             # Parse times
@@ -92,10 +122,10 @@ class POSClosingShift(Document):
             end_time = self._parse_time(shift_closing_time)
 
             if not start_time or not end_time:
-                frappe.log_error(f"[[pos_closing_shift.py]] Could not parse closing times for POS Profile {self.pos_profile}")
                 return
 
             # Get period_end_date as datetime
+            # Related to: section_break_1 (period_end_date)
             period_end_dt = frappe.utils.get_datetime(self.period_end_date)
 
             # Create datetime objects for comparison
@@ -104,7 +134,7 @@ class POSClosingShift(Document):
             end_dt = period_end_dt.replace(
                 hour=end_time.hour, minute=end_time.minute, second=end_time.second, microsecond=end_time.microsecond)
 
-            # If start_time > end_time, assume end_time is next day
+            # If start_time > end_time, assume end_time is next day (overnight shift)
             if start_time > end_time:
                 end_dt = end_dt + timedelta(days=1)
 
@@ -116,7 +146,6 @@ class POSClosingShift(Document):
                 end_str = end_time.strftime("%H:%M")
                 if start_time > end_time:
                     end_str += " (next day)"
-                frappe.log_error(f"[[pos_closing_shift.py]] Closing time {period_end_dt} not allowed. Allowed window: {start_str} - {end_str}")
                 frappe.throw(
                     _("Closing shift is not allowed at this time. Closing is allowed only between {0} and {1}").format(
                         start_str, end_str),
@@ -126,11 +155,16 @@ class POSClosingShift(Document):
             frappe.log_error(f"[[pos_closing_shift.py]] Error validating shift closing window: {str(e)}")
             raise
 
+    # ========================================================================
+    # SECTION 1.4: UPDATE PAYMENT RECONCILIATION
+    # ========================================================================
+    # Updates difference values in Payment Reconciliation child table
+    # difference = closing_amount - expected_amount
+    # Related to: section_break_4 (payment_reconciliation)
     def update_payment_reconciliation(self):
         try:
-            frappe.log_error(f"[[pos_closing_shift.py]] Updating payment reconciliation for {self.name}")
-            # update the difference values in Payment Reconciliation child table
-            # get default precision for site
+            # Update the difference values in Payment Reconciliation child table
+            # Get default precision for site (used for float calculations)
             precision = frappe.get_cached_value(
                 "System Settings", None, "currency_precision") or 3
             for d in self.payment_reconciliation:
@@ -140,47 +174,66 @@ class POSClosingShift(Document):
             frappe.log_error(f"[[pos_closing_shift.py]] Error updating payment reconciliation: {str(e)}")
             raise
 
+    # ========================================================================
+    # SECTION 1.5: ON SUBMIT METHOD
+    # ========================================================================
+    # Called when document is submitted
+    # Links closing shift to opening shift and deletes draft invoices
+    # Related to: section_break_1 (pos_opening_shift), section_break_2 (pos_profile)
     def on_submit(self):
         try:
+            # Link this closing shift to the opening shift
+            # Related to: section_break_1 (pos_opening_shift)
             opening_entry = frappe.get_doc(
                 "POS Opening Shift", self.pos_opening_shift)
             opening_entry.pos_closing_shift = self.name
-            opening_entry.set_status()
+            opening_entry.set_status()  # Updates opening shift status to "Closed"
+            
+            # Delete draft invoices if auto-delete is enabled
+            # Related to: section_break_2 (pos_profile)
             self.delete_draft_invoices()
+            
             opening_entry.save()
         except Exception as e:
             frappe.log_error(f"[[pos_closing_shift.py]] Error submitting POS Closing Shift {self.name}: {str(e)}")
             raise
 
+    # ========================================================================
+    # SECTION 1.6: ON CANCEL METHOD
+    # ========================================================================
+    # Called when document is cancelled
+    # Unlinks closing shift from opening shift
+    # Related to: section_break_1 (pos_opening_shift)
     def on_cancel(self):
         try:
+            # Unlink this closing shift from the opening shift
+            # Related to: section_break_1 (pos_opening_shift)
             if frappe.db.exists("POS Opening Shift", self.pos_opening_shift):
                 opening_entry = frappe.get_doc(
                     "POS Opening Shift", self.pos_opening_shift)
                 if opening_entry.pos_closing_shift == self.name:
                     opening_entry.pos_closing_shift = ""
-                    opening_entry.set_status()
+                    opening_entry.set_status()  # Updates opening shift status back to "Open"
                 opening_entry.save()
         except Exception as e:
             frappe.log_error(f"[[pos_closing_shift.py]] Error cancelling POS Closing Shift {self.name}: {str(e)}")
             raise
 
-    @frappe.whitelist()
-    def get_payment_reconciliation_details(self):
-        currency = frappe.get_cached_value(
-            "Company", self.company, "default_currency")
-        return frappe.render_template(
-            "posawesome/posawesome/doctype/pos_closing_shift/closing_shift_details.html",
-            {"data": self, "currency": currency},
-        )
-
+    # ========================================================================
+    # SECTION 1.7: DELETE DRAFT INVOICES (PRIVATE)
+    # ========================================================================
+    # Deletes draft invoices for this shift if auto-delete is enabled in POS Profile
+    # Related to: section_break_2 (pos_profile), section_break_1 (pos_opening_shift)
     def delete_draft_invoices(self):
         """Delete draft invoices for this shift if auto-delete is enabled in POS Profile."""
         try:
+            # Check if auto-delete is enabled in POS Profile
+            # Related to: section_break_2 (pos_profile)
             if not frappe.get_value("POS Profile", self.pos_profile, "posa_auto_delete_draft_invoices"):
                 return
 
             # Find draft invoices for this shift
+            # Related to: section_break_1 (pos_opening_shift)
             draft_invoices = frappe.get_all(
                 "Sales Invoice",
                 filters={
@@ -203,19 +256,26 @@ class POSClosingShift(Document):
             # Don't raise - allow closing shift to complete even if draft deletion fails
 
 
+# =============================================================================
+# SECTION 2: API ENDPOINTS - GET CURRENT CASH TOTAL
+# =============================================================================
+# API endpoint to get current cash total for shift (used in POS frontend Navbar)
+# Related to: section_break_2 (pos_profile, user), section_break_4 (payment_reconciliation)
+
 @frappe.whitelist()
 def get_current_cash_total(pos_profile=None, user=None):
     """
     GET - Get current cash total for shift (used in POS frontend Navbar)
+    Related to: section_break_2 (pos_profile, user)
     """
     try:
-        frappe.log_error(f"[[pos_closing_shift.py]] get_current_cash_total: user={user}, pos_profile={pos_profile}")
-        
         # Use session user if not specified
+        # Related to: section_break_2 (user)
         if not user:
             user = frappe.session.user
 
         # Find current open shift for user
+        # Related to: section_break_2 (pos_profile, user)
         open_shift = frappe.get_all(
             "POS Opening Shift",
             filters={
@@ -230,13 +290,13 @@ def get_current_cash_total(pos_profile=None, user=None):
         )
 
         if not open_shift:
-            frappe.log_error(f"[[pos_closing_shift.py]] get_current_cash_total: No open shift found")
             return {"total": 0.0}
 
         shift_name = open_shift[0].name
         pos_profile_name = open_shift[0].pos_profile
 
         # Get cash mode of payment from POS Profile
+        # Related to: section_break_2 (pos_profile)
         cash_mode_of_payment = frappe.get_value(
             "POS Profile",
             pos_profile_name,
@@ -244,16 +304,14 @@ def get_current_cash_total(pos_profile=None, user=None):
         )
         if not cash_mode_of_payment:
             cash_mode_of_payment = "Cash"
-        
-        frappe.log_error(f"[[pos_closing_shift.py]] get_current_cash_total: Cash mode = {cash_mode_of_payment}")
 
         # Calculate payment totals using helper (returns dict: {mode_of_payment: amount})
+        # Related to: section_break_4 (payment_reconciliation)
         payment_totals = _calculate_payment_totals(shift_name, pos_profile_name)
 
         # Get cash total from dict (payment_totals is a dict, not a list!)
+        # Related to: section_break_4 (payment_reconciliation)
         cash_total = flt(payment_totals.get(cash_mode_of_payment, 0.0))
-        
-        frappe.log_error(f"[[pos_closing_shift.py]] get_current_cash_total: Cash total = {cash_total}")
 
         return {"total": cash_total}
 
@@ -262,19 +320,26 @@ def get_current_cash_total(pos_profile=None, user=None):
         return {"total": 0.0}
 
 
+# =============================================================================
+# SECTION 3: API ENDPOINTS - GET CURRENT NON-CASH TOTAL
+# =============================================================================
+# API endpoint to get current non-cash total for shift (used in POS frontend Navbar)
+# Related to: section_break_2 (pos_profile, user), section_break_4 (payment_reconciliation)
+
 @frappe.whitelist()
 def get_current_non_cash_total(pos_profile=None, user=None):
     """
     GET - Get current non-cash total for shift (used in POS frontend Navbar)
+    Related to: section_break_2 (pos_profile, user)
     """
     try:
-        frappe.log_error(f"[[pos_closing_shift.py]] get_current_non_cash_total: user={user}, pos_profile={pos_profile}")
-        
         # Use session user if not specified
+        # Related to: section_break_2 (user)
         if not user:
             user = frappe.session.user
 
         # Find current open shift for user
+        # Related to: section_break_2 (pos_profile, user)
         open_shift = frappe.get_all(
             "POS Opening Shift",
             filters={
@@ -289,13 +354,13 @@ def get_current_non_cash_total(pos_profile=None, user=None):
         )
 
         if not open_shift:
-            frappe.log_error(f"[[pos_closing_shift.py]] get_current_non_cash_total: No open shift found")
             return {"total": 0.0}
 
         shift_name = open_shift[0].name
         pos_profile_name = open_shift[0].pos_profile
 
         # Get cash mode of payment from POS Profile
+        # Related to: section_break_2 (pos_profile)
         cash_mode_of_payment = frappe.get_value(
             "POS Profile",
             pos_profile_name,
@@ -303,20 +368,17 @@ def get_current_non_cash_total(pos_profile=None, user=None):
         )
         if not cash_mode_of_payment:
             cash_mode_of_payment = "Cash"
-        
-        frappe.log_error(f"[[pos_closing_shift.py]] get_current_non_cash_total: Cash mode = {cash_mode_of_payment}")
 
         # Calculate payment totals using helper (returns dict: {mode_of_payment: amount})
+        # Related to: section_break_4 (payment_reconciliation)
         payment_totals = _calculate_payment_totals(shift_name, pos_profile_name)
 
         # Sum all non-cash payments (payment_totals is a dict, not a list!)
+        # Related to: section_break_4 (payment_reconciliation)
         non_cash_total = 0.0
         for mode_of_payment, amount in payment_totals.items():
             if mode_of_payment != cash_mode_of_payment:
                 non_cash_total += flt(amount)
-                frappe.log_error(f"[[pos_closing_shift.py]] Non-cash payment {mode_of_payment}: {amount}")
-        
-        frappe.log_error(f"[[pos_closing_shift.py]] get_current_non_cash_total: Non-cash total = {non_cash_total}")
 
         return {"total": non_cash_total}
 
@@ -326,8 +388,18 @@ def get_current_non_cash_total(pos_profile=None, user=None):
 
 
 # =============================================================================
-# HELPER FUNCTIONS
+# SECTION 4: HELPER FUNCTIONS
 # =============================================================================
+# Internal helper functions (not @frappe.whitelist())
+# Used by document methods and API endpoints
+
+# ========================================================================
+# SECTION 4.1: CALCULATE PAYMENT TOTALS
+# ========================================================================
+# UNIFIED payment calculation logic used by both closing shift and navbar
+# This is the SINGLE SOURCE OF TRUTH for payment totals
+# Matches Sales Register report calculation exactly
+# Related to: section_break_4 (payment_reconciliation), section_break_3 (pos_transactions)
 
 def _calculate_payment_totals(pos_opening_shift, pos_profile):
     """
@@ -340,14 +412,16 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
         "Cash": 930.00,
         "شبكة - فرع الخضراء": 3017.65
     }
+    Related to: section_break_4 (payment_reconciliation)
     """
     try:
-        frappe.log_error(f"[[pos_closing_shift.py]] _calculate_payment_totals: Calculating for shift {pos_opening_shift}, profile {pos_profile}")
-        
+        # Get all invoices for this opening shift
+        # Related to: section_break_3 (pos_transactions)
         invoices = _get_pos_invoices_helper(pos_opening_shift)
         payments = {}
 
-        # Get cash mode of payment
+        # Get cash mode of payment from POS Profile
+        # Related to: section_break_2 (pos_profile)
         cash_mode_of_payment = frappe.get_value(
             "POS Profile",
             pos_profile,
@@ -355,10 +429,9 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
         )
         if not cash_mode_of_payment:
             cash_mode_of_payment = "Cash"
-        
-        frappe.log_error(f"[[pos_closing_shift.py]] _calculate_payment_totals: Cash mode of payment = {cash_mode_of_payment}")
 
         # Process Sales Invoice Payments (matches Sales Register logic)
+        # Related to: section_break_3 (pos_transactions)
         for d in invoices:
             invoice_name = d.get("name", "Unknown")
             invoice_payments = d.get("payments", [])
@@ -367,6 +440,7 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
                 continue
             
             # Single currency: change_amount equals base_change_amount
+            # Related to: section_break_3 (pos_transactions)
             change_amount = flt(d.get("change_amount") or 0)
             
             for p in invoice_payments:
@@ -374,25 +448,30 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
                 amount = flt(p.get("amount") or 0)
                 mode_of_payment = p.get("mode_of_payment")
 
-                # ✅ طرح change_amount من المبلغ النقدي فقط (matches Sales Register)
-                # change_amount هو المبلغ الذي يُرجع للعميل كباقي
-                # يجب طرحه من المبلغ المتوقع في المصالحة النقدية
+                # Subtract change_amount from cash payments only (matches Sales Register)
+                # change_amount is the amount returned to customer as change
+                # Must be subtracted from expected amount in cash reconciliation
+                # Related to: section_break_4 (payment_reconciliation)
                 if mode_of_payment == cash_mode_of_payment:
                     amount = amount - change_amount
 
                 # Add to payments dict
+                # Related to: section_break_4 (payment_reconciliation)
                 if mode_of_payment in payments:
                     payments[mode_of_payment] += amount
                 else:
                     payments[mode_of_payment] = amount
 
-        # Process Payment Entries
+        # Process Payment Entries (separate from Sales Invoice Payments)
+        # Related to: section_break_3 (pos_transactions)
         pos_payments = _get_payments_entries_helper(pos_opening_shift)
         for py in pos_payments:
             mode_of_payment = py.get("mode_of_payment")
             # Single currency: paid_amount equals base_paid_amount
             paid_amount = flt(py.get("paid_amount") or 0)
             
+            # Add to payments dict
+            # Related to: section_break_4 (payment_reconciliation)
             if mode_of_payment in payments:
                 payments[mode_of_payment] += paid_amount
             else:
@@ -404,6 +483,13 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
         frappe.log_error(f"[[pos_closing_shift.py]] Error in _calculate_payment_totals: {str(e)}")
         return {}
 
+
+# ========================================================================
+# SECTION 4.2: PARSE TIME HELPER
+# ========================================================================
+# Helper function to parse time value to datetime.time object
+# Used by _validate_shift_closing_window
+# Related to: section_break_1 (period_end_date)
 
 def _parse_time_helper(time_value):
     """Helper function to parse time value to datetime.time object"""
@@ -418,6 +504,12 @@ def _parse_time_helper(time_value):
             continue
     return None
 
+
+# ========================================================================
+# SECTION 4.3: SUBMIT PRINTED INVOICES
+# ========================================================================
+# Helper function to submit printed invoices
+# Related to: section_break_1 (pos_opening_shift)
 
 def _submit_printed_invoices(pos_opening_shift):
     """Helper function to submit printed invoices"""
@@ -438,15 +530,22 @@ def _submit_printed_invoices(pos_opening_shift):
         pass
 
 
+# ========================================================================
+# SECTION 4.4: GET POS INVOICES HELPER
+# ========================================================================
+# Helper function to get POS invoices with full document data
+# Returns full documents matching Sales Register report data structure
+# Related to: section_break_3 (pos_transactions)
+
 def _get_pos_invoices_helper(pos_opening_shift):
     """
     Helper function to get POS invoices with full document data.
     Returns full documents matching Sales Register report data structure.
+    Related to: section_break_3 (pos_transactions)
     """
     try:
-        frappe.log_error(f"[[pos_closing_shift.py]] _get_pos_invoices_helper: Fetching invoices for shift {pos_opening_shift}")
-        
         # Get invoice names first (same query as Sales Register)
+        # Related to: section_break_3 (pos_transactions)
         data = frappe.db.sql(
             """
         select
@@ -461,10 +560,9 @@ def _get_pos_invoices_helper(pos_opening_shift):
             as_dict=1,
         )
 
-        frappe.log_error(f"[[pos_closing_shift.py]] _get_pos_invoices_helper: Found {len(data)} invoice names")
-        
         # Return full documents with all child tables (payments, taxes, etc.)
         # This matches exactly what Sales Register report uses
+        # Related to: section_break_3 (pos_transactions)
         invoices = []
         grand_total_sum = 0.0
         net_total_sum = 0.0
@@ -476,19 +574,16 @@ def _get_pos_invoices_helper(pos_opening_shift):
                 
                 # Log invoice totals for debugging
                 # Single currency: grand_total equals base_grand_total
+                # Related to: section_break_5 (grand_total, net_total)
                 grand = flt(invoice_dict.get("grand_total") or 0)
                 net = flt(invoice_dict.get("net_total") or 0)
                 grand_total_sum += grand
                 net_total_sum += net
                 
-                frappe.log_error(f"[[pos_closing_shift.py]] Invoice {d.name}: grand_total={grand}, net_total={net}, payments_count={len(invoice_dict.get('payments', []))}, taxes_count={len(invoice_dict.get('taxes', []))}")
-                
                 invoices.append(invoice_dict)
             except Exception as e:
                 frappe.log_error(f"[[pos_closing_shift.py]] _get_pos_invoices_helper: Error loading invoice {d.name}: {str(e)}")
                 continue
-        
-        frappe.log_error(f"[[pos_closing_shift.py]] _get_pos_invoices_helper: Processed {len(invoices)} invoices, total grand_total={grand_total_sum}, total net_total={net_total_sum}")
         
         return invoices
     except Exception as e:
@@ -496,13 +591,22 @@ def _get_pos_invoices_helper(pos_opening_shift):
         return []
 
 
+# ========================================================================
+# SECTION 4.5: GET PAYMENTS ENTRIES HELPER
+# ========================================================================
+# Helper function to get payment entries linked to invoices in this shift
+# Payment Entries link to Sales Invoices via the Payment Entry Reference child table
+# Related to: section_break_3 (pos_transactions)
+
 def _get_payments_entries_helper(pos_opening_shift):
     """
     Helper function to get payment entries linked to invoices in this shift.
     Payment Entries link to Sales Invoices via the Payment Entry Reference child table.
+    Related to: section_break_3 (pos_transactions)
     """
     try:
         # Query Payment Entries that reference Sales Invoices from this shift
+        # Related to: section_break_3 (pos_transactions)
         payment_entries = frappe.db.sql("""
             SELECT DISTINCT
                 pe.name,
