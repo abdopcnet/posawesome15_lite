@@ -331,6 +331,11 @@ def make_closing_shift_from_opening(opening_shift):
             "grand_total": 0.0,
             "net_total": 0.0,
             "total_quantity": 0.0,
+            "total_taxes": 0.0,
+            "total_invoice_additional_discount": 0.0,
+            "total_item_discount": 0.0,
+            "total_invoice_paid": 0.0,
+            "total_payment_entries_paid": 0.0,
             "payment_reconciliation": [],
             "pos_transactions": []
         }
@@ -382,8 +387,6 @@ def make_closing_shift_from_opening(opening_shift):
         default_mode_of_payment = frappe.get_value("POS Profile", opening.pos_profile, "posa_cash_mode_of_payment") or "Cash"
         
         # Process invoices: calculate totals and add to pos_transactions
-        total_taxes = 0.0
-        
         for invoice in invoices:
             # Single currency: POS Profile.currency only - no conversion needed
             # Use grand_total directly (same as base_grand_total for single currency)
@@ -401,7 +404,6 @@ def make_closing_shift_from_opening(opening_shift):
             for tax in invoice_taxes:
                 tax_amount = flt(tax.get("tax_amount") or 0)
                 invoice_taxes_total += tax_amount
-            total_taxes += invoice_taxes_total
             
             # Get invoice name and validate
             invoice_name = invoice.get("name")
@@ -430,10 +432,15 @@ def make_closing_shift_from_opening(opening_shift):
             total_taxes_and_charges = flt(invoice.get("total_taxes_and_charges") or 0)
             taxes_value = total_taxes_and_charges if total_taxes_and_charges > 0 else invoice_taxes_total
             
-            # Add to totals
+            # Add to totals (calculated from pos_transactions)
             closing_data["grand_total"] += grand_total
             closing_data["net_total"] += net_total
             closing_data["total_quantity"] += total_qty
+            closing_data["total_taxes"] += taxes_value
+            closing_data["total_invoice_additional_discount"] += discount_amount
+            closing_data["total_item_discount"] += posa_item_discount_total
+            closing_data["total_invoice_paid"] += paid_amount
+            closing_data["total_payment_entries_paid"] += payment_entry_paid_amount
             
             # Add invoice to pos_transactions (simple and clean - one row per invoice)
             closing_data["pos_transactions"].append({
