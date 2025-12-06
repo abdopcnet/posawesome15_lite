@@ -37,9 +37,14 @@ frappe.ui.form.on('POS Closing Shift', {
 		// Auto-set period_end_date for new documents
 		if (frm.doc.docstatus === 0)
 			frm.set_value('period_end_date', frappe.datetime.now_datetime());
-		
-		// Calculate totals from pos_transactions on form load
-		if (frm.doc.pos_transactions && frm.doc.pos_transactions.length > 0) {
+
+		// Calculate totals from pos_transactions on form load (only for draft documents)
+		// Don't recalculate for submitted documents to avoid precision issues
+		if (
+			frm.doc.docstatus === 0 &&
+			frm.doc.pos_transactions &&
+			frm.doc.pos_transactions.length > 0
+		) {
 			calculate_totals_from_transactions(frm);
 		}
 	},
@@ -147,20 +152,30 @@ frappe.ui.form.on('POS Closing Shift Detail', {
 // Related to: section_break_3 (pos_transactions), section_break_5 (totals)
 
 frappe.ui.form.on('Sales Invoice Reference', {
-	// Recalculate totals when row is added, removed, or updated
+	// Recalculate totals when row is added, removed, or updated (only for draft documents)
+	// Don't recalculate for submitted documents to avoid precision issues
 	pos_transactions_add: (frm) => {
-		calculate_totals_from_transactions(frm);
+		if (frm.doc.docstatus === 0) {
+			calculate_totals_from_transactions(frm);
+		}
 	},
 	pos_transactions_remove: (frm) => {
-		calculate_totals_from_transactions(frm);
+		if (frm.doc.docstatus === 0) {
+			calculate_totals_from_transactions(frm);
+		}
 	},
 });
 
 // Add event listener to pos_transactions grid for refresh events
 frappe.ui.form.on('POS Closing Shift', {
 	refresh: (frm) => {
-		// Recalculate totals when form is refreshed
-		if (frm.doc.pos_transactions && frm.doc.pos_transactions.length > 0) {
+		// Recalculate totals when form is refreshed (only for draft documents)
+		// Don't recalculate for submitted documents to avoid precision issues
+		if (
+			frm.doc.docstatus === 0 &&
+			frm.doc.pos_transactions &&
+			frm.doc.pos_transactions.length > 0
+		) {
 			calculate_totals_from_transactions(frm);
 		}
 	},
@@ -187,7 +202,7 @@ async function set_form_data(data, frm) {
 		add_to_pos_transaction(d, frm);
 		await add_to_payments(d, frm);
 	}
-	
+
 	// Calculate totals from pos_transactions after adding all rows
 	calculate_totals_from_transactions(frm);
 }
@@ -210,10 +225,8 @@ function set_form_data_invoices_only(data, frm) {
 
 	// Calculate totals from pos_transactions after adding all rows
 	calculate_totals_from_transactions(frm);
-	
-	console.log(
-		`[pos_closing_shift.js] Final totals calculated from pos_transactions`,
-	);
+
+	console.log(`[pos_closing_shift.js] Final totals calculated from pos_transactions`);
 	console.log(
 		`[pos_closing_shift.js] Payment reconciliation preserved from backend:`,
 		frm.doc.payment_reconciliation.map((p) => ({
@@ -349,7 +362,7 @@ async function add_to_payments(d, frm) {
 // SECTION 4.1: CALCULATE TOTALS FROM TRANSACTIONS
 // ========================================================================
 // Calculates all totals from pos_transactions child table
-// Updates: grand_total, net_total, total_quantity, total_taxes, 
+// Updates: grand_total, net_total, total_quantity, total_taxes,
 //          total_invoice_additional_discount, total_item_discount,
 //          total_invoice_paid, total_payment_entries_paid
 // Related to: section_break_3 (pos_transactions), section_break_5 (totals)
@@ -378,28 +391,35 @@ function calculate_totals_from_transactions(frm) {
 	let total_payment_entries_paid = 0;
 
 	// Sum all values from pos_transactions
+	// Use flt() with precision to avoid floating point precision issues
 	frm.doc.pos_transactions.forEach((row) => {
 		// All fields in pos_transactions are stored as strings (Data type)
-		// Convert to float for calculation
-		grand_total += flt(row.grand_total || 0);
-		net_total += flt(row.net_total || 0);
-		total_quantity += flt(row.total_qty || 0);
-		total_taxes += flt(row.taxes || 0);
-		total_invoice_additional_discount += flt(row.discount_amount || 0);
-		total_item_discount += flt(row.posa_item_discount_total || 0);
-		total_invoice_paid += flt(row.paid_amount || 0);
-		total_payment_entries_paid += flt(row.payment_entry_paid_amount || 0);
+		// Convert to float for calculation with proper precision
+		grand_total = flt(grand_total + flt(row.grand_total || 0), 2);
+		net_total = flt(net_total + flt(row.net_total || 0), 2);
+		total_quantity = flt(total_quantity + flt(row.total_qty || 0), 3);
+		total_taxes = flt(total_taxes + flt(row.taxes || 0), 2);
+		total_invoice_additional_discount = flt(
+			total_invoice_additional_discount + flt(row.discount_amount || 0),
+			2,
+		);
+		total_item_discount = flt(total_item_discount + flt(row.posa_item_discount_total || 0), 2);
+		total_invoice_paid = flt(total_invoice_paid + flt(row.paid_amount || 0), 2);
+		total_payment_entries_paid = flt(
+			total_payment_entries_paid + flt(row.payment_entry_paid_amount || 0),
+			2,
+		);
 	});
 
-	// Update form fields
-	frm.set_value('grand_total', grand_total);
-	frm.set_value('net_total', net_total);
-	frm.set_value('total_quantity', total_quantity);
-	frm.set_value('total_taxes', total_taxes);
-	frm.set_value('total_invoice_additional_discount', total_invoice_additional_discount);
-	frm.set_value('total_item_discount', total_item_discount);
-	frm.set_value('total_invoice_paid', total_invoice_paid);
-	frm.set_value('total_payment_entries_paid', total_payment_entries_paid);
+	// Update form fields with rounded values to avoid precision issues
+	frm.set_value('grand_total', flt(grand_total, 2));
+	frm.set_value('net_total', flt(net_total, 2));
+	frm.set_value('total_quantity', flt(total_quantity, 3));
+	frm.set_value('total_taxes', flt(total_taxes, 2));
+	frm.set_value('total_invoice_additional_discount', flt(total_invoice_additional_discount, 2));
+	frm.set_value('total_item_discount', flt(total_item_discount, 2));
+	frm.set_value('total_invoice_paid', flt(total_invoice_paid, 2));
+	frm.set_value('total_payment_entries_paid', flt(total_payment_entries_paid, 2));
 }
 
 // ========================================================================
