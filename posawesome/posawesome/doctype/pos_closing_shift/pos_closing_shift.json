@@ -9,16 +9,25 @@
  "field_order": [
   "section_break_1",
   "column_break_1",
-  "period_start_date",
-  "period_end_date",
-  "column_break_2",
   "posting_date",
+  "column_break_2",
   "pos_opening_shift",
+  "section_break_laka",
+  "period_start_date",
+  "column_break_jahk",
+  "period_end_date",
+  "section_break_ooim",
+  "posa_closing_time_control",
+  "column_break_mazw",
+  "posa_closing_time_start",
+  "column_break_xdwl",
+  "posa_closing_time_end",
   "section_break_2",
   "column_break_3",
   "company",
   "column_break_4",
   "pos_profile",
+  "column_break_bxro",
   "user",
   "section_break_3",
   "column_break_5",
@@ -47,7 +56,7 @@
    "fieldname": "period_start_date",
    "fieldtype": "Datetime",
    "in_list_view": 1,
-   "label": "Period Start Date",
+   "label": "period_start_date",
    "reqd": 1
   },
   {
@@ -55,7 +64,7 @@
    "fieldname": "period_end_date",
    "fieldtype": "Datetime",
    "in_list_view": 1,
-   "label": "Period End Date",
+   "label": "period_end_date",
    "reqd": 1
   },
   {
@@ -222,19 +231,63 @@
   {
    "fieldname": "total_invoice_paid",
    "fieldtype": "Currency",
-   "label": "total_invoice_paid",
-   "read_only": 1
+   "label": "total_invoice_paid"
   },
   {
    "fieldname": "total_payment_entries_paid",
    "fieldtype": "Currency",
-   "label": "total_payment_entries_paid",
+   "label": "total_payment_entries_paid"
+  },
+  {
+   "fieldname": "section_break_laka",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_jahk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_ooim",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "0",
+   "fetch_from": "pos_profile.posa_closing_time_control",
+   "fieldname": "posa_closing_time_control",
+   "fieldtype": "Check",
+   "label": "posa_closing_time_control",
    "read_only": 1
+  },
+  {
+   "fieldname": "column_break_mazw",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "pos_profile.posa_closing_time_start",
+   "fieldname": "posa_closing_time_start",
+   "fieldtype": "Time",
+   "label": "posa_closing_time_start",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_xdwl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "pos_profile.posa_closing_time_end",
+   "fieldname": "posa_closing_time_end",
+   "fieldtype": "Time",
+   "label": "posa_closing_time_end",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_bxro",
+   "fieldtype": "Column Break"
   }
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2025-12-06 12:43:16.686462",
+ "modified": "2025-12-06 20:05:35.389601",
  "modified_by": "Administrator",
  "module": "POSAwesome",
  "name": "POS Closing Shift",
