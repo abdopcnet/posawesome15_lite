@@ -56,8 +56,8 @@ export default {
 			items: [],
 			posa_offers: [],
 			discount_percentage_offer_name: null,
-			float_precision: 2,
-			currency_precision: 2,
+			float_precision: 3, // For quantities (qty) - 3 decimal places
+			currency_precision: 2, // For currency amounts - 2 decimal places
 			invoice_posting_date: false,
 			posting_date: frappe.datetime.nowdate(),
 			quick_return_value: false,
@@ -171,9 +171,9 @@ export default {
 				return false;
 			}
 
-			const targetAmount = this.flt(
-				this.invoice_doc.rounded_total || this.invoice_doc.grand_total || 0,
-			);
+			// Use grand_total only, no rounding
+			// Following user requirement: no rounded_total dependency at all
+			const targetAmount = this.flt(this.invoice_doc.grand_total || 0);
 			const cash_mode = this.pos_profile?.posa_cash_mode_of_payment || 'Cash';
 			const isReturn = this.invoice_doc?.is_return || this.quick_return_value;
 
@@ -306,18 +306,27 @@ export default {
 		},
 
 		// Computed property for real-time tax amount display
+		// Return exact value without rounding to preserve precision
+		// Following user requirement: no rounding logic at all
+		// formatCurrency will handle display formatting
 		computedTaxAmount() {
-			return flt(this.invoice_doc?.total_taxes_and_charges || 0, this.currency_precision);
+			return flt(this.invoice_doc?.total_taxes_and_charges || 0);
 		},
 
 		// Computed property for net total (before tax)
+		// Return exact value without rounding to preserve precision
+		// Following user requirement: no rounding logic at all
+		// formatCurrency will handle display formatting
 		computedNetTotal() {
-			return flt(this.invoice_doc?.net_total || 0, this.currency_precision);
+			return flt(this.invoice_doc?.net_total || 0);
 		},
 
 		// Computed property for grand total (after tax)
+		// Return exact value without rounding to preserve precision
+		// Following user requirement: no rounding logic at all
+		// formatCurrency will handle display formatting
 		computedGrandTotalWithTax() {
-			return flt(this.invoice_doc?.grand_total || 0, this.currency_precision);
+			return flt(this.invoice_doc?.grand_total || 0);
 		},
 
 		// Computed property for discount amount (calculated from percentage)
@@ -399,11 +408,22 @@ export default {
 		},
 
 		// ERPNext precision helper - matches standard implementation
+		// Returns appropriate precision based on field type:
+		// - qty, stock_qty, actual_qty: float_precision (3 decimal places)
+		// - All currency/amount fields: currency_precision (2 decimal places)
 		getPrecision(fieldname, item = null) {
-			// Use frappe's precision() if available, fallback to currency_precision
+			// Use frappe's precision() if available
 			if (typeof precision === 'function') {
 				return precision(fieldname, item);
 			}
+
+			// Quantity fields use float_precision (3 decimal places)
+			const quantityFields = ['qty', 'stock_qty', 'actual_qty', 'conversion_factor'];
+			if (quantityFields.includes(fieldname)) {
+				return this.float_precision || 3;
+			}
+
+			// All currency/amount fields use currency_precision (2 decimal places)
 			return this.currency_precision || 2;
 		},
 
@@ -590,8 +610,8 @@ export default {
 			this.invoice_doc.net_total = doc.net_total;
 			this.invoice_doc.total_taxes_and_charges = doc.total_taxes_and_charges;
 			this.invoice_doc.grand_total = doc.grand_total;
-			this.invoice_doc.rounded_total = doc.rounded_total;
-			this.invoice_doc.rounding_adjustment = doc.rounding_adjustment;
+			// Do not set rounded_total - following user requirement: no rounded_total dependency
+			// Do not set rounding_adjustment - following user requirement: no rounding logic
 
 			this.isUpdatingTotals = false;
 		},
@@ -1106,8 +1126,9 @@ export default {
 				if (!hasDefault && payments.length > 0) payments[0].default = 1;
 			}
 
-			// --- Rounding adjustment for payments ---
-			const totalTarget = this.invoice_doc?.rounded_total || this.invoice_doc?.grand_total;
+			// --- Payment validation using grand_total only ---
+			// Following user requirement: no rounded_total dependency at all
+			const totalTarget = this.invoice_doc?.grand_total;
 			let totalPayments = payments.reduce((sum, p) => sum + p.amount, 0);
 			let diff = totalPayments - totalTarget;
 
@@ -1219,8 +1240,8 @@ export default {
 			this.invoice_doc.discount_amount = doc.discount_amount;
 			this.invoice_doc.net_total = doc.net_total;
 			this.invoice_doc.grand_total = doc.grand_total;
-			this.invoice_doc.rounded_total = doc.rounded_total;
-			this.invoice_doc.rounding_adjustment = doc.rounding_adjustment;
+			// Do not set rounded_total - following user requirement: no rounded_total dependency
+			// Do not set rounding_adjustment - following user requirement: no rounding logic
 			this.invoice_doc.items = doc.items;
 
 			return doc;
@@ -1233,7 +1254,7 @@ export default {
 
 			try {
 				// Force fresh calculation of all totals before opening payment window
-				// This ensures rounded_total is calculated from current grand_total
+				// Following user requirement: no rounded_total dependency at all
 				this.updateInvoiceDocLocally();
 
 				const invoice_doc = await this.process_invoice();
@@ -1258,9 +1279,9 @@ export default {
 							invoice_doc.payments = [
 								{
 									mode_of_payment: defaultPayment.message.mode_of_payment,
-									amount: flt(
-										invoice_doc?.rounded_total || invoice_doc?.grand_total,
-									),
+									// Use grand_total only, no rounding
+									// Following user requirement: no rounded_total dependency at all
+									amount: flt(invoice_doc?.grand_total),
 									account: defaultPayment.message.account,
 									default: 1,
 								},
@@ -1420,7 +1441,11 @@ export default {
 				return;
 			}
 
-			let newRate = parseFloat(event.target.value) || 0;
+			// Parse input value from text field
+			// Remove commas and parse as float to preserve exact decimal precision
+			// Following user requirement: no rounding logic at all
+			let inputValue = event.target.value.toString().replace(/,/g, '');
+			let newRate = parseFloat(inputValue) || 0;
 			const priceListRate = flt(item.price_list_rate) || 0;
 
 			if (newRate < 0) newRate = 0;
@@ -1765,7 +1790,8 @@ export default {
 			);
 
 			// Step 2: Set net_total (before tax, after item discounts)
-			doc.net_total = doc.total;
+			// Use precision = 2 for all currency amounts
+			doc.net_total = flt(doc.total, this.getPrecision('net_total'));
 
 			// Step 3: Calculate taxes (ERPNext approach)
 			const applyTax = this.pos_profile?.posa_apply_tax;
@@ -1778,9 +1804,13 @@ export default {
 			}
 
 			if (applyTax && normalizedTaxType && taxPercent > 0) {
+				// Round net_total first to ensure all calculations use 2 decimal places
+				doc.net_total = flt(doc.net_total, this.getPrecision('net_total'));
+				
 				if (normalizedTaxType === 'Inclusive') {
 					// Tax included: extract tax from net_total
-					doc.grand_total = doc.net_total;
+					// Use precision = 2 for all currency amounts
+					doc.grand_total = flt(doc.net_total, this.getPrecision('grand_total'));
 					doc.net_total = flt(
 						doc.net_total / (1 + taxPercent / 100),
 						this.getPrecision('net_total'),
@@ -1791,10 +1821,14 @@ export default {
 					);
 				} else if (normalizedTaxType === 'Exclusive') {
 					// Tax added: add tax to net_total
+					// Use precision = 2 for all currency amounts
+					// Calculate tax on rounded net_total
 					doc.total_taxes_and_charges = flt(
 						doc.net_total * (taxPercent / 100),
 						this.getPrecision('total_taxes_and_charges'),
 					);
+					// Round total_taxes_and_charges before adding to net_total
+					doc.total_taxes_and_charges = flt(doc.total_taxes_and_charges, this.getPrecision('total_taxes_and_charges'));
 					doc.grand_total = flt(
 						doc.net_total + doc.total_taxes_and_charges,
 						this.getPrecision('grand_total'),
@@ -1802,7 +1836,8 @@ export default {
 				}
 			} else {
 				doc.total_taxes_and_charges = 0;
-				doc.grand_total = doc.net_total;
+				// Use precision = 2 for grand_total
+				doc.grand_total = flt(doc.net_total, this.getPrecision('grand_total'));
 			}
 
 			// Step 4: Apply invoice-level discount (if set)
@@ -1814,12 +1849,17 @@ export default {
 			// This is required when apply_discount_on = 'Net Total' and tax is Exclusive
 			const applyDiscountOn = doc.apply_discount_on || 'Net Total';
 			if (applyTax && doc.discount_amount > 0 && applyDiscountOn === 'Net Total') {
+				// Round net_total first to ensure all calculations use 2 decimal places
+				doc.net_total = flt(doc.net_total, this.getPrecision('net_total'));
+				
 				// Tax must be recalculated on discounted net_total
 				if (normalizedTaxType === 'Exclusive') {
 					doc.total_taxes_and_charges = flt(
 						doc.net_total * (taxPercent / 100),
 						this.getPrecision('total_taxes_and_charges'),
 					);
+					// Round total_taxes_and_charges before adding to net_total
+					doc.total_taxes_and_charges = flt(doc.total_taxes_and_charges, this.getPrecision('total_taxes_and_charges'));
 					doc.grand_total = flt(
 						doc.net_total + doc.total_taxes_and_charges,
 						this.getPrecision('grand_total'),
@@ -1837,23 +1877,9 @@ export default {
 				}
 			}
 
-			// Step 6: Rounding - Use ERPNext standard rounding logic
-			if (typeof round_based_on_smallest_currency_fraction === 'function') {
-				doc.rounded_total = round_based_on_smallest_currency_fraction(
-					doc.grand_total,
-					this.pos_profile?.currency || 'USD',
-					this.getPrecision('rounded_total'),
-				);
-			} else {
-				// Fallback to simple rounding
-				doc.rounded_total = Math.round(doc.grand_total * 2) / 2;
-			}
-
-			// Calculate rounding adjustment
-			doc.rounding_adjustment = flt(
-				doc.rounded_total - doc.grand_total,
-				this.getPrecision('rounding_adjustment'),
-			);
+			// Step 6: No rounding - Following user requirement: no rounded_total dependency at all
+			// Do not calculate rounded_total or rounding_adjustment
+			// Use grand_total directly without any rounding logic
 
 			// Final precision formatting
 			doc.grand_total = flt(doc.grand_total, this.getPrecision('grand_total'));
@@ -1918,7 +1944,8 @@ export default {
 						this.getPrecision('grand_total'),
 					);
 				} else {
-					doc.grand_total = doc.net_total;
+					// Use precision = 2 for grand_total
+					doc.grand_total = flt(doc.net_total, this.getPrecision('grand_total'));
 				}
 			}
 		},
@@ -2529,7 +2556,9 @@ export default {
 					if (list_price > 0) {
 						if (originalDiscount > 0) {
 							const discount_amount = (list_price * originalDiscount) / 100;
-							item.rate = flt(list_price - discount_amount, this.currency_precision);
+							// Set item rate to exact value without rounding to preserve precision
+							// Following user requirement: no rounding logic at all
+							item.rate = flt(list_price - discount_amount);
 						} else {
 							// No discount - restore to list price
 							item.rate = list_price;
@@ -2718,8 +2747,13 @@ export default {
 			this.pos_profile = data.pos_profile;
 			this.setCustomer(data.pos_profile?.customer);
 			this.pos_opening_shift = data.pos_opening_shift;
-			this.float_precision = frappe.defaults.get_default('float_precision') || 2;
-			this.currency_precision = frappe.defaults.get_default('currency_precision') || 2;
+			// Set float_precision to 3 for quantities (qty) - following user requirement
+			// Set currency_precision to 2 for currency amounts - following user requirement
+			// Set fixed precision values
+			// float_precision = 3 for quantities (qty) - 3 decimal places
+			// currency_precision = 2 for currency amounts - 2 decimal places
+			this.float_precision = 3;
+			this.currency_precision = 2;
 			this.invoiceType = 'Invoice';
 			evntBus.emit('update_invoice_type', this.invoiceType);
 
@@ -2855,9 +2889,10 @@ export default {
 		evntBus.on('request_invoice_print', () => {
 			// Check credit sale status before validation
 			const isCreditSale =
-			this.invoice_doc?.is_credit_sale === true || this.invoice_doc?.is_credit_sale == 1;
-		// Check if posa_use_customer_credit_switch is enabled (allows printing without payments)
-		const isReturnFromCredit = this.posa_use_customer_credit_switch === true;			if (!isCreditSale && !isReturnFromCredit && !this.canPrintInvoice()) {
+				this.invoice_doc?.is_credit_sale === true || this.invoice_doc?.is_credit_sale == 1;
+			// Check if posa_use_customer_credit_switch is enabled (allows printing without payments)
+			const isReturnFromCredit = this.posa_use_customer_credit_switch === true;
+			if (!isCreditSale && !isReturnFromCredit && !this.canPrintInvoice()) {
 				evntBus.emit('show_mesage', {
 					text: 'Please select a payment method before printing',
 					color: 'warning',
