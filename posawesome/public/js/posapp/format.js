@@ -113,9 +113,10 @@ export default {
   },
 
   mounted() {
-    // Use your fixed System Settings values
-    this.float_precision = frappe.defaults.get_default("float_precision") || 3;
-    this.currency_precision =
-      frappe.defaults.get_default("currency_precision") || 2;
+    // Set fixed precision values
+    // float_precision = 3 for quantities (qty) - 3 decimal places
+    // currency_precision = 2 for currency amounts - 2 decimal places
+    this.float_precision = 3;
+    this.currency_precision = 2;
   },
 };
