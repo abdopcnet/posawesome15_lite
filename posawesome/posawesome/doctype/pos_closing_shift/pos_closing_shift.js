@@ -24,7 +24,7 @@ frappe.ui.form.on('POS Closing Shift', {
 		// Set query for User/Cashier field (get from POS Profile)
 		frm.set_query('user', function (doc) {
 			return {
-				query: 'posawesome.api.pos_closing_shift.get_cashiers',
+				query: 'posawesome.posawesome.doctype.pos_closing_shift.pos_closing_shift.get_cashiers',
 				filters: { parent: doc.pos_profile },
 			};
 		});
@@ -104,7 +104,7 @@ frappe.ui.form.on('POS Closing Shift', {
 	get_pos_invoices(frm) {
 		// Simple logic: always fetch and calculate (like old version)
 		frappe.call({
-			method: 'posawesome.api.pos_closing_shift.get_pos_invoices',
+			method: 'posawesome.posawesome.doctype.pos_closing_shift.pos_closing_shift.get_pos_invoices',
 			args: {
 				pos_opening_shift: frm.doc.pos_opening_shift,
 			},
