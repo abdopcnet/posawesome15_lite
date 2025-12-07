@@ -478,7 +478,6 @@ def get_current_shift_name():
                         # Credit settings
                         "posa_allow_credit_sale",
                         "posa_use_customer_credit",
-                        "posa_use_cashback",
                         # Offers settings
                         "posa_auto_fetch_offers",
                         "posa_fetch_zero_qty",
