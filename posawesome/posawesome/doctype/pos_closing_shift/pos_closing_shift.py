@@ -879,16 +879,33 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
 # Used by both _validate_shift_closing_window and check_closing_time_allowed
 # Returns formatted Arabic message with time range
 
+def _format_time_12h(time_obj):
+    """Convert 24-hour time to 12-hour format with ص/م"""
+    hour = time_obj.hour
+    minute = time_obj.minute
+    
+    # Convert to 12-hour format
+    if hour == 0:
+        hour_12 = 12
+        period = "ص"
+    elif hour < 12:
+        hour_12 = hour
+        period = "ص"
+    elif hour == 12:
+        hour_12 = 12
+        period = "م"
+    else:
+        hour_12 = hour - 12
+        period = "م"
+    
+    return f"{hour_12}:{minute:02d}{period}"
+
+
 def _get_closing_time_message(start_time, end_time):
-    """
-    Helper function to generate closing time error message in Arabic
-    Returns: formatted message string
-    """
-    start_str = start_time.strftime("%H:%M")
-    end_str = end_time.strftime("%H:%M")
-    if start_time > end_time:
-        end_str += " (next day)"
-    return _("الإغلاق مسموح فقط بين {0} و {1}").format(start_str, end_str)
+    """Generate closing time error message in Arabic with 12-hour format"""
+    start_str = _format_time_12h(start_time)
+    end_str = _format_time_12h(end_time)
+    return _("الإغلاق مسموح من {0} الي {1}").format(start_str, end_str)
 
 
 # ========================================================================
