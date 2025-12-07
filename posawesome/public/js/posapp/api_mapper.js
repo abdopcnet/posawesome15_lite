@@ -47,21 +47,28 @@ const API_MAP = {
 
 	// POS Offer APIs (from Invoice.vue, Pos.vue)
 	POS_OFFER: {
-		GET_APPLICABLE_OFFERS: 'posawesome.api.pos_offer.get_applicable_offers',
-		GET_OFFERS_FOR_PROFILE: 'posawesome.api.pos_offer.get_offers_for_profile',
-		APPLY_OFFERS_TO_INVOICE: 'posawesome.api.pos_offer.get_offers',
+		GET_APPLICABLE_OFFERS:
+			'posawesome.posawesome.doctype.pos_offer.pos_offer.get_applicable_offers',
+		GET_OFFERS_FOR_PROFILE:
+			'posawesome.posawesome.doctype.pos_offer.pos_offer.get_offers_for_profile',
+		APPLY_OFFERS_TO_INVOICE: 'posawesome.posawesome.doctype.pos_offer.pos_offer.get_offers',
 	},
 
 	// POS Opening Shift APIs (from OpeningDialog.vue, Pos.vue, Navbar.vue)
 	POS_OPENING_SHIFT: {
 		GET_OPENING_DATA: 'posawesome.api.pos_profile.get_opening_dialog_data',
-		CREATE_OPENING_VOUCHER: 'posawesome.api.pos_opening_shift.create_opening_voucher',
-		GET_CURRENT_SHIFT_NAME: 'posawesome.api.pos_opening_shift.get_current_shift_name',
-		GET_ALL_OPEN_SHIFTS: 'posawesome.api.pos_opening_shift.get_all_open_shifts',
+		CREATE_OPENING_VOUCHER:
+			'posawesome.posawesome.doctype.pos_opening_shift.pos_opening_shift.create_opening_voucher',
+		GET_CURRENT_SHIFT_NAME:
+			'posawesome.posawesome.doctype.pos_opening_shift.pos_opening_shift.get_current_shift_name',
+		GET_ALL_OPEN_SHIFTS:
+			'posawesome.posawesome.doctype.pos_opening_shift.pos_opening_shift.get_all_open_shifts',
 		GET_USER_SHIFT_INVOICE_COUNT:
-			'posawesome.api.pos_opening_shift.get_user_shift_invoice_count',
-		GET_PROFILE_USERS: 'posawesome.api.pos_opening_shift.get_profile_users',
-		CHECK_OPENING_TIME_ALLOWED: 'posawesome.api.pos_opening_shift.check_opening_time_allowed',
+			'posawesome.posawesome.doctype.pos_opening_shift.pos_opening_shift.get_user_shift_invoice_count',
+		GET_PROFILE_USERS:
+			'posawesome.posawesome.doctype.pos_opening_shift.pos_opening_shift.get_profile_users',
+		CHECK_OPENING_TIME_ALLOWED:
+			'posawesome.posawesome.doctype.pos_opening_shift.pos_opening_shift.check_opening_time_allowed',
 	},
 
 	// POS Closing Shift APIs (from ClosingDialog.vue)
