@@ -66,15 +66,24 @@ const API_MAP = {
 
 	// POS Closing Shift APIs (from ClosingDialog.vue)
 	POS_CLOSING_SHIFT: {
-		CHECK_CLOSING_TIME_ALLOWED: 'posawesome.api.pos_closing_shift.check_closing_time_allowed',
-		GET_CASHIERS: 'posawesome.api.pos_closing_shift.get_cashiers',
-		GET_POS_INVOICES: 'posawesome.api.pos_closing_shift.get_pos_invoices',
-		GET_PAYMENTS_ENTRIES: 'posawesome.api.pos_closing_shift.get_payments_entries',
-		MAKE_CLOSING_SHIFT: 'posawesome.api.pos_closing_shift.make_closing_shift_from_opening',
-		SUBMIT_CLOSING_SHIFT: 'posawesome.api.pos_closing_shift.submit_closing_shift',
-		GET_PAYMENT_TOTALS: 'posawesome.api.pos_closing_shift.get_payment_totals',
-		GET_CURRENT_CASH_TOTAL: 'posawesome.api.pos_closing_shift.get_current_cash_total',
-		GET_CURRENT_NON_CASH_TOTAL: 'posawesome.api.pos_closing_shift.get_current_non_cash_total',
+		CHECK_CLOSING_TIME_ALLOWED:
+			'posawesome.posawesome.doctype.pos_closing_shift.pos_closing_shift.check_closing_time_allowed',
+		GET_CASHIERS:
+			'posawesome.posawesome.doctype.pos_closing_shift.pos_closing_shift.get_cashiers',
+		GET_POS_INVOICES:
+			'posawesome.posawesome.doctype.pos_closing_shift.pos_closing_shift.get_pos_invoices',
+		GET_PAYMENTS_ENTRIES:
+			'posawesome.posawesome.doctype.pos_closing_shift.pos_closing_shift.get_payments_entries',
+		MAKE_CLOSING_SHIFT:
+			'posawesome.posawesome.doctype.pos_closing_shift.pos_closing_shift.make_closing_shift_from_opening',
+		SUBMIT_CLOSING_SHIFT:
+			'posawesome.posawesome.doctype.pos_closing_shift.pos_closing_shift.submit_closing_shift',
+		GET_PAYMENT_TOTALS:
+			'posawesome.posawesome.doctype.pos_closing_shift.pos_closing_shift.get_payment_totals',
+		GET_CURRENT_CASH_TOTAL:
+			'posawesome.posawesome.doctype.pos_closing_shift.pos_closing_shift.get_current_cash_total',
+		GET_CURRENT_NON_CASH_TOTAL:
+			'posawesome.posawesome.doctype.pos_closing_shift.pos_closing_shift.get_current_non_cash_total',
 	},
 
 	// POS Awesome APIs
