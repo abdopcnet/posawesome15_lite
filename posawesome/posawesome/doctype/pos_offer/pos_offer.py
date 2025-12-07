@@ -10,6 +10,7 @@ from frappe.utils import nowdate, flt
 
 class POSOffer(Document):
     def validate(self):
+        """Validate offer fields and check for duplicates"""
         # Clear non-relevant fields based on offer_type to prevent conflicts
         if self.offer_type == "grand_total":
             self.item_code = None
@@ -87,7 +88,7 @@ class POSOffer(Document):
         self.check_duplicate_offers()
 
     def check_duplicate_offers(self):
-        """Check for duplicate active offers"""
+        """Check for duplicate active offers per POS Profile"""
         from frappe.utils import getdate, today
 
         # Check if required fields exist
@@ -177,20 +178,7 @@ class POSOffer(Document):
 
 @frappe.whitelist()
 def get_offers(invoice_data):
-    """
-    🎯 Central function that applies offers directly to invoice
-
-    Args:
-        invoice_data: dict - Invoice data with items
-
-    Returns:
-        dict: {
-            "enabled": bool,
-            "applied_offers": list,
-            "message": str,
-            "updated_invoice": dict
-        }
-    """
+    """Apply applicable offers to invoice data"""
     try:
         # Check if offers are enabled in POS Profile
         if not check_offers_enabled_by_profile(invoice_data.get("pos_profile")):
@@ -240,6 +228,7 @@ def get_offers(invoice_data):
         return out
 
     except Exception as e:
+        frappe.log_error(f"[[pos_offer.py]] get_offers: {str(e)}")
         return {
             "enabled": False,
             "applied_offers": [],
@@ -250,7 +239,7 @@ def get_offers(invoice_data):
 
 @frappe.whitelist()
 def get_applicable_offers(invoice_name):
-    """Get applied offers for an existing invoice"""
+    """Get applied offers from existing Sales Invoice"""
     try:
         doc = frappe.get_doc("Sales Invoice", invoice_name)
 
@@ -269,12 +258,13 @@ def get_applicable_offers(invoice_name):
         return posa_offers
 
     except Exception as e:
+        frappe.log_error(f"[[pos_offer.py]] get_pos_offers: {str(e)}")
         return []
 
 
 @frappe.whitelist()
 def get_offers_for_profile(profile):
-    """Legacy API - redirects to centralized API"""
+    """Get all active offers for a POS Profile"""
     try:
         # FRAPPE STANDARD: Extract name from dict if needed
         if isinstance(profile, dict):
@@ -301,7 +291,7 @@ def get_offers_for_profile(profile):
             filters={
                 "disable": 0,
                 "company": company,
-                "pos_profile": ["in", [profile, ""]],
+                "pos_profile": ["in", [profile_name, ""]],
                 "warehouse": ["in", [warehouse, ""]],
                 "valid_from": ["<=", date],
                 "valid_upto": [">=", date]
@@ -312,6 +302,7 @@ def get_offers_for_profile(profile):
         return offers or []
 
     except Exception as e:
+        frappe.log_error(f"[[pos_offer.py]] get_offers_for_profile: {str(e)}")
         return []
 
 
@@ -320,25 +311,19 @@ def get_offers_for_profile(profile):
 # =============================================================================
 
 def check_offers_enabled_by_profile(profile):
-    """Helper: Check if offers are enabled in POS Profile"""
+    """Check if auto-fetch offers is enabled in POS Profile"""
     if not profile:
         return False
 
     try:
-        # FRAPPE STANDARD: Extract name from dict if needed
-        if isinstance(profile, dict):
-            profile_name = profile.get('name')
-        else:
-            profile_name = profile
-
-        pos_profile_doc = frappe.get_doc("POS Profile", profile_name)
+        pos_profile_doc = frappe.get_doc("POS Profile", profile)
         return pos_profile_doc.get("posa_auto_fetch_offers")
     except:
         return False
 
 
 def get_applicable_offers_for_invoice_data(invoice_data):
-    """Helper: Get applicable offers for invoice data"""
+    """Get all offers that match invoice criteria"""
     try:
         # Extract required data from invoice
         company = invoice_data.get("company")
@@ -378,11 +363,12 @@ def get_applicable_offers_for_invoice_data(invoice_data):
         return applicable
 
     except Exception as e:
+        frappe.log_error(f"[[pos_offer.py]] get_applicable_offers: {str(e)}")
         return []
 
 
 def check_offer_applicable_for_data(offer, invoice_data, total_qty):
-    """Helper: Check if offer is applicable for invoice data"""
+    """Validate if offer matches invoice quantity, amount, and type criteria"""
     try:
         # Check quantity
         if offer.get('min_qty') and total_qty < flt(offer.min_qty):
@@ -425,11 +411,12 @@ def check_offer_applicable_for_data(offer, invoice_data, total_qty):
         return False
 
     except Exception as e:
+        frappe.log_error(f"[[pos_offer.py]] check_offer_applicable_for_data: {str(e)}")
         return False
 
 
 def check_item_code_in_invoice(offer, invoice_data):
-    """Helper: Check if specific item exists in invoice"""
+    """Check if offer's item code exists in invoice items"""
     if not offer.get('item_code'):
         return False
 
@@ -441,7 +428,7 @@ def check_item_code_in_invoice(offer, invoice_data):
 
 
 def check_item_group_in_invoice(offer, invoice_data):
-    """Helper: Check if item group exists in invoice"""
+    """Check if offer's item group exists in invoice items"""
     if not offer.get('item_group'):
         return False
 
@@ -453,7 +440,7 @@ def check_item_group_in_invoice(offer, invoice_data):
 
 
 def check_brand_in_invoice(offer, invoice_data):
-    """Helper: Check if specific brand exists in invoice"""
+    """Check if offer's brand exists in invoice items"""
     if not offer.get('brand'):
         return False
 
@@ -465,7 +452,7 @@ def check_brand_in_invoice(offer, invoice_data):
 
 
 def check_customer_match(offer, invoice_data):
-    """Helper: Check customer match"""
+    """Check if offer's customer matches invoice customer"""
     if not offer.get('customer'):
         return False
 
@@ -473,7 +460,7 @@ def check_customer_match(offer, invoice_data):
 
 
 def check_customer_group_match(offer, invoice_data):
-    """Helper: Check customer group match"""
+    """Check if invoice customer's group matches offer's customer group"""
     if not offer.get('customer_group'):
         return False
 
@@ -486,7 +473,7 @@ def check_customer_group_match(offer, invoice_data):
 
 
 def apply_offer_by_type(offer, invoice_data):
-    """Helper: Apply offer by type"""
+    """Route offer to appropriate discount application function by type"""
     try:
         offer_type = offer.get('offer_type')
 
@@ -511,11 +498,12 @@ def apply_offer_by_type(offer, invoice_data):
         return False
 
     except Exception as e:
+        frappe.log_error(f"[[pos_offer.py]] apply_offer_to_invoice_data: {str(e)}")
         return False
 
 
 def apply_discount_percentage_on_grand_total(offer, invoice_data):
-    """Helper: Apply discount on grand total"""
+    """Apply percentage discount on invoice grand total"""
     try:
         discount_percentage = offer.get("discount_percentage")
         offer_name = offer.get("name")
@@ -548,11 +536,12 @@ def apply_discount_percentage_on_grand_total(offer, invoice_data):
         return True
 
     except Exception as e:
+        frappe.log_error(f"[[pos_offer.py]] apply_discount_percentage_on_grand_total: {str(e)}")
         return False
 
 
 def apply_discount_percentage_on_item_code(offer, invoice_data):
-    """Helper: Apply discount on specific item"""
+    """Apply percentage discount on specific item code"""
     try:
         discount_percentage = offer.get("discount_percentage")
         item_code = offer.get("item_code")
@@ -589,11 +578,12 @@ def apply_discount_percentage_on_item_code(offer, invoice_data):
         return applied
 
     except Exception as e:
+        frappe.log_error(f"[[pos_offer.py]] apply_discount_percentage_on_item_code: {str(e)}")
         return False
 
 
 def apply_discount_percentage_on_item_group(offer, invoice_data):
-    """Helper: Apply discount on item group"""
+    """Apply percentage discount on all items in item group"""
     try:
         discount_percentage = offer.get("discount_percentage")
         item_group = offer.get("item_group")
@@ -630,11 +620,12 @@ def apply_discount_percentage_on_item_group(offer, invoice_data):
         return applied
 
     except Exception as e:
+        frappe.log_error(f"[[pos_offer.py]] apply_discount_percentage_on_item_group: {str(e)}")
         return False
 
 
 def apply_discount_percentage_on_brand(offer, invoice_data):
-    """Helper: Apply discount on specific brand"""
+    """Apply percentage discount on all items with matching brand"""
     try:
         discount_percentage = offer.get("discount_percentage")
         brand = offer.get("brand")
@@ -671,6 +662,7 @@ def apply_discount_percentage_on_brand(offer, invoice_data):
         return applied
 
     except Exception as e:
+        frappe.log_error(f"[[pos_offer.py]] apply_discount_percentage_on_brand: {str(e)}")
         return False
 
 
@@ -679,7 +671,7 @@ def apply_discount_percentage_on_brand(offer, invoice_data):
 # =============================================================================
 
 def is_offer_applicable(offer, invoice):
-    """Legacy function - redirects to helper"""
+    """Legacy: Check if offer is applicable for invoice document"""
     try:
         # Convert invoice doc to invoice_data
         invoice_data = {
@@ -695,11 +687,12 @@ def is_offer_applicable(offer, invoice):
         return check_offer_applicable_for_data(offer, invoice_data, total_qty)
 
     except Exception as e:
+        frappe.log_error(f"[[pos_offer.py]] check_offer_applicable: {str(e)}")
         return False
 
 
 def apply_offer_to_invoice(doc, offer):
-    """Legacy function - Apply offer to document"""
+    """Legacy: Apply offer discount to Sales Invoice document"""
     try:
         if not offer or not offer.name:
             return False
@@ -742,4 +735,5 @@ def apply_offer_to_invoice(doc, offer):
         return False
 
     except Exception as e:
+        frappe.log_error(f"[[pos_offer.py]] apply_offer_to_document: {str(e)}")
         return False
