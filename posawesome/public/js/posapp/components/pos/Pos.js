@@ -287,7 +287,7 @@ export default {
 					console.log('[Pos.js] check_opening_entry() completed');
 				}, 1000); // 1 second delay for normal flow
 				console.log('[Pos.js] ===== handleSubmitClosingPos END (normal case) =====');
-			} else {
+				} else {
 				console.log('[Pos.js] data.success is false or undefined - not processing');
 				console.log('[Pos.js] ===== handleSubmitClosingPos END (no success) =====');
 			}
