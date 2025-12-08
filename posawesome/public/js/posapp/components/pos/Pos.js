@@ -252,31 +252,19 @@ export default {
 			}
 		},
 
-		async submit_closing_pos(data) {
-			try {
-				const transactionsCount = data.pos_transactions ? data.pos_transactions.length : 0;
+		/**
+		 * Handle closing shift submission success
+		 * Called after ClosingDialog.js successfully submits and prints
+		 * Similar to invoice submission flow
+		 */
+		async handleSubmitClosingPos(data) {
+			if (data?.success) {
 				console.log(
-					`[Pos.js] submit_closing_pos: ${transactionsCount} transactions to submit`,
+					`[Pos.js] handleSubmitClosingPos: Closing shift ${data.closing_shift_name} submitted successfully`,
 				);
-
-				const response = await frappe.call({
-					method: API_MAP.POS_CLOSING_SHIFT.SUBMIT_CLOSING_SHIFT,
-					args: {
-						closing_shift: data, // ✅ Send entire data object including payment_reconciliation
-					},
-				});
-
-				if (response.message) {
-					console.log(`[Pos.js] submit_closing_pos success: ${response.message.name}`);
-					this.show_message('تم إغلاق وردية الصراف بنجاح', 'success');
-					await this.check_opening_entry();
-				} else {
-					// Failed to close cashier shift
-					this.show_message('فشل إغلاق وردية الصراف', 'error');
-				}
-			} catch (error) {
-				console.log(`[Pos.js] submit_closing_pos error: ${error.message || error}`);
-				this.show_message('فشل إغلاق وردية الصراف', 'error');
+				this.show_message('تم إغلاق وردية الصراف بنجاح', 'success');
+				// Check for new opening entry after closing
+				await this.check_opening_entry();
 			}
 		},
 
@@ -346,10 +334,6 @@ export default {
 
 		handleOpenClosingDialog() {
 			this.get_closing_data();
-		},
-
-		handleSubmitClosingPos(data) {
-			this.submit_closing_pos(data);
 		},
 	},
 
