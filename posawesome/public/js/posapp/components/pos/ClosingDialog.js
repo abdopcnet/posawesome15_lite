@@ -234,10 +234,10 @@ export default {
 			console.log('[ClosingDialog.js] posa_auto_print_closing_shift:', currentPosProfile?.posa_auto_print_closing_shift);
 			
 			// If auto-print will be triggered, stop monitoring in Navbar BEFORE API call
-			// This prevents checkShiftStatus() from reloading the page
+			// This prevents checkShiftStatus() from reloading the page during print
 			if (willAutoPrint) {
-				console.log('[ClosingDialog.js] Auto-print enabled - emitting stop_shift_monitoring event');
-				// Emit event to stop shift monitoring in Navbar immediately
+				console.log('[ClosingDialog.js] Auto-print enabled - stopping Navbar shift monitoring');
+				// Emit event to stop shift monitoring in Navbar immediately (only once)
 				evntBus.emit('stop_shift_monitoring');
 				console.log('[ClosingDialog.js] stop_shift_monitoring event emitted');
 			}
@@ -292,18 +292,17 @@ export default {
 						closingDialog.value = false;
 						console.log('[ClosingDialog.js] Dialog closed, closingDialog.value:', closingDialog.value);
 						
-						// Emit event immediately after opening print window
-						// This will trigger check_opening_entry() in Pos.js to show OpeningDialog
-						// Small delay to ensure print window starts loading
+						// Start monitoring shift status AFTER print window opens
+						// This ensures we wait for print to complete before checking
+						console.log('[ClosingDialog.js] Starting shift status monitoring after print window opens...');
+						const openingShiftName = dialog_data.value?.pos_opening_shift;
+						const closingShiftName = response.message.name;
+						
+						// Start monitoring after 2 seconds (give print window time to load)
 						setTimeout(() => {
-							console.log('[ClosingDialog.js] Emitting SUBMIT_CLOSING_POS event (auto-print case)');
-							evntBus.emit(EVENT_NAMES.SUBMIT_CLOSING_POS, {
-								success: true,
-								closing_shift_name: response.message.name,
-								has_auto_print: true,
-							});
-							console.log('[ClosingDialog.js] SUBMIT_CLOSING_POS event emitted');
-						}, 500); // 500ms delay to ensure print window starts loading
+							console.log('[ClosingDialog.js] Starting shift status check...');
+							startShiftStatusMonitoring(openingShiftName, closingShiftName);
+						}, 2000); // 2 seconds delay to ensure print window is fully loaded
 					} else {
 						console.log('[ClosingDialog.js] Auto-print NOT enabled - closing dialog and emitting event immediately');
 						// No auto-print - close dialog and emit event immediately
@@ -462,6 +461,87 @@ export default {
 				headers.value.push(TABLE_HEADERS.EXPECTED_TOTAL);
 				headers.value.push(TABLE_HEADERS.DIFFERENCE);
 			}
+		};
+
+		/**
+		 * Monitor shift status after closing shift is submitted and print window opens
+		 * Checks if opening shift status changed to "Closed" with pos_closing_shift set
+		 * This ensures we wait for print to complete before reloading
+		 * @param {string} openingShiftName - Name of the opening shift being monitored
+		 * @param {string} closingShiftName - Name of the closing shift that was just submitted
+		 */
+		const startShiftStatusMonitoring = (openingShiftName, closingShiftName) => {
+			if (!openingShiftName) {
+				console.log('[ClosingDialog.js] No opening shift name - cannot monitor');
+				return;
+			}
+
+			console.log('[ClosingDialog.js] Monitoring shift:', openingShiftName);
+			console.log('[ClosingDialog.js] Expected closing shift:', closingShiftName);
+
+			// Check every 2 seconds (faster than old 3 seconds, but still reasonable)
+			const monitoringInterval = setInterval(() => {
+				console.log('[ClosingDialog.js] Checking shift status...');
+				
+				frappe.call({
+					method: 'frappe.client.get',
+					args: {
+						doctype: 'POS Opening Shift',
+						name: openingShiftName,
+					},
+					callback: (r) => {
+						if (r.message) {
+							const openingShift = r.message;
+							console.log('[ClosingDialog.js] Opening shift status:', openingShift.status);
+							console.log('[ClosingDialog.js] Opening shift pos_closing_shift:', openingShift.pos_closing_shift);
+							
+							// Check if shift is closed AND has pos_closing_shift set
+							// This means closing shift was successfully submitted and linked
+							if (
+								openingShift.status === 'Closed' &&
+								openingShift.pos_closing_shift === closingShiftName
+							) {
+								console.log('[ClosingDialog.js] Shift closed successfully with closing shift linked!');
+								console.log('[ClosingDialog.js] Stopping monitoring and emitting SUBMIT_CLOSING_POS event');
+								
+								// Stop monitoring
+								clearInterval(monitoringInterval);
+								
+								// Emit event to trigger check_opening_entry() in Pos.js
+								evntBus.emit(EVENT_NAMES.SUBMIT_CLOSING_POS, {
+									success: true,
+									closing_shift_name: closingShiftName,
+									has_auto_print: true,
+								});
+								console.log('[ClosingDialog.js] SUBMIT_CLOSING_POS event emitted');
+							} else {
+								console.log('[ClosingDialog.js] Shift not yet closed or closing shift not linked - continuing to monitor...');
+							}
+						} else {
+							console.log('[ClosingDialog.js] Could not fetch opening shift - continuing to monitor...');
+						}
+					},
+					error: (err) => {
+						console.error('[ClosingDialog.js] Error checking shift status:', err);
+						// Continue monitoring on error (might be network issue)
+					},
+					freeze: false,
+					show_spinner: false,
+					async: true,
+				});
+			}, 2000); // Check every 2 seconds
+
+			// Stop monitoring after 30 seconds (safety timeout)
+			setTimeout(() => {
+				console.log('[ClosingDialog.js] Monitoring timeout reached - stopping and emitting event');
+				clearInterval(monitoringInterval);
+				// Emit event anyway after timeout
+				evntBus.emit(EVENT_NAMES.SUBMIT_CLOSING_POS, {
+					success: true,
+					closing_shift_name: closingShiftName,
+					has_auto_print: true,
+				});
+			}, 30000); // 30 seconds timeout
 		};
 
 		// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
