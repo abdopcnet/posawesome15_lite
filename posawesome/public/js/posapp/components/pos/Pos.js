@@ -270,15 +270,10 @@ export default {
 				);
 				this.show_message('تم إغلاق وردية الصراف بنجاح', 'success');
 				
-				// If auto-print was triggered, call check_opening_entry() immediately
-				// Print window is already open, so we can safely reload/refresh
+				// Note: Page reload is handled in ClosingDialog.js after print window opens
+				// No need to call check_opening_entry() here - page will reload and show OpeningDialog automatically
 				if (data.has_auto_print) {
-					console.log(
-						'[Pos.js] Auto-print was triggered - calling check_opening_entry() immediately',
-					);
-					// Call check_opening_entry() immediately to show OpeningDialog
-					await this.check_opening_entry();
-					console.log('[Pos.js] check_opening_entry() completed (auto-print case)');
+					console.log('[Pos.js] Auto-print was triggered - page reload will happen in ClosingDialog.js');
 					console.log('[Pos.js] ===== handleSubmitClosingPos END (auto-print case) =====');
 					return;
 				}
