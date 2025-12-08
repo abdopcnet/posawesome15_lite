@@ -21,8 +21,30 @@
 1. Use: `bench --site all mariadb -e "DESCRIBE \`tabTableName\`;\"` to inspect fields.  
 2. Replace `TableName` with actual DocType (e.g., `tabPOS Profile`).  
 3. Never assume field names; always verify first.  
+4. Check table structure examples:  
+   1. Fetch `tabDocType` to fetch system fields and all doctypes in system are recorded here:  
+      - `bench --site all mariadb -e "DESCRIBE \`tabDocType\`;\"`  
+   2. Fetch `tabDocField` to fetch system fields:  
+      - `bench --site all mariadb -e "DESCRIBE \`tabDocField\`;\"`  
+   3. Fetch `tabCustom Field` to fetch custom fields in any doctype:  
+      - `bench --site all mariadb -e "DESCRIBE \`tabCustom Field\`;\"`  
+   4. Fetch `tabError Log` to fetch frappe.log_error records:  
+      - `bench --site all mariadb -e "DESCRIBE \`tabError Log\`;\"`  
+5. Check table structure examples:  
+   - `bench --site all mariadb -e "DESCRIBE \`tabSales Invoice\`;\"`  
+   - `bench --site all mariadb -e "DESCRIBE \`tabPayment Entry\`;\"`  
+   - `bench --site all mariadb -e "DESCRIBE \`tabPayment Entry Reference\`;\"`  
+6. Fetch records examples (use SELECT):  
+   - `bench --site all mariadb -e "SELECT * FROM \`tabSales Invoice\` LIMIT 10;\"`  
+   - `bench --site all mariadb -e "SELECT name, field1, field2 FROM \`tabTableName\` WHERE condition LIMIT 10;\"`  
 
-### 4.2. RULE COMMAND TROUBLESHOOTING PROTOCOL
+
+### 4.2. FIND DOCTYPE FILES PROTOCOL
+1. To find DocType files (JSON, PY, JS), convert DocType name to lowercase with underscores (e.g., "POS Opening Shift" → "pos_opening_shift").  
+2. Use: `find . -type f \( -iname 'doctype_name.json' -o -iname 'doctype_name.py' -o -iname 'doctype_name.js' \)`  
+3. Example for "POS Opening Shift": `find . -type f \( -iname 'pos_opening_shift.json' -o -iname 'pos_opening_shift.py' -o -iname 'pos_opening_shift.js' \)`  
+
+### 4.3. RULE COMMAND TROUBLESHOOTING PROTOCOL
 1. If a rule command fails, check syntax, bench env, site, DB connection, table exists.  
 2. If blocked, explain cause, ask user to run, fallback to DocType JSON only as last resort.  
 3. Document any command failure and its cause.  
