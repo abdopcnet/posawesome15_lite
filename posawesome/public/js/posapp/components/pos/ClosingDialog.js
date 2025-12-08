@@ -174,7 +174,17 @@ export default {
 		 * Submits closing shift and prints if auto-print is enabled
 		 * Similar to invoice submit + print logic
 		 */
-		const submit_dialog = async () => {
+		const submit_dialog = async (event) => {
+			console.log('[ClosingDialog.js] ===== submit_dialog START =====');
+			console.log('[ClosingDialog.js] Event:', event);
+			
+			// Prevent default form submission behavior
+			if (event) {
+				event.preventDefault();
+				event.stopPropagation();
+				console.log('[ClosingDialog.js] Prevented default event behavior');
+			}
+			
 			const transactionsCount = dialog_data.value.pos_transactions
 				? dialog_data.value.pos_transactions.length
 				: 0;
@@ -184,7 +194,56 @@ export default {
 				} transactions: ${transactionsCount}`,
 			);
 
+			// Get pos_profile - try multiple sources
+			// 1. From dialog_data (if available from get_closing_data)
+			// 2. From pos_profile.value (from REGISTER_POS_PROFILE event)
+			// 3. Fetch from API if only name is available
+			let currentPosProfile = dialog_data.value?.pos_profile || pos_profile.value;
+			console.log('[ClosingDialog.js] currentPosProfile (initial):', currentPosProfile);
+			console.log('[ClosingDialog.js] dialog_data.value?.pos_profile:', dialog_data.value?.pos_profile);
+			console.log('[ClosingDialog.js] pos_profile.value:', pos_profile.value);
+			
+			// If pos_profile is just a name (string) or doesn't have posa_auto_print_closing_shift, fetch full document
+			if (!currentPosProfile || typeof currentPosProfile === 'string' || !currentPosProfile.posa_auto_print_closing_shift) {
+				const posProfileName = typeof currentPosProfile === 'string' 
+					? currentPosProfile 
+					: (currentPosProfile?.name || dialog_data.value?.pos_profile || pos_profile.value?.name);
+				
+				if (posProfileName) {
+					console.log('[ClosingDialog.js] Fetching full pos_profile from API:', posProfileName);
+					try {
+						const profileResponse = await frappe.call({
+							method: 'frappe.client.get',
+							args: {
+								doctype: 'POS Profile',
+								name: posProfileName,
+							},
+						});
+						currentPosProfile = profileResponse.message;
+						console.log('[ClosingDialog.js] Fetched pos_profile from API:', currentPosProfile);
+						console.log('[ClosingDialog.js] posa_auto_print_closing_shift:', currentPosProfile?.posa_auto_print_closing_shift);
+					} catch (err) {
+						console.error('[ClosingDialog.js] Error fetching pos_profile:', err);
+					}
+				}
+			}
+			
+			// Check if auto-print is enabled BEFORE submitting
+			const willAutoPrint = currentPosProfile?.posa_auto_print_closing_shift === 1;
+			console.log('[ClosingDialog.js] willAutoPrint:', willAutoPrint);
+			console.log('[ClosingDialog.js] posa_auto_print_closing_shift:', currentPosProfile?.posa_auto_print_closing_shift);
+			
+			// If auto-print will be triggered, stop monitoring in Navbar BEFORE API call
+			// This prevents checkShiftStatus() from reloading the page
+			if (willAutoPrint) {
+				console.log('[ClosingDialog.js] Auto-print enabled - emitting stop_shift_monitoring event');
+				// Emit event to stop shift monitoring in Navbar immediately
+				evntBus.emit('stop_shift_monitoring');
+				console.log('[ClosingDialog.js] stop_shift_monitoring event emitted');
+			}
+
 			try {
+				console.log('[ClosingDialog.js] Calling API: SUBMIT_CLOSING_SHIFT');
 				// Submit closing shift
 				const response = await frappe.call({
 					method: API_MAP.POS_CLOSING_SHIFT.SUBMIT_CLOSING_SHIFT,
@@ -193,36 +252,72 @@ export default {
 					},
 				});
 
+				console.log('[ClosingDialog.js] API response received:', response);
+				console.log('[ClosingDialog.js] response.message:', response.message);
+				console.log('[ClosingDialog.js] response.message?.name:', response.message?.name);
+
 				if (response.message?.name) {
 					console.log(
 						`[ClosingDialog.js] submit_dialog success: ${response.message.name}`,
 					);
 
+					// Get pos_profile again (use the one we fetched earlier or current value)
+					const currentPosProfileForPrint = currentPosProfile || pos_profile.value;
+					console.log('[ClosingDialog.js] Using pos_profile for auto-print check:', currentPosProfileForPrint);
+					console.log('[ClosingDialog.js] currentPosProfile:', currentPosProfile);
+					
 					// Auto print closing shift if enabled in POS Profile
 					if (
-						pos_profile.value?.posa_auto_print_closing_shift === 1 &&
+						currentPosProfileForPrint?.posa_auto_print_closing_shift === 1 &&
 						response.message.name
 					) {
+						console.log('[ClosingDialog.js] Auto-print condition met - preparing to print');
 						const print_format =
-							pos_profile.value?.posa_closing_shift_print_format || '';
+							currentPosProfileForPrint?.posa_closing_shift_print_format || '';
+						console.log('[ClosingDialog.js] Print format:', print_format);
 
 						// Open print window directly
 						const print_url = frappe.urllib.get_full_url(
 							`/printview?doctype=POS%20Closing%20Shift&name=${response.message.name}&format=${print_format}&trigger_print=1&no_letterhead=0`,
 						);
+						console.log('[ClosingDialog.js] Print URL:', print_url);
 
-						window.open(print_url);
+						// Open print window first
+						console.log('[ClosingDialog.js] Opening print window...');
+						const printWindow = window.open(print_url);
+						console.log('[ClosingDialog.js] printWindow object:', printWindow);
+						
+						// Close dialog after print window opens
+						console.log('[ClosingDialog.js] Closing dialog...');
+						closingDialog.value = false;
+						console.log('[ClosingDialog.js] Dialog closed, closingDialog.value:', closingDialog.value);
+						
+						// Emit event immediately after opening print window
+						// This will trigger check_opening_entry() in Pos.js to show OpeningDialog
+						// Small delay to ensure print window starts loading
+						setTimeout(() => {
+							console.log('[ClosingDialog.js] Emitting SUBMIT_CLOSING_POS event (auto-print case)');
+							evntBus.emit(EVENT_NAMES.SUBMIT_CLOSING_POS, {
+								success: true,
+								closing_shift_name: response.message.name,
+								has_auto_print: true,
+							});
+							console.log('[ClosingDialog.js] SUBMIT_CLOSING_POS event emitted');
+						}, 500); // 500ms delay to ensure print window starts loading
+					} else {
+						console.log('[ClosingDialog.js] Auto-print NOT enabled - closing dialog and emitting event immediately');
+						// No auto-print - close dialog and emit event immediately
+						closingDialog.value = false;
+						
+						// Emit event to notify Pos.js that closing was successful
+						console.log('[ClosingDialog.js] Emitting SUBMIT_CLOSING_POS event (no auto-print)');
+						evntBus.emit(EVENT_NAMES.SUBMIT_CLOSING_POS, {
+							success: true,
+							closing_shift_name: response.message.name,
+						});
+						console.log('[ClosingDialog.js] SUBMIT_CLOSING_POS event emitted');
 					}
-
-					// Close dialog
-					closingDialog.value = false;
-
-					// Emit event to notify Pos.js that closing was successful
-					// This will trigger check_opening_entry() in Pos.js
-					evntBus.emit(EVENT_NAMES.SUBMIT_CLOSING_POS, {
-						success: true,
-						closing_shift_name: response.message.name,
-					});
+					console.log('[ClosingDialog.js] ===== submit_dialog END (success) =====');
 				} else {
 					// Failed to close cashier shift
 					frappe.show_alert({
@@ -231,9 +326,11 @@ export default {
 					});
 				}
 			} catch (error) {
-				console.log(
+				console.error(
 					`[ClosingDialog.js] submit_dialog error: ${error.message || error}`,
 				);
+				console.error('[ClosingDialog.js] Error stack:', error.stack);
+				console.log('[ClosingDialog.js] ===== submit_dialog END (error) =====');
 				frappe.show_alert({
 					message: 'فشل إغلاق وردية الصراف',
 					indicator: 'red',
