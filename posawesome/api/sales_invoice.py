@@ -633,6 +633,10 @@ def create_and_submit_invoice(invoice_doc):
                 else:
                     doc.base_paid_amount = 0.0
 
+        # Note: Partial payment validation is handled in frontend (Payments.js)
+        # Frontend prevents submission if partial payment is not allowed
+        # No need to validate here - frontend validation is sufficient
+
         # Step 2: Use ERPNext native validate() - full validation
         # This validates customer, items, taxes, payments, etc.
         # For return invoices, this will call verify_payment_amount_is_negative() which requires negative amounts
