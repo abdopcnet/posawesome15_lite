@@ -224,12 +224,6 @@ export default {
           if (r.message) {
             this.totalCash = parseFloat(r.message.cash_total || 0) || 0;
             this.totalNonCash = parseFloat(r.message.non_cash_total || 0) || 0;
-						console.log(
-							'[Navbar.js] Cash total:',
-							this.totalCash,
-							'Non-cash total:',
-							this.totalNonCash,
-						);
           } else {
             this.totalCash = 0;
             this.totalNonCash = 0;
