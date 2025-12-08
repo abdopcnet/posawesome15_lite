@@ -535,7 +535,8 @@
           <!-- Submit Button -->
           <button
             v-if="isClosingAllowed && isAllRequiredFieldsFilled"
-            @click="submit_dialog"
+            @click.prevent="submit_dialog"
+            type="button"
             style="
               display: flex;
               align-items: center;
