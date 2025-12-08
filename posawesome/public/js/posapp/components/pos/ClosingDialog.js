@@ -171,9 +171,10 @@ export default {
 
 		/**
 		 * Submit closing dialog data
-		 * Emits submit event with payment reconciliation data
+		 * Submits closing shift and prints if auto-print is enabled
+		 * Similar to invoice submit + print logic
 		 */
-		const submit_dialog = () => {
+		const submit_dialog = async () => {
 			const transactionsCount = dialog_data.value.pos_transactions
 				? dialog_data.value.pos_transactions.length
 				: 0;
@@ -183,8 +184,61 @@ export default {
 				} transactions: ${transactionsCount}`,
 			);
 
-			evntBus.emit(EVENT_NAMES.SUBMIT_CLOSING_POS, dialog_data.value);
-			closingDialog.value = false;
+			try {
+				// Submit closing shift
+				const response = await frappe.call({
+					method: API_MAP.POS_CLOSING_SHIFT.SUBMIT_CLOSING_SHIFT,
+					args: {
+						closing_shift: dialog_data.value,
+					},
+				});
+
+				if (response.message?.name) {
+					console.log(
+						`[ClosingDialog.js] submit_dialog success: ${response.message.name}`,
+					);
+
+					// Auto print closing shift if enabled in POS Profile
+					if (
+						pos_profile.value?.posa_auto_print_closing_shift === 1 &&
+						response.message.name
+					) {
+						const print_format =
+							pos_profile.value?.posa_closing_shift_print_format || '';
+
+						// Open print window directly
+						const print_url = frappe.urllib.get_full_url(
+							`/printview?doctype=POS%20Closing%20Shift&name=${response.message.name}&format=${print_format}&trigger_print=1&no_letterhead=0`,
+						);
+
+						window.open(print_url);
+					}
+
+					// Close dialog
+					closingDialog.value = false;
+
+					// Emit event to notify Pos.js that closing was successful
+					// This will trigger check_opening_entry() in Pos.js
+					evntBus.emit(EVENT_NAMES.SUBMIT_CLOSING_POS, {
+						success: true,
+						closing_shift_name: response.message.name,
+					});
+				} else {
+					// Failed to close cashier shift
+					frappe.show_alert({
+						message: 'فشل إغلاق وردية الصراف',
+						indicator: 'red',
+					});
+				}
+			} catch (error) {
+				console.log(
+					`[ClosingDialog.js] submit_dialog error: ${error.message || error}`,
+				);
+				frappe.show_alert({
+					message: 'فشل إغلاق وردية الصراف',
+					indicator: 'red',
+				});
+			}
 		};
 
 		// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
