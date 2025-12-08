@@ -587,7 +587,7 @@ export default {
             ) {
               console.log('[Navbar.js] Shift closed successfully with closing shift linked!');
               this.show_mesage({
-                color: 'error',
+								color: 'error',
                 text: 'تم إغلاق الوردية. سيتم إعادة تحميل الصفحة...',
               });
               
@@ -602,7 +602,7 @@ export default {
             } else if (openingShift.status === 'Closed' && !openingShift.pos_closing_shift) {
               // Shift is closed but no closing shift linked - might be in process
               console.log('[Navbar.js] Shift closed but no closing shift linked yet - continuing to monitor...');
-            } else {
+          } else {
               // Shift is still open or status doesn't match - check if different shift opened
               frappe.call({
                 method: API_MAP.POS_OPENING_SHIFT.GET_CURRENT_SHIFT_NAME,
@@ -614,32 +614,32 @@ export default {
                     if (currentShift.name !== openingShiftName) {
                       // Shift was changed (different shift opened)
                       console.log('[Navbar.js] Shift was changed to:', currentShift.name);
-                      this.show_mesage({
-                        color: 'error',
+            this.show_mesage({
+							color: 'error',
                         text: 'تم تغيير الوردية. سيتم إعادة تحميل الصفحة...',
-                      });
-                      
+            });
+            
                       // Reload after short delay
-                      setTimeout(() => {
-                        if (window.clearCacheAndReload) {
-                          window.clearCacheAndReload();
-                        } else {
-                          location.reload();
-                        }
-                      }, 2000);
+            setTimeout(() => {
+              if (window.clearCacheAndReload) {
+                window.clearCacheAndReload();
+              } else {
+                location.reload();
+              }
+            }, 2000);
                     }
-                  }
-                },
-                error: (err) => {
-                  // On error, don't reload - might be network issue
-                  if (err && err.message) {
-                    console.error('[Navbar.js] checkShiftStatus error:', err.message);
-                  }
-                },
-                freeze: false,
-                show_spinner: false,
-                async: true,
-              });
+          }
+        },
+        error: (err) => {
+          // On error, don't reload - might be network issue
+					if (err && err.message) {
+						console.error('[Navbar.js] checkShiftStatus error:', err.message);
+					}
+        },
+        freeze: false,
+        show_spinner: false,
+        async: true,
+      });
             }
           }
         },
@@ -665,7 +665,7 @@ export default {
       }
 
       console.log('[Navbar.js] Starting shift monitoring for:', this.pos_opening_shift.name);
-      
+
       // Check immediately
       this.checkShiftStatus();
 
