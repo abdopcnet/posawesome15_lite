@@ -329,7 +329,7 @@ export default {
 				);
 				// If original invoice was unpaid (paid_amount <= 0.01), allow printing without payments
 				if (origPaid <= 0.01) {
-					return true;
+				return true;
 				}
 			}
 
@@ -758,7 +758,7 @@ export default {
 				);
 				// If original invoice was unpaid (paid_amount <= 0.01), allow printing without payments
 				if (origPaid <= 0.01) {
-					return true;
+				return true;
 				}
 			}
 
@@ -1856,7 +1856,7 @@ export default {
 			if (applyTax && normalizedTaxType && taxPercent > 0) {
 				// Round net_total first to ensure all calculations use 2 decimal places
 				doc.net_total = flt(doc.net_total, this.getPrecision('net_total'));
-				
+
 				if (normalizedTaxType === 'Inclusive') {
 					// Tax included: extract tax from net_total
 					// Use precision = 2 for all currency amounts
@@ -1901,7 +1901,7 @@ export default {
 			if (applyTax && doc.discount_amount > 0 && applyDiscountOn === 'Net Total') {
 				// Round net_total first to ensure all calculations use 2 decimal places
 				doc.net_total = flt(doc.net_total, this.getPrecision('net_total'));
-				
+
 				// Tax must be recalculated on discounted net_total
 				if (normalizedTaxType === 'Exclusive') {
 					doc.total_taxes_and_charges = flt(
@@ -2648,7 +2648,7 @@ export default {
 			const isCreditSale = doc.is_credit_sale === true || doc.is_credit_sale == 1;
 			// For return invoices with unpaid original invoices, allow printing without payments
 			const isReturnUnpaid =
-				doc?.is_return &&
+					doc?.is_return &&
 				doc?._original_invoice_payment_info &&
 				Math.abs(this.flt(doc._original_invoice_payment_info.paid_amount || 0)) <= 0.01;
 			// Allow printing if posa_use_customer_credit_switch is enabled (allows printing without payments)
