@@ -557,86 +557,19 @@ export default {
       }
     },
     // Shift monitoring methods
-    checkShiftStatus() {
-      if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
-        return;
-      }
-
-      frappe.call({
-        method: API_MAP.POS_OPENING_SHIFT.GET_CURRENT_SHIFT_NAME,
-        args: {},
-        callback: (r) => {
-          if (r.message && r.message.success && r.message.data) {
-            const currentShift = r.message.data;
-            // Check if current shift matches our shift
-            // Note: get_current_shift_name only returns open shifts, so if we get data, it's open
-            if (currentShift.name !== this.pos_opening_shift.name) {
-              // Shift was changed (different shift opened)
-              this.show_mesage({
-								color: 'error',
-								text: 'تم تغيير الوردية. سيتم إعادة تحميل الصفحة...',
-              });
-              
-              // Reload after short delay
-              setTimeout(() => {
-                if (window.clearCacheAndReload) {
-                  window.clearCacheAndReload();
-                } else {
-                  location.reload();
-                }
-              }, 2000);
-            }
-            // If names match, shift is still open - do nothing
-          } else {
-            // No active shift found - shift was closed
-            this.show_mesage({
-							color: 'error',
-							text: 'تم إغلاق الوردية. سيتم إعادة تحميل الصفحة...',
-            });
-            
-            setTimeout(() => {
-              if (window.clearCacheAndReload) {
-                window.clearCacheAndReload();
-              } else {
-                location.reload();
-              }
-            }, 2000);
-          }
-        },
-        error: (err) => {
-          // On error, don't reload - might be network issue
-					// Only log if err is actually an error object with useful info
-					if (err && err.message) {
-						console.error('[Navbar.js] checkShiftStatus error:', err.message);
-					}
-        },
-        freeze: false,
-        show_spinner: false,
-        async: true,
-      });
-    },
-    startShiftMonitoring() {
-      if (this.shiftMonitoringInterval) {
-        return;
-      }
-
-      if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
-        return;
-      }
-
-      // Check immediately
-      this.checkShiftStatus();
-
-      // Check every 3 seconds
-      this.shiftMonitoringInterval = setInterval(() => {
-        this.checkShiftStatus();
-      }, 3000);
-    },
+    // Note: checkShiftStatus logic has been moved to ClosingDialog.js
+    // These methods are kept for stopping monitoring when auto-print is enabled
     stopShiftMonitoring() {
+      console.log('[Navbar.js] stopShiftMonitoring called');
+      console.log('[Navbar.js] shiftMonitoringInterval before:', this.shiftMonitoringInterval);
       if (this.shiftMonitoringInterval) {
         clearInterval(this.shiftMonitoringInterval);
         this.shiftMonitoringInterval = null;
+        console.log('[Navbar.js] Shift monitoring stopped');
+      } else {
+        console.log('[Navbar.js] No shift monitoring interval to stop');
       }
+      console.log('[Navbar.js] shiftMonitoringInterval after:', this.shiftMonitoringInterval);
     },
 
     // Toggle ping monitoring (can be called via evntBus)
@@ -648,6 +581,15 @@ export default {
 				sessionStorage.setItem('pos_enable_ping_monitoring', 'false');
         this.stopPingMonitoring();
       }
+    },
+    
+    // Handle stop shift monitoring event (called from ClosingDialog when auto-print is enabled)
+    handleStopShiftMonitoring() {
+      console.log('[Navbar.js] ===== handleStopShiftMonitoring START =====');
+      console.log('[Navbar.js] Received stop_shift_monitoring event - stopping shift monitoring');
+      console.log('[Navbar.js] Current shiftMonitoringInterval:', this.shiftMonitoringInterval);
+      this.stopShiftMonitoring();
+      console.log('[Navbar.js] ===== handleStopShiftMonitoring END =====');
     },
   },
   created: function () {
@@ -723,7 +665,7 @@ export default {
           this.fetch_company_info();
           this.fetchShiftInvoiceCount();
           this.setupCashUpdateInterval(); // Start auto-refresh interval when POS loads
-          this.startShiftMonitoring(); // Start shift monitoring when POS profile is registered
+          // Shift monitoring moved to ClosingDialog.js
           // External payments screen disabled - removed payments option
         });
 				evntBus.on('set_last_invoice', (data) => {
@@ -739,8 +681,7 @@ export default {
           this.pos_opening_shift = data;
           this.fetchShiftInvoiceCount();
           this.setupCashUpdateInterval(); // Restart auto-refresh when shift changes
-          // Start shift monitoring when shift is set
-          this.startShiftMonitoring();
+          // Shift monitoring moved to ClosingDialog.js
         });
 				evntBus.on('register_pos_data', (data) => {
           if (data.pos_profile) {
@@ -753,8 +694,7 @@ export default {
           this.fetch_company_info();
           this.fetchShiftInvoiceCount();
           this.setupCashUpdateInterval(); // Start auto-refresh when POS data registered
-          // Start shift monitoring when POS data is registered
-          this.startShiftMonitoring();
+          // Shift monitoring moved to ClosingDialog.js
         });
 				evntBus.on('invoice_submitted', () => {
           // Refresh invoice count when a new invoice is submitted
@@ -777,6 +717,9 @@ export default {
 					this.freezTitle = '';
 					this.freezeMsg = '';
         });
+
+        // Add event listener for stopping shift monitoring (when auto-print is enabled)
+				evntBus.on('stop_shift_monitoring', this.handleStopShiftMonitoring);
 
         // Add event listener for toggling ping monitoring
 				evntBus.on('toggle_ping_monitoring', (enable) => {
@@ -829,5 +772,6 @@ export default {
 		evntBus.off('freeze');
 		evntBus.off('unfreeze');
 		evntBus.off('toggle_ping_monitoring');
+		evntBus.off('stop_shift_monitoring', this.handleStopShiftMonitoring);
   },
 };
