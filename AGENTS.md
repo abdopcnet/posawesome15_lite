@@ -1,103 +1,52 @@
-## 1. FIELD NAMING & DATA INTEGRITY
+## 1. FIELD NAMING & DATA INTEGRITY 📌
+1. Use only real DB field names from the schema.  
+2. No fake/temp/abbrev fields; only actual table fields.  
+3. Verify fields via DB schema or DocType JSON before use.  
 
-Use only original, real field names from the actual database schema.
+## 2. CODE ANALYSIS PRINCIPLES 🧭
+1. Base answers on actual code analysis only.  
+2. Understand architecture before proposing solutions.  
+3. Read the real files; no guesses.  
 
-- No temporary variables, abbreviations, or fake names unrelated to actual fields
-- Never create fictional field names - only use what exists in the actual table structure
-- Always verify field names by checking the database schema or DocType JSON files
+## 3. CORE SYSTEM APPLICATIONS REFERENCE 🏛️
+1. Reference `/home/frappe/frappe-bench/apps/frappe` for patterns.  
+2. Reference `/home/frappe/frappe-bench/apps/erpnext` for patterns.  
+3. Search these apps to learn structure and best practices.  
 
-## 2. CODE ANALYSIS PRINCIPLES
+## 4. DATABASE MODIFICATION PROTOCOL 🔒
+1. Never modify DB without explicit permission.  
+2. Always ask before DROP/ALTER/INSERT/UPDATE.  
 
-All answers must be based on actual code analysis of the project structure.
-
-- No predictions or suggestions - only analysis of existing code patterns
-- Understand the project's architecture before providing solutions
-- Read actual files to understand the codebase structure
-
-## 3. CORE SYSTEM APPLICATIONS REFERENCE
-
-The original system applications that should be referenced for understanding code patterns and architecture:
-
-- `/home/frappe/frappe-bench/apps/frappe` - Core Frappe framework
-- `/home/frappe/frappe-bench/apps/erpnext` - ERPNext application
-
-These applications should be searched or queried to understand how to build and structure code properly.
-
-- Always reference these core applications when understanding code patterns
-- Search these directories when learning how features are implemented
-- Use them as reference for code structure and best practices
-
-## 4. DATABASE MODIFICATION PROTOCOL
-
-Never modify the database without explicit permission.
-
-- Always ask first before any database changes
-- Never run DROP, ALTER, or INSERT/UPDATE commands without user approval
-
-## 4.1. DATABASE FIELD QUERY PROTOCOL
-
-When searching for fields in database tables or DocTypes, always use the specified query method.
-
-- Use the command: `bench --site all mariadb -e "DESCRIBE \`tabTableName\`;"`
-- Replace `TableName` with the actual DocType name (e.g., `tabPOS Profile` for POS Profile DocType)
-- This command shows all fields in the table with their types and properties
-- Always use this method to verify field names and structure before using them in code
-- Never guess or assume field names - always query the database first
+## 4.1. DATABASE FIELD QUERY PROTOCOL ✅
+1. Use: `bench --site all mariadb -e "DESCRIBE \`tabTableName\`;\"` to inspect fields.  
+2. Replace `TableName` with actual DocType (e.g., `tabPOS Profile`).  
+3. Never assume field names; always verify first.  
 
 ### 4.2. RULE COMMAND TROUBLESHOOTING PROTOCOL
+1. If a rule command fails, check syntax, bench env, site, DB connection, table exists.  
+2. If blocked, explain cause, ask user to run, fallback to DocType JSON only as last resort.  
+3. Document any command failure and its cause.  
 
-When a rule-specified command fails or doesn't work, follow this troubleshooting protocol.
+## 5. DEVELOPMENT WORKFLOW 🧭
+1. Manual read/write; avoid bulk modify commands.  
+2. Update `plan.md` before changes; document modifications.  
+3. Read files fully before editing; use read tools, not broad search.  
 
-- First, verify the command syntax matches the rule exactly (check quotes, backticks, table name format)
-- Check if the command requires specific environment setup (bench directory, site name, database connection)
-- If the command fails with no output or error code, investigate the root cause:
-  - Note: Terminal tool execution failures may be environment-specific - the command may work when run directly by the user
-  - **Cursor Agent Terminal Execution (Linux)**:
-    - Sandbox is NOT available on Linux (macOS only per Cursor docs)
-    - Check Settings -> Cursor Settings -> Agents -> Auto-Run -> "Auto-Run Mode"
-    - If set to "Ask Every Time", commands require approval that may not be captured
-    - If set to "Run Everything", commands should execute automatically
-    - Add commands to "Command Allowlist" to allow automatic execution outside sandbox
-    - Check Enterprise Controls if applicable (may override user settings)
-    - Even basic commands failing suggests Auto-Run Mode or Enterprise restrictions
-  - Verify bench is installed and accessible
-  - Check if sites exist and are configured
-  - Verify database connection is available
-  - Check if the table/DocType exists
-- If the command cannot be executed due to environment issues:
-  - Inform the user about the failure and root cause
-  - Ask the user to run the command manually and share the output
-  - As a last resort, use DocType JSON files from the codebase (e.g., `erpnext/erpnext/accounts/doctype/pos_profile/pos_profile.json`)
-  - Always mention that the JSON file method is a fallback and the database query is the preferred method
-- Never silently switch to alternative methods without explaining why the rule-specified method failed
-- Document any command failures and their causes in the response
+## 6. CODE QUALITY STANDARDS 🎛️
+1. Review syntax every time before saving.  
+2. Keep formatting consistent; follow project style.  
+3. Write English comments above sections (not beside code).  
 
-## 5. DEVELOPMENT WORKFLOW
-
-Manual reading and writing - no bulk modifications with commands.
-
-- Follow the plan.md file - update it with every change
-- Document all modifications in the plan file before implementation
-- Read files completely before making changes
-- Use file reading tools instead of search patterns when analyzing code
-
-## 6. CODE QUALITY STANDARDS
-
-Revise file syntax every time before writing.
-
-- Write English comments above every section (not beside code)
-- Maintain consistent formatting and coding standards
-- Check for syntax errors before saving files
-- Follow project's existing code style
-
-## 7. COMMUNICATION & VERIFICATION
-
-MANDATORY: Use emoji ✅ at the end of EVERY response to confirm rule compliance.
-
-- MANDATORY: Number ALL important points in responses (1. 2. 3. etc.)
-- MANDATORY: Include these rules summary at the end when user requests "show rules" or "what rules"
-- Response format requirements:
-  - Always start with numbered points
-  - Always end with ✅ emoji
-  - Use clear Arabic/English mixed communication as needed
-  - Each response must demonstrate compliance with all rules
+## 7. COMMUNICATION & VERIFICATION ✅
+1. Start responses with numbered points.  
+2. End every response with ✅.  
+3. Include rules summary when user asks "show rules"/"what rules".  
+4. Use simple, concise English friendly to Arabic readers.  
+5. In responses, list applied rules under heading `Applied rules:` followed by one line per section in this exact format (no numbers):  
+   - `📌 FIELD NAMING & DATA INTEGRITY`  
+   - `🧭 CODE ANALYSIS PRINCIPLES`  
+   - `🏛️ CORE SYSTEM APPLICATIONS REFERENCE`  
+   - `🔒 DATABASE MODIFICATION PROTOCOL`  
+   - `🧭 DEVELOPMENT WORKFLOW`  
+   - `🎛️ CODE QUALITY STANDARDS`  
+   - `✅ COMMUNICATION & VERIFICATION`  
