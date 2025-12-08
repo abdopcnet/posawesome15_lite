@@ -315,7 +315,7 @@ export default {
 					} else {
 						console.log('[ClosingDialog.js] Auto-print NOT enabled - closing dialog and emitting event immediately');
 						// No auto-print - close dialog and emit event immediately
-						closingDialog.value = false;
+			closingDialog.value = false;
 						
 						// Emit event to notify Pos.js that closing was successful
 						console.log('[ClosingDialog.js] Emitting SUBMIT_CLOSING_POS event (no auto-print)');
