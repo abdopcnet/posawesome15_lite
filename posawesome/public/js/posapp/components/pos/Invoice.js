@@ -209,6 +209,56 @@ export default {
 
 			return false;
 		},
+		// Check if partial payment is not allowed
+		// Returns true if posa_allow_partial_payment = 0 and paid amount is less than grand total
+		hasPartialPaymentNotAllowed() {
+			if (!this.invoice_doc?.payments || !this.pos_profile) {
+				return false;
+			}
+
+			// Skip validation for return invoices
+			const isReturn = this.invoice_doc?.is_return || this.quick_return_value;
+			if (isReturn) {
+				return false;
+			}
+
+			// Check if partial payment is allowed in POS Profile
+			if (this.pos_profile.posa_allow_partial_payment === 1) {
+				return false; // Partial payment is allowed
+			}
+
+			// Calculate paid_amount: payments + loyalty_amount + redeemed_customer_credit
+			let paidAmount = this.flt(this.invoice_doc?.loyalty_amount || 0, 2);
+			if (this.invoice_doc?.payments && Array.isArray(this.invoice_doc.payments)) {
+				this.invoice_doc.payments.forEach((payment) => {
+					paidAmount += this.flt(payment.amount || 0, 2);
+				});
+			}
+			paidAmount += this.flt(this.redeemed_customer_credit || 0, 2);
+			paidAmount = this.flt(paidAmount, 2);
+
+			// Use grand_total with precision = 2
+			const grandTotal = this.flt(this.invoice_doc?.grand_total || 0, 2);
+
+			// Credit sale: if paidAmount is zero or near zero, check if credit sale is allowed
+			// Credit sale is only allowed if posa_allow_credit_sale = 1
+			if (paidAmount <= 0.01) {
+				// If credit sale is not allowed, return true (not allowed)
+				if (!this.pos_profile.posa_allow_credit_sale) {
+					return true; // Credit sale is not allowed
+				}
+				// Credit sale is allowed - not a partial payment issue
+				return false;
+			}
+
+			// Partial payment is not allowed - check if paid amount is less than grand total
+			// Allow small rounding differences using tolerance (0.01)
+			if (paidAmount < grandTotal - 0.01) {
+				return true; // Partial payment detected and not allowed
+			}
+
+			return false;
+		},
 		itemsScrollStyle() {
 			if (!this.itemsScrollHeight) {
 				return {};
