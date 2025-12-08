@@ -1137,7 +1137,7 @@
 			>
 				<!-- Print Button -->
 				<button
-					v-if="!hasExcessNonCashPayment"
+					v-if="!hasExcessNonCashPayment && !hasPartialPaymentNotAllowed"
 					:disabled="!hasItems || isPrinting || !canPrintInvoice"
 					@click="printInvoice"
 					title="طباعة الفاتورة"
@@ -1190,6 +1190,28 @@
 				>
 					<i class="mdi mdi-alert" style="font-size: 16px"></i>
 					<span style="font-size: 0.85rem">المبلغ الزائد غير مسموح</span>
+				</div>
+
+				<!-- Warning Message for Partial Payment Not Allowed -->
+				<div
+					v-if="hasPartialPaymentNotAllowed"
+					style="
+						flex: 1;
+						padding: 8px 4px;
+						border-radius: 5px;
+						background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+						color: white;
+						font-size: 0.85rem;
+						font-weight: 600;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						gap: 4px;
+						text-align: center;
+					"
+				>
+					<i class="mdi mdi-alert" style="font-size: 16px"></i>
+					<span style="font-size: 0.85rem">الدفع الجزئي غير مسموح</span>
 				</div>
 
 				<!-- Pay Button -->
