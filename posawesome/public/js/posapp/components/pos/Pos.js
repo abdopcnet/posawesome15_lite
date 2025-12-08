@@ -256,15 +256,45 @@ export default {
 		 * Handle closing shift submission success
 		 * Called after ClosingDialog.js successfully submits and prints
 		 * Similar to invoice submission flow
+		 * If auto-print was triggered, skip check_opening_entry() to prevent page reload
 		 */
 		async handleSubmitClosingPos(data) {
+			console.log('[Pos.js] ===== handleSubmitClosingPos START =====');
+			console.log('[Pos.js] Received data:', data);
+			console.log('[Pos.js] data?.success:', data?.success);
+			console.log('[Pos.js] data?.has_auto_print:', data?.has_auto_print);
+			
 			if (data?.success) {
 				console.log(
 					`[Pos.js] handleSubmitClosingPos: Closing shift ${data.closing_shift_name} submitted successfully`,
 				);
 				this.show_message('تم إغلاق وردية الصراف بنجاح', 'success');
-				// Check for new opening entry after closing
-				await this.check_opening_entry();
+				
+				// If auto-print was triggered, call check_opening_entry() immediately
+				// Print window is already open, so we can safely reload/refresh
+				if (data.has_auto_print) {
+					console.log(
+						'[Pos.js] Auto-print was triggered - calling check_opening_entry() immediately',
+					);
+					// Call check_opening_entry() immediately to show OpeningDialog
+					await this.check_opening_entry();
+					console.log('[Pos.js] check_opening_entry() completed (auto-print case)');
+					console.log('[Pos.js] ===== handleSubmitClosingPos END (auto-print case) =====');
+					return;
+				}
+				
+				// No auto-print - proceed normally with check_opening_entry()
+				console.log('[Pos.js] No auto-print - will call check_opening_entry() after 1 second');
+				setTimeout(async () => {
+					console.log('[Pos.js] Timeout fired - calling check_opening_entry()');
+					// Check for new opening entry after closing
+					await this.check_opening_entry();
+					console.log('[Pos.js] check_opening_entry() completed');
+				}, 1000); // 1 second delay for normal flow
+				console.log('[Pos.js] ===== handleSubmitClosingPos END (normal case) =====');
+			} else {
+				console.log('[Pos.js] data.success is false or undefined - not processing');
+				console.log('[Pos.js] ===== handleSubmitClosingPos END (no success) =====');
 			}
 		},
 
