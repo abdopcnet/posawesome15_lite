@@ -669,10 +669,10 @@ export default {
       // Check immediately
       this.checkShiftStatus();
 
-      // Check every 3 seconds
+      // Check every 5 seconds
       this.shiftMonitoringInterval = setInterval(() => {
         this.checkShiftStatus();
-      }, 3000);
+      }, 5000);
     },
     
     stopShiftMonitoring() {
