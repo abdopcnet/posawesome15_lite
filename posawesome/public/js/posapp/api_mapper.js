@@ -69,6 +69,8 @@ const API_MAP = {
 			'posawesome.posawesome.doctype.pos_opening_shift.pos_opening_shift.get_profile_users',
 		CHECK_OPENING_TIME_ALLOWED:
 			'posawesome.posawesome.doctype.pos_opening_shift.pos_opening_shift.check_opening_time_allowed',
+		CHECK_SHIFT_IS_OPEN:
+			'posawesome.posawesome.doctype.pos_opening_shift.pos_opening_shift.check_shift_is_open',
 	},
 
 	// POS Closing Shift APIs (from ClosingDialog.vue)
