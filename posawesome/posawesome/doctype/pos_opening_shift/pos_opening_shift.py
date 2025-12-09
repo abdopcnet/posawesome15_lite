@@ -587,6 +587,57 @@ def get_current_shift_name():
 
 
 # ========================================================================
+# SECTION 2.3.1: CHECK SHIFT IS OPEN
+# ========================================================================
+# Simple API to check if current user has an open shift (for ping monitoring)
+
+@frappe.whitelist()
+def check_shift_is_open(shift_name: str = None):
+    """Simple check: returns True if specified shift is open, False otherwise
+    
+    Args:
+        shift_name: Name of the shift to check. If None, checks if user has any open shift.
+    
+    Returns:
+        dict: {"is_open": True/False}
+    """
+    try:
+        if shift_name:
+            # Check specific shift status using SQL directly (bypass cache)
+            result = frappe.db.sql("""
+                SELECT status 
+                FROM `tabPOS Opening Shift` 
+                WHERE name = %s
+            """, [shift_name], as_dict=True)
+            
+            if not result or not result[0]:
+                # Shift doesn't exist - consider it closed
+                return {"is_open": False}
+            
+            status = result[0].get("status")
+            is_open = status == "Open"
+            
+            # Always log for debugging
+            frappe.log_error(
+                f"check_shift_is_open: shift={shift_name}, status={status}, is_open={is_open}, user={frappe.session.user}",
+                "Shift Status Check"
+            )
+            
+            return {"is_open": is_open}
+        else:
+            # Check if user has any open shift using get_value
+            open_shift = frappe.db.get_value(
+                "POS Opening Shift",
+                {"user": frappe.session.user, "status": "Open"},
+                "name"
+            )
+            return {"is_open": open_shift is not None}
+    except Exception as e:
+        frappe.log_error(f"check_shift_is_open error: {str(e)}")
+        return {"is_open": False}
+
+
+# ========================================================================
 # SECTION 2.4: GET ALL OPEN SHIFTS
 # ========================================================================
 # GET - Get all open shifts for the current user (or specified user)
