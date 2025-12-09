@@ -74,7 +74,7 @@ result = frappe.db.sql("SELECT * FROM tabCustomer WHERE name=%s", [user_input])
 result = frappe.db.get_value("Customer", user_input, ["name", "customer_name"])
 
 # ✅ BEST - Use get_list (automatically checks permissions)
-customers = frappe.get_list("Customer", 
+customers = frappe.get_list("Customer",
     filters={"customer_name": ["like", f"%{search_term}%"]},
     fields=["name", "customer_name"]
 )
@@ -136,7 +136,7 @@ def update_customer_credit(customer: str, new_limit: float):
 value = frappe.db.get_value("Customer", "CUST-001", "territory")
 
 # Get multiple fields as dict
-customer = frappe.db.get_value("Customer", "CUST-001", 
+customer = frappe.db.get_value("Customer", "CUST-001",
     ["customer_name", "territory"], as_dict=True)
 
 # Check existence
@@ -147,8 +147,8 @@ if frappe.db.exists("Customer", customer_name):
 count = frappe.db.count("Sales Order", {"status": "Draft"})
 
 # Bulk operations (MUCH faster than loops)
-frappe.db.bulk_insert("DocType", 
-    fields=["field1", "field2"], 
+frappe.db.bulk_insert("DocType",
+    fields=["field1", "field2"],
     values=[[val1, val2], [val3, val4]],
     chunk_size=10000
 )
@@ -280,7 +280,7 @@ class CustomSalesOrder(SalesOrder):
     def validate(self):
         super().validate()  # ALWAYS call parent first
         self.validate_custom_requirements()
-    
+
     def on_submit(self):
         super().on_submit()  # ALWAYS call parent first
         self.create_linked_documents()
@@ -377,7 +377,7 @@ warehouse_map = {w.name: w for w in warehouses}
 docs = frappe.get_all("Sales Invoice")  # Gets all columns unnecessarily
 
 # ✅ CORRECT - Select only needed fields
-docs = frappe.get_all("Sales Invoice", 
+docs = frappe.get_all("Sales Invoice",
     fields=["name", "customer", "grand_total"])
 
 # ❌ WRONG - Multiple db_set calls
@@ -423,12 +423,12 @@ class ProjectMilestone(Document):
     def validate(self):
         self.validate_dates()
         self.calculate_totals()
-    
+
     def validate_dates(self):
         if self.end_date and self.start_date:
             if getdate(self.end_date) < getdate(self.start_date):
                 frappe.throw(_("End Date cannot be before Start Date"))
-    
+
     def calculate_totals(self):
         if self.total_tasks:
             self.completion_percentage = (flt(self.completed_tasks) / flt(self.total_tasks)) * 100
@@ -441,20 +441,20 @@ class ProjectMilestone(Document):
 def get_customer_summary(customer: str) -> dict:
     """Get customer summary with orders and outstanding"""
     frappe.only_for("Sales User")  # Permission check
-    
+
     if not frappe.db.exists("Customer", customer):
         frappe.throw(_("Customer {0} not found").format(customer))
-    
+
     customer_doc = frappe.get_doc("Customer", customer)
     customer_doc.check_permission("read")
-    
+
     orders = frappe.db.sql("""
         SELECT COUNT(*) as total_orders,
                SUM(CASE WHEN docstatus = 1 THEN grand_total ELSE 0 END) as total_revenue
         FROM `tabSales Order`
         WHERE customer = %s
     """, [customer], as_dict=True)[0]
-    
+
     return {
         "customer_name": customer_doc.customer_name,
         "total_orders": orders.total_orders or 0,
@@ -466,55 +466,57 @@ def get_customer_summary(customer: str) -> dict:
 
 ```javascript
 frappe.ui.form.on("Sales Order", {
-    refresh: function(frm) {
-        if (frm.doc.docstatus === 1) {
-            frm.add_custom_button(__("Create Project"), function() {
-                create_project_from_order(frm);
-            });
-        }
-    },
-    
-    customer: function(frm) {
-        if (frm.doc.customer) {
-            frappe.call({
-                method: "custom_app.api.customer.get_customer_summary",
-                args: { customer: frm.doc.customer },
-                callback: function(r) {
-                    if (r.message) {
-                        frm.set_value("custom_total_orders", r.message.total_orders);
-                    }
-                }
-            });
-        }
+  refresh: function (frm) {
+    if (frm.doc.docstatus === 1) {
+      frm.add_custom_button(__("Create Project"), function () {
+        create_project_from_order(frm);
+      });
     }
+  },
+
+  customer: function (frm) {
+    if (frm.doc.customer) {
+      frappe.call({
+        method: "custom_app.api.customer.get_customer_summary",
+        args: { customer: frm.doc.customer },
+        callback: function (r) {
+          if (r.message) {
+            frm.set_value("custom_total_orders", r.message.total_orders);
+          }
+        },
+      });
+    }
+  },
 });
 ```
 
 ---
 
-## 13. COMMUNICATION & VERIFICATION ✅
+## 13. RESPONSE POLICY ✅
 
-1. Start responses with numbered points.
-2. Use simple, concise English friendly to Arabic readers.
-3. End every response with `Applied rules:` followed by the applied rules list (one line per section in this exact format, no numbers), then end with ✅:
+1. Always reply with numbered points.
+2. Keep English short and simple for Arabic readers; avoid idioms and long sentences.
+3. End every reply with `Applied rules:` then list only the sections you actually used in your response (one line per section, no numbers), then finish with ✅:
    - `📌 FIELD NAMING & DATA INTEGRITY`
    - `🧭 CODE ANALYSIS PRINCIPLES`
    - `🏛️ CORE SYSTEM APPLICATIONS REFERENCE`
    - `🔒 DATABASE MODIFICATION PROTOCOL`
    - `🔐 CRITICAL SECURITY PATTERNS`
    - `🎯 FRAMEWORK STANDARDS`
+   - `🎛️ CONTROLLER PATTERNS`
    - `⚡ ERPNext v15 Specific`
    - `🚀 PERFORMANCE OPTIMIZATION`
    - `🧭 DEVELOPMENT WORKFLOW`
    - `🎛️ CODE QUALITY STANDARDS`
    - `📋 COMMON PATTERNS`
-   - `✅ COMMUNICATION & VERIFICATION`
+   - `✅ RESPONSE POLICY`
 
 ---
 
 ## Quick Reference
 
 ### Essential Imports
+
 ```python
 import frappe
 from frappe import _
@@ -523,6 +525,7 @@ from frappe.model.document import Document
 ```
 
 ### Common Frappe Functions
+
 ```python
 # Document operations
 doc = frappe.get_doc(doctype, name)
