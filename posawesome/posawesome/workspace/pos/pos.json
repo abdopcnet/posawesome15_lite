@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"jn16CM3Enk\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">\u0645\u0628\u064a\u0639\u0627\u062a \u0627\u0644\u0643\u0627\u0634\u064a\u0631</span>\",\"col\":12}},{\"id\":\"8aOyLres2c\",\"type\":\"custom_block\",\"data\":{\"custom_block_name\":\"pos\",\"col\":12}},{\"id\":\"lUvk-8Kbut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \ud83d\uded2\",\"col\":3}},{\"id\":\"R1lS0t9h_e\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0641\u0648\u0627\u062a\u064a\u0631 \u0627\u0644\u0645\u0628\u064a\u0639\u0627\u062a\",\"col\":3}},{\"id\":\"BaXSR9y69u\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0641\u0648\u0627\u062a\u064a\u0631 \u0628\u064a\u0639 \u0645\u0633\u0648\u062f\u0647 \u26a0\ufe0f\",\"col\":3}},{\"id\":\"cbMb1LDyuJ\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"cbp5owv075\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0641\u062a\u062d \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \u2b06\ufe0f\",\"col\":3}},{\"id\":\"sFrOh5GUax\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0625\u063a\u0644\u0627\u0642 \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \u2b07\ufe0f\",\"col\":3}},{\"id\":\"6aiR6Id8Ch\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"qY3L-W1mX0\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u062a\u0642\u0631\u064a\u0631 \u0627\u0644\u0643\u0627\u0634\u064a\u0631 \u0628\u0627\u0644\u0648\u0631\u062f\u064a\u0629\",\"col\":3}},{\"id\":\"0TgQDlWE25\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u062a\u0642\u0631\u064a\u0631 \u0627\u0644\u0643\u0627\u0634\u064a\u0631 \u0628\u0627\u0644\u0641\u0627\u062a\u0648\u0631\u0629\",\"col\":3}},{\"id\":\"BLGO62KQrB\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u062a\u0642\u0631\u064a\u0631 \u0641\u0648\u0627\u062a\u064a\u0631 \u0627\u0644\u0643\u0627\u0634\u064a\u0631\",\"col\":3}}]",
+ "content": "[{\"id\":\"jn16CM3Enk\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">\u0645\u0628\u064a\u0639\u0627\u062a \u0627\u0644\u0643\u0627\u0634\u064a\u0631</span>\",\"col\":12}},{\"id\":\"8aOyLres2c\",\"type\":\"custom_block\",\"data\":{\"custom_block_name\":\"pos\",\"col\":12}},{\"id\":\"cbp5owv075\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0641\u062a\u062d \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \ud83d\udfe2\",\"col\":3}},{\"id\":\"sFrOh5GUax\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0625\u063a\u0644\u0627\u0642 \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \ud83d\udd34\",\"col\":3}},{\"id\":\"cbMb1LDyuJ\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"4XHGW5ItVW\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0625\u0639\u062f\u0627\u062f \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639\ud83e\uddca\",\"col\":3}},{\"id\":\"tAxU2NI6ts\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0625\u0639\u062f\u0627\u062f \u0627\u0644\u0639\u0631\u0648\u0636\ud83c\udf81\ud83c\udf89\",\"col\":3}},{\"id\":\"ge44ta88ct\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0625\u0639\u062f\u0627\u062f \u0646\u0642\u0627\u0637 \u0627\u0644\u0648\u0644\u0627\u0621\ud83d\udc8e\",\"col\":3}},{\"id\":\"6aiR6Id8Ch\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"qY3L-W1mX0\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u062a\u0642\u0631\u064a\u0631 \u0627\u0644\u0643\u0627\u0634\u064a\u0631 \u0628\u0627\u0644\u0648\u0631\u062f\u064a\u0629\",\"col\":3}},{\"id\":\"0TgQDlWE25\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u062a\u0642\u0631\u064a\u0631 \u0627\u0644\u0643\u0627\u0634\u064a\u0631 \u0628\u0627\u0644\u0641\u0627\u062a\u0648\u0631\u0629\",\"col\":3}},{\"id\":\"BLGO62KQrB\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u062a\u0642\u0631\u064a\u0631 \u0641\u0648\u0627\u062a\u064a\u0631 \u0627\u0644\u0643\u0627\u0634\u064a\u0631\",\"col\":3}}]",
  "creation": "2025-04-26 15:15:46.012579",
  "custom_blocks": [
   {
@@ -18,7 +18,7 @@
  "is_hidden": 0,
  "label": "POS",
  "links": [],
- "modified": "2025-11-26 04:31:04.536097",
+ "modified": "2025-12-10 12:02:09.599980",
  "modified_by": "Administrator",
  "module": "POSAwesome",
  "name": "POS",
@@ -49,34 +49,27 @@
    "type": "Report"
   },
   {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "\u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \ud83d\uded2",
-   "link_to": "posapp",
-   "type": "Page"
-  },
-  {
    "color": "Green",
    "doc_view": "List",
-   "label": "\u0641\u0648\u0627\u062a\u064a\u0631 \u0627\u0644\u0645\u0628\u064a\u0639\u0627\u062a",
-   "link_to": "Sales Invoice",
-   "stats_filter": "[[\"Sales Invoice\",\"is_pos\",\"=\",1,false]]",
-   "type": "DocType"
-  },
-  {
-   "color": "Red",
-   "doc_view": "List",
-   "label": "\u0641\u0648\u0627\u062a\u064a\u0631 \u0628\u064a\u0639 \u0645\u0633\u0648\u062f\u0647 \u26a0\ufe0f",
-   "link_to": "Sales Invoice",
-   "stats_filter": "[[\"Sales Invoice\",\"status\",\"=\",\"Draft\",false],[\"Sales Invoice\",\"is_pos\",\"=\",1,false]]",
-   "type": "DocType"
-  },
-  {
-   "color": "Green",
-   "doc_view": "List",
-   "label": "\u0641\u062a\u062d \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \u2b06\ufe0f",
+   "label": "\u0641\u062a\u062d \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \ud83d\udfe2",
    "link_to": "POS Opening Shift",
    "stats_filter": "[[\"POS Opening Shift\",\"status\",\"=\",\"Open\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "\u0625\u0639\u062f\u0627\u062f \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639\ud83e\uddca",
+   "link_to": "POS Profile",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "\u0625\u0639\u062f\u0627\u062f \u0627\u0644\u0639\u0631\u0648\u0636\ud83c\udf81\ud83c\udf89",
+   "link_to": "POS Offer",
+   "stats_filter": "[]",
    "type": "DocType"
   },
   {
@@ -98,9 +91,17 @@
   {
    "color": "Red",
    "doc_view": "List",
-   "label": "\u0625\u063a\u0644\u0627\u0642 \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \u2b07\ufe0f",
+   "label": "\u0625\u063a\u0644\u0627\u0642 \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \ud83d\udd34",
    "link_to": "POS Closing Shift",
    "stats_filter": "[[\"POS Closing Shift\",\"docstatus\",\"=\",\"1\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "label": "\u0625\u0639\u062f\u0627\u062f \u0646\u0642\u0627\u0637 \u0627\u0644\u0648\u0644\u0627\u0621\ud83d\udc8e",
+   "link_to": "Loyalty Program",
+   "stats_filter": "[]",
    "type": "DocType"
   }
  ],
