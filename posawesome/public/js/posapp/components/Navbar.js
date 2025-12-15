@@ -577,11 +577,11 @@ export default {
           if (r.message && !r.message.is_open) {
             // Specific shift is closed - reload page and clear cache
             console.log('[Navbar.js] Shift closed - reloading page');
-            this.show_mesage({
-              color: 'error',
-              text: 'تم إغلاق الوردية. سيتم إعادة تحميل الصفحة...',
-            });
-            
+              this.show_mesage({
+								color: 'error',
+                text: 'تم إغلاق الوردية. سيتم إعادة تحميل الصفحة...',
+              });
+              
             // Stop monitoring to prevent multiple reloads
             this.stopShiftMonitoring();
             this.stopPingMonitoring();
@@ -593,7 +593,7 @@ export default {
                 location.reload();
               }
             }, 2000);
-          }
+                    }
         },
         error: () => {
           // Ignore errors - might be network issue
@@ -628,7 +628,7 @@ export default {
         this.shiftMonitoringInterval = null;
       }
     },
-    
+
     // Toggle ping monitoring (can be called via evntBus)
     togglePingMonitoring(enable) {
       if (enable) {
