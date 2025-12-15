@@ -592,6 +592,45 @@ def create_and_submit_invoice(invoice_doc):
         # This is called from SellingController and sets customer, warehouse, etc.
         doc.set_missing_values()
 
+        # VALIDATION: Check if invoice company and company_address match POS Profile settings
+        if doc.pos_profile:
+            pos_profile_name = doc.pos_profile
+            if isinstance(pos_profile_name, dict):
+                pos_profile_name = pos_profile_name.get('name')
+            
+            if pos_profile_name:
+                pos_profile_doc = frappe.get_cached_doc("POS Profile", pos_profile_name)
+                
+                # Check company match
+                if doc.company and pos_profile_doc.company and doc.company != pos_profile_doc.company:
+                    frappe.throw("اسم الشركة في الفاتورة غير مطابق لاعداد نقطة البيع")
+                
+                # Check company_address match
+                if doc.company_address and pos_profile_doc.company_address and doc.company_address != pos_profile_doc.company_address:
+                    frappe.throw("عنوان الشركة في الفاتورة غير مطابق لاعداد نقطة البيع")
+
+        # Ensure company_address is valid for the company (fixes validation errors on return invoices)
+        # This validates that company_address exists and is linked to the correct company
+        if doc.company_address and doc.company:
+            from frappe.contacts.doctype.address.address import get_company_address
+            # Check if current company_address is valid (linked to this company)
+            is_valid = frappe.db.exists(
+                "Dynamic Link",
+                {
+                    "parent": doc.company_address,
+                    "parenttype": "Address",
+                    "link_doctype": "Company",
+                    "link_name": doc.company,
+                },
+            )
+            if not is_valid:
+                # Invalid address - get correct company address or clear it
+                company_addr = get_company_address(doc.company)
+                if company_addr:
+                    doc.company_address = company_addr.get("company_address", "")
+                else:
+                    doc.company_address = ""
+
         # For return invoices, payments should be negative amounts (following POS-Awesome-V15 and ERPNext requirement)
         # MUST be done AFTER set_missing_values() but BEFORE validate() because validate() calls verify_payment_amount_is_negative()
         # ERPNext's verify_payment_amount_is_negative() requires negative amounts for return invoices
