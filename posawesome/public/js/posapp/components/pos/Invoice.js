@@ -223,7 +223,11 @@ export default {
 			}
 
 			// Check if partial payment is allowed in POS Profile
-			if (this.pos_profile.posa_allow_partial_payment === 1) {
+			// Handle both number 1 and string "1" for robustness
+			if (
+				this.pos_profile.posa_allow_partial_payment === 1 ||
+				this.pos_profile.posa_allow_partial_payment === '1'
+			) {
 				return false; // Partial payment is allowed
 			}
 
@@ -329,7 +333,7 @@ export default {
 				);
 				// If original invoice was unpaid (paid_amount <= 0.01), allow printing without payments
 				if (origPaid <= 0.01) {
-				return true;
+					return true;
 				}
 			}
 
@@ -758,7 +762,7 @@ export default {
 				);
 				// If original invoice was unpaid (paid_amount <= 0.01), allow printing without payments
 				if (origPaid <= 0.01) {
-				return true;
+					return true;
 				}
 			}
 
@@ -1878,7 +1882,10 @@ export default {
 						this.getPrecision('total_taxes_and_charges'),
 					);
 					// Round total_taxes_and_charges before adding to net_total
-					doc.total_taxes_and_charges = flt(doc.total_taxes_and_charges, this.getPrecision('total_taxes_and_charges'));
+					doc.total_taxes_and_charges = flt(
+						doc.total_taxes_and_charges,
+						this.getPrecision('total_taxes_and_charges'),
+					);
 					doc.grand_total = flt(
 						doc.net_total + doc.total_taxes_and_charges,
 						this.getPrecision('grand_total'),
@@ -1909,7 +1916,10 @@ export default {
 						this.getPrecision('total_taxes_and_charges'),
 					);
 					// Round total_taxes_and_charges before adding to net_total
-					doc.total_taxes_and_charges = flt(doc.total_taxes_and_charges, this.getPrecision('total_taxes_and_charges'));
+					doc.total_taxes_and_charges = flt(
+						doc.total_taxes_and_charges,
+						this.getPrecision('total_taxes_and_charges'),
+					);
 					doc.grand_total = flt(
 						doc.net_total + doc.total_taxes_and_charges,
 						this.getPrecision('grand_total'),
@@ -2648,7 +2658,7 @@ export default {
 			const isCreditSale = doc.is_credit_sale === true || doc.is_credit_sale == 1;
 			// For return invoices with unpaid original invoices, allow printing without payments
 			const isReturnUnpaid =
-					doc?.is_return &&
+				doc?.is_return &&
 				doc?._original_invoice_payment_info &&
 				Math.abs(this.flt(doc._original_invoice_payment_info.paid_amount || 0)) <= 0.01;
 			// Allow printing if posa_use_customer_credit_switch is enabled (allows printing without payments)
