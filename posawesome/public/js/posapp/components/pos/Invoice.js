@@ -2694,21 +2694,34 @@ export default {
 				args: {
 					invoice_doc: doc,
 				},
-				callback: (r) => {
+				callback: async (r) => {
 					evntBus.emit('hide_loading');
 					this.isPrinting = false; // Re-enable print button
 
 					if (r.message?.name) {
 						const print_format = this.pos_profile?.posa_print_format;
+						const invoiceName = r.message.name;
 
-						// Open print window directly
+						// Wait for QR if required by POS Profile flag
+						let qrReady = true;
+						if (this.pos_profile?.posa_print_after_qr_ready) {
+							qrReady = await this.waitForQrCode(invoiceName);
+						}
+
+						if (!qrReady) {
+							evntBus.emit('show_mesage', {
+								text: 'لم يتم توليد رمز QR بعد، سيتم الطباعة بدون الرمز.',
+								color: 'warning',
+							});
+						}
+
+						// Open print window
 						const print_url = frappe.urllib.get_full_url(
-							`/printview?doctype=Sales%20Invoice&name=${r.message.name}&format=${print_format}&trigger_print=1&no_letterhead=0`,
+							`/printview?doctype=Sales%20Invoice&name=${invoiceName}&format=${print_format}&trigger_print=1&no_letterhead=0`,
 						);
-
 						window.open(print_url);
 
-						evntBus.emit('set_last_invoice', r.message.name);
+						evntBus.emit('set_last_invoice', invoiceName);
 
 						// Emit event to clear return invoice highlighting
 						evntBus.emit('invoice_submitted');
@@ -2740,6 +2753,43 @@ export default {
 					});
 				},
 			});
+		},
+
+		// Wait for QR code to be generated before printing (if enabled)
+		async waitForQrCode(invoiceName) {
+			const shouldWait = this.pos_profile?.posa_print_after_qr_ready;
+			if (!shouldWait) {
+				return true; // No waiting required
+			}
+
+			const maxAttempts = 15; // up to ~15 seconds
+			const delayMs = 1000;
+
+			for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+				try {
+					const res = await frappe.call({
+						method: 'frappe.client.get_value',
+						args: {
+							doctype: 'Sales Invoice',
+							filters: { name: invoiceName },
+							fieldname: ['custom_qr_code_image'],
+						},
+					});
+
+					const qr = res?.message?.custom_qr_code_image;
+					if (qr) {
+						return true; // QR is ready
+					}
+				} catch (err) {
+					// If call fails, continue retrying until attempts are exhausted
+				}
+
+				// Wait before next attempt
+				await new Promise((resolve) => setTimeout(resolve, delayMs));
+			}
+
+			// QR not ready after retries
+			return false;
 		},
 
 		update_item_detail(item) {
