@@ -72,7 +72,8 @@ class StatusUpdater(Document):
                                 self.status = s[0]
                                 break
                         except Exception as e:
-                            frappe.log_error(f"[[pos_opening_shift.py]] set_status: {str(e)}")
+                            frappe.log_error(
+                                f"[[pos_opening_shift.py]] set_status: {str(e)}")
                             raise
                     elif getattr(self, s[1])():
                         self.status = s[0]
@@ -129,7 +130,8 @@ class POSOpeningShift(StatusUpdater):
                     frappe.throw(_("User {} is not registered in POS Profile {}. Please select a user registered in the profile".format(
                         self.user, self.pos_profile)))
         except Exception as e:
-            frappe.log_error(f"[[pos_opening_shift.py]] validate_pos_profile_and_cashier: {str(e)}")
+            frappe.log_error(
+                f"[[pos_opening_shift.py]] validate_pos_profile_and_cashier: {str(e)}")
             raise
 
     def validate_pos_shift(self):
@@ -191,7 +193,8 @@ class POSOpeningShift(StatusUpdater):
                 frappe.throw(_("Opening cash amount cannot be negative"))
 
         except Exception as e:
-            frappe.log_error(f"[[pos_opening_shift.py]] validate_pos_shift: {str(e)}")
+            frappe.log_error(
+                f"[[pos_opening_shift.py]] validate_pos_shift: {str(e)}")
             raise
 
     def _parse_time(self, time_value):
@@ -264,7 +267,8 @@ class POSOpeningShift(StatusUpdater):
             # Re-raise validation errors (like frappe.throw)
             raise
         except Exception as e:
-            frappe.log_error(f"[[pos_opening_shift.py]] Error validating shift opening window: {str(e)}")
+            frappe.log_error(
+                f"[[pos_opening_shift.py]] Error validating shift opening window: {str(e)}")
             raise
 
     def on_submit(self):
@@ -345,7 +349,8 @@ def check_opening_time_allowed(pos_profile):
             }
 
     except Exception as e:
-        frappe.log_error(f"[[pos_opening_shift.py]] check_opening_time_allowed: {str(e)}")
+        frappe.log_error(
+            f"[[pos_opening_shift.py]] check_opening_time_allowed: {str(e)}")
         return {"allowed": False, "message": f"Error: {str(e)}"}
 
 
@@ -403,7 +408,8 @@ def create_opening_voucher(pos_profile, company, balance_details):
         return opening_voucher.as_dict()
 
     except Exception as e:
-        frappe.log_error(f"[[pos_opening_shift.py]] create_opening_voucher: {str(e)}")
+        frappe.log_error(
+            f"[[pos_opening_shift.py]] create_opening_voucher: {str(e)}")
         frappe.throw(_("Error creating opening voucher"))
 
 
@@ -455,51 +461,52 @@ def get_current_shift_name():
                     # Following Frappe pattern: specify exact fields needed (optimized query)
                     # Only fetch fields that exist in database (verified against tabPOS Profile structure)
                     pos_profile_list = frappe.get_all(
-                    "POS Profile",
-                    filters={"name": pos_profile_name},
-                    fields=[
+                        "POS Profile",
+                        filters={"name": pos_profile_name},
+                        fields=[
                             # Standard Frappe fields (always exist in DocType)
-                        "name",
-                        "company",
-                        "customer",
-                        "currency",
-                        "warehouse",
-                        "selling_price_list",
-                        "letter_head",
-                        "apply_discount_on",
+                            "name",
+                            "company",
+                            "customer",
+                            "currency",
+                            "warehouse",
+                            "selling_price_list",
+                            "letter_head",
+                            "apply_discount_on",
                             # POS Awesome custom fields (verified in database)
-                        # Print settings
-                        "posa_print_format",
-                        # Cash settings
-                        "posa_cash_mode_of_payment",
-                        # Return settings
-                        "posa_allow_return",
-                        "posa_allow_quick_return",
-                        # Credit settings
-                        "posa_allow_credit_sale",
-                        "posa_use_customer_credit",
-                        # Offers settings
-                        "posa_auto_fetch_offers",
-                        "posa_fetch_zero_qty",
-                        # Display settings
-                        "posa_default_card_view",
-                        "posa_hide_expected_amount",
-                        "posa_hide_closing_shift",
-                        "posa_hide_zero_price_items",
-                        "posa_display_discount_percentage",
-                        "posa_display_discount_amount",
-                        # Discount settings
-                        "posa_allow_user_to_edit_item_discount",
-                        "posa_allow_user_to_edit_additional_discount",
-                        "posa_item_max_discount_allowed",
-                        "posa_invoice_max_discount_allowed",
-                        # Tax fields
-                        "posa_apply_tax",
-                        "posa_tax_type",
-                        "posa_tax_percent",
-                    ],
-                    limit=1,
-                    ignore_permissions=True
+                            # Print settings
+                            "posa_print_format",
+                            # Cash settings
+                            "posa_cash_mode_of_payment",
+                            # Return settings
+                            "posa_allow_return",
+                            "posa_allow_quick_return",
+                            # Credit settings
+                            "posa_allow_credit_sale",
+                            "posa_allow_partial_payment",
+                            "posa_use_customer_credit",
+                            # Offers settings
+                            "posa_auto_fetch_offers",
+                            "posa_fetch_zero_qty",
+                            # Display settings
+                            "posa_default_card_view",
+                            "posa_hide_expected_amount",
+                            "posa_hide_closing_shift",
+                            "posa_hide_zero_price_items",
+                            "posa_display_discount_percentage",
+                            "posa_display_discount_amount",
+                            # Discount settings
+                            "posa_allow_user_to_edit_item_discount",
+                            "posa_allow_user_to_edit_additional_discount",
+                            "posa_item_max_discount_allowed",
+                            "posa_invoice_max_discount_allowed",
+                            # Tax fields
+                            "posa_apply_tax",
+                            "posa_tax_type",
+                            "posa_tax_percent",
+                        ],
+                        limit=1,
+                        ignore_permissions=True
                     )
 
                     if pos_profile_list and len(pos_profile_list) > 0:
@@ -532,7 +539,7 @@ def get_current_shift_name():
                         try:
                             # Fetch payments child table (tabPOS Payment Method)
                             payments_result = frappe.db.sql("""
-                                SELECT 
+                                SELECT
                                     mode_of_payment,
                                     `default`,
                                     allow_in_returns
@@ -578,7 +585,8 @@ def get_current_shift_name():
         }
 
     except Exception as e:
-        frappe.log_error(f"[[pos_opening_shift.py]] get_current_shift_name: {str(e)}")
+        frappe.log_error(
+            f"[[pos_opening_shift.py]] get_current_shift_name: {str(e)}")
         return {
             "success": False,
             "message": "No active shift found",
@@ -594,10 +602,10 @@ def get_current_shift_name():
 @frappe.whitelist()
 def check_shift_is_open(shift_name: str = None):
     """Simple check: returns True if specified shift is open, False otherwise
-    
+
     Args:
         shift_name: Name of the shift to check. If None, checks if user has any open shift.
-    
+
     Returns:
         dict: {"is_open": True/False}
     """
@@ -605,24 +613,24 @@ def check_shift_is_open(shift_name: str = None):
         if shift_name:
             # Check specific shift status using SQL directly (bypass cache)
             result = frappe.db.sql("""
-                SELECT status 
-                FROM `tabPOS Opening Shift` 
+                SELECT status
+                FROM `tabPOS Opening Shift`
                 WHERE name = %s
             """, [shift_name], as_dict=True)
-            
+
             if not result or not result[0]:
                 # Shift doesn't exist - consider it closed
                 return {"is_open": False}
-            
+
             status = result[0].get("status")
             is_open = status == "Open"
-            
+
             # Always log for debugging
             frappe.log_error(
                 f"check_shift_is_open: shift={shift_name}, status={status}, is_open={is_open}, user={frappe.session.user}",
                 "Shift Status Check"
             )
-            
+
             return {"is_open": is_open}
         else:
             # Check if user has any open shift using get_value
@@ -649,7 +657,7 @@ def get_all_open_shifts(user=None):
         # FRAPPE STANDARD: Use session user if not specified
         if not user:
             user = frappe.session.user
-        
+
         # Filter shifts by user and status
         shifts = frappe.db.sql("""
             SELECT name, pos_profile, company, period_start_date, user
@@ -672,7 +680,8 @@ def get_all_open_shifts(user=None):
         }
 
     except Exception as e:
-        frappe.log_error(f"[[pos_opening_shift.py]] get_all_open_shifts: {str(e)}")
+        frappe.log_error(
+            f"[[pos_opening_shift.py]] get_all_open_shifts: {str(e)}")
         return {
             "success": False,
             "count": 0,
@@ -711,7 +720,8 @@ def get_profile_users(doctype, txt, searchfield, start, page_len, filters):
 
     except Exception as e:
         # Note: get_profile_users doesn't have pos_profile parameter
-        frappe.log_error(f"[[pos_opening_shift.py]] get_profile_users: {str(e)}")
+        frappe.log_error(
+            f"[[pos_opening_shift.py]] get_profile_users: {str(e)}")
         frappe.throw(_("Error retrieving profile users"))
 
 
@@ -731,7 +741,8 @@ def get_user_shift_invoice_count(pos_profile, pos_opening_shift):
         return count
 
     except Exception as e:
-        frappe.log_error(f"[[pos_opening_shift.py]] get_user_shift_invoice_count: {str(e)}")
+        frappe.log_error(
+            f"[[pos_opening_shift.py]] get_user_shift_invoice_count: {str(e)}")
         return 0
 
 
@@ -750,7 +761,7 @@ def _format_time_12h(time_obj):
     """Convert 24-hour time to 12-hour format with ص/م"""
     hour = time_obj.hour
     minute = time_obj.minute
-    
+
     # Convert to 12-hour format
     if hour == 0:
         hour_12 = 12
@@ -764,7 +775,7 @@ def _format_time_12h(time_obj):
     else:
         hour_12 = hour - 12
         period = "م"
-    
+
     return f"{hour_12}:{minute:02d}{period}"
 
 
@@ -802,5 +813,6 @@ def _parse_time_helper(time_value):
 
     except Exception as e:
         # Note: _parse_time_helper doesn't have pos_profile parameter
-        frappe.log_error(f"[[pos_opening_shift.py]] _parse_time_helper: {str(e)}")
+        frappe.log_error(
+            f"[[pos_opening_shift.py]] _parse_time_helper: {str(e)}")
         return None
