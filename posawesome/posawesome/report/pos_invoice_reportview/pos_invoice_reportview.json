@@ -10,8 +10,8 @@
  "idx": 0,
  "is_standard": "Yes",
  "json": "{\"filters\":[[\"Sales Invoice\",\"pos_profile\",\"=\",\"\u0641\u0631\u0639 \u0627\u0644\u0634\u0631\u0627\u0626\u0639\",false],[\"Sales Invoice\",\"is_pos\",\"=\",1]],\"fields\":[[\"owner\",\"Sales Invoice\"],[\"docstatus\",\"Sales Invoice\"],[\"name\",\"Sales Invoice\"],[\"posting_date\",\"Sales Invoice\"],[\"customer\",\"Sales Invoice\"],[\"branch\",\"Sales Invoice\"],[\"posa_pos_opening_shift\",\"Sales Invoice\"],[\"total\",\"Sales Invoice\"],[\"net_total\",\"Sales Invoice\"],[\"total_taxes_and_charges\",\"Sales Invoice\"],[\"posa_item_discount_total\",\"Sales Invoice\"],[\"grand_total\",\"Sales Invoice\"],[\"rounded_total\",\"Sales Invoice\"],[\"is_return\",\"Sales Invoice\"],[\"outstanding_amount\",\"Sales Invoice\"],[\"rounding_adjustment\",\"Sales Invoice\"],[\"additional_discount_percentage\",\"Sales Invoice\"],[\"discount_amount\",\"Sales Invoice\"]],\"order_by\":\"`tabSales Invoice`.`modified` desc\",\"add_totals_row\":true,\"page_length\":20,\"column_widths\":{\"owner\":120,\"name\":120,\"posting_date\":120,\"customer\":120,\"branch\":120,\"posa_pos_opening_shift\":120,\"total\":120,\"net_total\":120,\"total_taxes_and_charges\":120,\"posa_item_discount_total\":120,\"grand_total\":120,\"rounded_total\":120,\"is_return\":120,\"outstanding_amount\":120,\"rounding_adjustment\":120,\"additional_discount_percentage\":120,\"discount_amount\":120},\"group_by\":null}",
- "letterhead": null,
- "modified": "2025-11-26 04:29:46.943024",
+ "letter_head": null,
+ "modified": "2025-12-16 18:18:32.429160",
  "modified_by": "Administrator",
  "module": "POSAwesome",
  "name": "pos_Invoice_reportview",
@@ -32,12 +32,6 @@
   },
   {
    "role": "Sales Manager"
-  },
-  {
-   "role": "pos_user"
-  },
-  {
-   "role": "sales_orders"
   },
   {
    "role": "System Manager"
