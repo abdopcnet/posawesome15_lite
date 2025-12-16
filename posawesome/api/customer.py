@@ -1144,3 +1144,4 @@ def _update_contact_for_customer(customer_doc, mobile_no_updated, email_id_updat
     except Exception:
         # Note: _update_contact_for_customer doesn't have pos_profile parameter
         # Don't fail the whole operation if contact update fails (no logging needed)
+        pass
