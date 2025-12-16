@@ -141,9 +141,8 @@ def create_customer(
                         "customer_primary_contact", contact.name)
                     customer_doc.db_set("mobile_no", customer_doc.mobile_no)
                     customer_doc.db_set("email_id", customer_doc.email_id)
-                except Exception as contact_error:
-                    # Don't fail customer creation if contact creation fails
-                    frappe.log_error(f"[[customer.py]] create_customer: {str(contact_error)}")
+                except Exception:
+                    # Don't fail customer creation if contact creation fails - silent fail
                     pass
 
         frappe.db.commit()
@@ -258,9 +257,9 @@ def get_customer(customer_id):
                     "Customer Group", customer_doc.customer_group)
                 if hasattr(customer_group_doc, 'default_price_list') and customer_group_doc.default_price_list:
                     result["customer_group_price_list"] = customer_group_doc.default_price_list
-            except Exception as cg_error:
-                # Note: get_customer doesn't have pos_profile parameter
-                frappe.log_error(f"[[customer.py]] get_customer: {str(cg_error)}")
+            except Exception:
+                # Silent fail - customer group data is optional (no logging needed)
+                pass
 
         # Get loyalty points (if loyalty program exists)
         if customer_doc.loyalty_program:
@@ -269,10 +268,11 @@ def get_customer(customer_id):
                 loyalty_details = get_loyalty_program_details_with_points(
                     customer_doc.name, customer_doc.loyalty_program, silent=True)
                 if loyalty_details and loyalty_details.get("loyalty_points"):
-                    result["loyalty_points"] = loyalty_details.get("loyalty_points")
-            except Exception as loyalty_error:
-                # Note: get_customer doesn't have pos_profile parameter
-                frappe.log_error(f"[[customer.py]] get_customer: {str(loyalty_error)}")
+                    result["loyalty_points"] = loyalty_details.get(
+                        "loyalty_points")
+            except Exception:
+                # Silent fail - loyalty points are optional (no logging needed)
+                pass
 
         return result
 
@@ -317,7 +317,7 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
                 elif not isinstance(pos_profile_name, str):
                     # Try to convert to string if it's not already
                     profile_name_to_fetch = str(pos_profile_name)
-                
+
                 # Verify POS Profile exists before fetching
                 if profile_name_to_fetch and frappe.db.exists("POS Profile", profile_name_to_fetch):
                     pos_profile_data = frappe.get_cached_doc(
@@ -330,11 +330,8 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
                             filters["customer_group"] = ["in", customer_groups]
             except Exception as profile_error:
                 # Note: get_many_customers doesn't have pos_profile parameter
-                # Truncate error message to avoid CharacterLengthExceededError (max 140 chars)
-                error_msg = str(profile_error)
-                if len(error_msg) > 100:
-                    error_msg = error_msg[:100] + "..."
-                frappe.log_error(f"[[customer.py]] get_many_customers: {error_msg}", "POS Profile Filter Error")
+                # Silent fail - POS profile filter is optional (no logging needed)
+                pass
 
         # Add search term filter
         if search_term and search_term.strip():
@@ -368,7 +365,7 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
                 elif not isinstance(pos_profile_name, str):
                     # Try to convert to string if it's not already
                     profile_name_to_fetch = str(pos_profile_name)
-                
+
                 if profile_name_to_fetch and frappe.db.exists("POS Profile", profile_name_to_fetch):
                     pos_profile_data = frappe.get_cached_doc(
                         "POS Profile", profile_name_to_fetch)
@@ -378,10 +375,8 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
                         customers = _ensure_default_customer_in_results(
                             customers, default_customer, ["name", "customer_name", "mobile_no", "customer_group"])
             except Exception as filter_error:
-                # Note: get_many_customers doesn't have pos_profile parameter
-                # Truncate error message to avoid CharacterLengthExceededError
-                error_msg = str(filter_error)[:100] if len(str(filter_error)) > 100 else str(filter_error)
-                frappe.log_error(f"[[customer.py]] get_many_customers: {error_msg}", "Customer Filter Error")
+                # Silent fail - customer filter error is non-critical (no logging needed)
+                pass
 
         return customers
 
@@ -391,7 +386,8 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
         error_msg = str(e)
         if len(error_msg) > 100:
             error_msg = error_msg[:100] + "..."
-        frappe.log_error(f"[[customer.py]] get_many_customers: {error_msg}", "Get Customers Error")
+        frappe.log_error(
+            f"[[customer.py]] get_many_customers: {error_msg}", "Get Customers Error")
         frappe.throw(_("Error retrieving customers"))
 
 
@@ -435,10 +431,11 @@ def get_customers_count(search_term="", pos_profile=None, filters=None):
                         if cg.get("customer_group")
                     ]
                     if customer_groups:
-                        base_filters["customer_group"] = ["in", customer_groups]
-            except Exception as profile_error:
-                # Note: get_customers_count doesn't have pos_profile parameter
-                frappe.log_error(f"[[customer.py]] get_customers_count: {str(profile_error)}")
+                        base_filters["customer_group"] = [
+                            "in", customer_groups]
+            except Exception:
+                # Silent fail - POS profile data is optional (no logging needed)
+                pass
 
         # Add search term filter
         if search_term and search_term.strip():
@@ -503,13 +500,8 @@ def get_many_customer_addresses(customer_id):
 
         return addresses
 
-    except Exception as address_error:
-        # Note: get_many_customer_addresses doesn't have pos_profile parameter
-        frappe.log_error(f"[[customer.py]] get_many_customer_addresses: {str(address_error)}")
-        return []
-    except Exception as e:
-        # Note: get_many_customer_addresses doesn't have pos_profile parameter
-        frappe.log_error(f"[[customer.py]] get_many_customer_addresses: {str(e)}")
+    except Exception:
+        # Graceful degradation - return empty list (no logging needed)
         return []
 
 
@@ -726,7 +718,8 @@ def get_customer_credit_summary(customer_id, company=None):
 
     except Exception as e:
         # Note: get_customer_credit_summary doesn't have pos_profile parameter
-        frappe.log_error(f"[[customer.py]] get_customer_credit_summary: {str(e)}")
+        frappe.log_error(
+            f"[[customer.py]] get_customer_credit_summary: {str(e)}")
         frappe.throw(_("Error retrieving customer credit summary"))
 
 
@@ -735,11 +728,11 @@ def get_customer_outstanding_balance(customer_id, company=None):
     """
     Get total outstanding balance (unpaid amount) for a customer.
     Following ERPNext logic: sum of outstanding_amount from all unpaid Sales Invoices.
-    
+
     Args:
         customer_id (str): Customer ID/name (required)
         company (str): Company to filter by (optional)
-    
+
     Returns:
         dict: Outstanding balance information
     """
@@ -763,66 +756,71 @@ def get_customer_outstanding_balance(customer_id, company=None):
         # Use ERPNext standard logic: Calculate from GL Entry (General Ledger)
         # This matches exactly how ERPNext calculates "Total Unpaid" in dashboard
         # Reference: erpnext/erpnext/accounts/party.py get_dashboard_info()
-        
+
         # Build SQL query parameters
         party_type = "Customer"
         party = customer_id
-        
+
         # SQL query to get outstanding balance from GL Entry
         # Formula: sum(debit_in_account_currency) - sum(credit_in_account_currency)
         # This gives the actual accounting balance, not just invoice outstanding
         sql_query = """
-            SELECT company, 
+            SELECT company,
                    SUM(debit_in_account_currency) - SUM(credit_in_account_currency) as outstanding
             FROM `tabGL Entry`
             WHERE party_type = %s AND party = %s
             AND is_cancelled = 0
         """
         params = [party_type, party]
-        
+
         # Add company filter if provided
         if company:
             sql_query += " AND company = %s"
             params.append(company)
-        
+
         sql_query += " GROUP BY company"
-        
+
         # Execute query
         gl_entries = frappe.db.sql(sql_query, tuple(params), as_dict=True)
-        
+
         # Calculate total outstanding
         total_outstanding = 0.0
         outstanding_by_company = {}
-        
+
         for entry in gl_entries:
             outstanding = flt(entry.get("outstanding", 0))
-            if outstanding > 0:  # Only positive outstanding (customer owes money)
+            # Only positive outstanding (customer owes money)
+            if outstanding > 0:
                 outstanding_by_company[entry.company] = outstanding
                 total_outstanding += outstanding
-        
+
         # Get currency for the company
         if company:
             # Get company default currency
-            company_currency = frappe.get_cached_value("Company", company, "default_currency")
+            company_currency = frappe.get_cached_value(
+                "Company", company, "default_currency")
             # Get party account currency (may differ from company currency)
             try:
                 from erpnext.accounts.party import get_party_account_currency
-                currency = get_party_account_currency(party_type, party, company)
+                currency = get_party_account_currency(
+                    party_type, party, company)
             except:
                 currency = company_currency or "SAR"
         else:
             # If no company specified, use first company's currency
             if outstanding_by_company:
                 first_company = list(outstanding_by_company.keys())[0]
-                company_currency = frappe.get_cached_value("Company", first_company, "default_currency")
+                company_currency = frappe.get_cached_value(
+                    "Company", first_company, "default_currency")
                 try:
                     from erpnext.accounts.party import get_party_account_currency
-                    currency = get_party_account_currency(party_type, party, first_company)
+                    currency = get_party_account_currency(
+                        party_type, party, first_company)
                 except:
                     currency = company_currency or "SAR"
             else:
                 currency = "SAR"
-        
+
         # Build outstanding_by_currency dict for compatibility
         outstanding_by_currency = {}
         if currency:
@@ -836,8 +834,8 @@ def get_customer_outstanding_balance(customer_id, company=None):
             "outstanding_by_currency": outstanding_by_currency
         }
 
-    except Exception as e:
-        frappe.log_error(f"[[customer.py]] get_customer_outstanding_balance: {str(e)}", "Customer Outstanding Balance Error")
+    except Exception:
+        # Graceful degradation - return zero outstanding (no logging needed)
         return {
             "customer": customer_id,
             "company": company,
@@ -972,9 +970,8 @@ def _resolve_default_customer_name(pos_profile):
         pos_profile_data = frappe.parse_json(pos_profile)
         if isinstance(pos_profile_data, dict):
             return pos_profile_data.get("customer")
-    except Exception as resolve_error:
-        frappe.log_error(f"[[customer.py]] _resolve_default_customer_name: {str(resolve_error)}")
-        # Silent fallback - default customer remains None
+    except Exception:
+        # Silent fallback - default customer remains None (no logging needed)
         return None
 
     return None
@@ -1011,10 +1008,9 @@ def _ensure_default_customer_in_results(customers, default_customer_name, fields
 
         if default_customer_data:
             customers.insert(0, default_customer_data[0])
-    except Exception as ensure_error:
+    except Exception:
         # Note: _ensure_default_customer_in_results doesn't have pos_profile parameter
-        frappe.log_error(f"[[customer.py]] _ensure_default_customer_in_results: {str(ensure_error)}")
-        # Silent fallback - return the original list unchanged
+        # Silent fallback - return the original list unchanged (no logging needed)
         return customers
 
     return customers
@@ -1090,9 +1086,9 @@ def _update_contact_for_customer(customer_doc, mobile_no_updated, email_id_updat
             try:
                 contact = _make_contact_for_customer(customer_doc)
                 customer_doc.db_set("customer_primary_contact", contact.name)
-            except Exception as e:
-                # Note: _update_contact_for_customer doesn't have pos_profile parameter
-                frappe.log_error(f"[[customer.py]] _update_contact_for_customer: {str(e)}")
+            except Exception:
+                # Silent fail - contact update is optional (no logging needed)
+                pass
         return
 
     try:
@@ -1145,7 +1141,6 @@ def _update_contact_for_customer(customer_doc, mobile_no_updated, email_id_updat
             contact_doc.flags.ignore_mandatory = True
             contact_doc.save(ignore_permissions=True)
 
-    except Exception as contact_error:
+    except Exception:
         # Note: _update_contact_for_customer doesn't have pos_profile parameter
-        frappe.log_error(f"[[customer.py]] _update_contact_for_customer: {str(contact_error)}")
-        # Don't fail the whole operation if contact update fails
+        # Don't fail the whole operation if contact update fails (no logging needed)
