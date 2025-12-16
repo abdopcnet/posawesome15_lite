@@ -9,8 +9,8 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "letterhead": null,
- "modified": "2025-11-14 13:22:01.831312",
+ "letter_head": null,
+ "modified": "2025-12-16 18:16:07.416219",
  "modified_by": "Administrator",
  "module": "POSAwesome",
  "name": "POS_Shift_Report",
@@ -19,6 +19,10 @@
  "ref_doctype": "POS Opening Shift",
  "report_name": "POS_Shift_Report",
  "report_type": "Script Report",
- "roles": [],
+ "roles": [
+  {
+   "role": "Sales Manager"
+  }
+ ],
  "timeout": 0
 }
