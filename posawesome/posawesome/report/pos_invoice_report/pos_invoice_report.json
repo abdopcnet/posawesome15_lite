@@ -9,8 +9,8 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "letterhead": null,
- "modified": "2025-11-15 11:22:39.911448",
+ "letter_head": null,
+ "modified": "2025-12-16 18:17:49.742694",
  "modified_by": "Administrator",
  "module": "POSAwesome",
  "name": "POS_invoice_Report",
@@ -19,6 +19,13 @@
  "ref_doctype": "Sales Invoice",
  "report_name": "POS_invoice_Report",
  "report_type": "Script Report",
- "roles": [],
+ "roles": [
+  {
+   "role": "Sales Manager"
+  },
+  {
+   "role": "Accounts Manager"
+  }
+ ],
  "timeout": 0
 }
