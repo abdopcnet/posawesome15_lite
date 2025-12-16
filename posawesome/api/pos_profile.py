@@ -19,7 +19,7 @@ import frappe
 def get_default_payment_from_pos_profile(company=None, pos_profile=None):
     """
     Get default payment method from POS Profile
-    
+
     Args:
         company (str): Company name (required)
         pos_profile (str|dict): POS Profile name or dict (optional)
@@ -27,7 +27,7 @@ def get_default_payment_from_pos_profile(company=None, pos_profile=None):
     try:
         if not company:
             frappe.throw(_("Company is required"))
-        
+
         if not pos_profile:
             return None
 
@@ -62,8 +62,8 @@ def get_default_payment_from_pos_profile(company=None, pos_profile=None):
 
         return None
 
-    except Exception as e:
-        frappe.log_error(f"[[pos_profile.py]] get_default_payment_from_pos_profile: {str(e)}")
+    except Exception:
+        # Graceful degradation - return None (no logging needed)
         return None
 
 
@@ -101,9 +101,8 @@ def get_opening_dialog_data():
 
         return data
 
-    except Exception as e:
-        # Note: get_opening_dialog_data doesn't have pos_profile parameter
-        frappe.log_error(f"[[pos_profile.py]] get_opening_dialog_data: {str(e)}")
+    except Exception:
+        # Graceful degradation - return empty dict (no logging needed)
         return {}
 
 
@@ -123,7 +122,7 @@ def get_payment_methods(pos_profile_name=None, pos_profile_list=None):
         if pos_profile_name:
             # Single profile - used by pos_opening_shift
             payments = frappe.db.sql("""
-                SELECT 
+                SELECT
                     mode_of_payment,
                     `default`,
                     allow_in_returns
@@ -152,8 +151,8 @@ def get_payment_methods(pos_profile_name=None, pos_profile_list=None):
 
         return []
 
-    except Exception as e:
-        frappe.log_error(f"[[pos_profile.py]] get_payment_methods: {str(e)}")
+    except Exception:
+        # Graceful degradation - return empty list (no logging needed)
         return []
 
 
@@ -173,8 +172,8 @@ def get_profile_users(profile_name):
         result = [u.user for u in users]
         return result
 
-    except Exception as e:
-        frappe.log_error(f"[[pos_profile.py]] get_profile_users: {str(e)}")
+    except Exception:
+        # Graceful degradation - return empty list (no logging needed)
         return []
 
 
@@ -194,8 +193,8 @@ def get_profile_warehouses(profile_name):
         result = [w.warehouse for w in warehouses]
         return result
 
-    except Exception as e:
-        frappe.log_error(f"[[pos_profile.py]] get_profile_warehouses: {str(e)}")
+    except Exception:
+        # Graceful degradation - return empty list (no logging needed)
         return []
 
 
@@ -273,7 +272,6 @@ def get_payment_account(mode_of_payment, company):
         result = {"account": ""}
         return result
 
-    except Exception as e:
-        # Note: get_payment_account doesn't have pos_profile parameter
-        frappe.log_error(f"[[pos_profile.py]] get_payment_account: {str(e)}")
+    except Exception:
+        # Graceful degradation - return empty account (no logging needed)
         return {"account": ""}
