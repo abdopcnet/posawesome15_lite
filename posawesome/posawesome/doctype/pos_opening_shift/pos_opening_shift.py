@@ -349,8 +349,7 @@ def check_opening_time_allowed(pos_profile):
             }
 
     except Exception as e:
-        frappe.log_error(
-            f"[[pos_opening_shift.py]] check_opening_time_allowed: {str(e)}")
+        # Graceful degradation - return not allowed (no logging needed)
         return {"allowed": False, "message": f"Error: {str(e)}"}
 
 
@@ -450,10 +449,6 @@ def get_current_shift_name():
                 # First check if POS Profile exists in database
                 if not frappe.db.exists("POS Profile", pos_profile_name):
                     error_msg = f"POS Profile '{pos_profile_name}' غير موجود في قاعدة البيانات"
-                    frappe.log_error(
-                        f"[[pos_opening_shift.py]] get_current_shift_name: {error_msg}",
-                        "POS Profile Not Found"
-                    )
                     row["pos_profile_data"] = None
                     row["pos_profile_error"] = error_msg
                 else:
@@ -527,12 +522,8 @@ def get_current_shift_name():
                             """, (pos_profile_name,), as_dict=True)
                             pos_profile_data["item_groups"] = [
                                 ig.item_group for ig in item_groups_result]
-                        except Exception as item_groups_error:
-                            # FRAPPE STANDARD: Log error but continue (graceful degradation)
-                            frappe.log_error(
-                                f"[[pos_opening_shift.py]] get_current_shift_name: item_groups error: {str(item_groups_error)}",
-                                "POS Item Groups Fetch Error"
-                            )
+                        except Exception:
+                            # Graceful degradation - continue without item groups (no logging needed)
                             pos_profile_data["item_groups"] = []
 
                         # FRAPPE FRAMEWORK STANDARD: Fetch child table data using SQL
@@ -550,32 +541,19 @@ def get_current_shift_name():
                                 ORDER BY idx
                             """, (pos_profile_name,), as_dict=True)
                             pos_profile_data["payments"] = payments_result
-                        except Exception as payments_error:
-                            # FRAPPE STANDARD: Log error but continue (graceful degradation)
-                            frappe.log_error(
-                                f"[[pos_opening_shift.py]] get_current_shift_name: payments error: {str(payments_error)}",
-                                "POS Payment Methods Fetch Error"
-                            )
+                        except Exception:
+                            # Graceful degradation - continue without payments (no logging needed)
                             pos_profile_data["payments"] = []
 
                         row["pos_profile_data"] = pos_profile_data
                     else:
                         # POS Profile exists but frappe.get_all returned empty (permissions issue?)
                         error_msg = f"لم يتم العثور على بيانات POS Profile '{pos_profile_name}' (قد تكون مشكلة في الصلاحيات)"
-                        frappe.log_error(
-                            f"[[pos_opening_shift.py]] get_current_shift_name: POS Profile '{pos_profile_name}' exists but frappe.get_all returned empty list",
-                            "POS Profile Data Not Retrieved"
-                        )
                         row["pos_profile_data"] = None
                         row["pos_profile_error"] = error_msg
             except Exception as profile_error:
-                # Log error with full details for debugging
+                # Return error info without logging (non-critical error)
                 error_message = f"خطأ في تحميل POS Profile '{pos_profile_name}': {str(profile_error)}"
-                frappe.log_error(
-                    f"[[pos_opening_shift.py]] get_current_shift_name: {error_message}",
-                    "POS Profile Load Error"
-                )
-                # Don't fail silently - return error info
                 row["pos_profile_data"] = None
                 row["pos_profile_error"] = error_message
 
@@ -584,9 +562,8 @@ def get_current_shift_name():
             "data": row if rows else None
         }
 
-    except Exception as e:
-        frappe.log_error(
-            f"[[pos_opening_shift.py]] get_current_shift_name: {str(e)}")
+    except Exception:
+        # Graceful degradation - return failure response (no logging needed)
         return {
             "success": False,
             "message": "No active shift found",
@@ -625,12 +602,7 @@ def check_shift_is_open(shift_name: str = None):
             status = result[0].get("status")
             is_open = status == "Open"
 
-            # Always log for debugging
-            frappe.log_error(
-                f"check_shift_is_open: shift={shift_name}, status={status}, is_open={is_open}, user={frappe.session.user}",
-                "Shift Status Check"
-            )
-
+            # Return result without logging (this function is called frequently for monitoring)
             return {"is_open": is_open}
         else:
             # Check if user has any open shift using get_value
@@ -640,8 +612,8 @@ def check_shift_is_open(shift_name: str = None):
                 "name"
             )
             return {"is_open": open_shift is not None}
-    except Exception as e:
-        frappe.log_error(f"check_shift_is_open error: {str(e)}")
+    except Exception:
+        # Silent failure - return False for monitoring function
         return {"is_open": False}
 
 
@@ -679,9 +651,8 @@ def get_all_open_shifts(user=None):
             "shifts": shifts,
         }
 
-    except Exception as e:
-        frappe.log_error(
-            f"[[pos_opening_shift.py]] get_all_open_shifts: {str(e)}")
+    except Exception:
+        # Graceful degradation - return empty result (no logging needed)
         return {
             "success": False,
             "count": 0,
@@ -740,9 +711,8 @@ def get_user_shift_invoice_count(pos_profile, pos_opening_shift):
         })
         return count
 
-    except Exception as e:
-        frappe.log_error(
-            f"[[pos_opening_shift.py]] get_user_shift_invoice_count: {str(e)}")
+    except Exception:
+        # Graceful degradation - return 0 (no logging needed)
         return 0
 
 
@@ -811,8 +781,6 @@ def _parse_time_helper(time_value):
         else:
             return None
 
-    except Exception as e:
-        # Note: _parse_time_helper doesn't have pos_profile parameter
-        frappe.log_error(
-            f"[[pos_opening_shift.py]] _parse_time_helper: {str(e)}")
+    except Exception:
+        # Graceful degradation - return None (no logging needed)
         return None
