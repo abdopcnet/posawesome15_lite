@@ -25,11 +25,11 @@ FRAPPE API PATTERN - How Data Flows:
    - Frontend only sends fields that are loaded in memory
    - If you need ALL document fields (like custom barcode settings),
      you MUST re-fetch from database: frappe.get_cached_doc()
-   
+
    Example:
    Frontend sends:  {'name': 'Profile1', 'warehouse': 'Store'} (only 23 fields)
    Database has:    All fields including posa_enable_scale_barcode, etc.
-   
+
    Solution: Always fetch complete doc when you need custom fields:
    pos_profile = frappe.get_cached_doc("POS Profile", pos_profile.get('name')).as_dict()
 """
@@ -89,7 +89,7 @@ def get_items(pos_profile, price_list=None, item_group="", search_value="", cust
         # Validate parameter type
         if not isinstance(pos_profile, dict):
             frappe.throw(_("Invalid POS Profile data"))
-        
+
         # Validate pos_profile has required 'name' field
         if not pos_profile.get('name'):
             frappe.throw(_("POS Profile name is required"))
@@ -264,7 +264,7 @@ def get_barcode_item(pos_profile, barcode_value):
         # Ensure pos_profile is a dictionary
         if not isinstance(pos_profile, dict):
             frappe.throw(_("Invalid POS Profile data"))
-        
+
         # Validate pos_profile has required 'name' field
         if not pos_profile.get('name'):
 
@@ -434,8 +434,7 @@ def process_batch_selection(item_code, current_item_row_id, existing_items_data,
             "data": {}
         }
     except Exception as e:
-        # Note: process_batch_selection doesn't have pos_profile parameter
-        frappe.log_error(f"[[item.py]] process_batch_selection: {str(e)}")
+        # Graceful degradation - return failure (no logging needed)
         return {
             "success": False,
             "message": str(e),
