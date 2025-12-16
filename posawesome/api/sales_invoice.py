@@ -66,14 +66,15 @@ def get_draft_invoices(pos_opening_shift=None):
             "is_pos": 1,
             "docstatus": 0,
         }
-        
+
         if pos_opening_shift:
             filters["posa_pos_opening_shift"] = pos_opening_shift
 
         invoices_list = frappe.get_all(
             "Sales Invoice",
             filters=filters,
-            fields=["name", "customer", "posting_date", "posting_time", "grand_total", "currency"],
+            fields=["name", "customer", "posting_date",
+                    "posting_time", "grand_total", "currency"],
             order_by="modified desc",
             limit=50
         )
@@ -84,21 +85,23 @@ def get_draft_invoices(pos_opening_shift=None):
             try:
                 doc = frappe.get_cached_doc("Sales Invoice", invoice["name"])
                 invoice_dict = doc.as_dict()
-                invoice_dict["customer_name"] = frappe.get_value("Customer", invoice["customer"], "customer_name") if invoice["customer"] else ""
-                
+                invoice_dict["customer_name"] = frappe.get_value(
+                    "Customer", invoice["customer"], "customer_name") if invoice["customer"] else ""
+
                 # Use ERPNext native status field
                 # Draft invoices (docstatus=0) have status "Draft"
-                invoice_dict["invoice_status"] = invoice_dict.get("status", "Draft")
-                
+                invoice_dict["invoice_status"] = invoice_dict.get(
+                    "status", "Draft")
+
                 data.append(invoice_dict)
-            except Exception as e:
-                frappe.log_error(f"[[sales_invoice.py]] get_draft_invoices: Error loading {invoice['name']}: {str(e)}")
+            except Exception:
+                # Silent fail - skip problematic invoice (no logging needed)
                 continue
 
         return data
 
-    except Exception as e:
-        frappe.log_error(f"[[sales_invoice.py]] get_draft_invoices: {str(e)}")
+    except Exception:
+        # Graceful degradation - return empty list (no logging needed)
         return []
 
 
@@ -213,8 +216,8 @@ def calculate_return_stats(invoice_name):
             "items": items_stats
         }
 
-    except Exception as e:
-        frappe.log_error(f"[[sales_invoice.py]] get_returnable_amounts: {str(e)}")
+    except Exception:
+        # Graceful degradation - return zero values (no logging needed)
         return {
             "remaining_returnable_amount": 0,
             "total_returned_amount": 0,
@@ -237,7 +240,7 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
     - Not already returns (is_return=0)
     - Include all invoices (paid, partly paid, or unpaid) with remaining returnable amount > 0
 
-    Note: 
+    Note:
     - Unpaid invoices (outstanding_amount == grand_total) are allowed for return
     - Partial returns are allowed (ERPNext native behavior)
     - Invoice may have status "Paid", "Partly Paid", or "Unpaid" with remaining returnable amount
@@ -316,7 +319,7 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
                 invoice["remaining_returnable_amount"] = return_stats["remaining_returnable_amount"]
                 invoice["total_returned_amount"] = return_stats["total_returned_amount"]
                 invoice["original_amount"] = return_stats["original_amount"]
-                
+
                 # Use ERPNext native status field if available, otherwise calculate it
                 # Following ERPNext sales_invoice.py set_status() logic exactly
                 # Reference: erpnext/erpnext/accounts/doctype/sales_invoice/sales_invoice.py:1907-1948
@@ -326,16 +329,19 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
                     invoice["invoice_status_en"] = invoice.get("status")
                 else:
                     # Calculate status following ERPNext logic
-                    outstanding_amount = flt(invoice.get("outstanding_amount", 0))
+                    outstanding_amount = flt(
+                        invoice.get("outstanding_amount", 0))
                     grand_total = flt(invoice.get("grand_total", 0))
-                    total_returned = flt(return_stats.get("total_returned_amount", 0))
-                    
+                    total_returned = flt(return_stats.get(
+                        "total_returned_amount", 0))
+
                     # Check if invoice is returned (following ERPNext logic: is_return == 1)
                     if invoice.get("is_return") == 1:
                         invoice["invoice_status"] = "Return"
                         invoice["invoice_status_en"] = "Return"
                     # Check if invoice has returns against it (Credit Note Issued)
-                    elif abs(total_returned) >= abs(grand_total) * 0.99:  # Fully returned (99% tolerance)
+                    # Fully returned (99% tolerance)
+                    elif abs(total_returned) >= abs(grand_total) * 0.99:
                         invoice["invoice_status"] = "Credit Note Issued"
                         invoice["invoice_status_en"] = "Credit Note Issued"
                     # Check payment status
@@ -354,7 +360,8 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
         return returnable_invoices
 
     except Exception as e:
-        frappe.log_error(f"[[sales_invoice.py]] get_returnable_invoices: {str(e)}")
+        frappe.log_error(
+            f"[[sales_invoice.py]] get_returnable_invoices: {str(e)}")
         frappe.throw(_("Error fetching invoices for return"))
         return []
 
@@ -366,7 +373,7 @@ def get_print_invoices(pos_profile=None, pos_opening_shift=None, user=None):
     """
     GET - Get submitted invoices for print dialog with invoice type
     Returns list of invoices with invoice_type field (مبيعات, مرتجع فاتورة, مرتجع سريع)
-    
+
     FRAPPE STANDARD: pos_profile and pos_opening_shift can be dict or string
     """
     try:
@@ -375,19 +382,19 @@ def get_print_invoices(pos_profile=None, pos_opening_shift=None, user=None):
             pos_profile_name = pos_profile.get('name')
         else:
             pos_profile_name = pos_profile
-            
+
         if isinstance(pos_opening_shift, dict):
             pos_opening_shift_name = pos_opening_shift.get('name')
         else:
             pos_opening_shift_name = pos_opening_shift
-        
+
         # Use session user if not specified
         if not user:
             user = frappe.session.user
-        
+
         if not pos_profile_name:
             return []
-        
+
         # Build filters
         filters = {
             "is_pos": 1,
@@ -395,11 +402,11 @@ def get_print_invoices(pos_profile=None, pos_opening_shift=None, user=None):
             "owner": user,
             "docstatus": 1,  # Only submitted invoices
         }
-        
+
         # Add pos_opening_shift filter if provided
         if pos_opening_shift_name:
             filters["posa_pos_opening_shift"] = pos_opening_shift_name
-        
+
         # FRAPPE STANDARD: Fetch invoices with all required fields
         invoices = frappe.get_all(
             "Sales Invoice",
@@ -423,7 +430,7 @@ def get_print_invoices(pos_profile=None, pos_opening_shift=None, user=None):
             order_by="creation desc",
             limit=50,
         )
-        
+
         # Get customer names and determine invoice status
         result = []
         for invoice in invoices:
@@ -431,17 +438,18 @@ def get_print_invoices(pos_profile=None, pos_opening_shift=None, user=None):
             customer_name = invoice.customer
             if invoice.customer:
                 try:
-                    customer_name = frappe.get_value("Customer", invoice.customer, "customer_name") or invoice.customer
+                    customer_name = frappe.get_value(
+                        "Customer", invoice.customer, "customer_name") or invoice.customer
                 except:
                     customer_name = invoice.customer
-            
+
             # Calculate invoice status (like get_invoices_for_return)
             invoice_status = invoice.get("status")
             if not invoice_status:
                 # Calculate status following ERPNext logic
                 outstanding_amount = flt(invoice.get("outstanding_amount", 0))
                 grand_total = flt(invoice.get("grand_total", 0))
-                
+
                 # Check if invoice is returned
                 if invoice.get("is_return") == 1:
                     invoice_status = "Return"
@@ -452,7 +460,7 @@ def get_print_invoices(pos_profile=None, pos_opening_shift=None, user=None):
                     invoice_status = "Unpaid"
                 else:  # Partially paid
                     invoice_status = "Partly Paid"
-            
+
             result.append({
                 "name": invoice.name,
                 "customer": invoice.customer,
@@ -463,13 +471,11 @@ def get_print_invoices(pos_profile=None, pos_opening_shift=None, user=None):
                 "currency": invoice.currency,
                 "invoice_status": invoice_status,
             })
-        
+
         return result
-        
-    except Exception as e:
-        # FRAPPE STANDARD: Short error message (max 140 chars for Error Log title field)
-        error_msg = str(e)[:100] if len(str(e)) > 100 else str(e)
-        frappe.log_error(f"get_print_invoices: {error_msg}", "Sales Invoice")
+
+    except Exception:
+        # Graceful degradation - return empty list (no logging needed)
         return []
 
 
@@ -485,28 +491,30 @@ def _get_invoice_type(invoice, pos_profile_name, pos_opening_shift_name, user):
         is_return = invoice.get("is_return", 0)
         grand_total = flt(invoice.get("grand_total") or 0)
         return_against = invoice.get("return_against")
-        
+
         # Check if invoice matches current shift, profile, and user
         # Only check if filters were provided (if not provided, accept all)
         if pos_profile_name:
-            matches_current_profile = invoice.get("pos_profile") == pos_profile_name
+            matches_current_profile = invoice.get(
+                "pos_profile") == pos_profile_name
             if not matches_current_profile:
                 return "غير معروف"
-        
+
         if user:
             matches_current_user = invoice.get("owner") == user
             if not matches_current_user:
                 return "غير معروف"
-        
+
         if pos_opening_shift_name:
-            matches_current_shift = invoice.get("posa_pos_opening_shift") == pos_opening_shift_name
+            matches_current_shift = invoice.get(
+                "posa_pos_opening_shift") == pos_opening_shift_name
             if not matches_current_shift:
                 return "غير معروف"
-        
+
         # مبيعات: is_pos=1, is_return=0
         if is_pos == 1 and is_return == 0:
             return "مبيعات"
-        
+
         # مرتجع: is_pos=1, is_return=1, grand_total < 0
         if is_pos == 1 and is_return == 1 and grand_total < 0:
             # مرتجع فاتورة: return_against is not empty or null
@@ -514,11 +522,11 @@ def _get_invoice_type(invoice, pos_profile_name, pos_opening_shift_name, user):
                 return "مرتجع فاتورة"
             # مرتجع سريع: return_against is empty or null
             return "مرتجع سريع"
-        
+
         return "غير معروف"
-        
-    except Exception as e:
-        frappe.log_error(f"_get_invoice_type: {str(e)[:100]}", "Sales Invoice")
+
+    except Exception:
+        # Graceful degradation - return unknown type (no logging needed)
         return "غير معروف"
 
 
@@ -558,12 +566,13 @@ def create_and_submit_invoice(invoice_doc):
 
         # Check if this is an existing draft invoice (following POS-Awesome-V15 logic)
         invoice_name = invoice_doc.get("name")
-        
+
         # Determine invoice type for logging
         invoice_type = "Sales_Mode"
         if invoice_doc.get("is_return"):
-            invoice_type = "Return_Invoice" if invoice_doc.get("return_against") else "Quick_Return"
-        
+            invoice_type = "Return_Invoice" if invoice_doc.get(
+                "return_against") else "Quick_Return"
+
         # Following POS-Awesome-V15 submit_invoice logic exactly:
         # If invoice name exists and document exists in DB, load and update it
         if invoice_name and frappe.db.exists("Sales Invoice", invoice_name):
@@ -597,17 +606,20 @@ def create_and_submit_invoice(invoice_doc):
             pos_profile_name = doc.pos_profile
             if isinstance(pos_profile_name, dict):
                 pos_profile_name = pos_profile_name.get('name')
-            
+
             if pos_profile_name:
-                pos_profile_doc = frappe.get_cached_doc("POS Profile", pos_profile_name)
-                
+                pos_profile_doc = frappe.get_cached_doc(
+                    "POS Profile", pos_profile_name)
+
                 # Check company match
                 if doc.company and pos_profile_doc.company and doc.company != pos_profile_doc.company:
-                    frappe.throw("اسم الشركة في الفاتورة غير مطابق لاعداد نقطة البيع")
-                
+                    frappe.throw(
+                        "اسم الشركة في الفاتورة غير مطابق لاعداد نقطة البيع")
+
                 # Check company_address match
                 if doc.company_address and pos_profile_doc.company_address and doc.company_address != pos_profile_doc.company_address:
-                    frappe.throw("عنوان الشركة في الفاتورة غير مطابق لاعداد نقطة البيع")
+                    frappe.throw(
+                        "عنوان الشركة في الفاتورة غير مطابق لاعداد نقطة البيع")
 
         # Ensure company_address is valid for the company (fixes validation errors on return invoices)
         # This validates that company_address exists and is linked to the correct company
@@ -627,7 +639,8 @@ def create_and_submit_invoice(invoice_doc):
                 # Invalid address - get correct company address or clear it
                 company_addr = get_company_address(doc.company)
                 if company_addr:
-                    doc.company_address = company_addr.get("company_address", "")
+                    doc.company_address = company_addr.get(
+                        "company_address", "")
                 else:
                     doc.company_address = ""
 
@@ -648,12 +661,12 @@ def create_and_submit_invoice(invoice_doc):
                         payment.base_amount = -abs(payment.base_amount)
                     elif payment.base_amount == 0:
                         payment.base_amount = 0
-            
+
             # Filter out zero-amount payments for return invoices
             # For return invoices with unpaid original invoices, payments may be empty (0)
             # This is valid - ERPNext will automatically reduce outstanding_amount of original invoice
             doc.payments = [p for p in doc.payments if p.amount != 0]
-            
+
             # Update paid amounts (will be negative for returns, or 0 if no payments)
             # Handle None values in base_amount to avoid TypeError
             # If payments list is empty (return of unpaid invoice), paid_amount = 0
@@ -664,10 +677,11 @@ def create_and_submit_invoice(invoice_doc):
                 # Return invoice with no payments (unpaid original invoice)
                 # paid_amount = 0, and ERPNext will reduce original invoice's outstanding_amount
                 doc.paid_amount = 0.0
-            
+
             if hasattr(doc, 'base_paid_amount'):
                 if doc.payments:
-                    base_amounts = [flt(p.base_amount) if p.base_amount is not None else 0 for p in doc.payments]
+                    base_amounts = [
+                        flt(p.base_amount) if p.base_amount is not None else 0 for p in doc.payments]
                     doc.base_paid_amount = flt(sum(base_amounts))
                 else:
                     doc.base_paid_amount = 0.0
@@ -684,7 +698,7 @@ def create_and_submit_invoice(invoice_doc):
         # Step 3: Save document (insert for new, save for existing draft)
         # Check if this is an existing draft by checking if doc has name and docstatus = 0
         is_existing_draft = doc.name and doc.docstatus == 0
-        
+
         if is_existing_draft:
             # For existing draft, just save (already loaded and updated above)
             # Following POS-Awesome-V15: doc.update() already handled child tables
@@ -709,13 +723,13 @@ def create_and_submit_invoice(invoice_doc):
         if len(error_message) > 120:
             error_message = error_message[:120] + "..."
 
-        frappe.log_error(title="create_and_submit_invoice", message=frappe.get_traceback())
+        frappe.log_error(title="create_and_submit_invoice",
+                         message=frappe.get_traceback())
         frappe.throw(_(error_message))
     except Exception:
-        frappe.log_error(title="create_and_submit_invoice", message=frappe.get_traceback())
+        frappe.log_error(title="create_and_submit_invoice",
+                         message=frappe.get_traceback())
         frappe.throw(_("Error creating and submitting invoice"))
-
-
 
 
 def validate_return_limits(return_doc):
@@ -768,7 +782,6 @@ def validate_return_limits(return_doc):
                         title=_("Return Quantity Exceeded")
                     )
 
-    except Exception as e:
-        frappe.log_error(f"[[sales_invoice.py]] validate_return_limits: {str(e)}")
-        # Don't block submission if validation check fails
+    except Exception:
+        # Don't block submission if validation check fails (no logging needed)
         pass
