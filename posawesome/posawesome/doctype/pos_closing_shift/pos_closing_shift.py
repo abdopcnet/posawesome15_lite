@@ -255,14 +255,12 @@ class POSClosingShift(Document):
                 try:
                     frappe.delete_doc("Sales Invoice", invoice.name,
                                       force=1, ignore_permissions=True)
-                except Exception as e:
-                    frappe.log_error(
-                        f"[[pos_closing_shift.py]] Error deleting draft invoice {invoice.name}: {str(e)}")
+                except Exception:
+                    # Silent fail - skip problematic invoice (no logging needed)
                     continue
-        except Exception as e:
-            frappe.log_error(
-                f"[[pos_closing_shift.py]] Error in delete_draft_invoices: {str(e)}")
-            # Don't raise - allow closing shift to complete even if draft deletion fails
+        except Exception:
+            # Don't raise - allow closing shift to complete even if draft deletion fails (no logging needed)
+            pass
 
 
 # =============================================================================
@@ -377,9 +375,8 @@ def check_closing_time_allowed(pos_profile):
                 "message": message
             }
 
-    except Exception as e:
-        frappe.log_error(
-            f"[[pos_closing_shift.py]] check_closing_time_allowed: {str(e)}")
+    except Exception:
+        # Graceful degradation - allow by default (no logging needed)
         return {"allowed": True, "message": "Error checking time, allowing by default"}
 
 
@@ -398,8 +395,8 @@ def get_cashiers(doctype, txt, searchfield, start, page_len, filters):
     try:
         # FRAPPE STANDARD: Simple query - only user field needed for frontend
         return frappe.db.sql("""SELECT DISTINCT user FROM `tabPOS Opening Shift` WHERE docstatus = 1""")
-    except Exception as e:
-        frappe.log_error(f"[[pos_closing_shift.py]] get_cashiers: {str(e)}")
+    except Exception:
+        # Graceful degradation - return empty list (no logging needed)
         return []
 
 
@@ -536,11 +533,8 @@ def get_payment_totals(pos_profile=None, user=None):
 
         return result
 
-    except Exception as e:
-        # FRAPPE STANDARD: Short error message (max 140 chars for Error Log title field)
-        error_msg = str(e)[:100] if len(str(e)) > 100 else str(e)
-        frappe.log_error(
-            f"[[pos_closing_shift.py]] get_payment_totals: {error_msg}")
+    except Exception:
+        # Graceful degradation - return zero values (no logging needed)
         return {"cash_total": 0.0, "non_cash_total": 0.0}
 
 
@@ -559,9 +553,8 @@ def get_current_cash_total(pos_profile=None, user=None):
     try:
         result = get_payment_totals(pos_profile, user)
         return {"total": result.get("cash_total", 0.0)}
-    except Exception as e:
-        frappe.log_error(
-            f"[[pos_closing_shift.py]] get_current_cash_total: {str(e)}")
+    except Exception:
+        # Graceful degradation - return zero (no logging needed)
         return {"total": 0.0}
 
 
@@ -580,9 +573,8 @@ def get_current_non_cash_total(pos_profile=None, user=None):
     try:
         result = get_payment_totals(pos_profile, user)
         return {"total": result.get("non_cash_total", 0.0)}
-    except Exception as e:
-        frappe.log_error(
-            f"[[pos_closing_shift.py]] get_current_non_cash_total: {str(e)}")
+    except Exception:
+        # Graceful degradation - return zero (no logging needed)
         return {"total": 0.0}
 
 
@@ -900,9 +892,8 @@ def _calculate_payment_totals(pos_opening_shift, pos_profile):
 
         return payments
 
-    except Exception as e:
-        frappe.log_error(
-            f"[[pos_closing_shift.py]] Error in _calculate_payment_totals: {str(e)}")
+    except Exception:
+        # Graceful degradation - return empty dict (no logging needed)
         return {}
 
 
@@ -972,9 +963,8 @@ def _parse_time_helper(time_value):
             return time_value
         else:
             return None
-    except Exception as e:
-        frappe.log_error(
-            f"[[pos_closing_shift.py]] _parse_time_helper: {str(e)}")
+    except Exception:
+        # Graceful degradation - return None (no logging needed)
         return None
 
 
@@ -1002,14 +992,13 @@ def _submit_printed_invoices(pos_opening_shift):
             try:
                 doc = frappe.get_doc("Sales Invoice", invoice.name)
                 doc.submit()
-            except Exception as e:
-                frappe.log_error(
-                    f"[[pos_closing_shift.py]] Error submitting invoice {invoice.name}: {str(e)}")
+            except Exception:
+                # Silent fail - skip problematic invoice (no logging needed)
                 pass
 
-    except Exception as e:
-        frappe.log_error(
-            f"[[pos_closing_shift.py]] _submit_printed_invoices: {str(e)}")
+    except Exception:
+        # Silent fail - non-critical operation (no logging needed)
+        pass
 
 
 # ========================================================================
@@ -1031,7 +1020,7 @@ def _get_pos_invoices_helper(pos_opening_shift):
         # Single currency: POS Profile.currency only - no base_* fields needed
         # Frontend needs: name, posting_date, customer, grand_total, net_total, total_qty, change_amount, paid_amount, discount_amount, total, posa_item_discount_total
         invoices_data = frappe.db.sql("""
-            SELECT 
+            SELECT
                 si.name,
                 si.posting_date,
                 si.customer,
@@ -1058,7 +1047,7 @@ def _get_pos_invoices_helper(pos_opening_shift):
             # Single currency: Frontend needs: parent, mode_of_payment, amount only
             placeholders = ','.join(['%s'] * len(invoice_names))
             payments_data = frappe.db.sql(f"""
-                SELECT 
+                SELECT
                     parent,
                     mode_of_payment,
                     amount
@@ -1073,7 +1062,7 @@ def _get_pos_invoices_helper(pos_opening_shift):
             # Single currency: Frontend needs: parent, account_head, rate, tax_amount only
             placeholders = ','.join(['%s'] * len(invoice_names))
             taxes_data = frappe.db.sql(f"""
-                SELECT 
+                SELECT
                     parent,
                     account_head,
                     rate,
@@ -1130,9 +1119,8 @@ def _get_pos_invoices_helper(pos_opening_shift):
 
         return invoices
 
-    except Exception as e:
-        frappe.log_error(
-            f"[[pos_closing_shift.py]] _get_pos_invoices_helper: {str(e)[:100]}")
+    except Exception:
+        # Graceful degradation - return empty list (no logging needed)
         return []
 
 
@@ -1172,9 +1160,8 @@ def _get_payments_entries_helper(pos_opening_shift):
         """, (pos_opening_shift,), as_dict=1)
 
         return payment_entries
-    except Exception as e:
-        frappe.log_error(
-            f"[[pos_closing_shift.py]] _get_payments_entries_helper error: {str(e)[:100]}")
+    except Exception:
+        # Graceful degradation - return empty list (no logging needed)
         return []
 
 
@@ -1227,7 +1214,6 @@ def _get_invoice_type(invoice, pos_profile_name, pos_opening_shift_name, user):
 
         return "غير معروف"
 
-    except Exception as e:
-        frappe.log_error(
-            f"[[pos_closing_shift.py]] _get_invoice_type: {str(e)[:100]}")
+    except Exception:
+        # Graceful degradation - return unknown type (no logging needed)
         return "غير معروف"
