@@ -28,9 +28,6 @@ doc_events = {
     "Sales Invoice": {
         "before_cancel": "posawesome.posawesome.api.before_cancel.before_cancel",
     },
-    "POS Closing Shift": {
-        "before_cancel": "posawesome.posawesome.api.before_cancel.before_cancel_closing_shift",
-    },
 }
 
 # Fixtures - bench --site erp.andalus-sweets.com export-fixtures --app posawesome
