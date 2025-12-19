@@ -1,228 +1,228 @@
 {
- "actions": [],
- "autoname": "POSA-OS-.YY.-.#######",
- "creation": "2020-09-22 14:15:10.599968",
- "doctype": "DocType",
- "editable_grid": 1,
- "engine": "InnoDB",
- "field_order": [
-  "posting_date",
-  "column_break_3",
-  "pos_closing_shift",
-  "section_break_vszg",
-  "period_start_date",
-  "column_break_ajww",
-  "status",
-  "section_break_ensi",
-  "posa_opening_time_control",
-  "column_break_ikdz",
-  "posa_opening_time_start",
-  "column_break_ggjf",
-  "posa_opening_time_end",
-  "section_break_5",
-  "company",
-  "column_break_7",
-  "pos_profile",
-  "column_break_ajli",
-  "user",
-  "opening_balance_details_section",
-  "balance_details",
-  "section_break_9",
-  "amended_from"
- ],
- "fields": [
-  {
-   "fieldname": "period_start_date",
-   "fieldtype": "Datetime",
-   "in_list_view": 1,
-   "label": "period_start_date",
-   "reqd": 1
-  },
-  {
-   "allow_on_submit": 1,
-   "default": "Draft",
-   "fieldname": "status",
-   "fieldtype": "Select",
-   "label": "status",
-   "options": "Draft\nOpen\nClosed\nCancelled",
-   "read_only": 1
-  },
-  {
-   "fieldname": "column_break_3",
-   "fieldtype": "Column Break"
-  },
-  {
-   "default": "Today",
-   "fieldname": "posting_date",
-   "fieldtype": "Date",
-   "in_list_view": 1,
-   "label": "Posting Date",
-   "reqd": 1
-  },
-  {
-   "fieldname": "section_break_5",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "company",
-   "fieldtype": "Link",
-   "label": "Company",
-   "options": "Company",
-   "reqd": 1
-  },
-  {
-   "fieldname": "pos_profile",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "POS Profile",
-   "options": "POS Profile",
-   "reqd": 1
-  },
-  {
-   "fieldname": "column_break_7",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "user",
-   "fieldtype": "Link",
-   "label": "Cashier",
-   "options": "User",
-   "reqd": 1
-  },
-  {
-   "fieldname": "opening_balance_details_section",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "balance_details",
-   "fieldtype": "Table",
-   "label": "Opening Balance Details",
-   "options": "POS Opening Shift Detail",
-   "reqd": 1
-  },
-  {
-   "fieldname": "section_break_9",
-   "fieldtype": "Section Break",
-   "read_only": 1
-  },
-  {
-   "fieldname": "amended_from",
-   "fieldtype": "Link",
-   "label": "Amended From",
-   "no_copy": 1,
-   "options": "POS Opening Shift",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "pos_closing_shift",
-   "fieldtype": "Link",
-   "label": "pos_closing_shift",
-   "options": "POS Closing Shift",
-   "read_only_depends_on": "eval:doc.status!=\"Open\""
-  },
-  {
-   "default": "0",
-   "fetch_from": "pos_profile.posa_opening_time_control",
-   "fieldname": "posa_opening_time_control",
-   "fieldtype": "Check",
-   "label": "posa_opening_time_control",
-   "read_only": 1
-  },
-  {
-   "fieldname": "section_break_ensi",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fetch_from": "pos_profile.posa_opening_time_start",
-   "fieldname": "posa_opening_time_start",
-   "fieldtype": "Time",
-   "label": "posa_opening_time_start",
-   "read_only": 1
-  },
-  {
-   "fieldname": "column_break_ikdz",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fetch_from": "pos_profile.posa_opening_time_end",
-   "fieldname": "posa_opening_time_end",
-   "fieldtype": "Time",
-   "label": "posa_opening_time_end",
-   "read_only": 1
-  },
-  {
-   "fieldname": "column_break_ajli",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_ggjf",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "section_break_vszg",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "column_break_ajww",
-   "fieldtype": "Column Break"
-  }
- ],
- "is_submittable": 1,
- "links": [],
- "modified": "2025-12-06 20:01:21.082086",
- "modified_by": "Administrator",
- "module": "POSAwesome",
- "name": "POS Opening Shift",
- "naming_rule": "Expression (old style)",
- "owner": "Administrator",
- "permissions": [
-  {
-   "cancel": 1,
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "System Manager",
-   "share": 1,
-   "submit": 1,
-   "write": 1
-  },
-  {
-   "cancel": 1,
-   "create": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Sales Manager",
-   "share": 1,
-   "submit": 1,
-   "write": 1
-  },
-  {
-   "cancel": 1,
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Administrator",
-   "share": 1,
-   "submit": 1,
-   "write": 1
-  }
- ],
- "row_format": "Dynamic",
- "sort_field": "modified",
- "sort_order": "DESC",
- "states": [],
- "track_changes": 1
+	"actions": [],
+	"autoname": "POSA-OS-.YY.-.#######",
+	"creation": "2020-09-22 14:15:10.599968",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"posting_date",
+		"column_break_3",
+		"pos_closing_shift",
+		"section_break_vszg",
+		"period_start_date",
+		"column_break_ajww",
+		"status",
+		"section_break_ensi",
+		"posa_opening_time_control",
+		"column_break_ikdz",
+		"posa_opening_time_start",
+		"column_break_ggjf",
+		"posa_opening_time_end",
+		"section_break_5",
+		"company",
+		"column_break_7",
+		"pos_profile",
+		"column_break_ajli",
+		"user",
+		"opening_balance_details_section",
+		"balance_details",
+		"section_break_9",
+		"amended_from"
+	],
+	"fields": [
+		{
+			"fieldname": "period_start_date",
+			"fieldtype": "Datetime",
+			"in_list_view": 1,
+			"label": "period_start_date",
+			"reqd": 1
+		},
+		{
+			"allow_on_submit": 1,
+			"default": "Draft",
+			"fieldname": "status",
+			"fieldtype": "Select",
+			"label": "status",
+			"options": "Draft\nOpen\nClosed\nCancelled",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_3",
+			"fieldtype": "Column Break"
+		},
+		{
+			"default": "Today",
+			"fieldname": "posting_date",
+			"fieldtype": "Date",
+			"in_list_view": 1,
+			"label": "Posting Date",
+			"reqd": 1
+		},
+		{
+			"fieldname": "section_break_5",
+			"fieldtype": "Section Break"
+		},
+		{
+			"fieldname": "company",
+			"fieldtype": "Link",
+			"label": "Company",
+			"options": "Company",
+			"reqd": 1
+		},
+		{
+			"fieldname": "pos_profile",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"label": "POS Profile",
+			"options": "POS Profile",
+			"reqd": 1
+		},
+		{
+			"fieldname": "column_break_7",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "user",
+			"fieldtype": "Link",
+			"label": "Cashier",
+			"options": "User",
+			"reqd": 1
+		},
+		{
+			"fieldname": "opening_balance_details_section",
+			"fieldtype": "Section Break"
+		},
+		{
+			"fieldname": "balance_details",
+			"fieldtype": "Table",
+			"label": "Opening Balance Details",
+			"options": "POS Opening Shift Detail",
+			"reqd": 1
+		},
+		{
+			"fieldname": "section_break_9",
+			"fieldtype": "Section Break",
+			"read_only": 1
+		},
+		{
+			"fieldname": "amended_from",
+			"fieldtype": "Link",
+			"label": "Amended From",
+			"no_copy": 1,
+			"options": "POS Opening Shift",
+			"print_hide": 1,
+			"read_only": 1
+		},
+		{
+			"allow_on_submit": 1,
+			"fieldname": "pos_closing_shift",
+			"fieldtype": "Link",
+			"label": "pos_closing_shift",
+			"options": "POS Closing Shift",
+			"read_only_depends_on": "eval:doc.status!=\"Open\""
+		},
+		{
+			"default": "0",
+			"fetch_from": "pos_profile.posa_opening_time_control",
+			"fieldname": "posa_opening_time_control",
+			"fieldtype": "Check",
+			"label": "posa_opening_time_control",
+			"read_only": 1
+		},
+		{
+			"fieldname": "section_break_ensi",
+			"fieldtype": "Section Break"
+		},
+		{
+			"fetch_from": "pos_profile.posa_opening_time_start",
+			"fieldname": "posa_opening_time_start",
+			"fieldtype": "Time",
+			"label": "posa_opening_time_start",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_ikdz",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fetch_from": "pos_profile.posa_opening_time_end",
+			"fieldname": "posa_opening_time_end",
+			"fieldtype": "Time",
+			"label": "posa_opening_time_end",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_ajli",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "column_break_ggjf",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "section_break_vszg",
+			"fieldtype": "Section Break"
+		},
+		{
+			"fieldname": "column_break_ajww",
+			"fieldtype": "Column Break"
+		}
+	],
+	"is_submittable": 1,
+	"links": [],
+	"modified": "2025-12-06 20:01:21.082086",
+	"modified_by": "Administrator",
+	"module": "POSAwesome",
+	"name": "POS Opening Shift",
+	"naming_rule": "Expression (old style)",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"cancel": 1,
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "System Manager",
+			"share": 1,
+			"submit": 1,
+			"write": 1
+		},
+		{
+			"cancel": 1,
+			"create": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Sales Manager",
+			"share": 1,
+			"submit": 1,
+			"write": 1
+		},
+		{
+			"cancel": 1,
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Administrator",
+			"share": 1,
+			"submit": 1,
+			"write": 1
+		}
+	],
+	"row_format": "Dynamic",
+	"sort_field": "modified",
+	"sort_order": "DESC",
+	"states": [],
+	"track_changes": 1
 }
