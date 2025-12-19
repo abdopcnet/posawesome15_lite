@@ -117,9 +117,8 @@
 		{
 			"allow_on_submit": 1,
 			"fieldname": "pos_closing_shift",
-			"fieldtype": "Link",
+			"fieldtype": "Data",
 			"label": "pos_closing_shift",
-			"options": "POS Closing Shift",
 			"read_only_depends_on": "eval:doc.status!=\"Open\""
 		},
 		{
