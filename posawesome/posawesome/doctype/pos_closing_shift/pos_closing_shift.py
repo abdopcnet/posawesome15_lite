@@ -33,6 +33,9 @@ class POSClosingShift(Document):
                 # Fetch period_start_date if not set
                 if not self.period_start_date and opening_shift.period_start_date:
                     self.period_start_date = opening_shift.period_start_date
+                # Fetch company if not set
+                if not self.company and opening_shift.company:
+                    self.company = opening_shift.company
                 # Fetch pos_profile if not set
                 if not self.pos_profile and opening_shift.pos_profile:
                     self.pos_profile = opening_shift.pos_profile
