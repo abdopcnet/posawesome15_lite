@@ -205,7 +205,24 @@ class POSClosingShift(Document):
             raise
 
     # ========================================================================
-    # SECTION 1.6: ON CANCEL METHOD
+    # SECTION 1.6: CANCEL METHOD
+    # ========================================================================
+    # Override cancel to allow canceling without canceling linked documents
+    def cancel(self):
+        """
+        Allow canceling POS Closing Shift without canceling linked documents.
+        Bypasses Frappe's linked document validation.
+        """
+        # Set flag before calling parent cancel to bypass linked document checks
+        frappe.flags.ignore_linked_doctypes = True
+        try:
+            super(POSClosingShift, self).cancel()
+        finally:
+            # Always clear the flag
+            frappe.flags.ignore_linked_doctypes = False
+
+    # ========================================================================
+    # SECTION 1.7: ON CANCEL METHOD
     # ========================================================================
     # Called when document is cancelled
     # Unlinks closing shift from opening shift
@@ -227,7 +244,7 @@ class POSClosingShift(Document):
             raise
 
     # ========================================================================
-    # SECTION 1.7: DELETE DRAFT INVOICES (PRIVATE)
+    # SECTION 1.8: DELETE DRAFT INVOICES (PRIVATE)
     # ========================================================================
     # Deletes draft invoices for this shift if auto-delete is enabled in POS Profile
     # Related to: section_break_2 (pos_profile), section_break_1 (pos_opening_shift)
