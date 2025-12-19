@@ -1,180 +1,170 @@
 {
- "actions": [],
- "creation": "2025-12-06 10:50:46.525571",
- "doctype": "DocType",
- "editable_grid": 1,
- "engine": "InnoDB",
- "field_order": [
-  "sales_invoice",
-  "posting_date",
-  "customer",
-  "mode_of_payment",
-  "grand_total",
-  "total",
-  "net_total",
-  "taxes",
-  "total_qty",
-  "discount_amount",
-  "posa_item_discount_total",
-  "paid_amount",
-  "change_amount",
-  "actual_paid",
-  "payment_entry",
-  "payment_entry_mode_of_payment",
-  "payment_entry_paid_amount"
- ],
- "fields": [
-  {
-   "fieldname": "sales_invoice",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "sales_invoice",
-   "options": "Sales Invoice",
-   "read_only": 1,
-   "reqd": 1
-  },
-  {
-   "fetch_from": "sales_invoice.posting_date",
-   "fieldname": "posting_date",
-   "fieldtype": "Date",
-   "in_list_view": 1,
-   "label": "posting_date",
-   "read_only": 1,
-   "reqd": 1
-  },
-  {
-   "fetch_from": "sales_invoice.customer",
-   "fieldname": "customer",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "customer",
-   "options": "Customer",
-   "read_only": 1,
-   "reqd": 1
-  },
-  {
-   "fetch_from": "sales_invoice.grand_total",
-   "fieldname": "grand_total",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "grand_total",
-   "read_only": 1,
-   "reqd": 1
-  },
-  {
-   "fieldname": "mode_of_payment",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "mode_of_payment",
-   "read_only": 1,
-   "reqd": 1
-  },
-  {
-   "fieldname": "actual_paid",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "actual_paid",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "sales_invoice.paid_amount",
-   "fieldname": "paid_amount",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "paid_amount",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "sales_invoice.change_amount",
-   "fieldname": "change_amount",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "change_amount",
-   "read_only": 1
-  },
-  {
-   "fieldname": "payment_entry",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "payment_entry",
-   "options": "Payment Entry",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "sales_invoice.net_total",
-   "fieldname": "net_total",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "net_total",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "sales_invoice.total_qty",
-   "fieldname": "total_qty",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "total_qty",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "sales_invoice.discount_amount",
-   "fieldname": "discount_amount",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "discount_amount",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "sales_invoice.posa_item_discount_total",
-   "fieldname": "posa_item_discount_total",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "posa_item_discount_total",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "sales_invoice.total",
-   "fieldname": "total",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "total",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "sales_invoice.total_taxes_and_charges",
-   "fieldname": "taxes",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "taxes",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "payment_entry.mode_of_payment",
-   "fieldname": "payment_entry_mode_of_payment",
-   "fieldtype": "Data",
-   "label": "payment_entry_mode_of_payment",
-   "read_only": 1
-  },
-  {
-   "fetch_from": "payment_entry.paid_amount",
-   "fieldname": "payment_entry_paid_amount",
-   "fieldtype": "Currency",
-   "label": "payment_entry_paid_amount",
-   "read_only": 1
-  }
- ],
- "istable": 1,
- "links": [],
- "modified": "2025-12-06 11:22:25.569113",
- "modified_by": "Administrator",
- "module": "POSAwesome",
- "name": "Sales Invoice Reference",
- "owner": "Administrator",
- "permissions": [],
- "quick_entry": 1,
- "row_format": "Dynamic",
- "sort_field": "modified",
- "sort_order": "DESC",
- "states": [],
- "track_changes": 1
+	"actions": [],
+	"creation": "2025-12-06 10:50:46.525571",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"sales_invoice",
+		"posting_date",
+		"customer",
+		"mode_of_payment",
+		"grand_total",
+		"total",
+		"net_total",
+		"taxes",
+		"total_qty",
+		"discount_amount",
+		"posa_item_discount_total",
+		"paid_amount",
+		"change_amount",
+		"actual_paid",
+		"payment_entry",
+		"payment_entry_mode_of_payment",
+		"payment_entry_paid_amount"
+	],
+	"fields": [
+		{
+			"fieldname": "sales_invoice",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "sales_invoice",
+			"read_only": 1,
+			"reqd": 1
+		},
+		{
+			"fieldname": "posting_date",
+			"fieldtype": "Date",
+			"in_list_view": 1,
+			"label": "posting_date",
+			"read_only": 1,
+			"reqd": 1
+		},
+		{
+			"fieldname": "customer",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "customer",
+			"read_only": 1,
+			"reqd": 1
+		},
+		{
+			"fieldname": "grand_total",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "grand_total",
+			"read_only": 1,
+			"reqd": 1
+		},
+		{
+			"fieldname": "mode_of_payment",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "mode_of_payment",
+			"read_only": 1,
+			"reqd": 1
+		},
+		{
+			"fieldname": "actual_paid",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "actual_paid",
+			"read_only": 1
+		},
+		{
+			"fieldname": "paid_amount",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "paid_amount",
+			"read_only": 1
+		},
+		{
+			"fieldname": "change_amount",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "change_amount",
+			"read_only": 1
+		},
+		{
+			"fieldname": "payment_entry",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "payment_entry",
+			"read_only": 1
+		},
+		{
+			"fieldname": "net_total",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "net_total",
+			"read_only": 1,
+			"reqd": 1
+		},
+		{
+			"fieldname": "total_qty",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "total_qty",
+			"read_only": 1,
+			"reqd": 1
+		},
+		{
+			"fieldname": "discount_amount",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "discount_amount",
+			"read_only": 1,
+			"reqd": 1
+		},
+		{
+			"fieldname": "posa_item_discount_total",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "posa_item_discount_total",
+			"read_only": 1,
+			"reqd": 1
+		},
+		{
+			"fieldname": "total",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "total",
+			"read_only": 1,
+			"reqd": 1
+		},
+		{
+			"fieldname": "taxes",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "taxes",
+			"read_only": 1,
+			"reqd": 1
+		},
+		{
+			"fieldname": "payment_entry_mode_of_payment",
+			"fieldtype": "Data",
+			"label": "payment_entry_mode_of_payment",
+			"read_only": 1
+		},
+		{
+			"fieldname": "payment_entry_paid_amount",
+			"fieldtype": "Currency",
+			"label": "payment_entry_paid_amount",
+			"read_only": 1
+		}
+	],
+	"istable": 1,
+	"links": [],
+	"modified": "2025-12-06 11:22:25.569113",
+	"modified_by": "Administrator",
+	"module": "POSAwesome",
+	"name": "Sales Invoice Reference",
+	"owner": "Administrator",
+	"permissions": [],
+	"quick_entry": 1,
+	"row_format": "Dynamic",
+	"sort_field": "modified",
+	"sort_order": "DESC",
+	"states": [],
+	"track_changes": 1
 }
