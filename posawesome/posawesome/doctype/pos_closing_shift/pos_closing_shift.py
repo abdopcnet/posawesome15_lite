@@ -26,6 +26,20 @@ class POSClosingShift(Document):
     #             section_break_4 (payment_reconciliation)
     def validate(self):
         try:
+            # Fetch fields from pos_opening_shift if it's a Data field (not Link)
+            # This replaces the fetch_from functionality that doesn't work with Data fields
+            if self.pos_opening_shift and frappe.db.exists("POS Opening Shift", self.pos_opening_shift):
+                opening_shift = frappe.get_doc("POS Opening Shift", self.pos_opening_shift)
+                # Fetch period_start_date if not set
+                if not self.period_start_date and opening_shift.period_start_date:
+                    self.period_start_date = opening_shift.period_start_date
+                # Fetch pos_profile if not set
+                if not self.pos_profile and opening_shift.pos_profile:
+                    self.pos_profile = opening_shift.pos_profile
+                # Fetch user if not set
+                if not self.user and opening_shift.user:
+                    self.user = opening_shift.user
+
             # Validate shift closing allowed time window based on POS Profile settings
             # Checks if period_end_date is within allowed closing window
             # Related to: section_break_1 (period_end_date), section_break_2 (pos_profile)
