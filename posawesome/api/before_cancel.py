@@ -25,14 +25,4 @@ def before_cancel(doc, method):
             "status"
         )
         if shift_status == "Closed":
-            frappe.throw(_("Cannot cancel invoice from closed shift"))
-
-
-def before_cancel_closing_shift(doc, method):
-    """
-    Allow canceling POS Closing Shift without canceling linked documents.
-    Sets flag to bypass Frappe's linked document checks.
-    """
-    # Set flag to ignore linked document validation
-    # This allows canceling the closing shift without canceling Sales Invoices
-    frappe.flags.ignore_linked_doctypes = True
+            frappe.throw(_("Cannot Cancel invoice from closed shift"))
