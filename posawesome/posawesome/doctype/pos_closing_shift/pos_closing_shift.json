@@ -76,24 +76,21 @@
 		},
 		{
 			"fieldname": "company",
-			"fieldtype": "Link",
+			"fieldtype": "Data",
 			"label": "Company",
-			"options": "Company",
 			"reqd": 1
 		},
 		{
 			"fieldname": "pos_profile",
-			"fieldtype": "Link",
+			"fieldtype": "Data",
 			"in_list_view": 1,
 			"label": "POS Profile",
-			"options": "POS Profile",
 			"reqd": 1
 		},
 		{
 			"fieldname": "user",
-			"fieldtype": "Link",
+			"fieldtype": "Data",
 			"label": "Cashier",
-			"options": "User",
 			"reqd": 1
 		},
 		{
