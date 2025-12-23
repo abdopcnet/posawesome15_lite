@@ -1480,8 +1480,7 @@
 
 				<!-- Settlement Button: سداد متبقي -->
 				<button
-					v-if="allowOutstandingPayments"
-					:disabled="is_payment || !allowOutstandingPayments"
+					:disabled="!pos_profile?.posa_allow_outstanding_payments"
 					@click="openSettlement"
 					title="سداد متبقي"
 					style="
@@ -1500,7 +1499,7 @@
 						gap: 4px;
 					"
 					:style="
-						is_payment
+						!pos_profile?.posa_allow_outstanding_payments
 							? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6'
 							: ''
 					"
