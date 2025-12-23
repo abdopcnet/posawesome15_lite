@@ -55,7 +55,9 @@
 			>
 				<div
 					:style="
-						invoiceNumberClass === 'regular-invoice'
+						invoiceNumberClass === 'pay-mode'
+							? `border-color: ${invoiceIconColor}; background: ${invoiceIconColor}; color: white;`
+							: invoiceNumberClass === 'regular-invoice'
 							? 'border-color: rgba(8, 86, 152, 0.85); background: linear-gradient(135deg, #d4e8ff 0%, #93b9ff 100%); color: #043a8b;'
 							: invoiceNumberClass === 'return-invoice' ||
 							  invoiceNumberClass === 'return-invoice-mode'
