@@ -151,7 +151,7 @@ def create_customer(
         return customer_doc.as_dict()
 
     except Exception as e:
-        frappe.log_error(f"[[customer.py]] create_customer: {str(e)}")
+        frappe.log_error("[customer.py] method: create_customer", "Customer API")
         frappe.throw(_("Error creating customer"))
 
 
@@ -192,7 +192,7 @@ def create_customer_address(args):
         return address.as_dict()
 
     except Exception as e:
-        frappe.log_error(f"[[customer.py]] create_customer_address: {str(e)}")
+        frappe.log_error("[customer.py] method: create_customer_address", "Customer API")
         frappe.throw(_("Error creating address"))
 
 
@@ -278,7 +278,7 @@ def get_customer(customer_id):
 
     except Exception as e:
         # Note: get_customer doesn't have pos_profile parameter
-        frappe.log_error(f"[[customer.py]] get_customer: {str(e)}")
+        frappe.log_error("[customer.py] method: get_customer", "Customer API")
         frappe.throw(_("Error retrieving customer"))
 
 
@@ -420,12 +420,7 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
 
     except Exception as e:
         # Note: get_many_customers doesn't have pos_profile parameter
-        # Truncate error message to avoid CharacterLengthExceededError (max 140 chars for Error Log title)
-        error_msg = str(e)
-        if len(error_msg) > 100:
-            error_msg = error_msg[:100] + "..."
-        frappe.log_error(
-            f"[[customer.py]] get_many_customers: {error_msg}", "Get Customers Error")
+        frappe.log_error("[customer.py] method: get_many_customers", "Customer API")
         frappe.throw(_("Error retrieving customers"))
 
 
@@ -491,7 +486,7 @@ def get_customers_count(search_term="", pos_profile=None, filters=None):
 
     except Exception as e:
         # Note: get_customers_count doesn't have pos_profile parameter
-        frappe.log_error(f"[[customer.py]] get_customers_count: {str(e)}")
+        frappe.log_error("[customer.py] method: get_customers_count", "Customer API")
         frappe.throw(_("Error counting customers"))
 
 
@@ -600,7 +595,7 @@ def update_customer(customer_id, **kwargs):
         return customer_doc.as_dict()
 
     except Exception as e:
-        frappe.log_error(f"[[customer.py]] update_customer: {str(e)}")
+        frappe.log_error("[customer.py] method: update_customer", "Customer API")
         frappe.throw(_("Error updating customer"))
 
 
@@ -663,8 +658,8 @@ def get_customer_credit(customer_id, company=None):
 
     except Exception as e:
         # Note: get_customer_credit doesn't have pos_profile parameter
-        frappe.log_error(f"[[customer.py]] get_customer_credit: {str(e)}")
-        frappe.throw(_("Error retrieving customer credit"))
+        frappe.log_error("[customer.py] method: get_customer_credit", "Customer API")
+        frappe.throw(_("Error retrieving credit"))
 
 
 @frappe.whitelist()
@@ -756,9 +751,8 @@ def get_customer_credit_summary(customer_id, company=None):
 
     except Exception as e:
         # Note: get_customer_credit_summary doesn't have pos_profile parameter
-        frappe.log_error(
-            f"[[customer.py]] get_customer_credit_summary: {str(e)}")
-        frappe.throw(_("Error retrieving customer credit summary"))
+        frappe.log_error("[customer.py] method: get_customer_credit_summary", "Customer API")
+        frappe.throw(_("Error retrieving credit summary"))
 
 
 @frappe.whitelist()
