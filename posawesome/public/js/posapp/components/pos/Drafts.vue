@@ -259,13 +259,6 @@
 												font-weight: 600;
 												min-width: 60px;
 											"
-											@mouseenter="
-												$event.currentTarget.style.background = '#e53935'
-											"
-											@mouseleave="
-												$event.currentTarget.style.background =
-													'linear-gradient(135deg, #f44336 0%, #e53935 100%)'
-											"
 										>
 											<i
 												class="mdi mdi-delete"
