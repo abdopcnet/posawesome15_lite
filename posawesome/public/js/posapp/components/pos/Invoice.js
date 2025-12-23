@@ -313,6 +313,28 @@ export default {
 
 			return defaultRow ? defaultRow.mode_of_payment : null;
 		},
+		// Determine invoice type for print button
+		invoicePrintType() {
+			if (!this.invoice_doc) return 'sales';
+
+			// Pay_Mode: Settlement invoice
+			if (this.invoice_doc._is_settlement && this.invoice_doc.docstatus === 1) {
+				return 'payment';
+			}
+
+			// Return_Invoice: Return from invoice
+			if (this.invoice_doc.is_return && this.invoice_doc.return_against) {
+				return 'return_invoice';
+			}
+
+			// Quick_Return: Quick return (no return_against)
+			if (this.invoice_doc.is_return && !this.invoice_doc.return_against) {
+				return 'quick_return';
+			}
+
+			// Sales_Mode: Normal invoice
+			return 'sales';
+		},
 		canPrintInvoice() {
 			// Check items first - must have items to print
 			if (!this.items?.length) return false;
@@ -2648,6 +2670,31 @@ export default {
 			return itemsModified;
 		},
 
+		// Print Sales Invoice (normal invoice)
+		printSalesInvoice() {
+			if (!this.invoice_doc || this.isPrinting) return;
+			this.printInvoice();
+		},
+
+		// Print Return Invoice (return from invoice)
+		printReturnInvoice() {
+			if (!this.invoice_doc || this.isPrinting) return;
+			this.printInvoice();
+		},
+
+		// Print Quick Return (return items without invoice)
+		printQuickReturn() {
+			if (!this.invoice_doc || this.isPrinting) return;
+			this.printInvoice();
+		},
+
+		// Print Payment Receipt (settlement)
+		printPaymentReceipt() {
+			if (!this.invoice_doc || this.isPrinting) return;
+			// Settlement invoice: create Payment Entry instead of updating invoice
+			evntBus.emit('submit_settlement_payment');
+		},
+
 		printInvoice() {
 			// Print button clicked (logged to backend only)
 			if (!this.invoice_doc || this.isPrinting) return;
@@ -2995,6 +3042,85 @@ export default {
 
 						// Mark as settlement mode (for read-only items)
 						invoice._is_settlement = true;
+
+						// Log invoice data for debugging
+						console.log('[Invoice.js] Settlement invoice loaded:', {
+							name: invoice.name,
+							grand_total: invoice.grand_total,
+							paid_amount: invoice.paid_amount,
+							outstanding_amount: invoice.outstanding_amount,
+							calculated_outstanding:
+								flt(invoice.grand_total || 0, 2) -
+								flt(invoice.paid_amount || 0, 2),
+						});
+
+						// For settlement invoices, replace payments with POS Profile payment methods
+						// This ensures all payment methods are available, not just those from original invoice
+						// Wait for pos_profile if not available yet
+						if (!this.pos_profile) {
+							console.log(
+								'[Invoice.js] Waiting for pos_profile to load payment methods...',
+							);
+							// Wait a bit for pos_profile to be registered
+							await new Promise((resolve) => setTimeout(resolve, 100));
+						}
+
+						if (this.pos_profile && Array.isArray(this.pos_profile.payments)) {
+							console.log(
+								'[Invoice.js] Loading payment methods from POS Profile:',
+								this.pos_profile.payments.length,
+							);
+							const existingPaymentModes = new Set(
+								(invoice.payments || []).map((p) => p.mode_of_payment),
+							);
+							const newPayments = [];
+
+							// Add all payment methods from POS Profile
+							this.pos_profile.payments.forEach((payment, index) => {
+								// Check if this payment method already exists in invoice
+								const existingPayment = invoice.payments?.find(
+									(p) => p.mode_of_payment === payment.mode_of_payment,
+								);
+
+								if (existingPayment) {
+									// Keep existing payment but reset amount to 0
+									newPayments.push({
+										...existingPayment,
+										amount: 0,
+										base_amount: 0,
+										idx: index + 1,
+									});
+								} else {
+									// Add new payment method from POS Profile
+									newPayments.push({
+										mode_of_payment: payment.mode_of_payment,
+										amount: 0,
+										base_amount: 0,
+										default: payment.default || 0,
+										account: payment.account || '',
+										idx: index + 1,
+									});
+								}
+							});
+
+							// Ensure at least one payment has default = 1
+							const hasDefault = newPayments.some((p) => p.default == 1);
+							if (!hasDefault && newPayments.length > 0) {
+								newPayments[0].default = 1;
+							}
+
+							invoice.payments = newPayments;
+						} else {
+							// If no POS Profile payments, reset all amounts to 0
+							if (invoice.payments && Array.isArray(invoice.payments)) {
+								invoice.payments.forEach((payment) => {
+									payment.amount = 0;
+									if (payment.base_amount !== undefined) {
+										payment.base_amount = 0;
+									}
+								});
+							}
+						}
 
 						// Load invoice into POS
 						this.invoice_doc = invoice;
