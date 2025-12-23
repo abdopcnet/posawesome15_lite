@@ -1,7 +1,7 @@
 import { evntBus } from '../../bus';
 import UpdateCustomer from './UpdateCustomer.vue';
 import { API_MAP } from '../../api_mapper.js';
-// Frontend logging: Use console.log/error/warn directly
+// Frontend logging: console.log('[filename.js] method: function_name')
 
 const EVENT_NAMES = {
 	UPDATE_CUSTOMER: 'update_customer',
@@ -72,7 +72,7 @@ export default {
 					evntBus.emit(EVENT_NAMES.UPDATE_CUSTOMER, this.customer);
 				}
 			} catch (error) {
-				console.log('[Customer.js] get_many_customers error:', error);
+				console.log('[Customer.js] method: get_many_customers');
 				this.showMessage(ERROR_MESSAGES.UNEXPECTED_ERROR, 'error');
 			}
 		},
@@ -116,10 +116,7 @@ export default {
 								this.defaultLoaded = true;
 								// Default customer loaded (logged to backend only)
 							} else {
-								console.log(
-									'[Customer.js] Default customer not found in list:',
-									this.customer,
-								);
+								console.log('[Customer.js] method: load_all_customers');
 								// If default customer not in list, fetch it directly
 								if (this.customer && !this.customer_info.name) {
 									this.fetch_customer_details_for_default(this.customer);
@@ -130,7 +127,7 @@ export default {
 					this.loading = false;
 				},
 				error: (err) => {
-					console.log('[Customer.js] load_all_customers error:', err);
+					console.log('[Customer.js] method: load_all_customers');
 					this.showMessage(ERROR_MESSAGES.FAILED_TO_FETCH, 'error');
 					this.loading = false;
 				},
@@ -183,7 +180,7 @@ export default {
 			try {
 				evntBus.emit(EVENT_NAMES.OPEN_UPDATE_CUSTOMER, null);
 			} catch (err) {
-				console.log('[Customer.js] new_customer error:', err);
+				console.log('[Customer.js] method: new_customer');
 				this.showMessage(ERROR_MESSAGES.NEW_CUSTOMER_ERROR, 'error');
 			}
 		},
@@ -192,7 +189,7 @@ export default {
 			try {
 				evntBus.emit(EVENT_NAMES.OPEN_UPDATE_CUSTOMER, this.customer_info);
 			} catch (err) {
-				console.log('[Customer.js] edit_customer error:', err);
+				console.log('[Customer.js] method: edit_customer');
 				this.showMessage(ERROR_MESSAGES.EDIT_CUSTOMER_ERROR, 'error');
 			}
 		},
@@ -225,7 +222,7 @@ export default {
 					this.handleCustomerDropdownOpened,
 				);
 			} catch (err) {
-				console.log('[Customer.js] registerEventListeners error:', err);
+				console.log('[Customer.js] method: registerEventListeners');
 				this.showMessage(ERROR_MESSAGES.INITIALIZATION_ERROR, 'error');
 			}
 		},
@@ -301,7 +298,7 @@ export default {
 					}
 				},
 				error: (err) => {
-					console.log('[Customer.js] fetch_customer_details_for_default error:', err);
+					console.log('[Customer.js] method: fetch_customer_details_for_default');
 				},
 			});
 		},
