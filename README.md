@@ -17,7 +17,7 @@
 ## 🎯 Goal
 
 <div align="center">
-    <img src="./imgs/Performace_metrics.png" height="300" alt="POS Awesome metrics snapshot">
+    <img src="./imgs/Performace_metrics.png" alt="POS Awesome metrics snapshot">
 </div>
 
 **POS Awesome Lite** = Modern Interface + Original ERPNext Engine
@@ -33,82 +33,14 @@ Just a lightweight web interface built on top of ERPNext's proven foundation:
 
 ---
 
-## 🖥️ Try It Live
+## 📝 Documentation
 
-**Remote Access to the POS UI system**
+For detailed documentation, please refer to:
 
--   🌐 **Application:** (<https://anydesk.com/en>)
--   🔑 **ID:** `1134153623`
--   🚀 **Status:** Online and Ready
--   📱 **Platform:** Cross-platform compatible
-
----
-
-## 📋 Development Tasks Tracking
-
-### 📋 Needed Tasks
-
-📁 **[View all needed tasks →](needed_tasks/)**
-
-### 🛠️ **Development Resources**
-
--   🔧 **Development Commands:** [dev_common_commands.md](docs/dev_common_commands.md)
--   📊 **Technology Stack:** [technology_stack_info.md](docs/technology_stack_info.md)
-
-### 🛡️ **Security & Policies**
-
--   🔒 **Backend Policy:** [backend_policy.md](docs/backend_policy.md)
--   🎨 **Frontend Policy:** [frontend_policy.md](docs/frontend_policy.md)
-
-## 💰 Development Collaboration
-
--   ⚠️ **Terms**: Tasks negotiated before beginning
--   💵 **Payment:** to completed tasks only
--   🤝 **Collaboration:** Professional and transparent
--   🌐 **Payment Methods:**
--   💼 **International**:
-    -   🟢 [Fiverr](https://fiverr.com)
-    -   🔵 [Upwork](https://upwork.com)
-    -   💰 Western Union
-    -   <img src="./imgs/tether_usdt.svg" width="16" height="16" alt="USDT"> Crypto
--   <img src="./imgs/Egypt.svg" width="16" height="16" alt="Egypt Flag"> **Egypt**: Phone cash wallets
--   <img src="./imgs/Saudi_Arabia.svg" width="16" height="16" alt="Saudi Arabia Flag"> **Saudi Arabia**: STC Pay, Alrajhi Bank Transfer
-
-## 🖥️ Development Server
-
-**Development Server:**
-
--   🔗 Direct work via **SSH on single server**
--   📦 Repository: [github.com/abdopcnet/posawesome15_lite](https://github.com/abdopcnet/posawesome15_lite)
--   🌿 Branch: **main only**
--   🔐 **Security:** Secure SSH access
--   🚀 **Performance:** High-speed development environment
-
-## 🐢 Server Specifications
-
-**🐢 Server Specifications:**
-
--   💾 **RAM:** 324 GB DDR5
--   🔧 **CPU:** 2x AMD EPYC 9555
--   ⚡ **Cores/Threads:** 2024 cores / 128 threads
--   🔋 **Power:** 360 Watt
--   🌐 **Network:** High-speed connectivity
--   💿 **Storage:** NVME optimized
-
-## ⚠️ Project POLICY
-
-**⚠️ Project POLICY:**
-
--   ⚠️ Changes into front conflicts improve policy
--   ⚠️ Changes into backend conflicts improve policy
--   ⚠️ Changes not asked for
--   ⚠️ Changing codebase structure
--   ⚠️ Changes not direct in ssh dev_server
--   ⚠️ Commits before review and test
--   ❌ will deleted
--   ❌ No payment
--   🔒 **Quality Control:** Strict adherence to policies
--   📋 **Review Process:** All changes must be reviewed
+-   📊 **API Structure:** [app_api_tree.md](./app_api_tree.md)
+-   📁 **File Organization:** [app_file_structure.md](./app_file_structure.md)
+-   🔄 **Workflow Diagrams:** [app_workflow.md](./app_workflow.md)
+-   📋 **Development Progress:** [app_plan.md](./app_plan.md)
 
 ---
 
