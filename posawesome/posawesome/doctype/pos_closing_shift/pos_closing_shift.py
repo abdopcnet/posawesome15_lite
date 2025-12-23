@@ -86,8 +86,7 @@ class POSClosingShift(Document):
             # Related to: section_break_4 (payment_reconciliation)
             self.update_payment_reconciliation()
         except Exception as e:
-            frappe.log_error(
-                f"[[pos_closing_shift.py]] Error validating POS Closing Shift {self.name}: {str(e)}")
+            frappe.log_error("[pos_closing_shift.py] method: validate", "POS Closing Shift")
             raise
 
     # ========================================================================
@@ -172,8 +171,7 @@ class POSClosingShift(Document):
             # Re-raise validation errors (like frappe.throw)
             raise
         except Exception as e:
-            frappe.log_error(
-                f"[[pos_closing_shift.py]] Error validating shift closing window: {str(e)}")
+            frappe.log_error("[pos_closing_shift.py] method: _validate_shift_closing_window", "POS Closing Shift")
             raise
 
     # ========================================================================
@@ -192,8 +190,7 @@ class POSClosingShift(Document):
                 d.difference = +flt(d.closing_amount, precision) - \
                     flt(d.expected_amount, precision)
         except Exception as e:
-            frappe.log_error(
-                f"[[pos_closing_shift.py]] Error updating payment reconciliation: {str(e)}")
+            frappe.log_error("[pos_closing_shift.py] method: update_payment_reconciliation", "POS Closing Shift")
             raise
 
     # ========================================================================
@@ -217,8 +214,7 @@ class POSClosingShift(Document):
 
             opening_entry.save()
         except Exception as e:
-            frappe.log_error(
-                f"[[pos_closing_shift.py]] Error submitting POS Closing Shift {self.name}: {str(e)}")
+            frappe.log_error("[pos_closing_shift.py] method: on_submit", "POS Closing Shift")
             raise
 
     # ========================================================================
@@ -239,8 +235,7 @@ class POSClosingShift(Document):
                     opening_entry.set_status()  # Updates opening shift status back to "Open"
                 opening_entry.save()
         except Exception as e:
-            frappe.log_error(
-                f"[[pos_closing_shift.py]] Error cancelling POS Closing Shift {self.name}: {str(e)}")
+            frappe.log_error("[pos_closing_shift.py] method: on_cancel", "POS Closing Shift")
             raise
 
     # ========================================================================
@@ -322,9 +317,7 @@ def submit_closing_shift(closing_shift):
         return doc.as_dict()
 
     except Exception as e:
-        # Only log actual errors
-        frappe.log_error(
-            f"[[pos_closing_shift.py]] submit_closing_shift error: {str(e)[:100]}")
+        frappe.log_error("[pos_closing_shift.py] method: submit_closing_shift", "POS Closing Shift")
         frappe.throw(_("Failed to submit closing shift: {0}").format(str(e)))
 
 
@@ -455,9 +448,8 @@ def get_pos_invoices(pos_opening_shift):
 
         return invoices
     except Exception as e:
-        frappe.log_error(
-            f"[[pos_closing_shift.py]] get_pos_invoices: {str(e)}")
-        frappe.throw(_("Error fetching POS invoices"))
+        frappe.log_error("[pos_closing_shift.py] method: get_pos_invoices", "POS Closing Shift")
+        frappe.throw(_("Error fetching invoices"))
 
 
 # ========================================================================
@@ -473,9 +465,8 @@ def get_payments_entries(pos_opening_shift):
     try:
         return _get_payments_entries_helper(pos_opening_shift)
     except Exception as e:
-        frappe.log_error(
-            f"[[pos_closing_shift.py]] get_payments_entries: {str(e)}")
-        frappe.throw(_("Error fetching payment entries"))
+        frappe.log_error("[pos_closing_shift.py] method: get_payments_entries", "POS Closing Shift")
+        frappe.throw(_("Error fetching payments"))
 
 
 # ========================================================================
@@ -793,7 +784,7 @@ def make_closing_shift_from_opening(opening_shift):
                 "grand_total": str(grand_total),
                 "total": str(total) if total is not None else "",
                 "net_total": str(net_total) if net_total is not None else "",
-                "taxes": str(taxes_value) if taxes_value else "",
+                "taxes": str(taxes_value) if taxes_value else "0",
                 "total_qty": str(total_qty) if total_qty is not None else "",
                 "discount_amount": str(discount_amount) if discount_amount is not None else "",
                 "posa_item_discount_total": str(posa_item_discount_total) if posa_item_discount_total is not None else "",
@@ -810,10 +801,7 @@ def make_closing_shift_from_opening(opening_shift):
         return closing_data
 
     except Exception as e:
-        # FRAPPE STANDARD: Short error message (max 140 chars for Error Log title field)
-        error_msg = str(e)[:100] if len(str(e)) > 100 else str(e)
-        frappe.log_error(
-            f"make_closing_shift_from_opening: {error_msg}", "POS Closing Shift")
+        frappe.log_error("[pos_closing_shift.py] method: make_closing_shift_from_opening", "POS Closing Shift")
         frappe.throw(_("Error creating closing shift"))
 
 
