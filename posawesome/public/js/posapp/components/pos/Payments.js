@@ -161,6 +161,40 @@ export default {
 		outstanding_amount() {
 			if (!this.invoice_doc) return 0;
 
+			// For settlement invoices, use the original outstanding_amount from the invoice
+			// Don't recalculate based on current payments (which are for settlement only)
+			if (this.invoice_doc._is_settlement) {
+				// Get the original outstanding amount from the invoice (before settlement payments)
+				// This is the amount that was still owed before we started the settlement process
+				let originalOutstanding = flt(this.invoice_doc.outstanding_amount || 0, 2);
+				if (originalOutstanding <= 0) {
+					// Fallback: calculate from grand_total and paid_amount of original invoice
+					const grandTotal = flt(this.invoice_doc.grand_total || 0, 2);
+					const originalPaidAmount = flt(this.invoice_doc.paid_amount || 0, 2);
+					const write_off_amount = flt(this.invoice_doc.write_off_amount || 0, 2);
+					originalOutstanding = flt(
+						grandTotal - originalPaidAmount - write_off_amount,
+						2,
+					);
+					if (originalOutstanding < 0) originalOutstanding = 0;
+				}
+
+				// Calculate current settlement payments (payments entered in settlement mode)
+				const currentSettlementPayments = flt(this.paid_amount, 2);
+
+				// Remaining to pay = Original outstanding - Current settlement payments
+				const remaining = flt(originalOutstanding - currentSettlementPayments, 2);
+
+				console.log('[Payments.js] Settlement outstanding calculation:', {
+					originalOutstanding,
+					currentSettlementPayments,
+					remaining,
+				});
+
+				return remaining > 0 ? remaining : 0;
+			}
+
+			// Normal mode: calculate outstanding from current invoice state
 			// Get invoice total (use grand_total only, no rounding)
 			// Following user requirement: no rounded_total dependency at all
 			// Use precision = 2 for all currency amounts
@@ -381,33 +415,77 @@ export default {
 					return;
 				}
 
-				// Get the primary payment method (first non-zero payment)
-				const payment = this.invoice_doc.payments.find((p) => flt(p.amount) > 0);
-				if (!payment) {
-					this.showMessage('يرجى اختيار طريقة الدفع', 'error');
+				// Get all payment methods with amounts > 0
+				const payments = this.invoice_doc.payments.filter((p) => flt(p.amount) > 0);
+				if (payments.length === 0) {
+					this.showMessage('يرجى اختيار طريقة دفع', 'error');
 					return;
 				}
 
 				// Show loading
 				evntBus.emit('show_loading', { text: 'جاري إنشاء سند الدفع...', color: 'info' });
 
-				// Create Payment Entry via backend
-				const response = await frappe.call({
-					method: API_MAP.SALES_INVOICE.CREATE_PAYMENT_ENTRY,
-					args: {
-						invoice_name: this.invoice_doc.name,
-						payment_data: {
-							mode_of_payment: payment.mode_of_payment,
-							amount: payment.amount,
-							account: payment.account || null,
+				// If single payment, use create_payment_entry_for_invoice
+				// If multiple payments, use create_payment_entry_for_multiple_payments
+				let response;
+				if (payments.length === 1) {
+					// Single payment method
+					const payment = payments[0];
+					response = await frappe.call({
+						method: API_MAP.PAYMENT_ENTRY.CREATE_PAYMENT_ENTRY,
+						args: {
+							invoice_name: this.invoice_doc.name,
+							payment_data: {
+								mode_of_payment: payment.mode_of_payment,
+								amount: payment.amount,
+								account: payment.account || null,
+								pos_profile: this.invoice_doc.pos_profile || null,
+							},
 						},
-					},
-				});
+					});
+				} else {
+					// Multiple payment methods - create separate Payment Entries
+					const paymentsList = payments.map((p) => ({
+						mode_of_payment: p.mode_of_payment,
+						amount: p.amount,
+						account: p.account || null,
+						pos_profile: this.invoice_doc.pos_profile || null,
+					}));
+
+					response = await frappe.call({
+						method: API_MAP.PAYMENT_ENTRY.CREATE_MULTIPLE_PAYMENTS,
+						args: {
+							invoice_name: this.invoice_doc.name,
+							payments_list: paymentsList,
+						},
+					});
+				}
 
 				evntBus.emit('hide_loading');
 
 				if (response.message) {
-					this.showMessage(`تم إنشاء سند الدفع: ${response.message.name}`, 'success');
+					const entries = Array.isArray(response.message)
+						? response.message
+						: [response.message];
+					const entryName = entries.map((e) => e.name).join(', ');
+
+					this.showMessage(`تم إنشاء سند الدفع: ${entryName}`, 'success');
+
+					// Print Payment Entry receipt
+					// Use the first entry for printing (or all if multiple)
+					const firstEntry = entries[0];
+					if (firstEntry && firstEntry.name) {
+						// Get print format from invoice_doc or use default
+						// Payment Entry uses same print format as Sales Invoice
+						const printFormat =
+							this.invoice_doc?.pos_profile?.posa_print_format || 'Standard';
+
+						// Open print window for Payment Entry
+						const printUrl = frappe.urllib.get_full_url(
+							`/printview?doctype=Payment%20Entry&name=${firstEntry.name}&format=${printFormat}&trigger_print=1&no_letterhead=0`,
+						);
+						window.open(printUrl);
+					}
 
 					// Close payment dialog and reset
 					this.back_to_invoice();
@@ -416,7 +494,8 @@ export default {
 			} catch (error) {
 				evntBus.emit('hide_loading');
 				console.error('[Payments.js] Settlement payment error:', error);
-				this.showMessage('فشل إنشاء سند الدفع', 'error');
+				const errorMessage = error?.message || error?.exc || 'فشل إنشاء سند الدفع';
+				this.showMessage(errorMessage, 'error');
 			}
 		},
 
@@ -815,9 +894,19 @@ export default {
 					// For settlement invoices, use outstanding_amount instead of grand_total
 					// Use grand_total with precision = 2 for all currency amounts
 					// Following user requirement: no rounded_total dependency
-					const invoice_total = this.invoice_doc._is_settlement
-						? flt(this.invoice_doc.outstanding_amount || 0, 2)
-						: flt(this.invoice_doc.grand_total, 2);
+					let invoice_total = flt(this.invoice_doc.grand_total, 2);
+					if (this.invoice_doc._is_settlement) {
+						// Calculate outstanding if not present
+						let outstanding = flt(this.invoice_doc.outstanding_amount || 0, 2);
+						if (outstanding <= 0) {
+							// Fallback: calculate from grand_total and paid_amount
+							const grandTotal = flt(this.invoice_doc.grand_total || 0, 2);
+							const paidAmount = flt(this.invoice_doc.paid_amount || 0, 2);
+							outstanding = flt(grandTotal - paidAmount, 2);
+							if (outstanding < 0) outstanding = 0;
+						}
+						invoice_total = outstanding;
+					}
 
 					// Fill with full invoice amount when clicking the payment method button
 					// For quick_return mode, same logic as sales_mode but with negative values
@@ -828,9 +917,24 @@ export default {
 
 					// For settlement invoices, ensure amount doesn't exceed outstanding_amount
 					if (this.invoice_doc._is_settlement && target_amount > 0) {
-						const outstanding = flt(this.invoice_doc.outstanding_amount || 0, 2);
-						if (target_amount > outstanding) {
-							target_amount = outstanding;
+						// Calculate outstanding if not present
+						let outstanding = flt(this.invoice_doc.outstanding_amount || 0, 2);
+						if (outstanding <= 0) {
+							// Fallback: calculate from grand_total and paid_amount
+							const grandTotal = flt(this.invoice_doc.grand_total || 0, 2);
+							const paidAmount = flt(this.invoice_doc.paid_amount || 0, 2);
+							outstanding = flt(grandTotal - paidAmount, 2);
+							if (outstanding < 0) outstanding = 0;
+						}
+
+						// Calculate total payments including this one
+						const otherPayments = this.invoice_doc.payments
+							.filter((p) => p.idx !== payment.idx)
+							.reduce((sum, p) => sum + flt(p.amount || 0, 2), 0);
+						const maxAllowed = flt(outstanding - otherPayments, 2);
+
+						if (target_amount > maxAllowed) {
+							target_amount = maxAllowed > 0 ? maxAllowed : 0;
 						}
 					}
 
@@ -880,9 +984,19 @@ export default {
 				// Use grand_total directly without rounding to preserve exact value
 				// Following user requirement: no rounded_total dependency
 				// Use precision = 2 for all currency amounts
-				const invoice_total = this.invoice_doc._is_settlement
-					? flt(this.invoice_doc.outstanding_amount || 0, 2)
-					: flt(this.invoice_doc.grand_total, 2);
+				let invoice_total = flt(this.invoice_doc.grand_total, 2);
+				if (this.invoice_doc._is_settlement) {
+					// Calculate outstanding if not present
+					let outstanding = flt(this.invoice_doc.outstanding_amount || 0, 2);
+					if (outstanding <= 0) {
+						// Fallback: calculate from grand_total and paid_amount
+						const grandTotal = flt(this.invoice_doc.grand_total || 0, 2);
+						const paidAmount = flt(this.invoice_doc.paid_amount || 0, 2);
+						outstanding = flt(grandTotal - paidAmount, 2);
+						if (outstanding < 0) outstanding = 0;
+					}
+					invoice_total = outstanding;
+				}
 
 				// Find the payment method being edited
 				const payment = this.invoice_doc.payments.find((p) => p.idx === idx);
@@ -939,9 +1053,24 @@ export default {
 
 				// For settlement invoices, ensure amount doesn't exceed outstanding_amount
 				if (this.invoice_doc._is_settlement && amount > 0) {
-					const outstanding = flt(this.invoice_doc.outstanding_amount || 0, 2);
-					if (amount > outstanding) {
-						amount = outstanding;
+					// Calculate outstanding if not present
+					let outstanding = flt(this.invoice_doc.outstanding_amount || 0, 2);
+					if (outstanding <= 0) {
+						// Fallback: calculate from grand_total and paid_amount
+						const grandTotal = flt(this.invoice_doc.grand_total || 0, 2);
+						const paidAmount = flt(this.invoice_doc.paid_amount || 0, 2);
+						outstanding = flt(grandTotal - paidAmount, 2);
+						if (outstanding < 0) outstanding = 0;
+					}
+
+					// Calculate total payments including this one
+					const otherPayments = this.invoice_doc.payments
+						.filter((p) => p.idx !== payment.idx)
+						.reduce((sum, p) => sum + flt(p.amount || 0, 2), 0);
+					const maxAllowed = flt(outstanding - otherPayments, 2);
+
+					if (amount > maxAllowed) {
+						amount = maxAllowed > 0 ? maxAllowed : 0;
 					}
 				}
 
@@ -1058,12 +1187,28 @@ export default {
 
 				// For settlement invoices, validate that payment doesn't exceed outstanding_amount
 				if (this.invoice_doc._is_settlement && value > 0) {
-					const outstanding = flt(this.invoice_doc.outstanding_amount || 0, 2);
+					// Calculate outstanding if not present
+					let outstanding = flt(this.invoice_doc.outstanding_amount || 0, 2);
+					if (outstanding <= 0) {
+						// Fallback: calculate from grand_total and paid_amount
+						const grandTotal = flt(this.invoice_doc.grand_total || 0, 2);
+						const paidAmount = flt(this.invoice_doc.paid_amount || 0, 2);
+						outstanding = flt(grandTotal - paidAmount, 2);
+						if (outstanding < 0) outstanding = 0;
+					}
+
 					// Calculate total payments including this one
 					const otherPayments = this.invoice_doc.payments
 						.filter((p) => p.idx !== payment.idx)
 						.reduce((sum, p) => sum + flt(p.amount || 0, 2), 0);
 					const totalPayments = flt(otherPayments + value, 2);
+
+					console.log(
+						'[Payments.js] Settlement validation - outstanding:',
+						outstanding,
+						'totalPayments:',
+						totalPayments,
+					);
 
 					if (totalPayments > outstanding) {
 						// Limit to outstanding amount
@@ -1261,6 +1406,13 @@ export default {
 	mounted() {
 		// Wait for DOM to be ready before setting up event listeners
 		this.$nextTick(() => {
+			// Listen for settlement payment submission from Invoice component
+			evntBus.on('submit_settlement_payment', () => {
+				if (this.invoice_doc?._is_settlement && this.invoice_doc?.docstatus === 1) {
+					this.submitSettlementPayment();
+				}
+			});
+
 			// Listen for quick return mode toggle
 			evntBus.on(EVENT_NAMES.TOGGLE_QUICK_RETURN, (value) => {
 				this.quick_return = value;
@@ -1314,13 +1466,31 @@ export default {
 					// For settlement invoices, use outstanding_amount instead of grand_total
 					if (invoice_doc._is_settlement) {
 						// Settlement mode: use outstanding_amount (what's left to pay)
-						const outstanding = flt(invoice_doc.outstanding_amount || 0, 2);
+						// Calculate outstanding if not present
+						let outstanding = flt(invoice_doc.outstanding_amount || 0, 2);
+						if (outstanding <= 0) {
+							// Fallback: calculate from grand_total and paid_amount
+							const grandTotal = flt(invoice_doc.grand_total || 0, 2);
+							const paidAmount = flt(invoice_doc.paid_amount || 0, 2);
+							outstanding = flt(grandTotal - paidAmount, 2);
+							if (outstanding < 0) outstanding = 0;
+						}
+
+						console.log(
+							'[Payments.js] Settlement mode - outstanding_amount:',
+							outstanding,
+						);
+						console.log(
+							'[Payments.js] Payments array length:',
+							this.invoice_doc.payments?.length,
+						);
+
 						// Set payment amount with precision = 2
 						default_payment.amount = outstanding;
 						if (default_payment.base_amount !== undefined) {
 							default_payment.base_amount = outstanding;
 						}
-						// Clear other payment methods
+						// Clear other payment methods (but keep them visible)
 						this.invoice_doc.payments.forEach((payment) => {
 							if (payment.idx !== default_payment.idx) {
 								payment.amount = 0;
