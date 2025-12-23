@@ -16,6 +16,8 @@ const API_MAP = {
 		SAVE_DRAFT: 'posawesome.api.sales_invoice.save_draft_invoice',
 		GET_DRAFTS: 'posawesome.api.sales_invoice.get_draft_invoices',
 		GET_PRINT_INVOICES: 'posawesome.api.sales_invoice.get_print_invoices',
+		GET_SETTLEMENT_INVOICES: 'posawesome.api.sales_invoice.get_settlement_invoices',
+		CREATE_PAYMENT_ENTRY: 'posawesome.api.sales_invoice.create_payment_entry_for_invoice',
 	},
 
 	// Customer APIs (from Customer.vue, UpdateCustomer.vue, Payments.vue, NewAddress.vue)
