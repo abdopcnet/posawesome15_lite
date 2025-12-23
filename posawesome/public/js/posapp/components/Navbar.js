@@ -3,809 +3,830 @@ import { evntBus } from '../bus';
 // Frontend logging: Use console.log/error/warn directly
 // Import cache manager utility
 (function () {
-  if (window.clearCacheAndReload) return;
-  window.clearCacheAndReload = function () {
-    try {
-      localStorage.clear();
-    } catch (_) {
-      try {
-        Object.keys(localStorage).forEach((k) => localStorage.removeItem(k));
-      } catch (_) {}
-    }
-    try {
-      sessionStorage.clear();
-    } catch (_) {}
-    try {
-      location.reload(true);
-    } catch (_) {
-      location.reload();
-    }
-  };
+	if (window.clearCacheAndReload) return;
+	window.clearCacheAndReload = function () {
+		try {
+			localStorage.clear();
+		} catch (_) {
+			try {
+				Object.keys(localStorage).forEach((k) => localStorage.removeItem(k));
+			} catch (_) {}
+		}
+		try {
+			sessionStorage.clear();
+		} catch (_) {}
+		try {
+			location.reload(true);
+		} catch (_) {
+			location.reload();
+		}
+	};
 })();
 import { API_MAP } from '../api_mapper.js';
 
 // ===== SECTION 2: EXPORT DEFAULT =====
 export default {
-  // components: {MyPopup},
-  // ===== SECTION 3: DATA =====
-  data() {
-    return {
-      drawer: false,
-      mini: true,
-      item: 0,
+	// components: {MyPopup},
+	// ===== SECTION 3: DATA =====
+	data() {
+		return {
+			drawer: false,
+			mini: true,
+			item: 0,
 			items: [{ text: 'POS', icon: 'mdi-network-pos' }],
 			page: '',
-      fav: true,
-      message: false,
-      hints: true,
-      snack: false,
+			fav: true,
+			message: false,
+			hints: true,
+			snack: false,
 			snackColor: '',
 			snackText: '',
 			company_name: '',
 			pos_profile: '',
-      freeze: false,
+			freeze: false,
 			freezeTitle: '',
 			freezeMsg: '',
 			last_invoice: '',
-      invoice_doc: null,
-      pos_opening_shift: null,
-      shift_invoice_count: 0,
-      // Ping variables
+			invoice_doc: null,
+			pos_opening_shift: null,
+			shift_invoice_count: 0,
+			// Ping variables
 			pingTime: '000',
-      pingInterval: null,
-      // Payment totals
-      totalCash: 0,
-      totalNonCash: 0,
-      // Quick return mode
-      quick_return_value: false,
-      // Connection state tracking
-      wasConnectionLost: false,
-      // Shift monitoring (independent from ping)
-      shiftMonitoringInterval: null,
-      // Print dialog
-      printDialog: false,
-      printInvoicesList: [],
-      selectedPrintInvoice: null,
-      isLoadingInvoices: false,
-    };
-  },
-  computed: {
-    invoiceNumberText() {
-      // Simple logic: check what's active
-      if (this.invoice_doc?.is_return && this.invoice_doc?.return_against) {
+			pingInterval: null,
+			// Payment totals
+			totalCash: 0,
+			totalNonCash: 0,
+			// Quick return mode
+			quick_return_value: false,
+			// Connection state tracking
+			wasConnectionLost: false,
+			// Shift monitoring (independent from ping)
+			shiftMonitoringInterval: null,
+			// Print dialog
+			printDialog: false,
+			printInvoicesList: [],
+			selectedPrintInvoice: null,
+			isLoadingInvoices: false,
+		};
+	},
+	computed: {
+		invoiceNumberText() {
+			// Simple logic: check what's active
+			// Check settlement mode first (payment only mode)
+			if (this.invoice_doc?._is_settlement) {
+				return 'Pay_Mode';
+			}
+			if (this.invoice_doc?.is_return && this.invoice_doc?.return_against) {
 				return 'Return_Invoice';
-      }
-      if (this.quick_return_value) {
+			}
+			if (this.quick_return_value) {
 				return 'Quick_Return';
-      }
+			}
 			return 'Sales_Mode';
-    },
-    invoiceNumberClass() {
-      if (!this.invoice_doc || !this.invoice_doc.name) {
-        // Prefer quick return mode when active
-        if (this.quick_return_value) {
+		},
+		invoiceNumberClass() {
+			if (!this.invoice_doc || !this.invoice_doc.name) {
+				// Prefer settlement mode first (payment only mode)
+				if (this.invoice_doc?._is_settlement) {
+					return 'pay-mode';
+				}
+				// Prefer quick return mode when active
+				if (this.quick_return_value) {
 					return 'quick-return-mode';
-        }
-        if (this.invoice_doc?.is_return) {
+				}
+				if (this.invoice_doc?.is_return) {
 					return 'return-invoice-mode';
-        }
+				}
 				return 'sales-invoice-mode';
-      }
+			}
+			// For existing invoices, check settlement mode
+			if (this.invoice_doc._is_settlement) {
+				return 'pay-mode';
+			}
 			return this.invoice_doc.is_return ? 'return-invoice' : 'regular-invoice';
-    },
-    invoiceIconColor() {
-      if (!this.invoice_doc || !this.invoice_doc.name) {
-        // Prefer quick return mode when active
-        if (this.quick_return_value) {
+		},
+		invoiceIconColor() {
+			if (!this.invoice_doc || !this.invoice_doc.name) {
+				// Prefer settlement mode first (payment only mode)
+				if (this.invoice_doc?._is_settlement) {
+					return '#ff9800'; // Orange for Pay Mode
+				}
+				// Prefer quick return mode when active
+				if (this.quick_return_value) {
 					return '#9c27b0'; // Purple for Quick Return Mode
-        }
-        if (this.invoice_doc?.is_return) {
+				}
+				if (this.invoice_doc?.is_return) {
 					return '#607d8b'; // Blue-grey for Return Invoice Mode (same as return button)
-        }
+				}
 				return '#4caf50'; // Green for Sales Invoice Mode
-      }
-      // Use hex colors even when invoice exists
+			}
+			// Use hex colors even when invoice exists
+			if (this.invoice_doc._is_settlement) {
+				return '#ff9800'; // Orange for Pay Mode
+			}
 			if (this.quick_return_value) return '#9c27b0';
 			return this.invoice_doc.is_return ? '#607d8b' : '#4caf50';
-    },
-    shiftNumberText() {
-      if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
+		},
+		shiftNumberText() {
+			if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
 				return 'Shift not opened yet';
-      }
-      return this.pos_opening_shift.name;
-    },
-    shiftNumberClass() {
-      if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
+			}
+			return this.pos_opening_shift.name;
+		},
+		shiftNumberClass() {
+			if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
 				return 'no-shift';
-      }
+			}
 			return this.pos_opening_shift.status === 'Open' ? 'open-shift' : 'closed-shift';
-    },
-    shiftIconColor() {
-      if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
+		},
+		shiftIconColor() {
+			if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
 				return '#757575';
-      }
+			}
 			return this.pos_opening_shift.status === 'Open' ? '#4caf50' : '#ff9800';
-    },
-    currentUserName() {
+		},
+		currentUserName() {
 			return frappe.session.user || 'Unknown User';
-    },
-    shiftStartText() {
-      if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
+		},
+		shiftStartText() {
+			if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
 				return 'Not opened';
-      }
-      if (!this.pos_opening_shift.period_start_date) {
+			}
+			if (!this.pos_opening_shift.period_start_date) {
 				return 'Unknown';
-      }
-      const startDate = new Date(this.pos_opening_shift.period_start_date);
+			}
+			const startDate = new Date(this.pos_opening_shift.period_start_date);
 			const timeString = startDate.toLocaleTimeString('en-US', {
 				hour: '2-digit',
 				minute: '2-digit',
-        hour12: true,
-      });
-      return `${timeString}`;
-    },
-    shiftStartClass() {
-      if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
+				hour12: true,
+			});
+			return `${timeString}`;
+		},
+		shiftStartClass() {
+			if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
 				return 'no-shift-start';
-      }
+			}
 			return this.pos_opening_shift.status === 'Open'
 				? 'open-shift-start'
 				: 'closed-shift-start';
-    },
-    shiftStartIconColor() {
-      if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
+		},
+		shiftStartIconColor() {
+			if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
 				return '#757575';
-      }
+			}
 			return this.pos_opening_shift.status === 'Open' ? '#4caf50' : '#ff9800';
-    },
-    totalInvoicesQty() {
-      // Get total invoices count for current shift
+		},
+		totalInvoicesQty() {
+			// Get total invoices count for current shift
 			if (!this.pos_opening_shift || !this.pos_opening_shift.name || !this.pos_profile) {
 				return '000';
-      }
+			}
 			return this.shift_invoice_count || '000';
-    },
-    // Ping computed properties
-    pingClass() {
-      const ping = parseInt(this.pingTime);
+		},
+		// Ping computed properties
+		pingClass() {
+			const ping = parseInt(this.pingTime);
 			if (ping < 100) return 'ping-excellent';
 			if (ping < 300) return 'ping-good';
 			if (ping < 500) return 'ping-fair';
 			return 'ping-poor';
-    },
-    pingIconColor() {
-      const ping = parseInt(this.pingTime);
+		},
+		pingIconColor() {
+			const ping = parseInt(this.pingTime);
 			if (ping < 100) return '#4caf50';
 			if (ping < 300) return '#1976d2';
 			if (ping < 500) return '#ff9800';
 			return '#f44336';
-    },
-  },
-  // ===== SECTION 3.5: WATCHERS =====
-  watch: {},
-  // ===== SECTION 4: METHODS =====
-  methods: {
-    // Format currency values
-    formatCurrency(value) {
-      // Handle null, undefined or NaN values
-      if (value === null || value === undefined || isNaN(value)) {
-        value = 0;
-      }
+		},
+	},
+	// ===== SECTION 3.5: WATCHERS =====
+	watch: {},
+	// ===== SECTION 4: METHODS =====
+	methods: {
+		// Format currency values
+		formatCurrency(value) {
+			// Handle null, undefined or NaN values
+			if (value === null || value === undefined || isNaN(value)) {
+				value = 0;
+			}
 
-      // Convert to number if it's a string
+			// Convert to number if it's a string
 			if (typeof value === 'string') {
-        value = parseFloat(value) || 0;
-      }
+				value = parseFloat(value) || 0;
+			}
 
-      // Format the number with comma separators and 2 decimal places
+			// Format the number with comma separators and 2 decimal places
 			return value.toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
-    },
+				minimumFractionDigits: 2,
+				maximumFractionDigits: 2,
+			});
+		},
 
-    // Fetch payment totals (optimized: single API call instead of two)
-    fetchPaymentTotals() {
-      // Only fetch if we have pos_profile
-      if (!this.pos_profile || !this.pos_profile.name) {
-        this.totalCash = 0;
-        this.totalNonCash = 0;
-        return;
-      }
+		// Fetch payment totals (optimized: single API call instead of two)
+		fetchPaymentTotals() {
+			// Only fetch if we have pos_profile
+			if (!this.pos_profile || !this.pos_profile.name) {
+				this.totalCash = 0;
+				this.totalNonCash = 0;
+				return;
+			}
 
-      // Fetch both totals in one API call (optimized for performance)
-      frappe.call({
-        method: API_MAP.POS_CLOSING_SHIFT.GET_PAYMENT_TOTALS,
-        args: {
-          pos_profile: this.pos_profile.name,
-          user: frappe.session.user,
-        },
-        callback: (r) => {
-          if (r.message) {
-            this.totalCash = parseFloat(r.message.cash_total || 0) || 0;
-            this.totalNonCash = parseFloat(r.message.non_cash_total || 0) || 0;
-          } else {
-            this.totalCash = 0;
-            this.totalNonCash = 0;
-          }
-        },
-        error: (err) => {
-          this.totalCash = 0;
-          this.totalNonCash = 0;
-        },
-      });
-    },
+			// Fetch both totals in one API call (optimized for performance)
+			frappe.call({
+				method: API_MAP.POS_CLOSING_SHIFT.GET_PAYMENT_TOTALS,
+				args: {
+					pos_profile: this.pos_profile.name,
+					user: frappe.session.user,
+				},
+				callback: (r) => {
+					if (r.message) {
+						this.totalCash = parseFloat(r.message.cash_total || 0) || 0;
+						this.totalNonCash = parseFloat(r.message.non_cash_total || 0) || 0;
+					} else {
+						this.totalCash = 0;
+						this.totalNonCash = 0;
+					}
+				},
+				error: (err) => {
+					this.totalCash = 0;
+					this.totalNonCash = 0;
+				},
+			});
+		},
 
-    // Set up interval to periodically update payment totals
-    setupCashUpdateInterval() {
-      // Clear existing interval if any
-      if (this.cashUpdateInterval) {
-        clearInterval(this.cashUpdateInterval);
-      }
+		// Set up interval to periodically update payment totals
+		setupCashUpdateInterval() {
+			// Clear existing interval if any
+			if (this.cashUpdateInterval) {
+				clearInterval(this.cashUpdateInterval);
+			}
 
-      // Fetch initial totals
-      this.fetchPaymentTotals();
+			// Fetch initial totals
+			this.fetchPaymentTotals();
 
-      // Set up interval to update totals (every 10 seconds - optimized with backend caching)
-      this.cashUpdateInterval = setInterval(() => {
-        this.fetchPaymentTotals();
-      }, 10000); // 10 seconds (backend caches for 5 seconds, so this is optimal)
-    },
+			// Set up interval to update totals (every 10 seconds - optimized with backend caching)
+			this.cashUpdateInterval = setInterval(() => {
+				this.fetchPaymentTotals();
+			}, 10000); // 10 seconds (backend caches for 5 seconds, so this is optimal)
+		},
 
-    changePage(key) {
+		changePage(key) {
 			this.$emit('changePage', key);
-    },
-    go_desk() {
+		},
+		go_desk() {
 			frappe.set_route('/');
-      location.reload();
-    },
-    close_shift_dialog() {
+			location.reload();
+		},
+		close_shift_dialog() {
 			evntBus.emit('open_closing_dialog');
-    },
-    show_mesage(data) {
-      this.snack = true;
-      this.snackColor = data.color;
-      this.snackText = data.text;
+		},
+		show_mesage(data) {
+			this.snack = true;
+			this.snackColor = data.color;
+			this.snackText = data.text;
 
-      // Auto-hide snackbar after 4 seconds
-      setTimeout(() => {
-        this.snack = false;
-      }, 4000);
-    },
-    logOut() {
-      var me = this;
-      me.logged_out = true;
-      return frappe.call({
+			// Auto-hide snackbar after 4 seconds
+			setTimeout(() => {
+				this.snack = false;
+			}, 4000);
+		},
+		logOut() {
+			var me = this;
+			me.logged_out = true;
+			return frappe.call({
 				method: 'logout',
-        callback: function (r) {
-          if (r.exc) {
-            return;
-          }
-          // Instead of automatic reload, let the user manually reload
-          me.show_mesage({
+				callback: function (r) {
+					if (r.exc) {
+						return;
+					}
+					// Instead of automatic reload, let the user manually reload
+					me.show_mesage({
 						color: 'info',
 						text: 'Logged out successfully. Click to reload.',
-          });
-          // Only reload when user clicks on the message
+					});
+					// Only reload when user clicks on the message
 					document.querySelector('.snackbar').addEventListener('click', function () {
 						frappe.set_route('/login');
-              location.reload();
-            });
-        },
-      });
-    },
-    async openPrintDialog() {
-      if (!this.pos_profile || !this.pos_profile.name) {
-        this.show_mesage({
+						location.reload();
+					});
+				},
+			});
+		},
+		async openPrintDialog() {
+			if (!this.pos_profile || !this.pos_profile.name) {
+				this.show_mesage({
 					color: 'error',
 					text: 'لا يوجد بروفايل POS محدد',
-        });
-        return;
-      }
+				});
+				return;
+			}
 
-      // Open dialog
-      this.printDialog = true;
-      this.selectedPrintInvoice = null;
-      this.isLoadingInvoices = true;
+			// Open dialog
+			this.printDialog = true;
+			this.selectedPrintInvoice = null;
+			this.isLoadingInvoices = true;
 
-      try {
-        // Get submitted invoices with invoice type from backend (single query)
-        // FRAPPE STANDARD: Use backend API to fetch invoices with type determination
-        const response = await frappe.call({
-          method: API_MAP.SALES_INVOICE.GET_PRINT_INVOICES,
-          args: {
-            pos_profile: this.pos_profile.name,
-            pos_opening_shift: this.pos_opening_shift?.name || null,
-            user: frappe.session.user,
-          },
-        });
+			try {
+				// Get submitted invoices with invoice type from backend (single query)
+				// FRAPPE STANDARD: Use backend API to fetch invoices with type determination
+				const response = await frappe.call({
+					method: API_MAP.SALES_INVOICE.GET_PRINT_INVOICES,
+					args: {
+						pos_profile: this.pos_profile.name,
+						pos_opening_shift: this.pos_opening_shift?.name || null,
+						user: frappe.session.user,
+					},
+				});
 
-        if (response.message && Array.isArray(response.message)) {
-          this.printInvoicesList = response.message;
-        } else {
-          this.printInvoicesList = [];
-        }
-      } catch (error) {
-        this.show_mesage({
+				if (response.message && Array.isArray(response.message)) {
+					this.printInvoicesList = response.message;
+				} else {
+					this.printInvoicesList = [];
+				}
+			} catch (error) {
+				this.show_mesage({
 					color: 'error',
 					text: 'خطأ في جلب الفواتير: ' + (error.message || 'خطأ غير معروف'),
-        });
-        this.printInvoicesList = [];
-      } finally {
-        this.isLoadingInvoices = false;
-      }
-    },
-    printSelectedInvoice() {
-      if (!this.selectedPrintInvoice) {
-        return;
-      }
+				});
+				this.printInvoicesList = [];
+			} finally {
+				this.isLoadingInvoices = false;
+			}
+		},
+		printSelectedInvoice() {
+			if (!this.selectedPrintInvoice) {
+				return;
+			}
 
-      const invoice_name = this.selectedPrintInvoice.name;
-      const print_format =
+			const invoice_name = this.selectedPrintInvoice.name;
+			const print_format =
 				this.pos_profile.print_format_for_online || this.pos_profile.posa_print_format;
-      const letter_head = this.pos_profile.letter_head || 0;
-      const url =
-        frappe.urllib.get_base_url() +
+			const letter_head = this.pos_profile.letter_head || 0;
+			const url =
+				frappe.urllib.get_base_url() +
 				'/printview?doctype=Sales%20Invoice&name=' +
-        invoice_name +
+				invoice_name +
 				'&trigger_print=1' +
 				'&format=' +
-        print_format +
+				print_format +
 				'&no_letterhead=' +
-        letter_head;
+				letter_head;
 			const printWindow = window.open(url, 'Print');
-      printWindow.addEventListener(
+			printWindow.addEventListener(
 				'load',
-        function () {
-          printWindow.print();
-        },
+				function () {
+					printWindow.print();
+				},
 				true,
-      );
+			);
 
-      // Close dialog after printing
-      this.printDialog = false;
-      this.selectedPrintInvoice = null;
-    },
-    fetch_company_info() {
-      if (this.pos_profile && this.pos_profile.company) {
-        frappe.db
+			// Close dialog after printing
+			this.printDialog = false;
+			this.selectedPrintInvoice = null;
+		},
+		fetch_company_info() {
+			if (this.pos_profile && this.pos_profile.company) {
+				frappe.db
 					.get_doc('Company', this.pos_profile.company)
-          .then((company_doc) => {
-            this.company_name = company_doc.company_name;
-          })
-          .catch((err) => {
-            // Error fetching company info
-          });
-      }
-    },
-    async clearCache() {
-      try {
-        // Show loading message
-        this.show_mesage({
+					.then((company_doc) => {
+						this.company_name = company_doc.company_name;
+					})
+					.catch((err) => {
+						// Error fetching company info
+					});
+			}
+		},
+		async clearCache() {
+			try {
+				// Show loading message
+				this.show_mesage({
 					color: 'info',
 					text: 'Clearing cache...',
-        });
+				});
 
-        // Use the comprehensive cache manager
-        if (window.clearCacheAndReload) {
-          await window.clearCacheAndReload();
+				// Use the comprehensive cache manager
+				if (window.clearCacheAndReload) {
+					await window.clearCacheAndReload();
 
-          this.show_mesage({
+					this.show_mesage({
 						color: 'success',
 						text: 'Cache cleared successfully. Reloading...',
-          });
+					});
 
-          // Reload page after short delay
-          setTimeout(() => {
-            location.reload();
-          }, 1000);
-        } else {
-          // Fallback to basic cache clearing
-          localStorage.clear();
-          sessionStorage.clear();
+					// Reload page after short delay
+					setTimeout(() => {
+						location.reload();
+					}, 1000);
+				} else {
+					// Fallback to basic cache clearing
+					localStorage.clear();
+					sessionStorage.clear();
 
-          this.show_mesage({
+					this.show_mesage({
 						color: 'success',
 						text: 'Basic cache cleared. Reloading...',
-          });
+					});
 
-          setTimeout(() => {
-            location.reload();
-          }, 1000);
-        }
-      } catch (error) {
-        this.show_mesage({
+					setTimeout(() => {
+						location.reload();
+					}, 1000);
+				}
+			} catch (error) {
+				this.show_mesage({
 					color: 'error',
 					text: 'Error clearing cache: ' + error.message,
-        });
-      }
-    },
-    async fetchShiftInvoiceCount() {
-      if (!this.pos_profile || !this.pos_opening_shift) {
-        return;
-      }
+				});
+			}
+		},
+		async fetchShiftInvoiceCount() {
+			if (!this.pos_profile || !this.pos_opening_shift) {
+				return;
+			}
 
-      try {
-        const response = await frappe.call({
-          method: API_MAP.POS_OPENING_SHIFT.GET_USER_SHIFT_INVOICE_COUNT,
-          args: {
-            pos_profile: this.pos_profile.name,
-            pos_opening_shift: this.pos_opening_shift.name,
-          },
-        });
+			try {
+				const response = await frappe.call({
+					method: API_MAP.POS_OPENING_SHIFT.GET_USER_SHIFT_INVOICE_COUNT,
+					args: {
+						pos_profile: this.pos_profile.name,
+						pos_opening_shift: this.pos_opening_shift.name,
+					},
+				});
 
-        if (response.message !== undefined) {
-          this.shift_invoice_count = response.message;
-        }
-      } catch (error) {
-        this.shift_invoice_count = 0;
-      }
-    },
-    // Ping methods
-    measurePing() {
-      // Check if browser reports offline
-      if (!navigator.onLine) {
+				if (response.message !== undefined) {
+					this.shift_invoice_count = response.message;
+				}
+			} catch (error) {
+				this.shift_invoice_count = 0;
+			}
+		},
+		// Ping methods
+		measurePing() {
+			// Check if browser reports offline
+			if (!navigator.onLine) {
 				this.pingTime = '999';
-        if (!this.wasConnectionLost) {
-          this.wasConnectionLost = true;
-          this.show_mesage({
+				if (!this.wasConnectionLost) {
+					this.wasConnectionLost = true;
+					this.show_mesage({
 						color: 'error',
 						text: 'الاتصال بالإنترنت مفصول',
-          });
-        }
-        return;
-      }
-      
-      console.log('[Navbar.js] measurePing called, shift:', this.pos_opening_shift?.name || 'none');
+					});
+				}
+				return;
+			}
 
-      const startTime = performance.now();
-      let timeoutId = null;
-      let isResolved = false;
+			console.log(
+				'[Navbar.js] measurePing called, shift:',
+				this.pos_opening_shift?.name || 'none',
+			);
 
-      // Timeout: 1 second to detect no response
-      timeoutId = setTimeout(() => {
-        if (!isResolved) {
-          isResolved = true;
+			const startTime = performance.now();
+			let timeoutId = null;
+			let isResolved = false;
+
+			// Timeout: 1 second to detect no response
+			timeoutId = setTimeout(() => {
+				if (!isResolved) {
+					isResolved = true;
 					this.pingTime = '999';
-          
-          if (!this.wasConnectionLost) {
-            this.wasConnectionLost = true;
-            this.show_mesage({
+
+					if (!this.wasConnectionLost) {
+						this.wasConnectionLost = true;
+						this.show_mesage({
 							color: 'error',
 							text: 'الاتصال بالإنترنت مفصول',
-            });
-          }
-        }
-      }, 1000);
+						});
+					}
+				}
+			}, 1000);
 
-      frappe.call({
-        method: API_MAP.POSAWESOME.PING,
-        args: {},
-        callback: (r) => {
-          if (timeoutId) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
-          }
-          
-          if (isResolved) return;
-          isResolved = true;
+			frappe.call({
+				method: API_MAP.POSAWESOME.PING,
+				args: {},
+				callback: (r) => {
+					if (timeoutId) {
+						clearTimeout(timeoutId);
+						timeoutId = null;
+					}
 
-          const endTime = performance.now();
-          const ping = Math.round(endTime - startTime);
+					if (isResolved) return;
+					isResolved = true;
+
+					const endTime = performance.now();
+					const ping = Math.round(endTime - startTime);
 					this.pingTime = ping.toString().padStart(3, '0');
 
-          // If ping > 1000ms, show weak connection message
-          if (ping > 1000) {
-            this.show_mesage({
+					// If ping > 1000ms, show weak connection message
+					if (ping > 1000) {
+						this.show_mesage({
 							color: 'warning',
 							text: 'الاتصال بالإنترنت ضعيف جدا',
-            });
-          }
+						});
+					}
 
-          // If connection was lost before and now it's back
-          if (this.wasConnectionLost) {
-            this.wasConnectionLost = false;
-            this.show_mesage({
+					// If connection was lost before and now it's back
+					if (this.wasConnectionLost) {
+						this.wasConnectionLost = false;
+						this.show_mesage({
 							color: 'success',
 							text: 'تم رجوع الاتصال بالإنترنت',
-            });
-          }
-          
-          // Shift monitoring is now independent from ping
-        },
-        error: (err) => {
-          if (timeoutId) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
-          }
-          
-          if (isResolved) return;
-          isResolved = true;
+						});
+					}
+
+					// Shift monitoring is now independent from ping
+				},
+				error: (err) => {
+					if (timeoutId) {
+						clearTimeout(timeoutId);
+						timeoutId = null;
+					}
+
+					if (isResolved) return;
+					isResolved = true;
 
 					this.pingTime = '999';
-          
-          if (!this.wasConnectionLost) {
-            this.wasConnectionLost = true;
-            this.show_mesage({
+
+					if (!this.wasConnectionLost) {
+						this.wasConnectionLost = true;
+						this.show_mesage({
 							color: 'error',
 							text: 'الاتصال بالإنترنت مفصول',
-            });
-          }
-        },
-        freeze: false,
-        show_spinner: false,
-        async: true,
-      });
-    },
-    startPingMonitoring() {
-      if (this.pingInterval) {
-        return;
-      }
+						});
+					}
+				},
+				freeze: false,
+				show_spinner: false,
+				async: true,
+			});
+		},
+		startPingMonitoring() {
+			if (this.pingInterval) {
+				return;
+			}
 
-      this._wasRunningBeforeHidden = true;
+			this._wasRunningBeforeHidden = true;
 
-      // Initial ping
-      this.measurePing();
+			// Initial ping
+			this.measurePing();
 
-      // Ping every 2 seconds
-      this.pingInterval = setInterval(() => {
-        this.measurePing();
-      }, 2000);
-    },
-    stopPingMonitoring() {
-      if (this.pingInterval) {
-        clearInterval(this.pingInterval);
-        this.pingInterval = null;
-        // Track that monitoring is stopped
-        this._wasRunningBeforeHidden = false;
-      }
-    },
-    // Simple shift status check (independent from ping)
-    checkShiftStatusSimple() {
-      if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
-        return;
-      }
+			// Ping every 2 seconds
+			this.pingInterval = setInterval(() => {
+				this.measurePing();
+			}, 2000);
+		},
+		stopPingMonitoring() {
+			if (this.pingInterval) {
+				clearInterval(this.pingInterval);
+				this.pingInterval = null;
+				// Track that monitoring is stopped
+				this._wasRunningBeforeHidden = false;
+			}
+		},
+		// Simple shift status check (independent from ping)
+		checkShiftStatusSimple() {
+			if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
+				return;
+			}
 
-      const shiftName = this.pos_opening_shift.name;
+			const shiftName = this.pos_opening_shift.name;
 
-      frappe.call({
-        method: API_MAP.POS_OPENING_SHIFT.CHECK_SHIFT_IS_OPEN,
-        args: {
-          shift_name: shiftName
-        },
-        callback: (r) => {
-          if (r.message && !r.message.is_open) {
-            // Specific shift is closed - reload page and clear cache
-            console.log('[Navbar.js] Shift closed - reloading page');
-              this.show_mesage({
-								color: 'error',
-                text: 'تم إغلاق الوردية. سيتم إعادة تحميل الصفحة...',
-              });
-              
-            // Stop monitoring to prevent multiple reloads
-            this.stopShiftMonitoring();
-            this.stopPingMonitoring();
-            
-            setTimeout(() => {
-              if (window.clearCacheAndReload) {
-                window.clearCacheAndReload();
-              } else {
-                location.reload();
-              }
-            }, 2000);
-                    }
-        },
-        error: () => {
-          // Ignore errors - might be network issue
-        },
-        freeze: false,
-        show_spinner: false,
-        async: true,
-      });
-    },
-    
-    startShiftMonitoring() {
-      if (this.shiftMonitoringInterval) {
-        return;
-      }
+			frappe.call({
+				method: API_MAP.POS_OPENING_SHIFT.CHECK_SHIFT_IS_OPEN,
+				args: {
+					shift_name: shiftName,
+				},
+				callback: (r) => {
+					if (r.message && !r.message.is_open) {
+						// Specific shift is closed - reload page and clear cache
+						console.log('[Navbar.js] Shift closed - reloading page');
+						this.show_mesage({
+							color: 'error',
+							text: 'تم إغلاق الوردية. سيتم إعادة تحميل الصفحة...',
+						});
 
-      if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
-        return;
-      }
+						// Stop monitoring to prevent multiple reloads
+						this.stopShiftMonitoring();
+						this.stopPingMonitoring();
 
-      // Check immediately
-      this.checkShiftStatusSimple();
+						setTimeout(() => {
+							if (window.clearCacheAndReload) {
+								window.clearCacheAndReload();
+							} else {
+								location.reload();
+							}
+						}, 2000);
+					}
+				},
+				error: () => {
+					// Ignore errors - might be network issue
+				},
+				freeze: false,
+				show_spinner: false,
+				async: true,
+			});
+		},
 
-      // Check every 2 seconds (independent from ping)
-      this.shiftMonitoringInterval = setInterval(() => {
-        this.checkShiftStatusSimple();
-      }, 2000);
-    },
-    
-    stopShiftMonitoring() {
-      if (this.shiftMonitoringInterval) {
-        clearInterval(this.shiftMonitoringInterval);
-        this.shiftMonitoringInterval = null;
-      }
-    },
+		startShiftMonitoring() {
+			if (this.shiftMonitoringInterval) {
+				return;
+			}
 
-    // Toggle ping monitoring (can be called via evntBus)
-    togglePingMonitoring(enable) {
-      if (enable) {
+			if (!this.pos_opening_shift || !this.pos_opening_shift.name) {
+				return;
+			}
+
+			// Check immediately
+			this.checkShiftStatusSimple();
+
+			// Check every 2 seconds (independent from ping)
+			this.shiftMonitoringInterval = setInterval(() => {
+				this.checkShiftStatusSimple();
+			}, 2000);
+		},
+
+		stopShiftMonitoring() {
+			if (this.shiftMonitoringInterval) {
+				clearInterval(this.shiftMonitoringInterval);
+				this.shiftMonitoringInterval = null;
+			}
+		},
+
+		// Toggle ping monitoring (can be called via evntBus)
+		togglePingMonitoring(enable) {
+			if (enable) {
 				sessionStorage.setItem('pos_enable_ping_monitoring', 'true');
-        this.startPingMonitoring();
-      } else {
+				this.startPingMonitoring();
+			} else {
 				sessionStorage.setItem('pos_enable_ping_monitoring', 'false');
-        this.stopPingMonitoring();
-      }
-    },
-    
-  },
-  created: function () {
-    this.$nextTick(function () {
-      try {
-        // Check if ping monitoring should be enabled
-        // We can add a global setting to control this
-        const enablePingMonitoring =
+				this.stopPingMonitoring();
+			}
+		},
+	},
+	created: function () {
+		this.$nextTick(function () {
+			try {
+				// Check if ping monitoring should be enabled
+				// We can add a global setting to control this
+				const enablePingMonitoring =
 					sessionStorage.getItem('pos_enable_ping_monitoring') !== 'false';
 
-        if (enablePingMonitoring) {
-          // Start ping monitoring
-          this.startPingMonitoring();
-        }
+				if (enablePingMonitoring) {
+					// Start ping monitoring
+					this.startPingMonitoring();
+				}
 
-        // Add page visibility handler to pause/resume ping monitoring for bfcache compatibility
-        // Modified to prevent automatic reloads
-        this.handleVisibilityChange = () => {
-          if (document.hidden) {
-            this.stopPingMonitoring();
-          } else {
-            // Only restart monitoring if it was previously running
-            if (this._wasRunningBeforeHidden) {
-              this.startPingMonitoring();
-            }
-          }
-        };
-        // Track ping monitor state before hiding
-        this._wasRunningBeforeHidden = true;
+				// Add page visibility handler to pause/resume ping monitoring for bfcache compatibility
+				// Modified to prevent automatic reloads
+				this.handleVisibilityChange = () => {
+					if (document.hidden) {
+						this.stopPingMonitoring();
+					} else {
+						// Only restart monitoring if it was previously running
+						if (this._wasRunningBeforeHidden) {
+							this.startPingMonitoring();
+						}
+					}
+				};
+				// Track ping monitor state before hiding
+				this._wasRunningBeforeHidden = true;
 				document.addEventListener('visibilitychange', this.handleVisibilityChange);
 
-        // Listen to online/offline events for immediate response
-        this.handleOnline = () => {
-          if (this.wasConnectionLost) {
-            this.wasConnectionLost = false;
-            this.show_mesage({
+				// Listen to online/offline events for immediate response
+				this.handleOnline = () => {
+					if (this.wasConnectionLost) {
+						this.wasConnectionLost = false;
+						this.show_mesage({
 							color: 'success',
 							text: 'تم رجوع الاتصال بالإنترنت',
-            });
-          }
-          // Restart ping monitoring if it stopped
-          if (!this.pingInterval) {
-            this.startPingMonitoring();
-          } else {
-            // Trigger immediate ping
-            this.measurePing();
-          }
-        };
+						});
+					}
+					// Restart ping monitoring if it stopped
+					if (!this.pingInterval) {
+						this.startPingMonitoring();
+					} else {
+						// Trigger immediate ping
+						this.measurePing();
+					}
+				};
 
-        this.handleOffline = () => {
+				this.handleOffline = () => {
 					this.pingTime = '999';
-          if (!this.wasConnectionLost) {
-            this.wasConnectionLost = true;
-            this.show_mesage({
+					if (!this.wasConnectionLost) {
+						this.wasConnectionLost = true;
+						this.show_mesage({
 							color: 'error',
 							text: 'الاتصال بالإنترنت مفصول',
-            });
-          }
-        };
+						});
+					}
+				};
 
 				window.addEventListener('online', this.handleOnline);
 				window.addEventListener('offline', this.handleOffline);
 
 				evntBus.on('show_mesage', (data) => {
-          this.show_mesage(data);
-        });
+					this.show_mesage(data);
+				});
 				evntBus.on('set_company', (data) => {
-          this.company_name = data.name;
-        });
+					this.company_name = data.name;
+				});
 				evntBus.on('register_pos_profile', (data) => {
-          this.pos_profile = data.pos_profile;
-          this.pos_opening_shift = data.pos_opening_shift;
-          this.fetch_company_info();
-          this.fetchShiftInvoiceCount();
-          this.setupCashUpdateInterval(); // Start auto-refresh interval when POS loads
-          // Shift monitoring moved to ClosingDialog.js
-          // External payments screen disabled - removed payments option
-        });
+					this.pos_profile = data.pos_profile;
+					this.pos_opening_shift = data.pos_opening_shift;
+					this.fetch_company_info();
+					this.fetchShiftInvoiceCount();
+					this.setupCashUpdateInterval(); // Start auto-refresh interval when POS loads
+					// Shift monitoring moved to ClosingDialog.js
+					// External payments screen disabled - removed payments option
+				});
 				evntBus.on('set_last_invoice', (data) => {
-          this.last_invoice = data;
-        });
+					this.last_invoice = data;
+				});
 				evntBus.on('toggle_quick_return', (value) => {
-          this.quick_return_value = value;
-        });
+					this.quick_return_value = value;
+				});
 				evntBus.on('update_invoice_doc', (data) => {
-          this.invoice_doc = data;
-        });
+					this.invoice_doc = data;
+				});
 				evntBus.on('set_pos_opening_shift', (data) => {
-          this.pos_opening_shift = data;
-          this.fetchShiftInvoiceCount();
-          this.setupCashUpdateInterval(); // Restart auto-refresh when shift changes
-          this.startShiftMonitoring(); // Start shift monitoring
-        });
+					this.pos_opening_shift = data;
+					this.fetchShiftInvoiceCount();
+					this.setupCashUpdateInterval(); // Restart auto-refresh when shift changes
+					this.startShiftMonitoring(); // Start shift monitoring
+				});
 				evntBus.on('register_pos_data', (data) => {
-          if (data.pos_profile) {
-            this.pos_profile = data.pos_profile;
-          }
-          if (data.pos_opening_shift) {
-            this.pos_opening_shift = data.pos_opening_shift;
+					if (data.pos_profile) {
+						this.pos_profile = data.pos_profile;
+					}
+					if (data.pos_opening_shift) {
+						this.pos_opening_shift = data.pos_opening_shift;
 						console.log('[Navbar.js] Shift registered:', this.pos_opening_shift.name);
-          }
-          this.fetch_company_info();
-          this.fetchShiftInvoiceCount();
-          this.setupCashUpdateInterval(); // Start auto-refresh when POS data registered
-          this.startShiftMonitoring(); // Start shift monitoring
-        });
+					}
+					this.fetch_company_info();
+					this.fetchShiftInvoiceCount();
+					this.setupCashUpdateInterval(); // Start auto-refresh when POS data registered
+					this.startShiftMonitoring(); // Start shift monitoring
+				});
 				evntBus.on('invoice_submitted', () => {
-          // Refresh invoice count when a new invoice is submitted
-          // Immediate refresh for payment totals (backend queries are fast)
-          this.fetchPaymentTotals(); // Immediate update
+					// Refresh invoice count when a new invoice is submitted
+					// Immediate refresh for payment totals (backend queries are fast)
+					this.fetchPaymentTotals(); // Immediate update
 
-          // Also schedule a delayed refresh to catch any async updates
-          setTimeout(() => {
-            this.fetchShiftInvoiceCount();
-            this.fetchPaymentTotals(); // Update payment totals after invoice submission
-          }, 1000); // Wait 1 second for any background processing
-        });
+					// Also schedule a delayed refresh to catch any async updates
+					setTimeout(() => {
+						this.fetchShiftInvoiceCount();
+						this.fetchPaymentTotals(); // Update payment totals after invoice submission
+					}, 1000); // Wait 1 second for any background processing
+				});
 				evntBus.on('freeze', (data) => {
-          this.freeze = true;
-          this.freezeTitle = data.title;
-          this.freezeMsg = data.msg;
-        });
+					this.freeze = true;
+					this.freezeTitle = data.title;
+					this.freezeMsg = data.msg;
+				});
 				evntBus.on('unfreeze', () => {
-          this.freeze = false;
+					this.freeze = false;
 					this.freezTitle = '';
 					this.freezeMsg = '';
-        });
+				});
 
-        // Add event listener for toggling ping monitoring
+				// Add event listener for toggling ping monitoring
 				evntBus.on('toggle_ping_monitoring', (enable) => {
-          this.togglePingMonitoring(enable);
-        });
-      } catch (error) {
-        this.show_mesage({
+					this.togglePingMonitoring(enable);
+				});
+			} catch (error) {
+				this.show_mesage({
 					color: 'error',
 					text: 'An error occurred while loading the menu.',
-        });
-      }
-    });
-  },
-  beforeUnmount() {
-    // Clean up ping monitoring
-    this.stopPingMonitoring();
-    // Clean up shift monitoring
-    this.stopShiftMonitoring();
+				});
+			}
+		});
+	},
+	beforeUnmount() {
+		// Clean up ping monitoring
+		this.stopPingMonitoring();
+		// Clean up shift monitoring
+		this.stopShiftMonitoring();
 
-    // Clean up click outside listener
+		// Clean up click outside listener
 		document.removeEventListener('click', this.handleClickOutside);
 
-    // Clean up page visibility listener
+		// Clean up page visibility listener
 		document.removeEventListener('visibilitychange', this.handleVisibilityChange);
 
-    // Clean up online/offline listeners
-    if (this.handleOnline) {
+		// Clean up online/offline listeners
+		if (this.handleOnline) {
 			window.removeEventListener('online', this.handleOnline);
-    }
-    if (this.handleOffline) {
+		}
+		if (this.handleOffline) {
 			window.removeEventListener('offline', this.handleOffline);
-    }
+		}
 
-    // Clean up payment totals interval
-    if (this.cashUpdateInterval) {
-      clearInterval(this.cashUpdateInterval);
-      this.cashUpdateInterval = null;
-    }
+		// Clean up payment totals interval
+		if (this.cashUpdateInterval) {
+			clearInterval(this.cashUpdateInterval);
+			this.cashUpdateInterval = null;
+		}
 
-    // Clean up all event listeners
+		// Clean up all event listeners
 		evntBus.off('show_mesage');
 		evntBus.off('set_company');
 		evntBus.off('register_pos_profile');
@@ -817,5 +838,5 @@ export default {
 		evntBus.off('freeze');
 		evntBus.off('unfreeze');
 		evntBus.off('toggle_ping_monitoring');
-  },
+	},
 };
