@@ -246,7 +246,10 @@
 											box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 										"
 										@click="decreaseQuantity(item)"
-										:disabled="!(item.qty && Math.abs(item.qty) > 0) || invoice_doc?._is_settlement"
+										:disabled="
+											!(item.qty && Math.abs(item.qty) > 0) ||
+											invoice_doc?._is_settlement
+										"
 										type="button"
 									>
 										<span
@@ -266,7 +269,7 @@
 										@input="onQtyInput(item, $event)"
 										@change="onQtyChange(item, $event)"
 										@blur="handleQtyBlur(item, $event)"
-:disabled="invoice_doc?._is_settlement"
+										:disabled="invoice_doc?._is_settlement"
 										style="
 											flex: 1;
 											width: 100%;
@@ -309,7 +312,7 @@
 											box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 										"
 										@click="increaseQuantity(item)"
-:disabled="invoice_doc?._is_settlement"
+										:disabled="invoice_doc?._is_settlement"
 										type="button"
 									>
 										<span
@@ -1137,11 +1140,15 @@
 					box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 				"
 			>
-				<!-- Print Button -->
+				<!-- Print Sales Invoice Button -->
 				<button
-					v-if="!hasExcessNonCashPayment && !hasPartialPaymentNotAllowed"
+					v-if="
+						invoicePrintType === 'sales' &&
+						!hasExcessNonCashPayment &&
+						!hasPartialPaymentNotAllowed
+					"
 					:disabled="!hasItems || isPrinting || !canPrintInvoice"
-					@click="printInvoice"
+					@click="printSalesInvoice"
 					title="طباعة الفاتورة"
 					style="
 						flex: 1;
@@ -1166,9 +1173,122 @@
 					type="button"
 				>
 					<i class="mdi mdi-printer" style="font-size: 16px"></i>
-					<!-- Printing / Print -->
 					<span style="font-size: 0.85rem">{{
-						isPrinting ? 'جاري الطباعة...' : 'طباعة'
+						isPrinting ? 'جاري الطباعة...' : 'طباعة الفاتورة'
+					}}</span>
+				</button>
+
+				<!-- Print Return Invoice Button -->
+				<button
+					v-if="
+						invoicePrintType === 'return_invoice' &&
+						!hasExcessNonCashPayment &&
+						!hasPartialPaymentNotAllowed
+					"
+					:disabled="!hasItems || isPrinting || !canPrintInvoice"
+					@click="printReturnInvoice"
+					title="طباعة مرتجع فاتورة"
+					style="
+						flex: 1;
+						padding: 8px 4px;
+						border: none;
+						border-radius: 5px;
+						cursor: pointer;
+						background: linear-gradient(135deg, #607d8b 0%, #455a64 100%);
+						color: white;
+						font-size: 0.85rem;
+						font-weight: 600;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						gap: 4px;
+					"
+					:style="
+						!hasItems || isPrinting || !canPrintInvoice
+							? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6'
+							: ''
+					"
+					type="button"
+				>
+					<i class="mdi mdi-printer" style="font-size: 16px"></i>
+					<span style="font-size: 0.85rem">{{
+						isPrinting ? 'جاري الطباعة...' : 'طباعة مرتجع فاتورة'
+					}}</span>
+				</button>
+
+				<!-- Print Quick Return Button -->
+				<button
+					v-if="
+						invoicePrintType === 'quick_return' &&
+						!hasExcessNonCashPayment &&
+						!hasPartialPaymentNotAllowed
+					"
+					:disabled="!hasItems || isPrinting || !canPrintInvoice"
+					@click="printQuickReturn"
+					title="طباعة مرتجع أصناف"
+					style="
+						flex: 1;
+						padding: 8px 4px;
+						border: none;
+						border-radius: 5px;
+						cursor: pointer;
+						background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+						color: white;
+						font-size: 0.85rem;
+						font-weight: 600;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						gap: 4px;
+					"
+					:style="
+						!hasItems || isPrinting || !canPrintInvoice
+							? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6'
+							: ''
+					"
+					type="button"
+				>
+					<i class="mdi mdi-printer" style="font-size: 16px"></i>
+					<span style="font-size: 0.85rem">{{
+						isPrinting ? 'جاري الطباعة...' : 'طباعة مرتجع أصناف'
+					}}</span>
+				</button>
+
+				<!-- Print Payment Receipt Button -->
+				<button
+					v-if="
+						invoicePrintType === 'payment' &&
+						!hasExcessNonCashPayment &&
+						!hasPartialPaymentNotAllowed
+					"
+					:disabled="!hasItems || isPrinting || !canPrintInvoice"
+					@click="printPaymentReceipt"
+					title="طباعة إيصال الدفع"
+					style="
+						flex: 1;
+						padding: 8px 4px;
+						border: none;
+						border-radius: 5px;
+						cursor: pointer;
+						background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+						color: white;
+						font-size: 0.85rem;
+						font-weight: 600;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						gap: 4px;
+					"
+					:style="
+						!hasItems || isPrinting || !canPrintInvoice
+							? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6'
+							: ''
+					"
+					type="button"
+				>
+					<i class="mdi mdi-printer" style="font-size: 16px"></i>
+					<span style="font-size: 0.85rem">{{
+						isPrinting ? 'جاري الطباعة...' : 'طباعة إيصال الدفع'
 					}}</span>
 				</button>
 
@@ -1358,10 +1478,11 @@
 					}}</span>
 				</button>
 
-				<!-- Settlement Button: سداد -->
+				<!-- Settlement Button: سداد متبقي -->
 				<button
 					:disabled="is_payment"
 					@click="openSettlement"
+					title="سداد متبقي"
 					style="
 						flex: 1;
 						padding: 8px 4px;
@@ -1385,7 +1506,7 @@
 					type="button"
 				>
 					<i class="mdi mdi-cash-check" style="font-size: 16px"></i>
-					<span style="font-size: 0.85rem">سداد</span>
+					<span style="font-size: 0.85rem">سداد متبقي</span>
 				</button>
 
 				<!-- Cancel Button -->
