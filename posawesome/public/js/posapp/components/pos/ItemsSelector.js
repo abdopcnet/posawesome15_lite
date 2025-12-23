@@ -2,7 +2,7 @@
 import { evntBus } from '../../bus';
 import format from '../../format';
 import { API_MAP } from '../../api_mapper.js';
-// Frontend logging: Use console.log/error/warn directly
+// Frontend logging: console.log('[filename.js] method: function_name')
 
 // Lightweight debounce function (replaces lodash)
 // CRITICAL: Preserve 'this' context for Vue component methods
@@ -405,7 +405,7 @@ export default {
 					}
 				},
 				error: function (err) {
-					console.log('[ItemsSelector.js] get_items error:', err);
+					console.log('[ItemsSelector.js] method: get_items');
 				},
 			});
 		},
@@ -448,7 +448,7 @@ export default {
 						}
 					},
 					error: function (err) {
-						console.log('[ItemsSelector.js] get_items_groups error:', err);
+						console.log('[ItemsSelector.js] method: get_items_groups');
 					},
 				});
 			}
@@ -655,7 +655,7 @@ export default {
 				error: function (err) {
 					// Stop search progress bar
 					vm.search_loading = false;
-					console.log('[ItemsSelector.js] _performNormalSearch error:', err);
+					console.log('[ItemsSelector.js] method: _performNormalSearch');
 				},
 			});
 		},
@@ -674,7 +674,7 @@ export default {
 					onScan.detachFrom(document);
 				}
 			} catch (e) {
-				console.log('[ItemsSelector.js] scan_barcode detachFrom error:', e);
+				console.log('[ItemsSelector.js] method: scan_barcode');
 			}
 
 			onScan.attachTo(document, {
