@@ -1,53 +1,41 @@
 # POS Awesome - File Structure
 
-## Directory Structure
+## Backend Structure
 
 ```
 posawesome/
-├── posawesome/                    # Main app package
-│   ├── api/                       # API modules
-│   │   ├── customer.py
-│   │   ├── item.py
-│   │   ├── ping.py
-│   │   ├── pos_profile.py
-│   │   └── sales_invoice.py
-│   │
-│   ├── posawesome/doctype/       # DocTypes
-│   │   ├── pos_closing_shift/
-│   │   ├── pos_opening_shift/
-│   │   ├── pos_offer/
-│   │   └── ...
-│   │
-│   └── public/js/posapp/         # Frontend
-│       ├── api_mapper.js         # API endpoints
-│       ├── bus.js                # Event bus
-│       ├── format.js             # Formatting
-│       └── components/           # Vue components
-│           ├── Navbar.js/vue     # Navigation
-│           └── pos/              # POS components
-│               ├── Pos.js/vue    # Main POS
-│               ├── Invoice.js/vue # Invoice
-│               ├── Payments.js/vue # Payments
-│               ├── ItemsSelector.js/vue # Items
-│               ├── OutstandingPayments.js/vue # Settlement
-│               └── ...
+├── api/                          # API modules
+│   ├── customer.py              # Customer operations
+│   ├── item.py                  # Item operations
+│   ├── payment_entry.py         # Payment entry operations
+│   ├── pos_profile.py           # POS Profile operations
+│   ├── sales_invoice.py         # Sales Invoice operations
+│   └── ping.py                  # Health check
 │
-├── app_api_tree.md               # API documentation
-├── app_file_structure.md         # This file
-├── app_workflow.md               # Workflow
-├── app_plan.md                   # Progress
-└── README.md                     # Overview
+└── posawesome/doctype/          # DocType modules
+    ├── pos_closing_shift/       # Closing shift logic
+    ├── pos_opening_shift/       # Opening shift logic
+    └── pos_offer/              # Offer logic
 ```
 
-## Key Files
+## Frontend Structure
 
-### Backend
-
--   `api/*.py` - API endpoints
--   `posawesome/doctype/*/` - DocType logic
-
-### Frontend
-
--   `public/js/posapp/posapp.js` - Main entry
--   `public/js/posapp/components/` - Vue components
--   `public/js/posapp/api_mapper.js` - API mapping
+```
+posawesome/public/js/posapp/
+├── api_mapper.js               # API endpoints mapping
+├── bus.js                      # Event bus
+├── format.js                   # Formatting utilities
+└── components/
+    ├── pos/
+    │   ├── Pos.js/vue          # Main POS component
+    │   ├── Invoice.js/vue      # Invoice component
+    │   ├── Payments.js/vue     # Payments component
+    │   ├── Customer.js/vue     # Customer component
+    │   ├── ItemsSelector.js/vue # Items selector
+    │   ├── OutstandingPayments.js/vue # Settlement
+    │   ├── Drafts.js/vue       # Draft invoices
+    │   ├── Returns.js/vue      # Returns
+    │   ├── ClosingDialog.js/vue # Closing dialog
+    │   └── OpeningDialog.js/vue # Opening dialog
+    └── Navbar.js/vue           # Navigation bar
+```
