@@ -88,10 +88,7 @@ frappe.ui.form.on('POS Closing Shift', {
 						difference: 0, // Initially no difference
 					});
 				});
-				console.log(
-					`[pos_closing_shift.js] set_opening_amounts: Added ${balance_details.length} payment methods. ` +
-						`expected_amount initialized to opening_amount (will be updated by add_to_payments)`,
-				);
+				console.log('[pos_closing_shift.js] method: set_opening_amounts');
 			});
 	},
 
@@ -110,7 +107,7 @@ frappe.ui.form.on('POS Closing Shift', {
 			},
 			callback: async (r) => {
 				if (r.exc) {
-					console.error(`[pos_closing_shift.js] Error fetching invoices:`, r.exc);
+					console.log('[pos_closing_shift.js] method: get_pos_invoices');
 					return;
 				}
 				const pos_docs = r.message;
@@ -214,9 +211,7 @@ async function set_form_data(data, frm) {
 // Used when payment_reconciliation already exists from backend
 // Related to: section_break_3 (pos_transactions), section_break_5 (totals)
 function set_form_data_invoices_only(data, frm) {
-	console.log(
-		`[pos_closing_shift.js] Processing ${data.length} invoices for pos_transactions only (payment_reconciliation already exists)`,
-	);
+	console.log('[pos_closing_shift.js] method: set_form_data_invoices_only');
 
 	data.forEach((d) => {
 		add_to_pos_transaction(d, frm);
@@ -226,15 +221,7 @@ function set_form_data_invoices_only(data, frm) {
 	// Calculate totals from pos_transactions after adding all rows
 	calculate_totals_from_transactions(frm);
 
-	console.log(`[pos_closing_shift.js] Final totals calculated from pos_transactions`);
-	console.log(
-		`[pos_closing_shift.js] Payment reconciliation preserved from backend:`,
-		frm.doc.payment_reconciliation.map((p) => ({
-			mode: p.mode_of_payment,
-			opening: p.opening_amount,
-			expected: p.expected_amount,
-		})),
-	);
+	console.log('[pos_closing_shift.js] method: calculate_totals_from_transactions');
 }
 
 // ========================================================================
@@ -290,7 +277,7 @@ function add_to_pos_transaction(d, frm) {
 				? String(taxes_total)
 				: d.total_taxes_and_charges != null && d.total_taxes_and_charges != 0
 				? String(flt(d.total_taxes_and_charges))
-				: '',
+				: '0',
 		total_qty: d.total_qty != null ? String(flt(d.total_qty)) : '',
 		discount_amount: d.discount_amount != null ? String(flt(d.discount_amount)) : '',
 		posa_item_discount_total:
@@ -302,11 +289,8 @@ function add_to_pos_transaction(d, frm) {
 		payment_entry_mode_of_payment: payment_entry_mode_of_payment,
 		payment_entry_paid_amount: payment_entry_paid_amount,
 	};
-	console.log(
-		`[pos_closing_shift.js] Added transaction: ${d.name} discount: ${d.discount_amount} paid: ${d.paid_amount} change: ${d.change_amount}`,
-	);
 	frm.add_child('pos_transactions', child);
-	console.log(`[pos_closing_shift.js] Added transaction: ${d.name} Total: ${d.grand_total}`);
+	console.log('[pos_closing_shift.js] method: add_to_pos_transaction');
 }
 
 // ========================================================================
@@ -469,10 +453,6 @@ function auto_fill_closing_amounts(frm) {
 		return;
 	}
 
-	console.log(
-		`[pos_closing_shift.js] Auto-filling closing_amount with expected_amount for ${frm.doc.payment_reconciliation.length} payment methods`,
-	);
-
 	frm.doc.payment_reconciliation.forEach((payment) => {
 		// Only auto-fill if closing_amount is empty/null/0
 		if (
@@ -482,13 +462,6 @@ function auto_fill_closing_amounts(frm) {
 			payment.closing_amount === undefined
 		) {
 			payment.closing_amount = flt(payment.expected_amount || 0);
-			console.log(
-				`[pos_closing_shift.js] Auto-filled closing_amount for ${payment.mode_of_payment}: ${payment.closing_amount}`,
-			);
-		} else {
-			console.log(
-				`[pos_closing_shift.js] Keeping existing closing_amount for ${payment.mode_of_payment}: ${payment.closing_amount}`,
-			);
 		}
 
 		// Update difference when closing_amount changes
@@ -509,7 +482,7 @@ const get_value = async (doctype, name, field) => {
 		const { message } = await frappe.db.get_value(doctype, name, field);
 		return message ? message[field] : undefined;
 	} catch (error) {
-		console.error('Failed to fetch value:', error);
+		console.log('[pos_closing_shift.js] method: get_value');
 		return undefined;
 	}
 };
