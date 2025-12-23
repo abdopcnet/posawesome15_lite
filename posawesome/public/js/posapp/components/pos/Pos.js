@@ -12,7 +12,7 @@ import Returns from './Returns.vue';
 import Drafts from './Drafts.vue';
 import OutstandingPayments from './OutstandingPayments.vue';
 import { API_MAP } from '../../api_mapper.js';
-// Frontend logging: Use console.log/error/warn directly
+// Frontend logging: console.log('[filename.js] method: function_name')
 
 // ===== EVENT BUS EVENTS =====
 const EVENTS = {
@@ -135,7 +135,7 @@ export default {
 						user: shift_data.user,
 					};
 
-					console.log('[Pos.js] POS Profile loaded:', pos_profile.name);
+					console.log('[Pos.js] method: load_pos_profile');
 
 					// Prepare data for event bus
 					const event_data = {
@@ -156,7 +156,7 @@ export default {
 					this.create_opening_voucher();
 				}
 			} catch (error) {
-				console.log('[Pos.js] check_opening_entry error:', error);
+				console.log('[Pos.js] method: check_opening_entry');
 				this.show_message('فشل التحقق من إدخال الافتتاح', 'error');
 			}
 		},
@@ -176,7 +176,7 @@ export default {
 				const doc = await frappe.db.get_doc('POS Settings', undefined);
 				evntBus.emit(EVENTS.SET_POS_SETTINGS, doc);
 			} catch (error) {
-				console.log('[Pos.js] get_pos_setting error:', error);
+				console.log('[Pos.js] method: get_pos_setting');
 			}
 		},
 
@@ -210,7 +210,7 @@ export default {
 					this.show_message('فشل تحميل العروض', 'error');
 				}
 			} catch (error) {
-				console.log('[Pos.js] get_offers error:', error);
+				console.log('[Pos.js] method: get_offers');
 				this.show_message('فشل تحميل العروض', 'error');
 			}
 		},
@@ -226,7 +226,7 @@ export default {
 					return;
 				}
 
-				console.log(`[Pos.js] get_closing_data shift: ${opening_shift_name}`);
+				console.log('[Pos.js] method: get_closing_data');
 
 				const response = await frappe.call({
 					method: API_MAP.POS_CLOSING_SHIFT.MAKE_CLOSING_SHIFT,
@@ -240,16 +240,14 @@ export default {
 					const transactionsCount = data.pos_transactions
 						? data.pos_transactions.length
 						: 0;
-					console.log(
-						`[Pos.js] get_closing_data success: ${transactionsCount} transactions found`,
-					);
+					console.log('[Pos.js] method: get_closing_data');
 					evntBus.emit(EVENTS.OPEN_CLOSING_DIALOG_EMIT, data);
 				} else {
 					// Failed to load closing data
 					this.show_message('فشل تحميل بيانات الإغلاق', 'error');
 				}
 			} catch (error) {
-				console.log(`[Pos.js] get_closing_data error: ${error.message || error}`);
+				console.log('[Pos.js] method: get_closing_data');
 				this.show_message('فشل تحميل بيانات الإغلاق', 'error');
 			}
 		},
@@ -261,43 +259,22 @@ export default {
 		 * If auto-print was triggered, skip check_opening_entry() to prevent page reload
 		 */
 		async handleSubmitClosingPos(data) {
-			console.log('[Pos.js] ===== handleSubmitClosingPos START =====');
-			console.log('[Pos.js] Received data:', data);
-			console.log('[Pos.js] data?.success:', data?.success);
-			console.log('[Pos.js] data?.has_auto_print:', data?.has_auto_print);
+			console.log('[Pos.js] method: handleSubmitClosingPos');
 
 			if (data?.success) {
-				console.log(
-					`[Pos.js] handleSubmitClosingPos: Closing shift ${data.closing_shift_name} submitted successfully`,
-				);
 				this.show_message('تم إغلاق وردية الصراف بنجاح', 'success');
 
 				// Note: Page reload is handled in ClosingDialog.js after print window opens
 				// No need to call check_opening_entry() here - page will reload and show OpeningDialog automatically
 				if (data.has_auto_print) {
-					console.log(
-						'[Pos.js] Auto-print was triggered - page reload will happen in ClosingDialog.js',
-					);
-					console.log(
-						'[Pos.js] ===== handleSubmitClosingPos END (auto-print case) =====',
-					);
 					return;
 				}
 
 				// No auto-print - proceed normally with check_opening_entry()
-				console.log(
-					'[Pos.js] No auto-print - will call check_opening_entry() after 1 second',
-				);
 				setTimeout(async () => {
-					console.log('[Pos.js] Timeout fired - calling check_opening_entry()');
 					// Check for new opening entry after closing
 					await this.check_opening_entry();
-					console.log('[Pos.js] check_opening_entry() completed');
 				}, 1000); // 1 second delay for normal flow
-				console.log('[Pos.js] ===== handleSubmitClosingPos END (normal case) =====');
-			} else {
-				console.log('[Pos.js] data.success is false or undefined - not processing');
-				console.log('[Pos.js] ===== handleSubmitClosingPos END (no success) =====');
 			}
 		},
 
