@@ -97,6 +97,13 @@ const API_MAP = {
 			'posawesome.posawesome.doctype.pos_closing_shift.pos_closing_shift.get_current_non_cash_total',
 	},
 
+	// Payment Entry APIs (from Payments.js for settlement)
+	PAYMENT_ENTRY: {
+		CREATE_PAYMENT_ENTRY: 'posawesome.api.payment_entry.create_payment_entry_for_invoice',
+		CREATE_MULTIPLE_PAYMENTS:
+			'posawesome.api.payment_entry.create_payment_entry_for_multiple_payments',
+	},
+
 	// POS Awesome APIs
 	POSAWESOME: {
 		PING: 'posawesome.api.ping.ping',
