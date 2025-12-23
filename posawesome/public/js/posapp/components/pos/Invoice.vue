@@ -1369,7 +1369,7 @@
 
 				<!-- Return Button -->
 				<button
-					:disabled="!pos_profile?.posa_allow_return"
+					v-if="pos_profile?.posa_allow_return"
 					@click="open_returns"
 					style="
 						flex: 1;
@@ -1386,11 +1386,6 @@
 						justify-content: center;
 						gap: 4px;
 					"
-					:style="
-						!pos_profile?.posa_allow_return
-							? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6'
-							: ''
-					"
 					type="button"
 				>
 					<i class="mdi mdi-keyboard-return" style="font-size: 16px"></i>
@@ -1400,7 +1395,7 @@
 
 				<!-- Quick Return Button -->
 				<button
-					:disabled="!pos_profile?.posa_allow_quick_return"
+					v-if="pos_profile?.posa_allow_quick_return"
 					@click="quick_return"
 					style="
 						flex: 1;
@@ -1417,11 +1412,6 @@
 						justify-content: center;
 						gap: 4px;
 					"
-					:style="
-						!pos_profile?.posa_allow_quick_return
-							? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6'
-							: ''
-					"
 					type="button"
 				>
 					<i class="mdi mdi-flash" style="font-size: 16px"></i>
@@ -1431,6 +1421,7 @@
 
 				<!-- Smart Draft Button: تكملة فاتورة / حفظ الفاتورة -->
 				<button
+					v-if="pos_profile?.posa_allow_save_fetch_drafts"
 					@click="handleDraftButton"
 					:style="
 						hasItems
@@ -1480,7 +1471,7 @@
 
 				<!-- Settlement Button: سداد متبقي -->
 				<button
-					:disabled="!pos_profile?.posa_allow_outstanding_payments"
+					v-if="pos_profile?.posa_allow_outstanding_payments"
 					@click="openSettlement"
 					title="سداد متبقي"
 					style="
@@ -1497,11 +1488,6 @@
 						align-items: center;
 						justify-content: center;
 						gap: 4px;
-					"
-					:style="
-						!pos_profile?.posa_allow_outstanding_payments
-							? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6'
-							: ''
 					"
 					type="button"
 				>
