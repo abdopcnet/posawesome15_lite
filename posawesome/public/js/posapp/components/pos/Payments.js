@@ -6,7 +6,7 @@
 import { evntBus } from '../../bus';
 import format from '../../format';
 import { API_MAP } from '../../api_mapper.js';
-// Frontend logging: Use console.log/error/warn directly
+// Frontend logging: console.log('[filename.js] method: function_name')
 
 // ===== EVENT NAMES CONSTANTS =====
 // All event names used for inter-component communication
@@ -185,11 +185,7 @@ export default {
 				// Remaining to pay = Original outstanding - Current settlement payments
 				const remaining = flt(originalOutstanding - currentSettlementPayments, 2);
 
-				console.log('[Payments.js] Settlement outstanding calculation:', {
-					originalOutstanding,
-					currentSettlementPayments,
-					remaining,
-				});
+				console.log('[Payments.js] method: outstanding_amount');
 
 				return remaining > 0 ? remaining : 0;
 			}
@@ -493,7 +489,7 @@ export default {
 				}
 			} catch (error) {
 				evntBus.emit('hide_loading');
-				console.error('[Payments.js] Settlement payment error:', error);
+				console.log('[Payments.js] method: submitSettlementPayment');
 				const errorMessage = error?.message || error?.exc || 'فشل إنشاء سند الدفع';
 				this.showMessage(errorMessage, 'error');
 			}
@@ -512,7 +508,7 @@ export default {
 			try {
 				await this.refreshInvoiceDoc();
 			} catch (error) {
-				console.log('[Payments.js] submit error:', error?.message || error);
+				console.log('[Payments.js] method: submit');
 			}
 
 			// If invoice is already submitted (settlement flow)
@@ -731,10 +727,7 @@ export default {
 								this.submit_invoice(print, autoMode, true);
 							})
 							.catch((err) => {
-								console.log(
-									'[Payments.js] refreshInvoiceDoc error:',
-									err?.message || err,
-								);
+								console.log('[Payments.js] method: refreshInvoiceDoc');
 								this.showMessage(
 									'Invoice was modified elsewhere, please try again',
 									'error',
@@ -962,7 +955,7 @@ export default {
 					delete this.set_full_amount_timeouts[idx];
 				}, 150); // 150ms debounce per payment
 			} catch (error) {
-				console.log('[Payments.js] set_full_amount error:', error?.message || error);
+				console.log('[Payments.js] method: set_full_amount');
 				if (this.set_full_amount_timeouts[idx]) {
 					delete this.set_full_amount_timeouts[idx];
 				}
@@ -1097,7 +1090,7 @@ export default {
 					this.$forceUpdate();
 				});
 			} catch (error) {
-				console.log('[Payments.js] set_rest_amount error:', error?.message || error);
+				console.log('[Payments.js] method: set_rest_amount');
 			}
 		},
 
@@ -1203,12 +1196,7 @@ export default {
 						.reduce((sum, p) => sum + flt(p.amount || 0, 2), 0);
 					const totalPayments = flt(otherPayments + value, 2);
 
-					console.log(
-						'[Payments.js] Settlement validation - outstanding:',
-						outstanding,
-						'totalPayments:',
-						totalPayments,
-					);
+					console.log('[Payments.js] method: validate_settlement_payment');
 
 					if (totalPayments > outstanding) {
 						// Limit to outstanding amount
@@ -1476,14 +1464,7 @@ export default {
 							if (outstanding < 0) outstanding = 0;
 						}
 
-						console.log(
-							'[Payments.js] Settlement mode - outstanding_amount:',
-							outstanding,
-						);
-						console.log(
-							'[Payments.js] Payments array length:',
-							this.invoice_doc.payments?.length,
-						);
+						console.log('[Payments.js] method: load_settlement_payments');
 
 						// Set payment amount with precision = 2
 						default_payment.amount = outstanding;
