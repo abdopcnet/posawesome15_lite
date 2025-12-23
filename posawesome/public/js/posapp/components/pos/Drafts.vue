@@ -178,13 +178,23 @@
 									>
 										المبلغ
 									</th>
+									<th
+										style="
+											padding: 12px;
+											text-align: center;
+											font-weight: 600;
+											color: white;
+											width: 80px;
+										"
+									>
+										إجراءات
+									</th>
 								</tr>
 							</thead>
 							<tbody>
 								<tr
 									v-for="invoice in dialog_data"
 									:key="invoice.name"
-									@click="selectInvoice(invoice)"
 									:style="
 										selected && selected.name === invoice.name
 											? 'background: #e3f2fd; cursor: pointer;'
@@ -192,25 +202,77 @@
 									"
 									style="border-bottom: 1px solid #e0e0e0"
 								>
-									<td style="padding: 12px; text-align: right">
+									<td
+										@click="selectInvoice(invoice)"
+										style="padding: 12px; text-align: right"
+									>
 										{{ invoice.customer_name || invoice.customer || '-' }}
 									</td>
-									<td style="padding: 12px; text-align: center">
+									<td
+										@click="selectInvoice(invoice)"
+										style="padding: 12px; text-align: center"
+									>
 										{{ invoice.posting_date || '-' }}
 									</td>
-									<td style="padding: 12px; text-align: center">
+									<td
+										@click="selectInvoice(invoice)"
+										style="padding: 12px; text-align: center"
+									>
 										{{
 											invoice.posting_time
 												? invoice.posting_time.split('.')[0]
 												: '-'
 										}}
 									</td>
-									<td style="padding: 12px; text-align: right; font-weight: 600">
+									<td
+										@click="selectInvoice(invoice)"
+										style="padding: 12px; text-align: right; font-weight: 600"
+									>
 										{{ invoice.name }}
 									</td>
-									<td style="padding: 12px; text-align: left; font-weight: 600">
+									<td
+										@click="selectInvoice(invoice)"
+										style="padding: 12px; text-align: left; font-weight: 600"
+									>
 										{{ currencySymbol(invoice.currency || 'SAR')
 										}}{{ formatCurrency(invoice.grand_total || 0) }}
+									</td>
+									<td @click.stop style="padding: 12px; text-align: center">
+										<button
+											@click="deleteInvoice(invoice)"
+											title="حذف الفاتورة"
+											style="
+												display: inline-flex;
+												align-items: center;
+												justify-content: center;
+												padding: 4px 8px;
+												border: none;
+												border-radius: 4px;
+												background: linear-gradient(
+													135deg,
+													#f44336 0%,
+													#e53935 100%
+												);
+												color: white;
+												cursor: pointer;
+												font-size: 0.85rem;
+												font-weight: 600;
+												min-width: 60px;
+											"
+											@mouseenter="
+												$event.currentTarget.style.background = '#e53935'
+											"
+											@mouseleave="
+												$event.currentTarget.style.background =
+													'linear-gradient(135deg, #f44336 0%, #e53935 100%)'
+											"
+										>
+											<i
+												class="mdi mdi-delete"
+												style="font-size: 16px; margin-left: 4px"
+											></i>
+											حذف
+										</button>
 									</td>
 								</tr>
 							</tbody>
