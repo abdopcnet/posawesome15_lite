@@ -246,7 +246,7 @@
 											box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 										"
 										@click="decreaseQuantity(item)"
-										:disabled="!(item.qty && Math.abs(item.qty) > 0)"
+										:disabled="!(item.qty && Math.abs(item.qty) > 0) || invoice_doc?._is_settlement"
 										type="button"
 									>
 										<span
@@ -266,6 +266,7 @@
 										@input="onQtyInput(item, $event)"
 										@change="onQtyChange(item, $event)"
 										@blur="handleQtyBlur(item, $event)"
+:disabled="invoice_doc?._is_settlement"
 										style="
 											flex: 1;
 											width: 100%;
@@ -308,6 +309,7 @@
 											box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 										"
 										@click="increaseQuantity(item)"
+:disabled="invoice_doc?._is_settlement"
 										type="button"
 									>
 										<span
@@ -1354,6 +1356,36 @@
 					<span style="font-size: 0.85rem">{{
 						hasItems ? 'حفظ الفاتورة' : 'تكملة فاتورة'
 					}}</span>
+				</button>
+
+				<!-- Settlement Button: سداد -->
+				<button
+					:disabled="is_payment"
+					@click="openSettlement"
+					style="
+						flex: 1;
+						padding: 8px 4px;
+						border: none;
+						border-radius: 5px;
+						cursor: pointer;
+						background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+						color: white;
+						font-size: 0.85rem;
+						font-weight: 600;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						gap: 4px;
+					"
+					:style="
+						is_payment
+							? 'background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; opacity: 0.6'
+							: ''
+					"
+					type="button"
+				>
+					<i class="mdi mdi-cash-check" style="font-size: 16px"></i>
+					<span style="font-size: 0.85rem">سداد</span>
 				</button>
 
 				<!-- Cancel Button -->
