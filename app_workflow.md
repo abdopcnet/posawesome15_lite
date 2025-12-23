@@ -1,149 +1,68 @@
 # POS Awesome - Workflow
 
-## Main POS Workflow
+## Main Flow
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    POS Application Start                     │
-└───────────────────────┬─────────────────────────────────────┘
-                        │
-                        ▼
-        ┌───────────────────────────────┐
-        │   Check Existing Open Shift   │
-        └───────────────┬───────────────┘
-                        │
-            ┌───────────┴───────────┐
-            │                       │
-            ▼                       ▼
-    ┌───────────────┐      ┌───────────────┐
-    │  Shift Open   │      │  No Shift     │
-    └───────┬───────┘      └───────┬───────┘
-            │                      │
-            │                      ▼
-            │          ┌───────────────────────┐
-            │          │  Opening Dialog       │
-            │          │  - Select POS Profile │
-            │          │  - Enter Balances     │
-            │          └───────────┬───────────┘
-            │                      │
-            │                      ▼
-            │          ┌───────────────────────┐
-            │          │  Create Opening      │
-            │          │  Shift (Submit)      │
-            │          └───────────┬───────────┘
-            │                      │
-            └──────────────────────┘
-                        │
-                        ▼
-        ┌───────────────────────────────┐
-        │      POS Main Interface        │
-        │  - Item Selection              │
-        │  - Customer Selection          │
-        │  - Payment Processing          │
-        └───────────────┬───────────────┘
-                        │
-                        ▼
-        ┌───────────────────────────────┐
-        │    Create Sales Invoice       │
-        │  - Add Items                  │
-        │  - Apply Discounts/Offers      │
-        │  - Process Payments           │
-        └───────────────┬───────────────┘
-                        │
-            ┌───────────┴───────────┐
-            │                       │
-            ▼                       ▼
-    ┌───────────────┐      ┌───────────────┐
-    │  Save Draft   │      │  Submit &     │
-    │               │      │  Print        │
-    └───────────────┘      └───────┬───────┘
-                                   │
-                                   ▼
-                    ┌───────────────────────────┐
-                    │  Continue Processing      │
-                    │  or Close Shift           │
-                    └───────────┬───────────────┘
-                                │
-                                ▼
-                    ┌───────────────────────────┐
-                    │    Closing Dialog         │
-                    │  - Review Totals          │
-                    │  - Enter Closing Balances │
-                    └───────────┬───────────────┘
-                                │
-                                ▼
-                    ┌───────────────────────────┐
-                    │  Create Closing Shift    │
-                    │  (Submit)                │
-                    └───────────┬───────────────┘
-                                │
-                                ▼
-                    ┌───────────────────────────┐
-                    │  Auto-Print (if enabled) │
-                    │  or Manual Print          │
-                    └───────────┬───────────────┘
-                                │
-                                ▼
-                    ┌───────────────────────────┐
-                    │  Page Reload              │
-                    │  (Back to Opening)        │
-                    └───────────────────────────┘
+Start
+  ↓
+Check Open Shift
+  ↓
+[No Shift] → Opening Dialog → Create Opening Shift
+  ↓
+POS Main Interface
+  ├─ Item Selection
+  ├─ Customer Selection
+  └─ Payment Processing
+  ↓
+Create Invoice
+  ├─ Save Draft
+  └─ Submit & Print
+  ↓
+[Continue] or [Close Shift]
+  ↓
+Closing Dialog → Create Closing Shift
+  ↓
+Auto-Print → Page Reload
 ```
 
-## Shift Status Workflow
+## Settlement Flow (Outstanding Payments)
 
 ```
-POS Opening Shift Status:
-┌─────────┐
-│ Draft   │ ──Submit──> ┌─────────┐
-└─────────┘             │  Open   │ ──Close──> ┌─────────┐
-                        └─────────┘             │ Closed  │
-                                                └─────────┘
+Select Settlement
+  ↓
+Load Outstanding Invoices
+  ↓
+Select Invoice
+  ↓
+Load Invoice (Pay_Mode)
+  ├─ Items: Read-only
+  ├─ Customer: Read-only
+  └─ Payments: Outstanding amount only
+  ↓
+Enter Payment
+  ↓
+Create Payment Entry
+  ↓
+Update Invoice Outstanding
 ```
 
-## Invoice Workflow
+## Shift Status
 
 ```
-Sales Invoice:
-┌─────────┐
-│ Draft   │ ──Submit──> ┌─────────┐
-└─────────┘             │Submitted│
-                        └─────────┘
+Draft → Submit → Open → Close → Closed
 ```
 
-## Key Workflow Components
+## Invoice Status
 
-1. **Opening Shift**
+```
+Draft → Submit → Submitted
+```
 
-    - User selects POS Profile
-    - Enters opening balances
-    - System validates time window (if enabled)
-    - Creates and submits POS Opening Shift
+## Key Events
 
-2. **POS Operations**
-
-    - Item selection and barcode scanning
-    - Customer selection
-    - Payment processing
-    - Invoice creation (draft or submit)
-    - **Settlement (سداد)**: Pay outstanding invoices
-        - Lists submitted invoices that are Unpaid or Partly Paid
-        - Filtered by current POS profile, shift, and user
-        - Creates Payment Entry via ERPNext's `get_payment_entry`
-        - Updates invoice outstanding amount automatically
-
-3. **Closing Shift**
-    - System calculates totals
-    - User enters closing balances
-    - System validates time window (if enabled)
-    - Creates and submits POS Closing Shift
-    - Auto-print (if enabled)
-    - Page reloads to opening screen
-
-## Event Flow
-
--   `register_pos_profile` - POS Profile registered
--   `set_pos_opening_shift` - Opening shift set
--   `register_pos_data` - POS data registered
--   `stop_shift_monitoring` - Stop shift monitoring
+-   `register_pos_profile` - POS Profile loaded
+-   `set_pos_opening_shift` - Shift set
+-   `load_settlement_invoice` - Settlement invoice loaded
+-   `send_invoice_doc_payment` - Invoice sent to payment
+-   `show_payment` - Show payment panel
 -   `submit_closing_pos` - Closing shift submitted
