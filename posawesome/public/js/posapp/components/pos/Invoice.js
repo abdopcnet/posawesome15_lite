@@ -335,6 +335,13 @@ export default {
 			// Sales_Mode: Normal invoice
 			return 'sales';
 		},
+		// Check if outstanding payments are allowed
+		allowOutstandingPayments() {
+			return (
+				this.pos_profile?.posa_allow_outstanding_payments === 1 ||
+				this.pos_profile?.posa_allow_outstanding_payments === '1'
+			);
+		},
 		canPrintInvoice() {
 			// Check items first - must have items to print
 			if (!this.items?.length) return false;
