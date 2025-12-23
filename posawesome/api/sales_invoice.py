@@ -52,8 +52,8 @@ def save_draft_invoice(invoice_doc):
         return doc.as_dict()
 
     except Exception as e:
-        frappe.log_error(f"[[sales_invoice.py]] save_draft_invoice: {str(e)}")
-        frappe.throw(_("Error saving draft invoice"))
+        frappe.log_error("[sales_invoice.py] method: save_draft_invoice", "Sales Invoice API")
+        frappe.throw(_("Error saving draft"))
 
 
 @frappe.whitelist()
@@ -138,7 +138,7 @@ def delete_invoice(invoice_name):
         }
 
     except Exception as e:
-        frappe.log_error(f"[[sales_invoice.py]] delete_invoice: {str(e)}")
+        frappe.log_error("[sales_invoice.py] method: delete_invoice", "Sales Invoice API")
         frappe.throw(_("Error deleting invoice"))
 
 
@@ -360,9 +360,8 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
         return returnable_invoices
 
     except Exception as e:
-        frappe.log_error(
-            f"[[sales_invoice.py]] get_returnable_invoices: {str(e)}")
-        frappe.throw(_("Error fetching invoices for return"))
+        frappe.log_error("[sales_invoice.py] method: get_invoices_for_return", "Sales Invoice API")
+        frappe.throw(_("Error fetching invoices"))
         return []
 
 
@@ -960,6 +959,6 @@ def create_payment_entry_for_invoice(invoice_name, payment_data):
         return payment_entry.as_dict()
 
     except Exception as e:
-        frappe.log_error(f"[[sales_invoice.py]] create_payment_entry_for_invoice: {str(e)}")
+        frappe.log_error("[sales_invoice.py] method: create_payment_entry_for_invoice", "Sales Invoice API")
         frappe.throw(_("Error creating payment entry: {0}").format(str(e)))
 
