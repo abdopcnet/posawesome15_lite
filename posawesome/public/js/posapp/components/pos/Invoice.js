@@ -1412,6 +1412,15 @@ export default {
 
 		openSettlement() {
 			// Settlement button clicked
+			console.log('[Invoice.js] openSettlement - pos_profile:', this.pos_profile);
+			console.log(
+				'[Invoice.js] posa_allow_outstanding_payments:',
+				this.pos_profile?.posa_allow_outstanding_payments,
+			);
+			console.log(
+				'[Invoice.js] Type:',
+				typeof this.pos_profile?.posa_allow_outstanding_payments,
+			);
 			evntBus.emit('open_settlement_dialog');
 		},
 
