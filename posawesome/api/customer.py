@@ -336,24 +336,62 @@ def get_many_customers(pos_profile=None, search_term=None, limit=50, offset=0):
         # Add search term filter
         if search_term and search_term.strip():
             search_term = search_term.strip()
-            # Search in customer_name, name, and mobile_no
-            search_filters = [
-                ["customer_name", "like", f"%{search_term}%"],
-                ["name", "like", f"%{search_term}%"],
-                ["mobile_no", "like", f"%{search_term}%"]
-            ]
-            # Use OR condition for search
-            filters["or"] = search_filters
+            # Use SQL query for OR search conditions
+            # Build WHERE conditions
+            where_conditions = ["disabled = 0"]
+            where_params = []
 
-        # Fetch customers
-        customers = frappe.get_all(
-            "Customer",
-            filters=filters,
-            fields=["name", "customer_name", "mobile_no", "customer_group"],
-            order_by="customer_name asc",
-            limit=limit,
-            start=offset
-        )
+            # Add customer group filter if exists
+            if "customer_group" in filters:
+                if isinstance(filters["customer_group"], list) and len(filters["customer_group"]) == 2:
+                    operator = filters["customer_group"][0]
+                    values = filters["customer_group"][1]
+                    if operator == "in" and isinstance(values, list):
+                        placeholders = ", ".join(["%s"] * len(values))
+                        where_conditions.append(f"customer_group IN ({placeholders})")
+                        where_params.extend(values)
+
+            # Add OR search conditions
+            search_pattern = f"%{search_term}%"
+            where_conditions.append(
+                "(customer_name LIKE %s OR name LIKE %s OR mobile_no LIKE %s)"
+            )
+            where_params.extend([search_pattern, search_pattern, search_pattern])
+
+            where_clause = " AND ".join(where_conditions)
+
+            # Ensure limit and offset are integers (handle string inputs from API)
+            try:
+                limit_int = int(limit) if limit is not None else 50
+            except (ValueError, TypeError):
+                limit_int = 50
+            try:
+                offset_int = int(offset) if offset is not None else 0
+            except (ValueError, TypeError):
+                offset_int = 0
+
+            # Fetch customers using SQL
+            customers = frappe.db.sql(
+                f"""
+                SELECT name, customer_name, mobile_no, customer_group
+                FROM `tabCustomer`
+                WHERE {where_clause}
+                ORDER BY customer_name ASC
+                LIMIT {limit_int} OFFSET {offset_int}
+                """,
+                tuple(where_params),
+                as_dict=True
+            )
+        else:
+            # Fetch customers without search (use frappe.get_all)
+            customers = frappe.get_all(
+                "Customer",
+                filters=filters,
+                fields=["name", "customer_name", "mobile_no", "customer_group"],
+                order_by="customer_name asc",
+                limit=limit,
+                start=offset
+            )
 
         # Ensure default customer is included
         if pos_profile_name:
