@@ -269,7 +269,7 @@
 										@input="onQtyInput(item, $event)"
 										@change="onQtyChange(item, $event)"
 										@blur="handleQtyBlur(item, $event)"
-										:disabled="invoice_doc?._is_settlement"
+:disabled="invoice_doc?._is_settlement"
 										style="
 											flex: 1;
 											width: 100%;
@@ -312,7 +312,7 @@
 											box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 										"
 										@click="increaseQuantity(item)"
-										:disabled="invoice_doc?._is_settlement"
+:disabled="invoice_doc?._is_settlement"
 										type="button"
 									>
 										<span
