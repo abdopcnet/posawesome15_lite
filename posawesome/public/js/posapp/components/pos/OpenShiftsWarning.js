@@ -1,5 +1,5 @@
 // ===== OPEN SHIFTS WARNING COMPONENT =====
-// Frontend logging: Use console.log/error/warn directly
+// Frontend logging: console.log('[filename.js] method: function_name')
 
 export default {
   name: "OpenShiftsWarning",
