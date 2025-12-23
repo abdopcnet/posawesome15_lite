@@ -1,6 +1,6 @@
 // ===== SECTION 1: IMPORTS =====
 import { evntBus } from '../bus';
-// Frontend logging: Use console.log/error/warn directly
+// Frontend logging: console.log('[filename.js] method: function_name')
 // Import cache manager utility
 (function () {
 	if (window.clearCacheAndReload) return;
@@ -475,10 +475,7 @@ export default {
 				return;
 			}
 
-			console.log(
-				'[Navbar.js] measurePing called, shift:',
-				this.pos_opening_shift?.name || 'none',
-			);
+			console.log('[Navbar.js] method: measurePing');
 
 			const startTime = performance.now();
 			let timeoutId = null;
@@ -598,7 +595,7 @@ export default {
 				callback: (r) => {
 					if (r.message && !r.message.is_open) {
 						// Specific shift is closed - reload page and clear cache
-						console.log('[Navbar.js] Shift closed - reloading page');
+						console.log('[Navbar.js] method: handle_shift_closed');
 						this.show_mesage({
 							color: 'error',
 							text: 'تم إغلاق الوردية. سيتم إعادة تحميل الصفحة...',
@@ -759,7 +756,7 @@ export default {
 					}
 					if (data.pos_opening_shift) {
 						this.pos_opening_shift = data.pos_opening_shift;
-						console.log('[Navbar.js] Shift registered:', this.pos_opening_shift.name);
+						console.log('[Navbar.js] method: register_shift');
 					}
 					this.fetch_company_info();
 					this.fetchShiftInvoiceCount();
