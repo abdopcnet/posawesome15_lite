@@ -1,6 +1,6 @@
 import { createApp } from "vue";
 import Home from "./Home.vue";
-// Frontend logging: Use console.log/error/warn directly
+// Frontend logging: console.log('[filename.js] method: function_name')
 
 // Define Vue 3 feature flags for better tree-shaking and performance
 // See: https://link.vuejs.org/feature-flags
