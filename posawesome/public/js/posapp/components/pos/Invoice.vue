@@ -1480,7 +1480,8 @@
 
 				<!-- Settlement Button: سداد متبقي -->
 				<button
-					:disabled="is_payment"
+					v-if="allowOutstandingPayments"
+					:disabled="is_payment || !allowOutstandingPayments"
 					@click="openSettlement"
 					title="سداد متبقي"
 					style="
