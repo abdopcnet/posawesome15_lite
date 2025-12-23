@@ -126,6 +126,11 @@ Sales Invoice:
     - Customer selection
     - Payment processing
     - Invoice creation (draft or submit)
+    - **Settlement (سداد)**: Pay outstanding invoices
+        - Lists submitted invoices that are Unpaid or Partly Paid
+        - Filtered by current POS profile, shift, and user
+        - Creates Payment Entry via ERPNext's `get_payment_entry`
+        - Updates invoice outstanding amount automatically
 
 3. **Closing Shift**
     - System calculates totals
