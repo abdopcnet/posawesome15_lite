@@ -370,6 +370,56 @@ export default {
 			evntBus.emit(EVENT_NAMES.SET_CUSTOMER_READONLY, false);
 		},
 
+		// Submit payment for settlement invoice (already submitted)
+		// Creates Payment Entry using ERPNext's get_payment_entry
+		async submitSettlementPayment() {
+			try {
+				// Validate that we have payment amounts
+				const totalPayment = this.paid_amount;
+				if (totalPayment <= 0) {
+					this.showMessage('يرجى إدخال مبلغ السداد', 'error');
+					return;
+				}
+
+				// Get the primary payment method (first non-zero payment)
+				const payment = this.invoice_doc.payments.find((p) => flt(p.amount) > 0);
+				if (!payment) {
+					this.showMessage('يرجى اختيار طريقة الدفع', 'error');
+					return;
+				}
+
+				// Show loading
+				evntBus.emit('show_loading', { text: 'جاري إنشاء سند الدفع...', color: 'info' });
+
+				// Create Payment Entry via backend
+				const response = await frappe.call({
+					method: API_MAP.SALES_INVOICE.CREATE_PAYMENT_ENTRY,
+					args: {
+						invoice_name: this.invoice_doc.name,
+						payment_data: {
+							mode_of_payment: payment.mode_of_payment,
+							amount: payment.amount,
+							account: payment.account || null,
+						},
+					},
+				});
+
+				evntBus.emit('hide_loading');
+
+				if (response.message) {
+					this.showMessage(`تم إنشاء سند الدفع: ${response.message.name}`, 'success');
+
+					// Close payment dialog and reset
+					this.back_to_invoice();
+					evntBus.emit(EVENT_NAMES.NEW_INVOICE, 'false');
+				}
+			} catch (error) {
+				evntBus.emit('hide_loading');
+				console.error('[Payments.js] Settlement payment error:', error);
+				this.showMessage('فشل إنشاء سند الدفع', 'error');
+			}
+		},
+
 		// Main submit method - entry point for invoice submission
 		// Handles form submission, validation, and delegates to submit_invoice
 		async submit(event, autoMode = false, print = false) {
@@ -386,8 +436,15 @@ export default {
 				console.log('[Payments.js] submit error:', error?.message || error);
 			}
 
-			// If invoice is already submitted, just print if requested
+			// If invoice is already submitted (settlement flow)
 			if (this.invoice_doc?.docstatus === 1) {
+				// Check if this is a settlement payment
+				if (this.invoice_doc._is_settlement) {
+					await this.submitSettlementPayment();
+					return;
+				}
+
+				// Otherwise, just print if requested
 				if (print) {
 					this.load_print_page();
 				}
@@ -755,15 +812,27 @@ export default {
 					});
 
 					// Calculate invoice total
+					// For settlement invoices, use outstanding_amount instead of grand_total
 					// Use grand_total with precision = 2 for all currency amounts
 					// Following user requirement: no rounded_total dependency
-					const invoice_total = flt(this.invoice_doc.grand_total, 2);
+					const invoice_total = this.invoice_doc._is_settlement
+						? flt(this.invoice_doc.outstanding_amount || 0, 2)
+						: flt(this.invoice_doc.grand_total, 2);
 
 					// Fill with full invoice amount when clicking the payment method button
 					// For quick_return mode, same logic as sales_mode but with negative values
+					// For settlement invoices, use outstanding_amount (already set in invoice_total)
 					// Use precision = 2 for all currency amounts
 					const amount = invoice_total;
-					const target_amount = isQuickReturn ? -Math.abs(amount) : amount;
+					let target_amount = isQuickReturn ? -Math.abs(amount) : amount;
+
+					// For settlement invoices, ensure amount doesn't exceed outstanding_amount
+					if (this.invoice_doc._is_settlement && target_amount > 0) {
+						const outstanding = flt(this.invoice_doc.outstanding_amount || 0, 2);
+						if (target_amount > outstanding) {
+							target_amount = outstanding;
+						}
+					}
 
 					// Set payment amount with precision = 2
 					payment.amount = target_amount;
@@ -807,10 +876,13 @@ export default {
 				}
 
 				const isQuickReturn = !!this.quick_return;
+				// For settlement invoices, use outstanding_amount instead of grand_total
 				// Use grand_total directly without rounding to preserve exact value
 				// Following user requirement: no rounded_total dependency
 				// Use precision = 2 for all currency amounts
-				const invoice_total = flt(this.invoice_doc.grand_total, 2);
+				const invoice_total = this.invoice_doc._is_settlement
+					? flt(this.invoice_doc.outstanding_amount || 0, 2)
+					: flt(this.invoice_doc.grand_total, 2);
 
 				// Find the payment method being edited
 				const payment = this.invoice_doc.payments.find((p) => p.idx === idx);
@@ -863,6 +935,14 @@ export default {
 				// If positive, convert to negative (same as sales_mode but negative)
 				if (isQuickReturn && amount > 0) {
 					amount = -Math.abs(amount);
+				}
+
+				// For settlement invoices, ensure amount doesn't exceed outstanding_amount
+				if (this.invoice_doc._is_settlement && amount > 0) {
+					const outstanding = flt(this.invoice_doc.outstanding_amount || 0, 2);
+					if (amount > outstanding) {
+						amount = outstanding;
+					}
 				}
 
 				// Set payment amount to exact remaining value without rounding
@@ -974,6 +1054,28 @@ export default {
 				// If input value is positive, convert to negative
 				if (this.quick_return && value > 0) {
 					value = -Math.abs(value);
+				}
+
+				// For settlement invoices, validate that payment doesn't exceed outstanding_amount
+				if (this.invoice_doc._is_settlement && value > 0) {
+					const outstanding = flt(this.invoice_doc.outstanding_amount || 0, 2);
+					// Calculate total payments including this one
+					const otherPayments = this.invoice_doc.payments
+						.filter((p) => p.idx !== payment.idx)
+						.reduce((sum, p) => sum + flt(p.amount || 0, 2), 0);
+					const totalPayments = flt(otherPayments + value, 2);
+
+					if (totalPayments > outstanding) {
+						// Limit to outstanding amount
+						value = flt(outstanding - otherPayments, 2);
+						if (value < 0) value = 0;
+						this.showMessage(
+							`لا يمكن الدفع أكثر من المبلغ المتبقي: ${this.formatCurrency(
+								outstanding,
+							)}`,
+							'error',
+						);
+					}
 				}
 
 				// Set the payment amount without rounding to preserve exact value
@@ -1209,14 +1311,34 @@ export default {
 				}
 
 				if (default_payment && !invoice_doc.is_return) {
-					// Use grand_total with precision = 2 for all currency amounts
-					// Following user requirement: no rounded_total dependency at all
-					// Always set default payment amount from grand_total, even if invoice exists
-					const total = flt(invoice_doc.grand_total, 2);
-					// Set payment amount with precision = 2
-					default_payment.amount = total;
-					if (default_payment.base_amount !== undefined) {
-						default_payment.base_amount = total;
+					// For settlement invoices, use outstanding_amount instead of grand_total
+					if (invoice_doc._is_settlement) {
+						// Settlement mode: use outstanding_amount (what's left to pay)
+						const outstanding = flt(invoice_doc.outstanding_amount || 0, 2);
+						// Set payment amount with precision = 2
+						default_payment.amount = outstanding;
+						if (default_payment.base_amount !== undefined) {
+							default_payment.base_amount = outstanding;
+						}
+						// Clear other payment methods
+						this.invoice_doc.payments.forEach((payment) => {
+							if (payment.idx !== default_payment.idx) {
+								payment.amount = 0;
+								if (payment.base_amount !== undefined) {
+									payment.base_amount = 0;
+								}
+							}
+						});
+					} else {
+						// Normal mode: use grand_total with precision = 2 for all currency amounts
+						// Following user requirement: no rounded_total dependency at all
+						// Always set default payment amount from grand_total, even if invoice exists
+						const total = flt(invoice_doc.grand_total, 2);
+						// Set payment amount with precision = 2
+						default_payment.amount = total;
+						if (default_payment.base_amount !== undefined) {
+							default_payment.base_amount = total;
+						}
 					}
 				}
 
