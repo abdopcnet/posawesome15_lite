@@ -1381,6 +1381,11 @@ export default {
 			});
 		},
 
+		openSettlement() {
+			// Settlement button clicked
+			evntBus.emit('open_settlement_dialog');
+		},
+
 		close_payments() {
 			evntBus.emit('show_payment', 'false');
 		},
@@ -2688,7 +2693,9 @@ export default {
 			}
 
 			// Determine invoice type for logging
-			const invoiceType = doc.is_return
+			const invoiceType = doc._is_settlement
+				? 'Pay_Mode'
+				: doc.is_return
 				? doc.return_against
 					? 'Return_Invoice'
 					: 'Quick_Return'
@@ -2965,6 +2972,57 @@ export default {
 					text: `تم تحميل الفاتورة: ${draft_invoice.name}`,
 					color: 'success',
 				});
+			}
+		});
+
+		// Load settlement invoice event
+		evntBus.on('load_settlement_invoice', async (settlement_invoice) => {
+			if (settlement_invoice && settlement_invoice.name) {
+				console.log('[Invoice.js] Loading settlement invoice:', settlement_invoice.name);
+
+				try {
+					// Fetch full invoice details
+					const response = await frappe.call({
+						method: 'frappe.client.get',
+						args: {
+							doctype: 'Sales Invoice',
+							name: settlement_invoice.name,
+						},
+					});
+
+					if (response.message) {
+						const invoice = response.message;
+
+						// Mark as settlement mode (for read-only items)
+						invoice._is_settlement = true;
+
+						// Load invoice into POS
+						this.invoice_doc = invoice;
+						this.items = invoice.items || [];
+						this.setCustomer(invoice.customer);
+
+						// Set customer as read-only during settlement
+						evntBus.emit('set_customer_readonly', true);
+
+						// Update Navbar with invoice_doc (for Pay_Mode display)
+						evntBus.emit('update_invoice_doc', invoice);
+
+						// Open payment panel directly (skip item editing)
+						evntBus.emit('send_invoice_doc_payment', invoice);
+						evntBus.emit('show_payment', 'true');
+
+						evntBus.emit('show_mesage', {
+							text: `تم تحميل الفاتورة للسداد: ${invoice.name}`,
+							color: 'success',
+						});
+					}
+				} catch (error) {
+					console.error('[Invoice.js] Error loading settlement invoice:', error);
+					evntBus.emit('show_mesage', {
+						text: 'فشل تحميل الفاتورة',
+						color: 'error',
+					});
+				}
 			}
 		});
 
