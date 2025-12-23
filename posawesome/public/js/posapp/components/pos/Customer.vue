@@ -345,7 +345,7 @@
 
 <script>
 import comp from './Customer.js';
-// Frontend logging: Use console.log/error/warn directly
+// Frontend logging: console.log('[filename.js] method: function_name')
 
 comp.methods = {
 	...comp.methods,
