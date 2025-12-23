@@ -1,68 +1,44 @@
 # POS Awesome - Workflow
 
-## Main Flow
+## Main POS Flow
 
 ```
-Start
-  ↓
-Check Open Shift
-  ↓
-[No Shift] → Opening Dialog → Create Opening Shift
-  ↓
-POS Main Interface
-  ├─ Item Selection
-  ├─ Customer Selection
-  └─ Payment Processing
-  ↓
-Create Invoice
-  ├─ Save Draft
-  └─ Submit & Print
-  ↓
-[Continue] or [Close Shift]
-  ↓
-Closing Dialog → Create Closing Shift
-  ↓
-Auto-Print → Page Reload
+1. Open Shift
+   ↓
+2. POS Interface
+   ├─ Select Items
+   ├─ Select Customer
+   └─ Process Payment
+   ↓
+3. Create Invoice
+   ├─ Save Draft
+   └─ Submit & Print
+   ↓
+4. Close Shift
 ```
 
-## Settlement Flow (Outstanding Payments)
+## Settlement Flow
 
 ```
-Select Settlement
-  ↓
-Load Outstanding Invoices
-  ↓
-Select Invoice
-  ↓
-Load Invoice (Pay_Mode)
-  ├─ Items: Read-only
-  ├─ Customer: Read-only
-  └─ Payments: Outstanding amount only
-  ↓
-Enter Payment
-  ↓
-Create Payment Entry
-  ↓
-Update Invoice Outstanding
+1. Select Settlement
+   ↓
+2. Load Outstanding Invoices
+   ↓
+3. Select Invoice
+   ↓
+4. Load Invoice (Pay_Mode)
+   ├─ Items: Read-only
+   ├─ Customer: Read-only
+   └─ Payments: Outstanding amount
+   ↓
+5. Enter Payment
+   ↓
+6. Create Payment Entry
 ```
 
-## Shift Status
+## Invoice Modes
 
-```
-Draft → Submit → Open → Close → Closed
-```
-
-## Invoice Status
-
-```
-Draft → Submit → Submitted
-```
-
-## Key Events
-
--   `register_pos_profile` - POS Profile loaded
--   `set_pos_opening_shift` - Shift set
--   `load_settlement_invoice` - Settlement invoice loaded
--   `send_invoice_doc_payment` - Invoice sent to payment
--   `show_payment` - Show payment panel
--   `submit_closing_pos` - Closing shift submitted
+-   **Sales**: Normal sales invoice
+-   **Return**: Return from invoice
+-   **Quick Return**: Return items only
+-   **Payment**: Settlement payment receipt
