@@ -323,6 +323,7 @@
   ],
   "custom_perms": [],
   "doctype": "Customer",
+  "links": [],
   "property_setters": [],
   "sync_on_migrate": 1
 }
