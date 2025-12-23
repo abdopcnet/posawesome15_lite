@@ -227,12 +227,12 @@ def get_offers(invoice_data):
         }
         return out
 
-    except Exception:
-        # Graceful degradation - return disabled state (no logging needed)
+    except Exception as e:
+        frappe.log_error("[pos_offer.py] method: get_offers", "POS Offer")
         return {
             "enabled": False,
             "applied_offers": [],
-            "message": f"Error: {str(e)}",
+            "message": "Error",
             "updated_invoice": invoice_data
         }
 
