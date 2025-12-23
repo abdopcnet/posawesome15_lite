@@ -1,376 +1,366 @@
 // ===== SECTION 1: IMPORTS =====
-import { evntBus } from "../../bus";
-import format from "../../format";
-// Frontend logging: Use console.log/error/warn directly
+import { evntBus } from '../../bus';
+import format from '../../format';
+// Frontend logging: console.log('[filename.js] method: function_name')
 
 // CONSTANTS
 const EVENT_NAMES = {
-  SHOW_OFFERS: "show_offers",
-  SHOW_MESSAGE: "show_mesage",
-  UPDATE_INVOICE_OFFERS: "update_invoice_offers",
-  UPDATE_OFFERS_COUNTERS: "update_offers_counters",
-  REGISTER_POS_PROFILE: "register_pos_profile",
-  UPDATE_CUSTOMER: "update_customer",
-  SET_OFFERS: "set_offers",
-  UPDATE_POS_OFFERS: "update_pos_offers",
-  UPDATE_DISCOUNT_PERCENTAGE_OFFER_NAME:
-    "update_discount_percentage_offer_name",
-  SET_ALL_ITEMS: "set_all_items",
+	SHOW_OFFERS: 'show_offers',
+	SHOW_MESSAGE: 'show_mesage',
+	UPDATE_INVOICE_OFFERS: 'update_invoice_offers',
+	UPDATE_OFFERS_COUNTERS: 'update_offers_counters',
+	REGISTER_POS_PROFILE: 'register_pos_profile',
+	UPDATE_CUSTOMER: 'update_customer',
+	SET_OFFERS: 'set_offers',
+	UPDATE_POS_OFFERS: 'update_pos_offers',
+	UPDATE_DISCOUNT_PERCENTAGE_OFFER_NAME: 'update_discount_percentage_offer_name',
+	SET_ALL_ITEMS: 'set_all_items',
 };
 
 const OFFER_TYPES = {
-  GRAND_TOTAL: "Grand Total",
-  GIVE_PRODUCT: "Give Product",
+	GRAND_TOTAL: 'Grand Total',
+	GIVE_PRODUCT: 'Give Product',
 };
 
 const APPLY_TYPES = {
-  ITEM_CODE: "Item Code",
-  ITEM_GROUP: "Item Group",
+	ITEM_CODE: 'Item Code',
+	ITEM_GROUP: 'Item Group',
 };
 
 const ITEMS_HEADERS = [
-  { title: "الاسم", key: "name", align: "start" },
-  { title: "يطبق على", key: "apply_on", align: "start" },
-  { title: "العرض", key: "offer", align: "start" },
-  { title: "مطبق", key: "offer_applied", align: "start" },
+	{ title: 'الاسم', key: 'name', align: 'start' },
+	{ title: 'يطبق على', key: 'apply_on', align: 'start' },
+	{ title: 'العرض', key: 'offer', align: 'start' },
+	{ title: 'مطبق', key: 'offer_applied', align: 'start' },
 ];
 
 // ===== SECTION 2: EXPORT DEFAULT =====
 export default {
-  mixins: [format],
+	mixins: [format],
 
-  // ===== SECTION 3: DATA =====
-  data() {
-    return {
-      loading: false,
-      pos_profile: "",
-      pos_offers: [],
-      allItems: [],
-      discount_percentage_offer_name: null,
-      itemsPerPage: 1000,
-      expanded: [],
-      singleExpand: true,
-      items_headers: ITEMS_HEADERS,
-    };
-  },
+	// ===== SECTION 3: DATA =====
+	data() {
+		return {
+			loading: false,
+			pos_profile: '',
+			pos_offers: [],
+			allItems: [],
+			discount_percentage_offer_name: null,
+			itemsPerPage: 1000,
+			expanded: [],
+			singleExpand: true,
+			items_headers: ITEMS_HEADERS,
+		};
+	},
 
-  // ===== SECTION 4: COMPUTED =====
-  computed: {
-    offersEnabled() {
-      const value = this.pos_profile?.posa_auto_fetch_offers;
+	// ===== SECTION 4: COMPUTED =====
+	computed: {
+		offersEnabled() {
+			const value = this.pos_profile?.posa_auto_fetch_offers;
 
-      const enabled =
-        value !== 0 &&
-        value !== "0" &&
-        value !== false &&
-        value !== null &&
-        value !== undefined;
+			const enabled =
+				value !== 0 &&
+				value !== '0' &&
+				value !== false &&
+				value !== null &&
+				value !== undefined;
 
-      return enabled;
-    },
-    offersCount() {
-      return this.pos_offers.length;
-    },
-    appliedOffersCount() {
-      return this.pos_offers.filter((el) => el.offer_applied).length;
-    },
-  },
+			return enabled;
+		},
+		offersCount() {
+			return this.pos_offers.length;
+		},
+		appliedOffersCount() {
+			return this.pos_offers.filter((el) => el.offer_applied).length;
+		},
+	},
 
-  // ===== SECTION 5: METHODS =====
-  methods: {
-    back_to_invoice() {
-      evntBus.emit(EVENT_NAMES.SHOW_OFFERS, "false");
-    },
+	// ===== SECTION 5: METHODS =====
+	methods: {
+		back_to_invoice() {
+			evntBus.emit(EVENT_NAMES.SHOW_OFFERS, 'false');
+		},
 
-    handleOfferToggle() {
-      this.pos_offers = [...this.pos_offers];
-      this.handleManualOfferChange();
-    },
+		handleOfferToggle() {
+			this.pos_offers = [...this.pos_offers];
+			this.handleManualOfferChange();
+		},
 
-    toggleOffer(offer) {
-      // Skip if offer is disabled
-      if (this.isOfferDisabled(offer)) {
-        return;
-      }
+		toggleOffer(offer) {
+			// Skip if offer is disabled
+			if (this.isOfferDisabled(offer)) {
+				return;
+			}
 
-      // Trigger handleOfferToggle to update local state
-      this.handleOfferToggle();
+			// Trigger handleOfferToggle to update local state
+			this.handleOfferToggle();
 
-      // Create a normalized offer object with all necessary fields for Invoice.js
-      const normalizedOffer = {
-        ...offer,
-        name: offer.name || offer.offer_name,
-        offer_name: offer.offer_name || offer.name,
-        // Ensure offer_type is set for Invoice.js logic
-        offer_type: offer.offer_type || this.inferOfferType(offer),
-      };
+			// Create a normalized offer object with all necessary fields for Invoice.js
+			const normalizedOffer = {
+				...offer,
+				name: offer.name || offer.offer_name,
+				offer_name: offer.offer_name || offer.name,
+				// Ensure offer_type is set for Invoice.js logic
+				offer_type: offer.offer_type || this.inferOfferType(offer),
+			};
 
-      // Emit based on current state (v-model already updated offer_applied)
-      if (offer.offer_applied) {
-        this.$emit("offerApplied", normalizedOffer);
-      } else {
-        // Pass the normalized offer object so Invoice.js knows which offer was removed
-        this.$emit("offerRemoved", normalizedOffer);
-      }
-    },
+			// Emit based on current state (v-model already updated offer_applied)
+			if (offer.offer_applied) {
+				this.$emit('offerApplied', normalizedOffer);
+			} else {
+				// Pass the normalized offer object so Invoice.js knows which offer was removed
+				this.$emit('offerRemoved', normalizedOffer);
+			}
+		},
 
-    inferOfferType(offer) {
-      // Infer offer_type from other fields if not present
-      // This handles cases where backend uses different field naming
+		inferOfferType(offer) {
+			// Infer offer_type from other fields if not present
+			// This handles cases where backend uses different field naming
 
-      if (offer.item_code) return "item_code";
-      if (offer.item_group) return "item_group";
-      if (offer.brand) return "brand";
-      if (offer.customer) return "customer";
-      if (offer.customer_group) return "customer_group";
+			if (offer.item_code) return 'item_code';
+			if (offer.item_group) return 'item_group';
+			if (offer.brand) return 'brand';
+			if (offer.customer) return 'customer';
+			if (offer.customer_group) return 'customer_group';
 
-      // Check legacy 'offer' field (e.g., "Grand Total")
-      if (offer.offer === "Grand Total" || offer.apply_on === "Grand Total") {
-        return "grand_total";
-      }
+			// Check legacy 'offer' field (e.g., "Grand Total")
+			if (offer.offer === 'Grand Total' || offer.apply_on === 'Grand Total') {
+				return 'grand_total';
+			}
 
-      // Default to grand_total for transaction-level offers
-      return "grand_total";
-    },
+			// Default to grand_total for transaction-level offers
+			return 'grand_total';
+		},
 
-    isOfferDisabled(offer) {
-      return Boolean(
-        (offer.offer_type === "Give Product" &&
-          !offer.give_item &&
-          (!offer.replace_cheapest_item || !offer.replace_item)) ||
-          (offer.offer_type === "Grand Total" &&
-            this.discount_percentage_offer_name &&
-            this.discount_percentage_offer_name !== offer.name)
-      );
-    },
+		isOfferDisabled(offer) {
+			return Boolean(
+				(offer.offer_type === 'Give Product' &&
+					!offer.give_item &&
+					(!offer.replace_cheapest_item || !offer.replace_item)) ||
+					(offer.offer_type === 'Grand Total' &&
+						this.discount_percentage_offer_name &&
+						this.discount_percentage_offer_name !== offer.name),
+			);
+		},
 
-    truncateName(name, maxLength) {
-      return name && name.length > maxLength
-        ? name.substring(0, maxLength) + "..."
-        : name;
-    },
+		truncateName(name, maxLength) {
+			return name && name.length > maxLength ? name.substring(0, maxLength) + '...' : name;
+		},
 
-    handleImageError(event) {
-      event.target.src =
-        "/assets/posawesome/js/posapp/components/pos/placeholder-image.png";
-    },
+		handleImageError(event) {
+			event.target.src = '/assets/posawesome/js/posapp/components/pos/placeholder-image.png';
+		},
 
-    handleManualOfferChange() {
-      try {
-        const appliedGrandTotalOffers = this.pos_offers.filter(
-          (offer) =>
-            offer.offer === OFFER_TYPES.GRAND_TOTAL && offer.offer_applied
-        );
+		handleManualOfferChange() {
+			try {
+				const appliedGrandTotalOffers = this.pos_offers.filter(
+					(offer) => offer.offer === OFFER_TYPES.GRAND_TOTAL && offer.offer_applied,
+				);
 
-        if (appliedGrandTotalOffers.length > 1) {
-          this.applyBestGrandTotalOffer();
-        } else if (appliedGrandTotalOffers.length === 1) {
-          this.discount_percentage_offer_name = appliedGrandTotalOffers[0].name;
-          this.pos_offers.forEach((offer) => {
-            if (
-              offer.offer === OFFER_TYPES.GRAND_TOTAL &&
-              offer.name !== appliedGrandTotalOffers[0].name
-            ) {
-              offer.offer_applied = false;
-            }
-          });
-        } else {
-          this.discount_percentage_offer_name = null;
-        }
-      } catch (error) {
-        console.log("[PosOffers.js] handleManualOfferChange error:", error);
-        this.showMessage("خطأ في معالجة تغيير العرض", "error");
-      }
-    },
+				if (appliedGrandTotalOffers.length > 1) {
+					this.applyBestGrandTotalOffer();
+				} else if (appliedGrandTotalOffers.length === 1) {
+					this.discount_percentage_offer_name = appliedGrandTotalOffers[0].name;
+					this.pos_offers.forEach((offer) => {
+						if (
+							offer.offer === OFFER_TYPES.GRAND_TOTAL &&
+							offer.name !== appliedGrandTotalOffers[0].name
+						) {
+							offer.offer_applied = false;
+						}
+					});
+				} else {
+					this.discount_percentage_offer_name = null;
+				}
+			} catch (error) {
+				console.log('[PosOffers.js] method: handleManualOfferChange');
+				this.showMessage('خطأ في معالجة تغيير العرض', 'error');
+			}
+		},
 
-    makeid(length) {
-      const characters = "abcdefghijklmnopqrstuvwxyz0123456789";
-      return Array.from({ length }, () =>
-        characters.charAt(Math.floor(Math.random() * characters.length))
-      ).join("");
-    },
+		makeid(length) {
+			const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+			return Array.from({ length }, () =>
+				characters.charAt(Math.floor(Math.random() * characters.length)),
+			).join('');
+		},
 
-    updatePosOffers(appliedOffers) {
-      try {
-        this.pos_offers.forEach((pos_offer) => {
-          const wasApplied = pos_offer.offer_applied;
-          pos_offer.offer_applied = appliedOffers.some(
-            (offer) =>
-              offer.name === pos_offer.name ||
-              offer.offer_name === pos_offer.name ||
-              offer.name === pos_offer.title
-          );
-        });
-      } catch (error) {
-        console.log("[PosOffers.js] updatePosOffers error:", error);
-      }
-    },
+		updatePosOffers(appliedOffers) {
+			try {
+				this.pos_offers.forEach((pos_offer) => {
+					const wasApplied = pos_offer.offer_applied;
+					pos_offer.offer_applied = appliedOffers.some(
+						(offer) =>
+							offer.name === pos_offer.name ||
+							offer.offer_name === pos_offer.name ||
+							offer.name === pos_offer.title,
+					);
+				});
+			} catch (error) {
+				console.log('[PosOffers.js] method: updatePosOffers');
+			}
+		},
 
-    applyBestGrandTotalOffer() {
-      try {
-        const grandTotalOffers = this.pos_offers.filter(
-          (offer) => offer.offer === OFFER_TYPES.GRAND_TOTAL
-        );
+		applyBestGrandTotalOffer() {
+			try {
+				const grandTotalOffers = this.pos_offers.filter(
+					(offer) => offer.offer === OFFER_TYPES.GRAND_TOTAL,
+				);
 
-        if (grandTotalOffers.length === 0) return;
+				if (grandTotalOffers.length === 0) return;
 
-        if (grandTotalOffers.length > 1) {
-          grandTotalOffers.sort((a, b) => {
-            const discountA = parseFloat(a.discount_percentage || 0);
-            const discountB = parseFloat(b.discount_percentage || 0);
-            return discountB - discountA;
-          });
+				if (grandTotalOffers.length > 1) {
+					grandTotalOffers.sort((a, b) => {
+						const discountA = parseFloat(a.discount_percentage || 0);
+						const discountB = parseFloat(b.discount_percentage || 0);
+						return discountB - discountA;
+					});
 
-          grandTotalOffers.forEach((offer) => (offer.offer_applied = false));
-          grandTotalOffers[0].offer_applied = true;
-          this.discount_percentage_offer_name = grandTotalOffers[0].name;
-          // Best offer applied
-          this.showMessage(
-            "تم تطبيق أفضل عرض: " + grandTotalOffers[0].name,
-            "success"
-          );
-        } else {
-          grandTotalOffers[0].offer_applied = true;
-          this.discount_percentage_offer_name = grandTotalOffers[0].name;
-        }
-      } catch (error) {
-        console.log("[PosOffers.js] applyBestOffer error:", error);
-        this.showMessage("خطأ في تطبيق أفضل عرض", "error");
-      }
-    },
+					grandTotalOffers.forEach((offer) => (offer.offer_applied = false));
+					grandTotalOffers[0].offer_applied = true;
+					this.discount_percentage_offer_name = grandTotalOffers[0].name;
+					// Best offer applied
+					this.showMessage('تم تطبيق أفضل عرض: ' + grandTotalOffers[0].name, 'success');
+				} else {
+					grandTotalOffers[0].offer_applied = true;
+					this.discount_percentage_offer_name = grandTotalOffers[0].name;
+				}
+			} catch (error) {
+				console.log('[PosOffers.js] method: applyBestOffer');
+				this.showMessage('خطأ في تطبيق أفضل عرض', 'error');
+			}
+		},
 
-    removeOffers(offers_id_list) {
-      try {
-        this.pos_offers = this.pos_offers.filter(
-          (offer) => !offers_id_list.includes(offer.name || offer.offer_name)
-        );
-      } catch (error) {
-        console.log("[PosOffers.js] removeAllOffers error:", error);
-        this.showMessage("خطأ في إزالة العروض", "error");
-      }
-    },
+		removeOffers(offers_id_list) {
+			try {
+				this.pos_offers = this.pos_offers.filter(
+					(offer) => !offers_id_list.includes(offer.name || offer.offer_name),
+				);
+			} catch (error) {
+				console.log('[PosOffers.js] method: removeAllOffers');
+				this.showMessage('خطأ في إزالة العروض', 'error');
+			}
+		},
 
-    handelOffers() {
-      try {
-        const applyedOffers = this.pos_offers.filter(
-          (offer) => offer.offer_applied
-        );
-        evntBus.emit(EVENT_NAMES.UPDATE_INVOICE_OFFERS, applyedOffers);
-      } catch (error) {
-        console.log("[PosOffers.js] processOffers error:", error);
-        this.showMessage("خطأ في معالجة العروض", "error");
-      }
-    },
+		handelOffers() {
+			try {
+				const applyedOffers = this.pos_offers.filter((offer) => offer.offer_applied);
+				evntBus.emit(EVENT_NAMES.UPDATE_INVOICE_OFFERS, applyedOffers);
+			} catch (error) {
+				console.log('[PosOffers.js] method: processOffers');
+				this.showMessage('خطأ في معالجة العروض', 'error');
+			}
+		},
 
-    handleNewLine(str) {
-      return str ? str.replace(/(?:\r\n|\r|\n)/g, "<br />") : "";
-    },
+		handleNewLine(str) {
+			return str ? str.replace(/(?:\r\n|\r|\n)/g, '<br />') : '';
+		},
 
-    get_give_items(offer) {
-      try {
-        if (offer.apply_type === APPLY_TYPES.ITEM_CODE) {
-          return [offer.apply_item_code];
-        }
+		get_give_items(offer) {
+			try {
+				if (offer.apply_type === APPLY_TYPES.ITEM_CODE) {
+					return [offer.apply_item_code];
+				}
 
-        if (offer.apply_type === APPLY_TYPES.ITEM_GROUP) {
-          let filterd_items = this.allItems.filter(
-            (item) => item.item_group === offer.apply_item_group
-          );
+				if (offer.apply_type === APPLY_TYPES.ITEM_GROUP) {
+					let filterd_items = this.allItems.filter(
+						(item) => item.item_group === offer.apply_item_group,
+					);
 
-          if (offer.less_then > 0) {
-            filterd_items = filterd_items.filter(
-              (item) => item.rate < offer.less_then
-            );
-          }
+					if (offer.less_then > 0) {
+						filterd_items = filterd_items.filter(
+							(item) => item.rate < offer.less_then,
+						);
+					}
 
-          return filterd_items;
-        }
+					return filterd_items;
+				}
 
-        return [];
-      } catch (error) {
-        console.log("[PosOffers.js] getFreeItems error:", error);
-        this.showMessage("خطأ في جلب الأصناف المجانية", "error");
-        return [];
-      }
-    },
+				return [];
+			} catch (error) {
+				console.log('[PosOffers.js] method: getFreeItems');
+				this.showMessage('خطأ في جلب الأصناف المجانية', 'error');
+				return [];
+			}
+		},
 
-    updateCounters() {
-      try {
-        evntBus.emit(EVENT_NAMES.UPDATE_OFFERS_COUNTERS, {
-          offersCount: this.offersCount,
-          appliedOffersCount: this.appliedOffersCount,
-        });
-      } catch (error) {
-        console.log("[PosOffers.js] updateCounters error:", error);
-        this.showMessage("خطأ في تحديث العدادات", "error");
-      }
-    },
+		updateCounters() {
+			try {
+				evntBus.emit(EVENT_NAMES.UPDATE_OFFERS_COUNTERS, {
+					offersCount: this.offersCount,
+					appliedOffersCount: this.appliedOffersCount,
+				});
+			} catch (error) {
+				console.log('[PosOffers.js] method: updateCounters');
+				this.showMessage('خطأ في تحديث العدادات', 'error');
+			}
+		},
 
-    showMessage(text, color) {
-      evntBus.emit(EVENT_NAMES.SHOW_MESSAGE, { text, color });
-    },
-  },
+		showMessage(text, color) {
+			evntBus.emit(EVENT_NAMES.SHOW_MESSAGE, { text, color });
+		},
+	},
 
-  // ===== SECTION 6: WATCH =====
-  watch: {
-    pos_offers: {
-      deep: true,
-      handler() {
-        this.handelOffers();
-        this.updateCounters();
-      },
-    },
-  },
+	// ===== SECTION 6: WATCH =====
+	watch: {
+		pos_offers: {
+			deep: true,
+			handler() {
+				this.handelOffers();
+				this.updateCounters();
+			},
+		},
+	},
 
-  // ===== SECTION 7: CREATED =====
-  created() {
-    this.$nextTick(() => {
-      evntBus.on(EVENT_NAMES.REGISTER_POS_PROFILE, (data) => {
-        this.pos_profile = data.pos_profile;
-      });
+	// ===== SECTION 7: CREATED =====
+	created() {
+		this.$nextTick(() => {
+			evntBus.on(EVENT_NAMES.REGISTER_POS_PROFILE, (data) => {
+				this.pos_profile = data.pos_profile;
+			});
 
-      evntBus.on(EVENT_NAMES.UPDATE_CUSTOMER, (customer) => {
-        if (this.customer !== customer) {
-          this.offers = [];
-        }
-      });
+			evntBus.on(EVENT_NAMES.UPDATE_CUSTOMER, (customer) => {
+				if (this.customer !== customer) {
+					this.offers = [];
+				}
+			});
 
-      evntBus.on(EVENT_NAMES.SET_OFFERS, (data) => {
-        this.pos_offers = data.map((offer) => ({
-          ...offer,
-          offer_applied: !!offer.auto,
-        }));
-      });
+			evntBus.on(EVENT_NAMES.SET_OFFERS, (data) => {
+				this.pos_offers = data.map((offer) => ({
+					...offer,
+					offer_applied: !!offer.auto,
+				}));
+			});
 
-      evntBus.on(EVENT_NAMES.UPDATE_POS_OFFERS, (data) => {
-        this.updatePosOffers(data);
-      });
+			evntBus.on(EVENT_NAMES.UPDATE_POS_OFFERS, (data) => {
+				this.updatePosOffers(data);
+			});
 
-      evntBus.on(EVENT_NAMES.UPDATE_DISCOUNT_PERCENTAGE_OFFER_NAME, (data) => {
-        this.discount_percentage_offer_name = data.value;
-      });
+			evntBus.on(EVENT_NAMES.UPDATE_DISCOUNT_PERCENTAGE_OFFER_NAME, (data) => {
+				this.discount_percentage_offer_name = data.value;
+			});
 
-      evntBus.on(EVENT_NAMES.SET_ALL_ITEMS, (data) => {
-        this.allItems = data;
-      });
+			evntBus.on(EVENT_NAMES.SET_ALL_ITEMS, (data) => {
+				this.allItems = data;
+			});
 
-      evntBus.on("reset_manual_offers", () => {
-        // Reset all manual offers to false (but keep auto offers if any)
-        this.pos_offers = this.pos_offers.map((offer) => ({
-          ...offer,
-          offer_applied: !!offer.auto, // Only keep auto-applied offers
-        }));
-      });
-    });
-  },
+			evntBus.on('reset_manual_offers', () => {
+				// Reset all manual offers to false (but keep auto offers if any)
+				this.pos_offers = this.pos_offers.map((offer) => ({
+					...offer,
+					offer_applied: !!offer.auto, // Only keep auto-applied offers
+				}));
+			});
+		});
+	},
 
-  beforeDestroy() {
-    // Clean up all event listeners
-    evntBus.$off(EVENT_NAMES.REGISTER_POS_PROFILE);
-    evntBus.$off(EVENT_NAMES.UPDATE_CUSTOMER);
-    evntBus.$off(EVENT_NAMES.SET_OFFERS);
-    evntBus.$off(EVENT_NAMES.UPDATE_POS_OFFERS);
-    evntBus.$off(EVENT_NAMES.UPDATE_DISCOUNT_PERCENTAGE_OFFER_NAME);
-    evntBus.$off(EVENT_NAMES.SET_ALL_ITEMS);
-  },
+	beforeDestroy() {
+		// Clean up all event listeners
+		evntBus.$off(EVENT_NAMES.REGISTER_POS_PROFILE);
+		evntBus.$off(EVENT_NAMES.UPDATE_CUSTOMER);
+		evntBus.$off(EVENT_NAMES.SET_OFFERS);
+		evntBus.$off(EVENT_NAMES.UPDATE_POS_OFFERS);
+		evntBus.$off(EVENT_NAMES.UPDATE_DISCOUNT_PERCENTAGE_OFFER_NAME);
+		evntBus.$off(EVENT_NAMES.SET_ALL_ITEMS);
+	},
 };
