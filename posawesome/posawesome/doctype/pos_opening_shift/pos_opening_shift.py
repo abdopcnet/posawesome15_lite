@@ -478,6 +478,8 @@ def get_current_shift_name():
                             "posa_allow_quick_return",
                             # Outstanding payments settings
                             "posa_allow_outstanding_payments",
+                            # Draft settings
+                            "posa_allow_save_fetch_drafts",
                             # Credit settings
                             "posa_allow_credit_sale",
                             "posa_allow_partial_payment",
