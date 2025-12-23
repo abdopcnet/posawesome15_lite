@@ -10,6 +10,7 @@ import ClosingDialog from './ClosingDialog.vue';
 import NewAddress from './NewAddress.vue';
 import Returns from './Returns.vue';
 import Drafts from './Drafts.vue';
+import OutstandingPayments from './OutstandingPayments.vue';
 import { API_MAP } from '../../api_mapper.js';
 // Frontend logging: Use console.log/error/warn directly
 
@@ -45,6 +46,7 @@ export default {
 		ClosingDialog,
 		Returns,
 		Drafts,
+		OutstandingPayments,
 		PosOffers,
 		NewAddress,
 	},
@@ -263,23 +265,29 @@ export default {
 			console.log('[Pos.js] Received data:', data);
 			console.log('[Pos.js] data?.success:', data?.success);
 			console.log('[Pos.js] data?.has_auto_print:', data?.has_auto_print);
-			
+
 			if (data?.success) {
 				console.log(
 					`[Pos.js] handleSubmitClosingPos: Closing shift ${data.closing_shift_name} submitted successfully`,
 				);
 				this.show_message('تم إغلاق وردية الصراف بنجاح', 'success');
-				
+
 				// Note: Page reload is handled in ClosingDialog.js after print window opens
 				// No need to call check_opening_entry() here - page will reload and show OpeningDialog automatically
 				if (data.has_auto_print) {
-					console.log('[Pos.js] Auto-print was triggered - page reload will happen in ClosingDialog.js');
-					console.log('[Pos.js] ===== handleSubmitClosingPos END (auto-print case) =====');
+					console.log(
+						'[Pos.js] Auto-print was triggered - page reload will happen in ClosingDialog.js',
+					);
+					console.log(
+						'[Pos.js] ===== handleSubmitClosingPos END (auto-print case) =====',
+					);
 					return;
 				}
-				
+
 				// No auto-print - proceed normally with check_opening_entry()
-				console.log('[Pos.js] No auto-print - will call check_opening_entry() after 1 second');
+				console.log(
+					'[Pos.js] No auto-print - will call check_opening_entry() after 1 second',
+				);
 				setTimeout(async () => {
 					console.log('[Pos.js] Timeout fired - calling check_opening_entry()');
 					// Check for new opening entry after closing
@@ -287,7 +295,7 @@ export default {
 					console.log('[Pos.js] check_opening_entry() completed');
 				}, 1000); // 1 second delay for normal flow
 				console.log('[Pos.js] ===== handleSubmitClosingPos END (normal case) =====');
-				} else {
+			} else {
 				console.log('[Pos.js] data.success is false or undefined - not processing');
 				console.log('[Pos.js] ===== handleSubmitClosingPos END (no success) =====');
 			}
