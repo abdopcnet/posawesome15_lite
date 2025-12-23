@@ -2,7 +2,7 @@
 import { evntBus } from '../../bus';
 import format from '../../format';
 import { API_MAP } from '../../api_mapper.js';
-// Frontend logging: Use console.log/error/warn directly
+// Frontend logging: console.log('[filename.js] method: function_name')
 
 const EVENT_NAMES = {
 	OPEN_DRAFTS_DIALOG: 'open_drafts_dialog',
@@ -31,7 +31,7 @@ export default {
 
 	created() {
 		evntBus.on(EVENT_NAMES.OPEN_DRAFTS_DIALOG, (data) => {
-			console.log('[Drafts.js] Opening drafts dialog with', data?.length || 0, 'invoices');
+			console.log('[Drafts.js] method: created');
 			this.draftsDialog = true;
 			this.dialog_data = data || [];
 			this.selected = null;
@@ -110,7 +110,7 @@ export default {
 					});
 				}
 			} catch (error) {
-				console.error('[Drafts.js] deleteInvoice error:', error);
+				console.log('[Drafts.js] method: deleteInvoice');
 				evntBus.emit(EVENT_NAMES.SHOW_MESSAGE, {
 					text: 'فشل حذف الفاتورة',
 					color: 'error',
