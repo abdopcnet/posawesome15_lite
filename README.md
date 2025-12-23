@@ -33,6 +33,7 @@ Just a lightweight web interface built on top of ERPNext's proven foundation:
 
 -   **Shift Management:** Opening and closing shift workflow with time controls
 -   **Sales Processing:** Create, update, and submit sales invoices
+-   **Settlement (Outstanding Payments):** Pay outstanding invoices with Pay_Mode workflow
 -   **Customer Management:** Customer creation, credit tracking, and address management
 -   **Item Management:** Barcode scanning, batch selection, and item groups
 -   **Payment Processing:** Multiple payment methods with partial payment support
