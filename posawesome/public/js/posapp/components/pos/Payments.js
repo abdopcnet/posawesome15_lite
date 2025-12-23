@@ -1750,44 +1750,40 @@ export default {
 				}
 			} else {
 				// Credit sale is being disabled
-				// Restore previous payment values if they were saved
+				// Simply fill default payment method and clear others
 				if (Array.isArray(this.invoice_doc.payments)) {
-					if (this.saved_payments_before_credit_sale) {
-						// Restore saved values
-						this.invoice_doc.payments.forEach((payment, index) => {
-							const savedPayment = this.saved_payments_before_credit_sale.find(
-								(p) => p.idx === payment.idx || p.name === payment.name,
-							);
-							if (savedPayment) {
-								payment.amount = savedPayment.amount || 0;
-								if (
-									payment.base_amount !== undefined &&
-									savedPayment.base_amount !== undefined
-								) {
-									payment.base_amount = savedPayment.base_amount;
-								}
-							}
-						});
-						// Clear saved values after restoration
-						this.saved_payments_before_credit_sale = null;
-					} else {
-						// No saved values - set cash payment to invoice total (default behavior)
-						// Use grand_total with precision = 2 for all currency amounts
-						// Following user requirement: no rounded_total dependency at all
-						const invoice_total = this.flt(this.invoice_doc.grand_total, 2);
+					const invoice_total = this.flt(this.invoice_doc.grand_total, 2);
+					const defaultPayment = this.getDefaultPayment();
+
+					if (defaultPayment) {
+						// Fill default payment method
+						defaultPayment.amount = invoice_total;
+						if (defaultPayment.base_amount !== undefined) {
+							defaultPayment.base_amount = invoice_total;
+						}
+
+						// Clear all other payment amounts
 						this.invoice_doc.payments.forEach((payment) => {
 							if (
-								payment.mode_of_payment &&
-								payment.mode_of_payment.toLowerCase() === 'cash'
+								payment.idx !== defaultPayment.idx &&
+								payment.name !== defaultPayment.name
 							) {
-								// Set payment amount with precision = 2
-								payment.amount = invoice_total;
+								payment.amount = 0;
 								if (payment.base_amount !== undefined) {
-									payment.base_amount = payment.amount;
+									payment.base_amount = 0;
 								}
 							}
 						});
 					}
+
+					// Clear saved values
+					this.saved_payments_before_credit_sale = null;
+
+					// Emit payments update to notify other components
+					evntBus.emit(
+						EVENT_NAMES.PAYMENTS_UPDATED,
+						JSON.parse(JSON.stringify(this.invoice_doc.payments)),
+					);
 				}
 			}
 			// Force update to recalculate computed properties
