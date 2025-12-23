@@ -67,6 +67,7 @@
   ],
   "custom_perms": [],
   "doctype": "Batch",
+  "links": [],
   "property_setters": [],
   "sync_on_migrate": 1
 }
