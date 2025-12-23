@@ -8,7 +8,7 @@ import format from '../../format';
 
 // Import API mapper
 import { API_MAP } from '../../api_mapper.js';
-// Frontend logging: Use console.log/error/warn directly
+// Frontend logging: console.log('[filename.js] method: function_name')
 
 /**
  * Event names for bus communication
@@ -199,7 +199,7 @@ export default {
 						// r.message is the opening_voucher document (as_dict())
 						const opening_shift = r.message;
 						const shift_name = opening_shift.name || 'غير معروف';
-						console.log('[OpeningDialog.js] Opening shift created:', shift_name);
+						console.log('[OpeningDialog.js] method: create_opening_voucher');
 
 						// Fetch complete shift data including pos_profile_data
 						frappe.call({
@@ -241,16 +241,10 @@ export default {
 										);
 										close_opening_dialog();
 									} else {
-										// Log error details for debugging
-										const error_msg = shift_data.pos_profile_error
-											? `فشل تحميل بيانات الملف الشخصي: ${shift_data.pos_profile_error}`
-											: `فشل تحميل بيانات الملف الشخصي: POS Profile "${shift_data.pos_profile}" غير موجود أو غير متاح`;
-										console.error(
-											'[OpeningDialog.js] POS Profile load error:',
-											shift_data.pos_profile_error ||
-												'POS Profile not found',
+										console.log(
+											'[OpeningDialog.js] method: create_opening_voucher',
 										);
-										showMessage(error_msg, 'error');
+										showMessage('Failed to load POS Profile', 'error');
 									}
 								} else {
 									showMessage('فشل تحميل بيانات الوردية', 'error');
@@ -273,7 +267,7 @@ export default {
 					}
 				})
 				.catch((error) => {
-					console.log('[OpeningDialog.js] submit_dialog error:', error);
+					console.log('[OpeningDialog.js] method: submit_dialog');
 					showMessage('فشل إنشاء مستند الافتتاح', 'error');
 					is_loading.value = false;
 				});
