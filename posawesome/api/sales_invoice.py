@@ -366,6 +366,119 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
         return []
 
 
+# ===== SETTLEMENT OPERATIONS =====
+
+@frappe.whitelist()
+def get_settlement_invoices(pos_profile=None, pos_opening_shift=None, user=None):
+    """
+    GET - Get submitted invoices that are Unpaid or Partly Paid for settlement
+    Returns list of invoices with outstanding_amount > 0
+
+    FRAPPE STANDARD: pos_profile and pos_opening_shift can be dict or string
+    Privacy: Filter by pos_profile, posa_pos_opening_shift, and owner (same pattern as print list)
+    """
+    try:
+        # FRAPPE STANDARD: Handle string or dict parameters
+        if isinstance(pos_profile, dict):
+            pos_profile_name = pos_profile.get('name')
+        else:
+            pos_profile_name = pos_profile
+
+        if isinstance(pos_opening_shift, dict):
+            pos_opening_shift_name = pos_opening_shift.get('name')
+        else:
+            pos_opening_shift_name = pos_opening_shift
+
+        # Use session user if not specified
+        if not user:
+            user = frappe.session.user
+
+        if not pos_profile_name:
+            return []
+
+        # Build filters - same privacy pattern as print list
+        filters = {
+            "is_pos": 1,
+            "pos_profile": pos_profile_name,
+            "owner": user,
+            "docstatus": 1,  # Only submitted invoices
+            "is_return": 0,  # Not return invoices
+        }
+
+        # Add pos_opening_shift filter if provided
+        if pos_opening_shift_name:
+            filters["posa_pos_opening_shift"] = pos_opening_shift_name
+
+        # FRAPPE STANDARD: Fetch invoices with all required fields
+        invoices = frappe.get_all(
+            "Sales Invoice",
+            filters=filters,
+            fields=[
+                "name",
+                "customer",
+                "posting_date",
+                "posting_time",
+                "grand_total",
+                "currency",
+                "outstanding_amount",
+                "paid_amount",
+                "status",
+                "posa_pos_opening_shift",
+                "pos_profile",
+                "owner",
+            ],
+            order_by="creation desc",
+            limit=50,
+        )
+
+        # Filter invoices where outstanding_amount > 0 (Unpaid or Partly Paid)
+        result = []
+        for invoice in invoices:
+            outstanding = flt(invoice.get("outstanding_amount", 0))
+            
+            # Only include invoices with outstanding amount > 0
+            if outstanding > 0:
+                # Get customer name
+                customer_name = invoice.customer
+                if invoice.customer:
+                    try:
+                        customer_name = frappe.get_value(
+                            "Customer", invoice.customer, "customer_name") or invoice.customer
+                    except:
+                        customer_name = invoice.customer
+
+                # Calculate invoice status (Unpaid or Partly Paid)
+                invoice_status = invoice.get("status")
+                if not invoice_status:
+                    # Calculate status following ERPNext logic
+                    outstanding_amount = flt(invoice.get("outstanding_amount", 0))
+                    grand_total = flt(invoice.get("grand_total", 0))
+
+                    # Check payment status
+                    if abs(outstanding_amount) >= abs(grand_total) * 0.99:  # Unpaid
+                        invoice_status = "Unpaid"
+                    else:  # Partially paid
+                        invoice_status = "Partly Paid"
+
+                result.append({
+                    "name": invoice.name,
+                    "customer": invoice.customer,
+                    "customer_name": customer_name,
+                    "posting_date": invoice.posting_date,
+                    "posting_time": invoice.posting_time,
+                    "grand_total": flt(invoice.grand_total or 0),
+                    "outstanding_amount": outstanding,
+                    "currency": invoice.currency,
+                    "invoice_status": invoice_status,
+                })
+
+        return result
+
+    except Exception:
+        # Graceful degradation - return empty list (no logging needed)
+        return []
+
+
 # ===== PRINT INVOICES =====
 
 @frappe.whitelist()
@@ -785,3 +898,68 @@ def validate_return_limits(return_doc):
     except Exception:
         # Don't block submission if validation check fails (no logging needed)
         pass
+
+
+# ===== PAYMENT ENTRY OPERATIONS =====
+
+@frappe.whitelist()
+def create_payment_entry_for_invoice(invoice_name, payment_data):
+    """
+    Create and submit Payment Entry for a submitted Sales Invoice
+    Uses ERPNext's get_payment_entry to create Payment Entry
+
+    Args:
+        invoice_name (str): Sales Invoice name
+        payment_data (dict): Payment details with:
+            - mode_of_payment: Payment method
+            - amount: Payment amount
+            - account: (optional) Payment account
+
+    Returns:
+        dict: Created Payment Entry document
+    """
+    try:
+        # Parse payment_data if it's a string
+        if isinstance(payment_data, str):
+            payment_data = json.loads(payment_data)
+
+        # Validate invoice exists and is submitted
+        if not frappe.db.exists("Sales Invoice", invoice_name):
+            frappe.throw(_("Sales Invoice {0} not found").format(invoice_name))
+
+        invoice = frappe.get_doc("Sales Invoice", invoice_name)
+        
+        if invoice.docstatus != 1:
+            frappe.throw(_("Sales Invoice {0} is not submitted").format(invoice_name))
+
+        if invoice.is_return:
+            frappe.throw(_("Cannot create payment for return invoice"))
+
+        # Use ERPNext's get_payment_entry to create Payment Entry
+        from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+
+        payment_entry = get_payment_entry("Sales Invoice", invoice_name)
+
+        # Set payment details from payment_data
+        if payment_data.get("mode_of_payment"):
+            payment_entry.mode_of_payment = payment_data["mode_of_payment"]
+
+        if payment_data.get("amount"):
+            payment_amount = flt(payment_data["amount"])
+            payment_entry.paid_amount = payment_amount
+            payment_entry.received_amount = payment_amount
+
+        # Set payment account if provided
+        if payment_data.get("account"):
+            payment_entry.paid_to = payment_data["account"]
+
+        # Save and submit Payment Entry
+        payment_entry.insert()
+        payment_entry.submit()
+
+        return payment_entry.as_dict()
+
+    except Exception as e:
+        frappe.log_error(f"[[sales_invoice.py]] create_payment_entry_for_invoice: {str(e)}")
+        frappe.throw(_("Error creating payment entry: {0}").format(str(e)))
+
