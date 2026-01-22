@@ -6,7 +6,6 @@
 import { evntBus } from '../../bus';
 import format from '../../format';
 import { API_MAP } from '../../api_mapper.js';
-// Frontend logging: console.log('[filename.js] method: function_name')
 
 // ===== EVENT NAMES CONSTANTS =====
 // All event names used for inter-component communication
@@ -183,11 +182,9 @@ export default {
 				const currentSettlementPayments = flt(this.paid_amount, 2);
 
 				// Remaining to pay = Original outstanding - Current settlement payments
-				const remaining = flt(originalOutstanding - currentSettlementPayments, 2);
+			const remaining = flt(originalOutstanding - currentSettlementPayments, 2);
 
-				console.log('[Payments.js] method: outstanding_amount');
-
-				return remaining > 0 ? remaining : 0;
+			return remaining > 0 ? remaining : 0;
 			}
 
 			// Normal mode: calculate outstanding from current invoice state
@@ -487,11 +484,11 @@ export default {
 					this.back_to_invoice();
 					evntBus.emit(EVENT_NAMES.NEW_INVOICE, 'false');
 				}
-			} catch (error) {
-				evntBus.emit('hide_loading');
-				console.log('[Payments.js] method: submitSettlementPayment');
-				const errorMessage = error?.message || error?.exc || 'فشل إنشاء سند الدفع';
-				this.showMessage(errorMessage, 'error');
+		} catch (error) {
+			evntBus.emit('hide_loading');
+			console.error('[Payments.js] submit_settlement_payment_failed');
+			const errorMessage = error?.message || error?.exc || 'فشل إنشاء سند الدفع';
+			this.showMessage(errorMessage, 'error');
 			}
 		},
 
@@ -506,10 +503,10 @@ export default {
 			// Refresh invoice document from server to get latest data
 			// This prevents conflicts if invoice was modified elsewhere
 			try {
-				await this.refreshInvoiceDoc();
-			} catch (error) {
-				console.log('[Payments.js] method: submit');
-			}
+			await this.refreshInvoiceDoc();
+		} catch (error) {
+			console.error('[Payments.js] submit_failed');
+		}
 
 			// If invoice is already submitted (settlement flow)
 			if (this.invoice_doc?.docstatus === 1) {
@@ -725,11 +722,11 @@ export default {
 						this.refreshInvoiceDoc()
 							.then(() => {
 								this.submit_invoice(print, autoMode, true);
-							})
-							.catch((err) => {
-								console.log('[Payments.js] method: refreshInvoiceDoc');
-								this.showMessage(
-									'Invoice was modified elsewhere, please try again',
+						})
+						.catch((err) => {
+							console.error('[Payments.js] refresh_invoice_doc_failed');
+							this.showMessage(
+								'Invoice was modified elsewhere, please try again',
 									'error',
 								);
 							});
@@ -953,11 +950,11 @@ export default {
 					});
 
 					delete this.set_full_amount_timeouts[idx];
-				}, 150); // 150ms debounce per payment
-			} catch (error) {
-				console.log('[Payments.js] method: set_full_amount');
-				if (this.set_full_amount_timeouts[idx]) {
-					delete this.set_full_amount_timeouts[idx];
+			}, 150); // 150ms debounce per payment
+		} catch (error) {
+			console.error('[Payments.js] set_full_amount_failed');
+			if (this.set_full_amount_timeouts[idx]) {
+				delete this.set_full_amount_timeouts[idx];
 				}
 			}
 		},
@@ -1088,11 +1085,11 @@ export default {
 				// Force update to recalculate computed properties
 				this.$nextTick(() => {
 					this.$forceUpdate();
-				});
-			} catch (error) {
-				console.log('[Payments.js] method: set_rest_amount');
-			}
-		},
+			});
+		} catch (error) {
+			console.error('[Payments.js] set_rest_amount_failed');
+		}
+	},
 
 		// Clear all payment amounts to zero
 		// Used when resetting payment form or switching payment methods
@@ -1194,11 +1191,9 @@ export default {
 					const otherPayments = this.invoice_doc.payments
 						.filter((p) => p.idx !== payment.idx)
 						.reduce((sum, p) => sum + flt(p.amount || 0, 2), 0);
-					const totalPayments = flt(otherPayments + value, 2);
+				const totalPayments = flt(otherPayments + value, 2);
 
-					console.log('[Payments.js] method: validate_settlement_payment');
-
-					if (totalPayments > outstanding) {
+				if (totalPayments > outstanding) {
 						// Limit to outstanding amount
 						value = flt(outstanding - otherPayments, 2);
 						if (value < 0) value = 0;
@@ -1228,11 +1223,11 @@ export default {
 				// Force update to recalculate computed properties
 				this.$nextTick(() => {
 					this.$forceUpdate();
-				});
-			} catch (e) {
-				console.log('[Payments.js] handlePaymentAmountChange error:', e?.message || e);
-				payment.amount = 0;
-			}
+			});
+		} catch (e) {
+			console.error('[Payments.js] handle_payment_amount_change_failed');
+			payment.amount = 0;
+		}
 		},
 
 		// Validate payment amount and notify other components
@@ -1462,11 +1457,9 @@ export default {
 							const paidAmount = flt(invoice_doc.paid_amount || 0, 2);
 							outstanding = flt(grandTotal - paidAmount, 2);
 							if (outstanding < 0) outstanding = 0;
-						}
+					}
 
-						console.log('[Payments.js] method: load_settlement_payments');
-
-						// Set payment amount with precision = 2
+					// Set payment amount with precision = 2
 						default_payment.amount = outstanding;
 						if (default_payment.base_amount !== undefined) {
 							default_payment.base_amount = outstanding;
