@@ -40,7 +40,6 @@ export default {
 
 		// Listen for settlement dialog open event
 		evntBus.on(EVENT_NAMES.OPEN_SETTLEMENT_DIALOG, () => {
-			console.log('[OutstandingPayments.js] method: created');
 			this.settlementDialog = true;
 			this.selected = null;
 			this.isLoading = true;
@@ -63,16 +62,15 @@ export default {
 					},
 				});
 
-				if (response.message) {
-					this.dialog_data = response.message;
-					console.log('[OutstandingPayments.js] method: fetchSettlementInvoices');
-				} else {
-					this.dialog_data = [];
-				}
-			} catch (error) {
-				console.log('[OutstandingPayments.js] method: fetchSettlementInvoices');
-				evntBus.emit(EVENT_NAMES.SHOW_MESSAGE, {
-					text: 'فشل جلب الفواتير غير المسددة',
+			if (response.message) {
+				this.dialog_data = response.message;
+			} else {
+				this.dialog_data = [];
+			}
+		} catch (error) {
+			console.error('[OutstandingPayments.js] fetch_settlement_invoices_failed');
+			evntBus.emit(EVENT_NAMES.SHOW_MESSAGE, {
+				text: 'فشل جلب الفواتير غير المسددة',
 					color: 'error',
 				});
 				this.dialog_data = [];
