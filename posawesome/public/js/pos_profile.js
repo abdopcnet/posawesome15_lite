@@ -140,46 +140,47 @@ function update_private_barcode_example(frm) {
 	}
 
 	// Generate examples
-	let html =
-		'<div style="padding: 15px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px;">';
-	html +=
-		'<div style="font-weight: 600; font-size: 13px; margin-bottom: 12px; color: #374151;">Barcode Examples:</div>';
+	let html = '<div style="padding: 8px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px;">';
+	html += '<table style="width: 100%; border-collapse: collapse; font-family: \'Courier New\', monospace;">';
+	html += '<thead><tr style="background: #374151; color: white;">';
+	html += '<th style="padding: 4px 8px; text-align: left; font-size: 14px; font-weight: 600;">Barcode</th>';
+	html += '<th style="padding: 4px 8px; text-align: center; font-size: 14px; font-weight: 600;">Prefix</th>';
+	html += '<th style="padding: 4px 8px; text-align: center; font-size: 14px; font-weight: 600;">Item Code</th>';
+	html += '<th style="padding: 4px 8px; text-align: center; font-size: 14px; font-weight: 600;">Rest</th>';
+	html += '<th style="padding: 4px 8px; text-align: center; font-size: 14px; font-weight: 600;">Total</th>';
+	html += '</tr></thead><tbody>';
 
-	prefix_list.forEach((prefix) => {
+	prefix_list.forEach((prefix, index) => {
 		const prefix_length = prefix.length;
 		const remaining_length = total_length - prefix_length - item_code_length;
 
 		if (remaining_length < 0) {
-			html += `<div style="margin-bottom: 8px; color: #dc2626; font-size: 12px;">`;
-			html += `⚠️ Error: Prefix "${prefix}" + Item Code Length (${item_code_length}) exceeds Total Length (${total_length})`;
-			html += `</div>`;
+			html += `<tr style="background: ${index % 2 === 0 ? '#fff' : '#f9fafb'};">`;
+			html += `<td colspan="5" style="padding: 4px 8px; color: #dc2626; font-size: 14px;">`;
+			html += `⚠️ Error: Prefix "${prefix}" + Item Code (${item_code_length}) exceeds Total (${total_length})`;
+			html += `</td></tr>`;
 			return;
 		}
 
 		// Generate sample item code (padded with zeros)
-		const sample_item_code = '12345100'
-			.padEnd(item_code_length, '0')
-			.substring(0, item_code_length);
-
-		// Generate remaining digits
+		const sample_item_code = '12345100'.padEnd(item_code_length, '0').substring(0, item_code_length);
 		const remaining_digits = '0'.repeat(remaining_length);
-
-		// Build complete barcode
 		const complete_barcode = prefix + sample_item_code + remaining_digits;
 
-		html += `<div style="margin-bottom: 10px; font-family: 'Courier New', monospace; font-size: 16px; line-height: 1.8;">`;
-		html += `<span style="color: #dc2626; font-weight: bold;">${prefix}</span>`;
-		html += `<span style="color: #2563eb; font-weight: bold;">${sample_item_code}</span>`;
+		html += `<tr style="background: ${index % 2 === 0 ? '#fff' : '#f9fafb'};">`;
+		html += `<td style="padding: 2px 8px; font-size: 20px; font-weight: bold;">`;
+		html += `<span style="color: #dc2626;">${prefix}</span>`;
+		html += `<span style="color: #2563eb;">${sample_item_code}</span>`;
 		html += `<span style="color: #000000;">${remaining_digits}</span>`;
-		html += `</div>`;
-
-		// Add breakdown
-		html += `<div style="margin-bottom: 12px; font-size: 11px; color: #6b7280; padding-left: 10px;">`;
-		html += `Prefix: ${prefix_length} digits | Item Code: ${item_code_length} digits | Remaining: ${remaining_length} digits | Total: ${total_length} digits`;
-		html += `</div>`;
+		html += `</td>`;
+		html += `<td style="padding: 2px 8px; text-align: center; font-size: 13px; color: #6b7280;">${prefix_length}</td>`;
+		html += `<td style="padding: 2px 8px; text-align: center; font-size: 13px; color: #6b7280;">${item_code_length}</td>`;
+		html += `<td style="padding: 2px 8px; text-align: center; font-size: 13px; color: #6b7280;">${remaining_length}</td>`;
+		html += `<td style="padding: 2px 8px; text-align: center; font-size: 13px; color: #6b7280;">${total_length}</td>`;
+		html += `</tr>`;
 	});
 
-	html += '</div>';
+	html += '</tbody></table></div>';
 
 	frm.fields_dict.posa_private_barcode_example.$wrapper.html(html);
 }
@@ -197,10 +198,10 @@ function update_scale_barcode_example(frm) {
 		return;
 	}
 
-	const prefix = frm.doc.posa_scale_barcode_start || '';
-	const total_length = frm.doc.posa_scale_barcode_lenth || 0;
-	const item_code_length = frm.doc.posa_scale_item_code_length || 0;
-	const weight_length = frm.doc.posa_weight_length || 0;
+	const prefix = String(frm.doc.posa_scale_barcode_start || '');
+	const total_length = parseInt(frm.doc.posa_scale_barcode_lenth) || 0;
+	const item_code_length = parseInt(frm.doc.posa_scale_item_code_length) || 0;
+	const weight_length = parseInt(frm.doc.posa_weight_length) || 0;
 
 	if (!prefix || !total_length || !item_code_length || !weight_length) {
 		frm.fields_dict.posa_scale_barcode_example.$wrapper.html(
@@ -210,50 +211,61 @@ function update_scale_barcode_example(frm) {
 	}
 
 	const prefix_length = prefix.length;
-	const calculated_length = prefix_length + item_code_length + weight_length;
+	const calculated_length = parseInt(prefix_length) + parseInt(item_code_length) + parseInt(weight_length);
+	const check_digit = (calculated_length < total_length) ? 1 : 0;
 
 	// Generate examples
-	let html =
-		'<div style="padding: 15px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px;">';
-	html +=
-		'<div style="font-weight: 600; font-size: 13px; margin-bottom: 12px; color: #374151;">Scale Barcode Examples:</div>';
+	let html = '<div style="padding: 8px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px;">';
+	html += '<table style="width: 100%; border-collapse: collapse; font-family: \'Courier New\', monospace;">';
+	html += '<thead><tr style="background: #374151; color: white;">';
+	html += '<th style="padding: 4px 8px; text-align: left; font-size: 14px; font-weight: 600;">Barcode</th>';
+	html += '<th style="padding: 4px 8px; text-align: center; font-size: 14px; font-weight: 600;">Prefix</th>';
+	html += '<th style="padding: 4px 8px; text-align: center; font-size: 14px; font-weight: 600;">Item Code</th>';
+	html += '<th style="padding: 4px 8px; text-align: center; font-size: 14px; font-weight: 600;">Weight</th>';
+	if (check_digit) {
+		html += '<th style="padding: 4px 8px; text-align: center; font-size: 14px; font-weight: 600;">Check</th>';
+	}
+	html += '<th style="padding: 4px 8px; text-align: center; font-size: 14px; font-weight: 600;">Total</th>';
+	html += '</tr></thead><tbody>';
 
-	if (calculated_length !== total_length) {
-		html += `<div style="margin-bottom: 8px; color: #dc2626; font-size: 12px;">`;
-		html += `⚠️ Error: Prefix (${prefix_length}) + Item Code (${item_code_length}) + Weight (${weight_length}) = ${calculated_length} does not match Total Length (${total_length})`;
-		html += `</div>`;
+	if (calculated_length + check_digit !== total_length) {
+		html += `<tr style="background: #fff;">`;
+		html += `<td colspan="${check_digit ? 6 : 5}" style="padding: 4px 8px; color: #dc2626; font-size: 14px;">`;
+		html += `⚠️ Error: Prefix (${prefix_length}) + Item Code (${item_code_length}) + Weight (${weight_length})${check_digit ? ' + Check (1)' : ''} = ${calculated_length + check_digit} ≠ Total (${total_length})`;
+		html += `</td></tr>`;
 	} else {
 		// Generate sample item code
-		const sample_item_code = '12345100'
-			.padEnd(item_code_length, '0')
-			.substring(0, item_code_length);
+		const sample_item_code = '12345'.padEnd(item_code_length, '0').substring(0, item_code_length);
+		const sample_weight = '00125'.padStart(weight_length, '0').substring(0, weight_length);
+		const check_digit_value = '0';
+		const complete_barcode = prefix + sample_item_code + sample_weight + (check_digit ? check_digit_value : '');
 
-		// Generate sample weight (in grams, e.g., 1250 = 1.250 kg)
-		const sample_weight = '1250'.padStart(weight_length, '0').substring(0, weight_length);
-
-		// Build complete barcode
-		const complete_barcode = prefix + sample_item_code + sample_weight;
-
-		html += `<div style="margin-bottom: 10px; font-family: 'Courier New', monospace; font-size: 16px; line-height: 1.8;">`;
-		html += `<span style="color: #dc2626; font-weight: bold;">${prefix}</span>`;
-		html += `<span style="color: #2563eb; font-weight: bold;">${sample_item_code}</span>`;
-		html += `<span style="color: #16a34a; font-weight: bold;">${sample_weight}</span>`;
-		html += `</div>`;
-
-		// Add breakdown
-		html += `<div style="margin-bottom: 12px; font-size: 11px; color: #6b7280; padding-left: 10px;">`;
-		html += `Prefix: ${prefix_length} digits | Item Code: ${item_code_length} digits | Weight: ${weight_length} digits | Total: ${total_length} digits`;
-		html += `</div>`;
-
-		// Add weight explanation
-		html += `<div style="margin-top: 10px; padding: 8px; background: #fef3c7; border-left: 3px solid #f59e0b; font-size: 11px; color: #92400e;">`;
-		html += `<strong>Note:</strong> Weight is stored in grams. Example: ${sample_weight} = ${(
-			parseInt(sample_weight) / 1000
-		).toFixed(3)} kg`;
-		html += `</div>`;
+		html += `<tr style="background: #fff;">`;
+		html += `<td style="padding: 2px 8px; font-size: 20px; font-weight: bold;">`;
+		html += `<span style="color: #dc2626;">${prefix}</span>`;
+		html += `<span style="color: #2563eb;">${sample_item_code}</span>`;
+		html += `<span style="color: #16a34a;">${sample_weight}</span>`;
+		if (check_digit) {
+			html += `<span style="color: #6b7280;">${check_digit_value}</span>`;
+		}
+		html += `</td>`;
+		html += `<td style="padding: 2px 8px; text-align: center; font-size: 13px; color: #6b7280;">${prefix_length}</td>`;
+		html += `<td style="padding: 2px 8px; text-align: center; font-size: 13px; color: #6b7280;">${item_code_length}</td>`;
+		html += `<td style="padding: 2px 8px; text-align: center; font-size: 13px; color: #6b7280;">${weight_length}</td>`;
+		if (check_digit) {
+			html += `<td style="padding: 2px 8px; text-align: center; font-size: 13px; color: #6b7280;">1</td>`;
+		}
+		html += `<td style="padding: 2px 8px; text-align: center; font-size: 13px; color: #6b7280;">${total_length}</td>`;
+		html += `</tr>`;
+		html += `<tr style="background: #fef3c7;"><td colspan="${check_digit ? 6 : 5}" style="padding: 4px 8px; font-size: 12px; color: #92400e;">`;
+		html += `<strong>Note:</strong> Weight in grams. Example: ${sample_weight} = ${(parseInt(sample_weight) / 1000).toFixed(3)} kg`;
+		if (check_digit) {
+			html += ` | Last digit is check digit (ignored)`;
+		}
+		html += `</td></tr>`;
 	}
 
-	html += '</div>';
+	html += '</tbody></table></div>';
 
 	frm.fields_dict.posa_scale_barcode_example.$wrapper.html(html);
 }
