@@ -1,5 +1,3 @@
-// Frontend logging: console.log('[filename.js] method: function_name')
-
 export default {
   data() {
     return {
