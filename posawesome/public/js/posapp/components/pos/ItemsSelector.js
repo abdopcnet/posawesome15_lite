@@ -2,7 +2,6 @@
 import { evntBus } from '../../bus';
 import format from '../../format';
 import { API_MAP } from '../../api_mapper.js';
-// Frontend logging: console.log('[filename.js] method: function_name')
 
 // Lightweight debounce function (replaces lodash)
 // CRITICAL: Preserve 'this' context for Vue component methods
@@ -403,11 +402,11 @@ export default {
 						vm.search_loading = false;
 						vm.scheduleScrollHeightUpdate();
 					}
-				},
-				error: function (err) {
-					console.log('[ItemsSelector.js] method: get_items');
-				},
-			});
+			},
+			error: function (err) {
+				console.error('[ItemsSelector.js] get_items_failed');
+			},
+		});
 		},
 
 		_buildItemsMap() {
@@ -446,11 +445,11 @@ export default {
 								vm.items_group.push(element.name);
 							});
 						}
-					},
-					error: function (err) {
-						console.log('[ItemsSelector.js] method: get_items_groups');
-					},
-				});
+				},
+				error: function (err) {
+					console.error('[ItemsSelector.js] get_items_groups_failed');
+				},
+			});
 			}
 		},
 
@@ -653,11 +652,10 @@ export default {
 					}
 				},
 				error: function (err) {
-					// Stop search progress bar
-					vm.search_loading = false;
-					console.log('[ItemsSelector.js] method: _performNormalSearch');
-				},
-			});
+				// Stop search progress bar
+				vm.search_loading = false;
+			},
+		});
 		},
 
 		update_items_details(items) {
@@ -672,10 +670,10 @@ export default {
 				// Check if scannerDetectionData exists before detaching
 				if (document.scannerDetectionData && document.scannerDetectionData.options) {
 					onScan.detachFrom(document);
-				}
-			} catch (e) {
-				console.log('[ItemsSelector.js] method: scan_barcode');
 			}
+		} catch (e) {
+			console.error('[ItemsSelector.js] scan_barcode_failed');
+		}
 
 			onScan.attachTo(document, {
 				suffixKeyCodes: [13], // Enter key terminates scan
