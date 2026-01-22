@@ -175,10 +175,8 @@ export default {
 		 * Submits closing shift and prints if auto-print is enabled
 		 * Similar to invoice submit + print logic
 		 */
-		const submit_dialog = async (event) => {
-			console.log('[ClosingDialog.js] method: submit_dialog');
-
-			// Prevent default form submission behavior
+	const submit_dialog = async (event) => {
+		// Prevent default form submission behavior
 			if (event) {
 				event.preventDefault();
 				event.stopPropagation();
@@ -212,10 +210,10 @@ export default {
 								name: posProfileName,
 							},
 						});
-						currentPosProfile = profileResponse.message;
-					} catch (err) {
-						console.log('[ClosingDialog.js] method: submit_dialog');
-					}
+					currentPosProfile = profileResponse.message;
+				} catch (err) {
+					console.error('[ClosingDialog.js] get_pos_profile_failed');
+				}
 				}
 			}
 
@@ -286,11 +284,11 @@ export default {
 						message: 'فشل إغلاق وردية الصراف',
 						indicator: 'red',
 					});
-				}
-			} catch (error) {
-				console.log('[ClosingDialog.js] method: submit_dialog');
-				frappe.show_alert({
-					message: 'فشل إغلاق وردية الصراف',
+			}
+		} catch (error) {
+			console.error('[ClosingDialog.js] submit_closing_shift_failed');
+			frappe.show_alert({
+				message: 'فشل إغلاق وردية الصراف',
 					indicator: 'red',
 				});
 			}
@@ -372,15 +370,10 @@ export default {
 		 * Handle opening closing dialog event
 		 * @param {Object} data - Payment reconciliation data
 		 */
-		const openClosingDialogHandler = (data) => {
-			const transactionsCount = data.pos_transactions ? data.pos_transactions.length : 0;
-			console.log(
-				`[ClosingDialog.js] Opening dialog shift: ${
-					data.pos_opening_shift || 'new'
-				} transactions: ${transactionsCount}`,
-			);
+	const openClosingDialogHandler = (data) => {
+		const transactionsCount = data.pos_transactions ? data.pos_transactions.length : 0;
 
-			closingDialog.value = true;
+		closingDialog.value = true;
 
 			// ✅ لا تعبئة تلقائية - الحقول تبقى فارغة للمستخدم
 			// Ensure closing_amount is 0 (which means empty in UI) if not set (user needs to fill manually)
