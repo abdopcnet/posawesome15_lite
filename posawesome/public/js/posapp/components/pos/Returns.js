@@ -2,7 +2,6 @@
 import { evntBus } from '../../bus';
 import format from '../../format';
 import { API_MAP } from '../../api_mapper.js';
-// Frontend logging: console.log('[filename.js] method: function_name')
 
 const EVENT_NAMES = {
 	OPEN_RETURNS: 'open_returns',
@@ -153,7 +152,7 @@ export default {
 				});
 				return response.message;
 			} catch (e) {
-				console.log('[Returns.js] method: fetchOriginalInvoice');
+				console.error('[Returns.js] fetch_original_invoice_failed');
 				this.showMessage('فشل جلب الفاتورة الأصلية', 'error');
 				return null;
 			}
