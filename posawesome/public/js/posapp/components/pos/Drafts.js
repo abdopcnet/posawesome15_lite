@@ -2,7 +2,6 @@
 import { evntBus } from '../../bus';
 import format from '../../format';
 import { API_MAP } from '../../api_mapper.js';
-// Frontend logging: console.log('[filename.js] method: function_name')
 
 const EVENT_NAMES = {
 	OPEN_DRAFTS_DIALOG: 'open_drafts_dialog',
@@ -31,7 +30,6 @@ export default {
 
 	created() {
 		evntBus.on(EVENT_NAMES.OPEN_DRAFTS_DIALOG, (data) => {
-			console.log('[Drafts.js] method: created');
 			this.draftsDialog = true;
 			this.dialog_data = data || [];
 			this.selected = null;
@@ -108,11 +106,11 @@ export default {
 						text: `تم حذف الفاتورة ${invoice.name} بنجاح`,
 						color: 'success',
 					});
-				}
-			} catch (error) {
-				console.log('[Drafts.js] method: deleteInvoice');
-				evntBus.emit(EVENT_NAMES.SHOW_MESSAGE, {
-					text: 'فشل حذف الفاتورة',
+			}
+		} catch (error) {
+			console.error('[Drafts.js] delete_invoice_failed');
+			evntBus.emit(EVENT_NAMES.SHOW_MESSAGE, {
+				text: 'فشل حذف الفاتورة',
 					color: 'error',
 				});
 			}
