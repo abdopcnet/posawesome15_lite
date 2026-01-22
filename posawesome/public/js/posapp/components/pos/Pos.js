@@ -12,7 +12,7 @@ import Returns from './Returns.vue';
 import Drafts from './Drafts.vue';
 import OutstandingPayments from './OutstandingPayments.vue';
 import { API_MAP } from '../../api_mapper.js';
-// Frontend logging: console.log('[filename.js] method: function_name')
+// Frontend logging: console.error('[filename.js] error_description')
 
 // ===== EVENT BUS EVENTS =====
 const EVENTS = {
@@ -121,7 +121,8 @@ export default {
 					const pos_profile = shift_data.pos_profile_data;
 
 					if (!pos_profile) {
-						this.show_message('فشل تحميل بيانات الملف الشخصي', 'error');
+						console.error('[Pos.js] profile_data_missing');
+						this.show_message('Failed to load profile data', 'error');
 						return;
 					}
 
@@ -135,7 +136,6 @@ export default {
 						user: shift_data.user,
 					};
 
-					console.log('[Pos.js] method: load_pos_profile');
 
 					// Prepare data for event bus
 					const event_data = {
@@ -156,8 +156,8 @@ export default {
 					this.create_opening_voucher();
 				}
 			} catch (error) {
-				console.log('[Pos.js] method: check_opening_entry');
-				this.show_message('فشل التحقق من إدخال الافتتاح', 'error');
+				console.error('[Pos.js] check_opening_entry_failed');
+				this.show_message('Failed to check opening entry', 'error');
 			}
 		},
 
@@ -176,7 +176,6 @@ export default {
 				const doc = await frappe.db.get_doc('POS Settings', undefined);
 				evntBus.emit(EVENTS.SET_POS_SETTINGS, doc);
 			} catch (error) {
-				console.log('[Pos.js] method: get_pos_setting');
 			}
 		},
 
@@ -206,12 +205,12 @@ export default {
 				if (response.message) {
 					evntBus.emit(EVENTS.SET_OFFERS, response.message);
 				} else {
-					// Failed to load offers
-					this.show_message('فشل تحميل العروض', 'error');
+					console.error('[Pos.js] offers_empty');
+					this.show_message('Failed to load offers', 'error');
 				}
 			} catch (error) {
-				console.log('[Pos.js] method: get_offers');
-				this.show_message('فشل تحميل العروض', 'error');
+				console.error('[Pos.js] get_offers_failed');
+				this.show_message('Failed to load offers', 'error');
 			}
 		},
 
@@ -222,11 +221,10 @@ export default {
 				const opening_shift_name = this.pos_opening_shift?.name || this.pos_opening_shift;
 
 				if (!opening_shift_name) {
-					this.show_message('لا يوجد شفت مفتوح', 'error');
+					console.error('[Pos.js] no_open_shift');
+					this.show_message('No open shift found', 'error');
 					return;
 				}
-
-				console.log('[Pos.js] method: get_closing_data');
 
 				const response = await frappe.call({
 					method: API_MAP.POS_CLOSING_SHIFT.MAKE_CLOSING_SHIFT,
@@ -240,15 +238,14 @@ export default {
 					const transactionsCount = data.pos_transactions
 						? data.pos_transactions.length
 						: 0;
-					console.log('[Pos.js] method: get_closing_data');
 					evntBus.emit(EVENTS.OPEN_CLOSING_DIALOG_EMIT, data);
 				} else {
-					// Failed to load closing data
-					this.show_message('فشل تحميل بيانات الإغلاق', 'error');
+					console.error('[Pos.js] closing_data_empty');
+					this.show_message('Failed to load closing data', 'error');
 				}
 			} catch (error) {
-				console.log('[Pos.js] method: get_closing_data');
-				this.show_message('فشل تحميل بيانات الإغلاق', 'error');
+				console.error('[Pos.js] get_closing_data_failed');
+				this.show_message('Failed to load closing data', 'error');
 			}
 		},
 
@@ -259,10 +256,9 @@ export default {
 		 * If auto-print was triggered, skip check_opening_entry() to prevent page reload
 		 */
 		async handleSubmitClosingPos(data) {
-			console.log('[Pos.js] method: handleSubmitClosingPos');
 
 			if (data?.success) {
-				this.show_message('تم إغلاق وردية الصراف بنجاح', 'success');
+				this.show_message('Shift closed successfully', 'success');
 
 				// Note: Page reload is handled in ClosingDialog.js after print window opens
 				// No need to call check_opening_entry() here - page will reload and show OpeningDialog automatically
