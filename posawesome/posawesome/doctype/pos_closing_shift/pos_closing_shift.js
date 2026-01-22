@@ -88,7 +88,6 @@ frappe.ui.form.on('POS Closing Shift', {
 						difference: 0, // Initially no difference
 					});
 				});
-				console.log('[pos_closing_shift.js] method: set_opening_amounts');
 			});
 	},
 
@@ -107,7 +106,6 @@ frappe.ui.form.on('POS Closing Shift', {
 			},
 			callback: async (r) => {
 				if (r.exc) {
-					console.log('[pos_closing_shift.js] method: get_pos_invoices');
 					return;
 				}
 				const pos_docs = r.message;
@@ -211,7 +209,6 @@ async function set_form_data(data, frm) {
 // Used when payment_reconciliation already exists from backend
 // Related to: section_break_3 (pos_transactions), section_break_5 (totals)
 function set_form_data_invoices_only(data, frm) {
-	console.log('[pos_closing_shift.js] method: set_form_data_invoices_only');
 
 	data.forEach((d) => {
 		add_to_pos_transaction(d, frm);
@@ -221,7 +218,6 @@ function set_form_data_invoices_only(data, frm) {
 	// Calculate totals from pos_transactions after adding all rows
 	calculate_totals_from_transactions(frm);
 
-	console.log('[pos_closing_shift.js] method: calculate_totals_from_transactions');
 }
 
 // ========================================================================
@@ -290,7 +286,6 @@ function add_to_pos_transaction(d, frm) {
 		payment_entry_paid_amount: payment_entry_paid_amount,
 	};
 	frm.add_child('pos_transactions', child);
-	console.log('[pos_closing_shift.js] method: add_to_pos_transaction');
 }
 
 // ========================================================================
@@ -482,7 +477,6 @@ const get_value = async (doctype, name, field) => {
 		const { message } = await frappe.db.get_value(doctype, name, field);
 		return message ? message[field] : undefined;
 	} catch (error) {
-		console.log('[pos_closing_shift.js] method: get_value');
 		return undefined;
 	}
 };
