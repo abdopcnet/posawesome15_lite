@@ -150,7 +150,7 @@ def create_payment_entry_for_invoice(invoice_name, payment_data):
         # Re-raise validation errors as-is
         raise
     except Exception as e:
-        frappe.log_error("[payment_entry.py] method: create_payment_entry_for_invoice", "Payment Entry")
+        frappe.log_error(f"[[payment_entry.py]] create_payment_entry_for_invoice")
         frappe.throw(_("Error creating payment entry"))
 
 
@@ -224,7 +224,7 @@ def create_payment_entry_for_multiple_payments(invoice_name, payments_list):
     except frappe.ValidationError:
         raise
     except Exception as e:
-        frappe.log_error("[payment_entry.py] method: create_payment_entry_for_multiple_payments", "Payment Entry")
+        frappe.log_error(f"[[payment_entry.py]] create_payment_entry_for_multiple_payments")
         frappe.throw(_("Error creating payment entries"))
 
 
