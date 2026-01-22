@@ -228,7 +228,7 @@ def get_offers(invoice_data):
         return out
 
     except Exception as e:
-        frappe.log_error("[pos_offer.py] method: get_offers", "POS Offer")
+        frappe.log_error(f"[[pos_offer.py]] get_offers")
         return {
             "enabled": False,
             "applied_offers": [],
