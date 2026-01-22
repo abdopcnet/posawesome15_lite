@@ -31,7 +31,7 @@ frappe.ui.form.on('POS Offer', {
 				);
 			}
 		} catch (e) {
-			console.log('[pos_offer.js] method: validate');
+			console.error('[pos_offer.js] validate_failed');
 			throw e;
 		}
 	},
