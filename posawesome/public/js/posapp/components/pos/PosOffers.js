@@ -1,7 +1,6 @@
 // ===== SECTION 1: IMPORTS =====
 import { evntBus } from '../../bus';
 import format from '../../format';
-// Frontend logging: console.log('[filename.js] method: function_name')
 
 // CONSTANTS
 const EVENT_NAMES = {
@@ -173,7 +172,7 @@ export default {
 					this.discount_percentage_offer_name = null;
 				}
 			} catch (error) {
-				console.log('[PosOffers.js] method: handleManualOfferChange');
+				console.error('[PosOffers.js] handle_manual_offer_change_failed');
 				this.showMessage('خطأ في معالجة تغيير العرض', 'error');
 			}
 		},
@@ -197,7 +196,7 @@ export default {
 					);
 				});
 			} catch (error) {
-				console.log('[PosOffers.js] method: updatePosOffers');
+				console.error('[PosOffers.js] update_pos_offers_failed');
 			}
 		},
 
@@ -226,7 +225,7 @@ export default {
 					this.discount_percentage_offer_name = grandTotalOffers[0].name;
 				}
 			} catch (error) {
-				console.log('[PosOffers.js] method: applyBestOffer');
+				console.error('[PosOffers.js] apply_best_offer_failed');
 				this.showMessage('خطأ في تطبيق أفضل عرض', 'error');
 			}
 		},
@@ -237,7 +236,7 @@ export default {
 					(offer) => !offers_id_list.includes(offer.name || offer.offer_name),
 				);
 			} catch (error) {
-				console.log('[PosOffers.js] method: removeAllOffers');
+				console.error('[PosOffers.js] remove_offers_failed');
 				this.showMessage('خطأ في إزالة العروض', 'error');
 			}
 		},
@@ -247,7 +246,7 @@ export default {
 				const applyedOffers = this.pos_offers.filter((offer) => offer.offer_applied);
 				evntBus.emit(EVENT_NAMES.UPDATE_INVOICE_OFFERS, applyedOffers);
 			} catch (error) {
-				console.log('[PosOffers.js] method: processOffers');
+				console.error('[PosOffers.js] process_offers_failed');
 				this.showMessage('خطأ في معالجة العروض', 'error');
 			}
 		},
@@ -278,7 +277,7 @@ export default {
 
 				return [];
 			} catch (error) {
-				console.log('[PosOffers.js] method: getFreeItems');
+				console.error('[PosOffers.js] get_free_items_failed');
 				this.showMessage('خطأ في جلب الأصناف المجانية', 'error');
 				return [];
 			}
@@ -291,7 +290,7 @@ export default {
 					appliedOffersCount: this.appliedOffersCount,
 				});
 			} catch (error) {
-				console.log('[PosOffers.js] method: updateCounters');
+				console.error('[PosOffers.js] update_counters_failed');
 				this.showMessage('خطأ في تحديث العدادات', 'error');
 			}
 		},
