@@ -52,7 +52,7 @@ def save_draft_invoice(invoice_doc):
         return doc.as_dict()
 
     except Exception as e:
-        frappe.log_error("[sales_invoice.py] method: save_draft_invoice", "Sales Invoice API")
+        frappe.log_error(f"[[sales_invoice.py]] save_draft_invoice")
         frappe.throw(_("Error saving draft"))
 
 
@@ -138,7 +138,7 @@ def delete_invoice(invoice_name):
         }
 
     except Exception as e:
-        frappe.log_error("[sales_invoice.py] method: delete_invoice", "Sales Invoice API")
+        frappe.log_error(f"[[sales_invoice.py]] delete_invoice")
         frappe.throw(_("Error deleting invoice"))
 
 
@@ -360,7 +360,7 @@ def get_invoices_for_return(invoice_name=None, company=None, pos_profile=None):
         return returnable_invoices
 
     except Exception as e:
-        frappe.log_error("[sales_invoice.py] method: get_invoices_for_return", "Sales Invoice API")
+        frappe.log_error(f"[[sales_invoice.py]] get_invoices_for_return")
         frappe.throw(_("Error fetching invoices"))
         return []
 
@@ -835,12 +835,10 @@ def create_and_submit_invoice(invoice_doc):
         if len(error_message) > 120:
             error_message = error_message[:120] + "..."
 
-        frappe.log_error(title="create_and_submit_invoice",
-                         message=frappe.get_traceback())
+        frappe.log_error(f"[[sales_invoice.py]] create_and_submit_invoice")
         frappe.throw(_(error_message))
     except Exception:
-        frappe.log_error(title="create_and_submit_invoice",
-                         message=frappe.get_traceback())
+        frappe.log_error(f"[[sales_invoice.py]] create_and_submit_invoice")
         frappe.throw(_("Error creating and submitting invoice"))
 
 
@@ -959,6 +957,6 @@ def create_payment_entry_for_invoice(invoice_name, payment_data):
         return payment_entry.as_dict()
 
     except Exception as e:
-        frappe.log_error("[sales_invoice.py] method: create_payment_entry_for_invoice", "Sales Invoice API")
+        frappe.log_error(f"[[sales_invoice.py]] create_payment_entry_for_invoice")
         frappe.throw(_("Error creating payment entry: {0}").format(str(e)))
 
