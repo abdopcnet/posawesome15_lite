@@ -1,6 +1,5 @@
 import { evntBus } from '../../bus';
 import { API_MAP } from '../../api_mapper.js';
-// Frontend logging: console.log('[filename.js] method: function_name')
 
 const EVENT_NAMES = {
 	SHOW_MESSAGE: 'show_mesage',
@@ -110,7 +109,7 @@ export default {
 					}
 				})
 				.catch((err) => {
-					console.log('[UpdateCustomer.js] method: getCustomerGroups');
+					console.error('[UpdateCustomer.js] load_customer_groups_failed');
 					this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_GROUPS, 'error');
 				});
 		},
@@ -131,7 +130,7 @@ export default {
 					}
 				})
 				.catch((err) => {
-					console.log('[UpdateCustomer.js] method: getCustomerTerritorys');
+					console.error('[UpdateCustomer.js] load_territories_failed');
 					this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_TERRITORIES, 'error');
 				});
 		},
@@ -148,7 +147,7 @@ export default {
 					}
 				})
 				.catch((err) => {
-					console.log('[UpdateCustomer.js] method: getGenders');
+					console.error('[UpdateCustomer.js] load_genders_failed');
 					this.showMessage(ERROR_MESSAGES.FAILED_TO_LOAD_GENDERS, 'error');
 				});
 		},
@@ -204,7 +203,7 @@ export default {
 					}
 				},
 				error: (err) => {
-					console.log('[UpdateCustomer.js] method: submit_dialog');
+					console.error('[UpdateCustomer.js] submit_customer_failed');
 					this.handleCustomerError();
 				},
 			});
