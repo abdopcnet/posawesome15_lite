@@ -1,7 +1,6 @@
 import { evntBus } from '../../bus';
 import UpdateCustomer from './UpdateCustomer.vue';
 import { API_MAP } from '../../api_mapper.js';
-// Frontend logging: console.log('[filename.js] method: function_name')
 
 const EVENT_NAMES = {
 	UPDATE_CUSTOMER: 'update_customer',
@@ -70,11 +69,11 @@ export default {
 				if (default_customer) {
 					this.customer = default_customer;
 					evntBus.emit(EVENT_NAMES.UPDATE_CUSTOMER, this.customer);
-				}
-			} catch (error) {
-				console.log('[Customer.js] method: get_many_customers');
-				this.showMessage(ERROR_MESSAGES.UNEXPECTED_ERROR, 'error');
 			}
+		} catch (error) {
+			console.error('[Customer.js] get_many_customers_failed');
+			this.showMessage(ERROR_MESSAGES.UNEXPECTED_ERROR, 'error');
+		}
 		},
 
 		handleCustomerFocus() {
@@ -114,22 +113,21 @@ export default {
 								this.customer_search = selected.customer_name;
 								this.customer_info = selected;
 								this.defaultLoaded = true;
-								// Default customer loaded (logged to backend only)
-							} else {
-								console.log('[Customer.js] method: load_all_customers');
-								// If default customer not in list, fetch it directly
-								if (this.customer && !this.customer_info.name) {
+							// Default customer loaded (logged to backend only)
+						} else {
+							// If default customer not in list, fetch it directly
+							if (this.customer && !this.customer_info.name) {
 									this.fetch_customer_details_for_default(this.customer);
 								}
 							}
 						}
 					}
 					this.loading = false;
-				},
-				error: (err) => {
-					console.log('[Customer.js] method: load_all_customers');
-					this.showMessage(ERROR_MESSAGES.FAILED_TO_FETCH, 'error');
-					this.loading = false;
+			},
+			error: (err) => {
+				console.error('[Customer.js] load_all_customers_failed');
+				this.showMessage(ERROR_MESSAGES.FAILED_TO_FETCH, 'error');
+				this.loading = false;
 				},
 			});
 		},
@@ -178,20 +176,20 @@ export default {
 
 		new_customer() {
 			try {
-				evntBus.emit(EVENT_NAMES.OPEN_UPDATE_CUSTOMER, null);
-			} catch (err) {
-				console.log('[Customer.js] method: new_customer');
-				this.showMessage(ERROR_MESSAGES.NEW_CUSTOMER_ERROR, 'error');
-			}
+			evntBus.emit(EVENT_NAMES.OPEN_UPDATE_CUSTOMER, null);
+		} catch (err) {
+			console.error('[Customer.js] new_customer_failed');
+			this.showMessage(ERROR_MESSAGES.NEW_CUSTOMER_ERROR, 'error');
+		}
 		},
 
 		edit_customer() {
 			try {
-				evntBus.emit(EVENT_NAMES.OPEN_UPDATE_CUSTOMER, this.customer_info);
-			} catch (err) {
-				console.log('[Customer.js] method: edit_customer');
-				this.showMessage(ERROR_MESSAGES.EDIT_CUSTOMER_ERROR, 'error');
-			}
+			evntBus.emit(EVENT_NAMES.OPEN_UPDATE_CUSTOMER, this.customer_info);
+		} catch (err) {
+			console.error('[Customer.js] edit_customer_failed');
+			this.showMessage(ERROR_MESSAGES.EDIT_CUSTOMER_ERROR, 'error');
+		}
 		},
 
 		showMessage(message, color) {
@@ -220,11 +218,11 @@ export default {
 				evntBus.on(
 					EVENT_NAMES.CUSTOMER_DROPDOWN_OPENED,
 					this.handleCustomerDropdownOpened,
-				);
-			} catch (err) {
-				console.log('[Customer.js] method: registerEventListeners');
-				this.showMessage(ERROR_MESSAGES.INITIALIZATION_ERROR, 'error');
-			}
+			);
+		} catch (err) {
+			console.error('[Customer.js] register_event_listeners_failed');
+			this.showMessage(ERROR_MESSAGES.INITIALIZATION_ERROR, 'error');
+		}
 		},
 
 		handleToggleQuickReturn(value) {
@@ -296,11 +294,11 @@ export default {
 							this.filteredCustomers = this.customers;
 						}
 					}
-				},
-				error: (err) => {
-					console.log('[Customer.js] method: fetch_customer_details_for_default');
-				},
-			});
+			},
+			error: (err) => {
+				console.error('[Customer.js] fetch_customer_details_failed');
+			},
+		});
 		},
 	},
 
