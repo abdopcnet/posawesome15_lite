@@ -521,7 +521,6 @@ def get_current_shift_name():
                             pos_profile_data["item_groups"] = [
                                 ig.item_group for ig in item_groups_result]
                         except Exception:
-                            # Graceful degradation - continue without item groups (no logging needed)
                             pos_profile_data["item_groups"] = []
 
                         # FRAPPE FRAMEWORK STANDARD: Fetch child table data using SQL
@@ -540,16 +539,15 @@ def get_current_shift_name():
                             """, (pos_profile_name,), as_dict=True)
                             pos_profile_data["payments"] = payments_result
                         except Exception:
-                            # Graceful degradation - continue without payments (no logging needed)
                             pos_profile_data["payments"] = []
 
                         row["pos_profile_data"] = pos_profile_data
                     else:
-                        # POS Profile exists but frappe.get_all returned empty (permissions issue?)
+                        frappe.log_error(f"[[pos_opening_shift.py]] get_current_shift_name")
                         row["pos_profile_data"] = None
                         row["pos_profile_error"] = "POS Profile data not found"
-            except Exception as profile_error:
-                # Return error info without logging (non-critical error)
+            except Exception:
+                frappe.log_error(f"[[pos_opening_shift.py]] get_current_shift_name")
                 row["pos_profile_data"] = None
                 row["pos_profile_error"] = "Error loading POS Profile"
 
