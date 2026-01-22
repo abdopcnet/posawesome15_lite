@@ -24,7 +24,7 @@ def validate_status(status, options):
             frappe.throw(
                 _("Status must be one of {0}").format(comma_or(options)))
     except Exception as e:
-        frappe.log_error("[pos_opening_shift.py] method: validate_status", "POS Opening Shift")
+        frappe.log_error(f"[[pos_opening_shift.py]] validate_status")
         raise
 
 
@@ -72,7 +72,7 @@ class StatusUpdater(Document):
                                 self.status = s[0]
                                 break
                         except Exception as e:
-                            frappe.log_error("[pos_opening_shift.py] method: set_status", "POS Opening Shift")
+                            frappe.log_error(f"[[pos_opening_shift.py]] set_status")
                             raise
                     elif getattr(self, s[1])():
                         self.status = s[0]
@@ -88,7 +88,7 @@ class StatusUpdater(Document):
                     self.db_set('status', self.status,
                                 update_modified=update_modified)
         except Exception as e:
-            frappe.log_error("[pos_opening_shift.py] method: set_status", "POS Opening Shift")
+            frappe.log_error(f"[[pos_opening_shift.py]] set_status")
             raise
 
 
@@ -102,7 +102,7 @@ class POSOpeningShift(StatusUpdater):
             self._validate_shift_opening_window()
             self.set_status()
         except Exception as e:
-            frappe.log_error("[pos_opening_shift.py] method: validate", "POS Opening Shift")
+            frappe.log_error(f"[[pos_opening_shift.py]] validate")
             raise
 
     def validate_pos_profile_and_cashier(self):
@@ -129,7 +129,7 @@ class POSOpeningShift(StatusUpdater):
                     frappe.throw(_("User {} is not registered in POS Profile {}. Please select a user registered in the profile".format(
                         self.user, self.pos_profile)))
         except Exception as e:
-            frappe.log_error("[pos_opening_shift.py] method: validate_pos_profile_and_cashier", "POS Opening Shift")
+            frappe.log_error(f"[[pos_opening_shift.py]] validate_pos_profile_and_cashier")
             raise
 
     def validate_pos_shift(self):
@@ -191,7 +191,7 @@ class POSOpeningShift(StatusUpdater):
                 frappe.throw(_("Opening cash amount cannot be negative"))
 
         except Exception as e:
-            frappe.log_error("[pos_opening_shift.py] method: validate_pos_shift", "POS Opening Shift")
+            frappe.log_error(f"[[pos_opening_shift.py]] validate_pos_shift")
             raise
 
     def _parse_time(self, time_value):
@@ -264,7 +264,7 @@ class POSOpeningShift(StatusUpdater):
             # Re-raise validation errors (like frappe.throw)
             raise
         except Exception as e:
-            frappe.log_error("[pos_opening_shift.py] method: _validate_shift_opening_window", "POS Opening Shift")
+            frappe.log_error(f"[[pos_opening_shift.py]] _validate_shift_opening_window")
             raise
 
     def on_submit(self):
@@ -272,7 +272,7 @@ class POSOpeningShift(StatusUpdater):
         try:
             self.set_status(update=True)
         except Exception as e:
-            frappe.log_error("[pos_opening_shift.py] method: on_submit", "POS Opening Shift")
+            frappe.log_error(f"[[pos_opening_shift.py]] on_submit")
             raise
 
 
@@ -345,7 +345,7 @@ def check_opening_time_allowed(pos_profile):
             }
 
     except Exception as e:
-        frappe.log_error("[pos_opening_shift.py] method: check_opening_time_allowed", "POS Opening Shift")
+        frappe.log_error(f"[[pos_opening_shift.py]] check_opening_time_allowed")
         return {"allowed": False, "message": "Error"}
 
 
@@ -403,7 +403,7 @@ def create_opening_voucher(pos_profile, company, balance_details):
         return opening_voucher.as_dict()
 
     except Exception as e:
-        frappe.log_error("[pos_opening_shift.py] method: create_opening_voucher", "POS Opening Shift")
+        frappe.log_error(f"[[pos_opening_shift.py]] create_opening_voucher")
         frappe.throw(_("Error creating voucher"))
 
 
@@ -685,7 +685,7 @@ def get_profile_users(doctype, txt, searchfield, start, page_len, filters):
 
     except Exception as e:
         # Note: get_profile_users doesn't have pos_profile parameter
-        frappe.log_error("[pos_opening_shift.py] method: get_profile_users", "POS Opening Shift")
+        frappe.log_error(f"[[pos_opening_shift.py]] get_profile_users")
         frappe.throw(_("Error retrieving users"))
 
 
