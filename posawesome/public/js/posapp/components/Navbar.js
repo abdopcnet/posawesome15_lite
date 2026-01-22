@@ -1,6 +1,5 @@
 // ===== SECTION 1: IMPORTS =====
 import { evntBus } from '../bus';
-// Frontend logging: console.log('[filename.js] method: function_name')
 // Import cache manager utility
 (function () {
 	if (window.clearCacheAndReload) return;
@@ -473,11 +472,9 @@ export default {
 					});
 				}
 				return;
-			}
+		}
 
-			console.log('[Navbar.js] method: measurePing');
-
-			const startTime = performance.now();
+		const startTime = performance.now();
 			let timeoutId = null;
 			let isResolved = false;
 
@@ -593,11 +590,10 @@ export default {
 					shift_name: shiftName,
 				},
 				callback: (r) => {
-					if (r.message && !r.message.is_open) {
-						// Specific shift is closed - reload page and clear cache
-						console.log('[Navbar.js] method: handle_shift_closed');
-						this.show_mesage({
-							color: 'error',
+				if (r.message && !r.message.is_open) {
+					// Specific shift is closed - reload page and clear cache
+					this.show_mesage({
+						color: 'error',
 							text: 'تم إغلاق الوردية. سيتم إعادة تحميل الصفحة...',
 						});
 
@@ -754,11 +750,10 @@ export default {
 					if (data.pos_profile) {
 						this.pos_profile = data.pos_profile;
 					}
-					if (data.pos_opening_shift) {
-						this.pos_opening_shift = data.pos_opening_shift;
-						console.log('[Navbar.js] method: register_shift');
-					}
-					this.fetch_company_info();
+				if (data.pos_opening_shift) {
+					this.pos_opening_shift = data.pos_opening_shift;
+				}
+				this.fetch_company_info();
 					this.fetchShiftInvoiceCount();
 					this.setupCashUpdateInterval(); // Start auto-refresh when POS data registered
 					this.startShiftMonitoring(); // Start shift monitoring
