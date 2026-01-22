@@ -25,7 +25,7 @@ frappe.ui.form.on('POS Opening Shift', {
 				};
 			});
 		} catch (error) {
-			console.log('[pos_opening_shift.js] method: setup');
+			console.error('[pos_opening_shift.js] setup_failed');
 		}
 	},
 
@@ -92,7 +92,7 @@ frappe.ui.form.on('POS Opening Shift', {
 				}
 			}
 		} catch (error) {
-			console.log('[pos_opening_shift.js] method: refresh');
+			console.error('[pos_opening_shift.js] refresh_failed');
 		}
 	},
 
@@ -119,14 +119,14 @@ frappe.ui.form.on('POS Opening Shift', {
 						}
 					})
 					.catch((error) => {
-						console.log('[pos_opening_shift.js] method: pos_profile');
+						console.error('[pos_opening_shift.js] load_payments_failed');
 					});
 			} else {
 				// Lock user field if POS Profile not selected
 				frm.set_df_property('user', 'read_only', 1);
 			}
 		} catch (error) {
-			console.log('[pos_opening_shift.js] method: pos_profile');
+			console.error('[pos_opening_shift.js] pos_profile_failed');
 		}
 	},
 });
