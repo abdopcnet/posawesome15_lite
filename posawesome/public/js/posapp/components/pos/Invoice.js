@@ -3,7 +3,6 @@ import { evntBus } from '../../bus';
 import format from '../../format';
 import Customer from './Customer.vue';
 import { API_MAP } from '../../api_mapper.js';
-// Frontend logging: console.log('[filename.js] method: function_name')
 
 const UI_CONFIG = {
 	SEARCH_MIN_LENGTH: 3,
@@ -845,9 +844,9 @@ export default {
 							this.items = result.message.items;
 						}
 					}
-				} catch (error) {
-					console.log('[Invoice.js] method: reload_invoice');
-				}
+			} catch (error) {
+				console.error('[Invoice.js] reload_invoice_failed');
+			}
 			}
 		},
 
@@ -895,9 +894,8 @@ export default {
 						invoice_doc: doc,
 					},
 					callback: (r) => {
-						if (r.message) {
-							console.log('[Invoice.js] method: save_draft_invoice');
-							evntBus.emit('show_mesage', {
+					if (r.message) {
+						evntBus.emit('show_mesage', {
 								text: `تم حفظ الفاتورة: ${r.message.name}`,
 								color: 'success',
 							});
@@ -905,17 +903,17 @@ export default {
 							this.reset_invoice_session();
 						}
 					},
-					error: (err) => {
-						console.log('[Invoice.js] method: save_draft_invoice');
-						evntBus.emit('show_mesage', {
+				error: (err) => {
+					console.error('[Invoice.js] save_draft_invoice_failed');
+					evntBus.emit('show_mesage', {
 							text: 'فشل حفظ الفاتورة',
 							color: 'error',
 						});
 					},
 				});
-			} catch (error) {
-				console.log('[Invoice.js] method: save_draft_invoice');
-				evntBus.emit('show_mesage', {
+		} catch (error) {
+			console.error('[Invoice.js] save_draft_invoice_exception');
+			evntBus.emit('show_mesage', {
 					text: 'فشل حفظ الفاتورة',
 					color: 'error',
 				});
@@ -925,17 +923,15 @@ export default {
 		// Load draft invoice
 		async load_draft_invoice() {
 			try {
-				const pos_opening_shift_name = this.pos_opening_shift?.name;
-				console.log('[Invoice.js] method: load_draft_invoice');
+			const pos_opening_shift_name = this.pos_opening_shift?.name;
 
 				frappe.call({
 					method: API_MAP.SALES_INVOICE.GET_DRAFTS,
 					args: {
 						pos_opening_shift: pos_opening_shift_name,
 					},
-					callback: (r) => {
-						console.log('[Invoice.js] method: load_draft_invoice');
-						if (r.message && r.message.length > 0) {
+				callback: (r) => {
+					if (r.message && r.message.length > 0) {
 							// Open drafts dialog with fresh data from server
 							evntBus.emit('open_drafts_dialog', r.message);
 						} else {
@@ -945,17 +941,17 @@ export default {
 							});
 						}
 					},
-					error: (err) => {
-						console.log('[Invoice.js] method: load_draft_invoice');
-						evntBus.emit('show_mesage', {
+				error: (err) => {
+					console.error('[Invoice.js] load_draft_invoice_failed');
+					evntBus.emit('show_mesage', {
 							text: 'فشل جلب الفواتير المسودة',
 							color: 'error',
 						});
 					},
 				});
-			} catch (error) {
-				console.log('[Invoice.js] method: load_draft_invoice');
-				evntBus.emit('show_mesage', {
+		} catch (error) {
+			console.error('[Invoice.js] load_draft_invoice_exception');
+			evntBus.emit('show_mesage', {
 					text: 'فشل جلب الفواتير المسودة',
 					color: 'error',
 				});
@@ -1367,9 +1363,9 @@ export default {
 							// In __islocal approach: do not save on server
 							// Payment stays local until Print
 						}
-					} catch (error) {
-						console.log('[Invoice.js] method: getDefaultPayment');
-					}
+				} catch (error) {
+					console.error('[Invoice.js] get_default_payment_failed');
+				}
 				}
 
 				evntBus.emit('send_invoice_doc_payment', invoice_doc);
@@ -1382,11 +1378,11 @@ export default {
 				}
 
 				evntBus.emit('invoice_session_reset');
-				evntBus.emit('hide_loading');
-			} catch (error) {
-				console.log('[Invoice.js] method: prepareInvoice');
-				evntBus.emit('hide_loading');
-				evntBus.emit('show_mesage', {
+			evntBus.emit('hide_loading');
+		} catch (error) {
+			console.error('[Invoice.js] prepare_invoice_exception');
+			evntBus.emit('hide_loading');
+			evntBus.emit('show_mesage', {
 					text: 'خطأ في إعداد الفاتورة: ' + error.message,
 					color: 'error',
 				});
@@ -1404,9 +1400,8 @@ export default {
 		},
 
 		openSettlement() {
-			// Settlement button clicked
-			console.log('[Invoice.js] method: openSettlement');
-			evntBus.emit('open_settlement_dialog');
+		// Settlement button clicked
+		evntBus.emit('open_settlement_dialog');
 		},
 
 		close_payments() {
@@ -1776,9 +1771,9 @@ export default {
 						break;
 					}
 				}
-			} catch (error) {
-				console.log('[Invoice.js] method: checkOfferApplied');
-				return false;
+		} catch (error) {
+			console.error('[Invoice.js] check_offer_applied_failed');
+			return false;
 			}
 
 			return applied;
@@ -1881,9 +1876,8 @@ export default {
 			const taxPercent = flt(this.pos_profile?.posa_tax_percent) || 0;
 			const normalizedTaxType = taxType?.replace(/^Tax\s*/i, '').trim();
 
-			if (applyTax) {
-				console.log('[Invoice.js] method: calculate_tax');
-			}
+		if (applyTax) {
+		}
 
 			if (applyTax && normalizedTaxType && taxPercent > 0) {
 				// Round net_total first to ensure all calculations use 2 decimal places
@@ -2750,8 +2744,7 @@ export default {
 				: 'Sales_Mode';
 			const invoiceStatus = doc.name
 				? `Updating draft: ${doc.name}`
-				: 'Creating new invoice';
-			console.log('[Invoice.js] method: printInvoice');
+			: 'Creating new invoice';
 
 			// Send to server for update + submit (if draft exists) or insert + submit (if new)
 			frappe.call({
@@ -2894,9 +2887,9 @@ export default {
 					// Mark as detail synced to avoid repeated updates
 					item._detailSynced = true;
 				}
-			} catch (error) {
-				console.log('[Invoice.js] method: update_item_detail');
-			}
+		} catch (error) {
+			console.error('[Invoice.js] update_item_detail_failed');
+		}
 		},
 	},
 
@@ -2922,8 +2915,7 @@ export default {
 			this.invoiceType = 'Invoice';
 			evntBus.emit('update_invoice_type', this.invoiceType);
 
-			console.log('[Invoice.js] method: register_pos_profile');
-		});
+	});
 		evntBus.on('add_item', (item) => {
 			this.add_item(item);
 		});
@@ -3008,15 +3000,13 @@ export default {
 		evntBus.on('load_draft_invoice', (draft_invoice) => {
 			if (draft_invoice && draft_invoice.name) {
 				// Prevent duplicate loading by checking if already loaded
-				if (this.invoice_doc?.name === draft_invoice.name) {
-					console.log('[Invoice.js] method: select_draft_invoice');
-					return;
+			if (this.invoice_doc?.name === draft_invoice.name) {
+				return;
 				}
 
 				// Load the draft invoice as a new invoice
-				this.new_invoice(draft_invoice);
-				console.log('[Invoice.js] method: select_draft_invoice');
-				evntBus.emit('show_mesage', {
+			this.new_invoice(draft_invoice);
+			evntBus.emit('show_mesage', {
 					text: `تم تحميل الفاتورة: ${draft_invoice.name}`,
 					color: 'success',
 				});
@@ -3025,8 +3015,7 @@ export default {
 
 		// Load settlement invoice event
 		evntBus.on('load_settlement_invoice', async (settlement_invoice) => {
-			if (settlement_invoice && settlement_invoice.name) {
-				console.log('[Invoice.js] method: load_settlement_invoice');
+		if (settlement_invoice && settlement_invoice.name) {
 
 				try {
 					// Fetch full invoice details
@@ -3044,21 +3033,18 @@ export default {
 						// Mark as settlement mode (for read-only items)
 						invoice._is_settlement = true;
 
-						// Log invoice data for debugging
-						console.log('[Invoice.js] method: load_settlement_invoice');
+					// Log invoice data for debugging
 
 						// For settlement invoices, replace payments with POS Profile payment methods
 						// This ensures all payment methods are available, not just those from original invoice
 						// Wait for pos_profile if not available yet
-						if (!this.pos_profile) {
-							console.log('[Invoice.js] method: load_settlement_invoice');
-							// Wait a bit for pos_profile to be registered
+					if (!this.pos_profile) {
+						// Wait a bit for pos_profile to be registered
 							await new Promise((resolve) => setTimeout(resolve, 100));
 						}
 
-						if (this.pos_profile && Array.isArray(this.pos_profile.payments)) {
-							console.log('[Invoice.js] method: load_settlement_invoice');
-							const existingPaymentModes = new Set(
+					if (this.pos_profile && Array.isArray(this.pos_profile.payments)) {
+						const existingPaymentModes = new Set(
 								(invoice.payments || []).map((p) => p.mode_of_payment),
 							);
 							const newPayments = [];
@@ -3130,9 +3116,9 @@ export default {
 							color: 'success',
 						});
 					}
-				} catch (error) {
-					console.log('[Invoice.js] method: load_settlement_invoice');
-					evntBus.emit('show_mesage', {
+			} catch (error) {
+				console.error('[Invoice.js] load_settlement_invoice_failed');
+				evntBus.emit('show_mesage', {
 						text: 'فشل تحميل الفاتورة',
 						color: 'error',
 					});
