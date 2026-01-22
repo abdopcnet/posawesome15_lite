@@ -8,7 +8,6 @@ import format from '../../format';
 
 // Import API mapper
 import { API_MAP } from '../../api_mapper.js';
-// Frontend logging: console.log('[filename.js] method: function_name')
 
 /**
  * Event names for bus communication
@@ -197,9 +196,8 @@ export default {
 				.then((r) => {
 					if (r.message) {
 						// r.message is the opening_voucher document (as_dict())
-						const opening_shift = r.message;
-						const shift_name = opening_shift.name || 'غير معروف';
-						console.log('[OpeningDialog.js] method: create_opening_voucher');
+					const opening_shift = r.message;
+					const shift_name = opening_shift.name || 'غير معروف';
 
 						// Fetch complete shift data including pos_profile_data
 						frappe.call({
@@ -239,23 +237,18 @@ export default {
 											`تم إنشاء وردية فتح نقطة البيع ${shift_name}`,
 											'success',
 										);
-										close_opening_dialog();
-									} else {
-										console.log(
-											'[OpeningDialog.js] method: create_opening_voucher',
-										);
+									close_opening_dialog();
+								} else {
+									console.error('[OpeningDialog.js] shift_data_missing');
 										showMessage('Failed to load POS Profile', 'error');
 									}
 								} else {
 									showMessage('فشل تحميل بيانات الوردية', 'error');
 								}
 								is_loading.value = false;
-							},
-							error: (err) => {
-								console.log(
-									'[OpeningDialog.js] get_current_shift_name error:',
-									err,
-								);
+						},
+						error: (err) => {
+							console.error('[OpeningDialog.js] get_current_shift_name_failed');
 								showMessage('فشل تحميل بيانات الوردية', 'error');
 								is_loading.value = false;
 							},
@@ -265,11 +258,11 @@ export default {
 						showMessage('فشل إنشاء مستند الافتتاح', 'error');
 						is_loading.value = false;
 					}
-				})
-				.catch((error) => {
-					console.log('[OpeningDialog.js] method: submit_dialog');
-					showMessage('فشل إنشاء مستند الافتتاح', 'error');
-					is_loading.value = false;
+			})
+			.catch((error) => {
+				console.error('[OpeningDialog.js] create_opening_voucher_failed');
+				showMessage('فشل إنشاء مستند الافتتاح', 'error');
+				is_loading.value = false;
 				});
 		};
 
