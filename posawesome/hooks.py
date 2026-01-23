@@ -30,6 +30,11 @@ doc_events = {
     },
 }
 
+permission_query_conditions = {
+    "POS Opening Shift": "posawesome.posawesome.doctype.pos_opening_shift.pos_opening_shift.get_permission_query_conditions",
+    "POS Closing Shift": "posawesome.posawesome.doctype.pos_closing_shift.pos_closing_shift.get_permission_query_conditions",
+}
+
 # Fixtures - bench --site erp.andalus-sweets.com export-fixtures --app posawesome
 fixtures = [
     {
