@@ -777,3 +777,53 @@ def _parse_time_helper(time_value):
     except Exception:
         # Graceful degradation - return None (no logging needed)
         return None
+
+
+# ========================================================================
+# SECTION 4: PERMISSION QUERY CONDITIONS
+# ========================================================================
+# Filter list view based on user's allowed POS Profiles
+# Prevents users from seeing documents they cannot access
+
+def get_permission_query_conditions(user, doctype=None):
+    """
+    Filter POS Opening Shift list view based on user's allowed POS Profiles.
+    This prevents users from seeing documents in the list view that they cannot access
+    due to Mode of Payment permissions in child tables.
+    
+    Args:
+        user: User name to check permissions for
+        doctype: Optional doctype parameter (for compatibility with Frappe hooks)
+    """
+    try:
+        # Skip for Administrator
+        if user == "Administrator":
+            return ""
+
+        # Get user permissions for POS Profile
+        user_permissions = frappe.get_all(
+            "User Permission",
+            filters={
+                "user": user,
+                "allow": "POS Profile"
+            },
+            fields=["for_value"]
+        )
+
+        if not user_permissions:
+            # No specific permissions - return empty (show all)
+            return ""
+
+        # Get list of allowed POS Profiles
+        allowed_profiles = [perm.for_value for perm in user_permissions]
+
+        # Build condition to filter by pos_profile
+        # Use safe SQL with placeholders
+        profile_list = "(" + ",".join(["'" + profile.replace("'", "''") + "'" for profile in allowed_profiles]) + ")"
+        condition = f"`tabPOS Opening Shift`.pos_profile IN {profile_list}"
+
+        return condition
+
+    except Exception:
+        # Graceful degradation - return empty (show all on error)
+        return ""
